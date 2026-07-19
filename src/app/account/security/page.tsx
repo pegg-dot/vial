@@ -1,0 +1,5 @@
+import { requirePrincipal } from "@/server/auth/principal";
+import { listUserSessions } from "@/server/auth/repository";
+import { revokeSessionAction } from "@/server/auth/actions";
+type SessionRow={id:string;active:boolean;created_at:string|Date};
+export default async function Page(){const p=await requirePrincipal({accountTypes:["customer","seller"]});const sessions=await listUserSessions(p.id) as SessionRow[];return <main className="mx-auto max-w-5xl px-5 py-14"><h1 className="text-5xl font-semibold">Security</h1><p className="mt-3 text-[var(--muted)]">Signed, revocable sessions for {p.email}.</p><div className="mt-8 space-y-3">{sessions.map(s=><div key={s.id} className="flex items-center justify-between rounded-2xl border bg-white p-4"><div><b>{s.active?"Active session":"Expired or revoked"}</b><p className="text-xs text-[var(--muted)]">{new Date(s.created_at).toLocaleString()}</p></div>{s.active&&<form action={revokeSessionAction}><input type="hidden" name="sessionId" value={s.id}/><button className="rounded-full border px-4 py-2 text-sm">Revoke</button></form>}</div>)}</div></main>}

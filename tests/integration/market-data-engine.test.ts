@@ -1,0 +1,15 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { resetDatabaseForTests, getDatabase } from "@/server/db/client";
+import { getEntityGraphSummary, resolveEntityLabel, createResolutionCase } from "@/server/market-data/graph";
+import { getBenchmarkDashboard, runParserBenchmark } from "@/server/market-data/benchmarks";
+import { getDataQualityDashboard, recordCorrection, recomputeSourceReliability } from "@/server/market-data/quality";
+import { getSearchQualityDashboard, searchMarket } from "@/server/search/engine";
+
+beforeEach(async()=>{process.env.VIAL_PGLITE_MEMORY="true";process.env.VIAL_SEED_FIXTURES="true";process.env.VIAL_SEED_DEMO_ACCOUNTS="true";await resetDatabaseForTests();});
+
+describe("VIAL 2.0 market data engine",()=>{
+ it("builds a canonical graph and resolves aliases",async()=>{const summary=await getEntityGraphSummary();expect(summary.types.reduce((s,r)=>s+r.count,0)).toBeGreaterThan(25);const resolution=await resolveEntityLabel("BPC157","compound");expect(resolution.best?.entity.canonical_key).toBe("bpc-157");expect(resolution.best?.score).toBeGreaterThan(.95);const caseResult=await createResolutionCase({subjectType:"source-label",subjectId:"fixture",rawLabel:"Epithalon",entityType:"compound"});expect(caseResult.best?.entity.canonical_key).toBe("epitalon");});
+ it("runs benchmark contracts against a golden set",async()=>{const run=await runParserBenchmark("catalog");expect(run.exampleCount).toBeGreaterThanOrEqual(5);expect(run.f1).toBeGreaterThan(.85);const dashboard=await getBenchmarkDashboard();expect(dashboard.contracts.some(contract=>contract.profile_key==="catalog")).toBe(true);expect(dashboard.runs.length).toBeGreaterThan(0);});
+ it("searches aliases and typo variants with evaluated ranking",async()=>{const compact=await searchMarket({query:"bpc157",log:false});expect(compact.results[0]?.entityId).toBe("cmp:bpc-157");const vendor=await searchMarket({query:"northstar",log:false});expect(vendor.results.some(result=>result.entityId==="org:northstar-research")).toBe(true);const typo=await searchMarket({query:"epithalon",log:false});expect(typo.results.some(result=>result.entityId==="cmp:epitalon")).toBe(true);const quality=await getSearchQualityDashboard();expect(quality.evaluations).toBeGreaterThanOrEqual(6);expect(quality.mrr).toBeGreaterThan(.7);});
+ it("tracks field freshness, corrections, pilots, and source reliability",async()=>{const db=await getDatabase();const listing=(await db.query<{id:string}>(`SELECT id FROM listings ORDER BY id LIMIT 1`)).rows[0];expect(listing).toBeTruthy();await recordCorrection({subjectType:"listing",subjectId:listing!.id,type:"normalization",previousValue:"2 to 4 days",correctedValue:"2-4 business days",reason:"Normalized dash while preserving meaning",reviewer:"integration-test"});await recomputeSourceReliability();const dashboard=await getDataQualityDashboard();expect(dashboard.freshness.reduce((s,r)=>s+r.count,0)).toBeGreaterThan(0);expect(dashboard.corrections).toBeGreaterThan(0);expect(dashboard.pilots.some(pilot=>pilot.status==="sandbox")).toBe(true);expect(dashboard.reliability.length).toBeGreaterThan(0);});
+});

@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("admin:manage");const rows=await listRows("feature_flags","updated_at DESC");return <OpsPage eyebrow="Product intelligence" title="Funnels and feature flags" description="Synthetic instrumentation for search, evidence engagement, cart, checkout, retention, and experiments." stats={[["Tracked events", '180'],["Active flags", '2'],["Experiments", '1'],["External analytics", 'None']]} rows={rows} columns={[{key:"key",label:"Flag"},{key:"description",label:"Description"},{key:"enabled",label:"Enabled"},{key:"rollout_percent",label:"Rollout %"},{key:"audience",label:"Audience"},{key:"updated_at",label:"Updated"}]}/>}

@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("commerce:read");const rows=await listRows("support_cases","created_at DESC");return <OpsPage eyebrow="Support operations" title="Cases and service levels" description="Order, evidence, seller, and refund cases with ownership, priority, and response deadlines." stats={[["Open cases", rows.length],["High priority", '1'],["SLA at risk", '1'],["CSAT sandbox", '94%']]} rows={rows} columns={[{key:"subject",label:"Subject"},{key:"requester_label",label:"Requester"},{key:"category",label:"Category"},{key:"priority",label:"Priority"},{key:"status",label:"Status"},{key:"assignee",label:"Assignee"}]}/>}

@@ -1,0 +1,105 @@
+export type EvidenceLevel =
+  | "independent"
+  | "issuer-confirmed"
+  | "vendor-published"
+  | "public-only"
+  | "stale";
+
+export type CheckoutMode =
+  | "information-only"
+  | "outbound"
+  | "marketplace-pending";
+
+export type VendorStatus = "participating" | "claimed" | "unclaimed";
+
+export interface Compound {
+  slug: string;
+  name: string;
+  shorthand: string;
+  category: string;
+  description: string;
+  aliases: string[];
+  listings: number;
+  medianPrice: number;
+  priceChange: number;
+  documentationCoverage: number;
+  accent: [string, string, string];
+  researchNote: string;
+}
+
+export interface Vendor {
+  slug: string;
+  name: string;
+  initials: string;
+  description: string;
+  location: string;
+  founded: string;
+  profileStatus: VendorStatus;
+  productCount: number;
+  documentationCurrent: number;
+  medianShipDays: number;
+  supportScore: number;
+  lastObserved: string;
+  accent: [string, string];
+  history: Array<{
+    date: string;
+    event: string;
+    type: "catalog" | "document" | "profile" | "policy";
+  }>;
+}
+
+export interface EvidenceDimension {
+  label: string;
+  status: "established" | "partial" | "unknown" | "not-tested";
+  detail: string;
+}
+
+export interface Product {
+  slug: string;
+  name: string;
+  compoundSlug: string;
+  vendorSlug: string;
+  quantity: string;
+  form: string;
+  price: number;
+  previousPrice?: number;
+  currency: "USD";
+  availability: "In stock" | "Low stock" | "Unavailable";
+  shipping: string;
+  evidenceLevel: EvidenceLevel;
+  evidenceLabel: string;
+  reportDate: string;
+  reportIssuer: string;
+  reportConfirmed: boolean;
+  batchCode: string;
+  batchLinked: boolean;
+  sampleOrigin: string;
+  lastChecked: string;
+  rating: number;
+  reviewCount: number;
+  featured?: boolean;
+  checkoutMode: CheckoutMode;
+  priceHistory: number[];
+  accent: [string, string, string];
+  evidence: EvidenceDimension[];
+}
+
+export interface CatalogSnapshot {
+  compounds: Compound[];
+  vendors: Vendor[];
+  products: Product[];
+  generatedAt: string;
+}
+
+export interface AgentRun {
+  id: string;
+  workflow: string;
+  target: string;
+  status: "published" | "review" | "blocked" | "running";
+  startedAt: string;
+  duration: string;
+  tools: string[];
+  proposedChanges: number;
+  publishedChanges: number;
+  reason?: string;
+}

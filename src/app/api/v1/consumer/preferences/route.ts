@@ -1,0 +1,8 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { requireApiPrincipal } from "@/server/auth/principal";
+import { getConsumerPreferences, updateConsumerPreferences } from "@/server/consumer-intelligence/repository";
+
+const schema=z.object({priceFloor:z.number().min(0).max(100000),priceCeiling:z.number().min(0).max(100000),maxShippingDays:z.number().int().min(1).max(60),evidencePriorities:z.array(z.enum(["batch_linkage","report_confirmation","freshness","sampling","quantity","issuer"])).max(6),requiredEvidenceLevels:z.array(z.string().max(40)).max(8),preferredVendorSlugs:z.array(z.string().max(100)).max(50),hiddenVendorSlugs:z.array(z.string().max(100)).max(50),preferredCompoundSlugs:z.array(z.string().max(100)).max(50),homeView:z.enum(["balanced","evidence-first","price-first","changes-first"]),personalizationEnabled:z.boolean()}).refine(v=>v.priceCeiling>=v.priceFloor,{message:"Price ceiling must be greater than or equal to price floor"});
+export async function GET(){const a=await requireApiPrincipal({accountTypes:["customer","seller"]});if(a.response)return a.response;return NextResponse.json(await getConsumerPreferences(a.principal.id),{headers:{"cache-control":"private, no-store"}})}
+export async function PATCH(request:Request){const a=await requireApiPrincipal({accountTypes:["customer","seller"]});if(a.response)return a.response;const parsed=schema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Invalid preferences",issues:parsed.error.flatten()},{status:400});return NextResponse.json(await updateConsumerPreferences(a.principal.id,parsed.data),{headers:{"cache-control":"private, no-store"}})}

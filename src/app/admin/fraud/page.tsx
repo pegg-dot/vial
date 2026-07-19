@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("security:read");const rows=await listRows("fraud_cases","created_at DESC");return <OpsPage eyebrow="Risk operations" title="Fraud and abuse cases" description="Rules, scores, queues, analyst decisions, and appeals for customer, seller, review, and checkout abuse." stats={[["Cases", rows.length],["High severity", '1'],["Investigating", '1'],["External provider", 'None']]} rows={rows} columns={[{key:"subject_type",label:"Type"},{key:"subject_id",label:"Subject"},{key:"score",label:"Score"},{key:"severity",label:"Severity"},{key:"signals",label:"Signals"},{key:"status",label:"Status"}]}/>}

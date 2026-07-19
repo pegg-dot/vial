@@ -1,0 +1,3 @@
+import{requireApiPermission}from"@/server/auth/principal";import { NextRequest, NextResponse } from "next/server";
+import { createShipment } from "@/server/commerce/operations";
+export async function POST(request:NextRequest){const auth=await requireApiPermission("commerce:write");if(auth.response)return auth.response;try{const b=await request.json();return NextResponse.json(await createShipment({orderId:String(b.orderId),sellerId:String(b.sellerId),carrier:String(b.carrier||"VIAL Sandbox"),trackingCode:String(b.trackingCode||`TEST-${Date.now()}`)}));}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Shipment failed"},{status:400});}}

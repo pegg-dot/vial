@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { requireApiLaboratoryPermission } from "@/server/auth/principal";
+import { getLaboratoryContext, revokeLaboratoryApiToken } from "@/server/evidence-network/repository";
+export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){const gate=await requireApiLaboratoryPermission("lab:tokens:manage");if(gate.response)return gate.response;const context=await getLaboratoryContext(gate.principal.email);if(!context)return NextResponse.json({error:"Laboratory membership not found"},{status:404});const {id}=await params;const revoked=await revokeLaboratoryApiToken({laboratoryId:String(context.lab.id),tokenId:id});return revoked?NextResponse.json({revoked:true}):NextResponse.json({error:"Token not found or already revoked"},{status:404})}

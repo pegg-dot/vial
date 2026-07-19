@@ -1,0 +1,4 @@
+"use client";
+import { BookmarkPlus, Check } from "lucide-react";
+import { useState } from "react";
+export function SaveSearchInline({query,authenticated}:{query:string;authenticated:boolean}){const[saved,setSaved]=useState(false);async function save(){if(!authenticated){window.location.href=`/login?next=${encodeURIComponent(`/search?q=${query}`)}`;return}const response=await fetch("/api/v1/saved-searches",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:`Search: ${query}`.slice(0,80),query,filters:{},alertMode:"important"})});if(response.ok||response.status===409){setSaved(true);setTimeout(()=>setSaved(false),1600)}}return <button type="button" onClick={save} className="inline-flex items-center gap-2 rounded-full border border-black/[.08] bg-white px-4 py-2 text-xs font-semibold">{saved?<><Check className="size-3.5"/>Saved</>:<><BookmarkPlus className="size-3.5"/>Save search</>}</button>}

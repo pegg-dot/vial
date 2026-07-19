@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("admin:manage");const rows=await listRows("policy_versions","version DESC");return <OpsPage eyebrow="Policy engine" title="Versioned eligibility simulation" description="Draft, compare, and activate deterministic policies without silently changing product eligibility." stats={[["Versions", rows.length],["Active", '1'],["Draft", '1'],["Rollback ready", 'Yes']]} rows={rows} columns={[{key:"version",label:"Version"},{key:"name",label:"Policy"},{key:"status",label:"Status"},{key:"rules",label:"Rules"},{key:"impact_summary",label:"Impact"},{key:"created_by",label:"Author"}]}/>}

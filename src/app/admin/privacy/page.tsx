@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("privacy:read");const rows=await listRows("privacy_requests","created_at DESC");return <OpsPage eyebrow="Privacy operations" title="Requests and retention" description="Data export, deletion, consent, dependency scanning, deadlines, and auditable completion." stats={[["Requests", rows.length],["In progress", '1'],["Deletion", '1'],["Overdue", '0']]} rows={rows} columns={[{key:"request_type",label:"Request"},{key:"user_id",label:"User"},{key:"status",label:"Status"},{key:"due_at",label:"Due"},{key:"audit_notes",label:"Notes"},{key:"completed_at",label:"Completed"}]}/>}

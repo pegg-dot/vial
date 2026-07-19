@@ -1,0 +1,6 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getOrder, getOrderForCustomer } from "@/server/commerce/repository";
+import { requirePrincipal } from "@/server/auth/principal";
+type OrderRow={id:string;grand_total:string|number};
+export default async function Page({params}:{params:Promise<{id:string}>}){const p=await requirePrincipal({accountTypes:["customer","staff"]});const{id}=await params;const d=p.accountType==="staff"?await getOrder(id):await getOrderForCustomer(id,p.id);if(!d)notFound();const o=d.order as OrderRow;return <section className="mx-auto max-w-4xl px-5 py-16"><h1 className="text-4xl font-semibold">Order created exactly once.</h1><p className="mt-4">Sandbox order {o.id} · ${Number(o.grand_total).toFixed(2)}</p><div className="mt-7 flex gap-3"><Link href="/account/orders" className="rounded-full bg-black px-5 py-3 text-white">View orders</Link>{p.accountType==="customer"&&<Link href={`/account/orders/${o.id}/return`} className="rounded-full border px-5 py-3">Request return</Link>}{p.accountType==="staff"&&<Link href="/admin/finance" className="rounded-full border px-5 py-3">Inspect ledger</Link>}</div></section>}

@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("review:decide");const rows=await listRows("marketplace_reviews","created_at DESC");return <OpsPage eyebrow="Trust operations" title="Reviews and moderation" description="Verified-purchase reviews separated into product, shipping, and documentation dimensions." stats={[["Reviews", rows.length],["Pending", '1'],["Flagged", '1'],["Auto-published", '0']]} rows={rows} columns={[{key:"body",label:"Review"},{key:"verified_purchase",label:"Verified"},{key:"product_rating",label:"Product"},{key:"shipping_rating",label:"Shipping"},{key:"documentation_rating",label:"Documentation"},{key:"moderation_status",label:"Status"}]}/>}

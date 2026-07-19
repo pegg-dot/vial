@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("admin:manage");const rows=await listRows("internal_users","created_at DESC");return <OpsPage eyebrow="Identity & access" title="Accounts and permissions" description="Customer, seller, and staff identities with explicit role boundaries, MFA state, and login history." stats={[["Users", rows.length],["MFA coverage", '75%'],["Role model", '10 roles'],["Production auth", 'Disabled']]} rows={rows} columns={[{key:"display_name",label:"Name"},{key:"email",label:"Email"},{key:"account_type",label:"Type"},{key:"roles",label:"Roles"},{key:"mfa_enabled",label:"MFA"},{key:"status",label:"Status"}]}/>}

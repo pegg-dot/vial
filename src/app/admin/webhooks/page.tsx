@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { operationsDashboard } from "@/server/commerce/operations";
+import { CommerceTable } from "@/components/commerce-table";
+export default async function Page(){await requirePermission("commerce:write");const data=await operationsDashboard();const rows=data.webhooks as Array<Record<string,unknown>>;return <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-violet-600">Commerce operations</p><h1 className="mt-2 text-4xl font-semibold tracking-[-.05em]">Webhook inbox</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">Inspect processor events, duplicate suppression, processing state, and replay history.</p><div className="mt-7"></div><div className="mt-7"><CommerceTable rows={rows} columns={[{key:"provider_event_id",label:"Provider event"},{key:"event_type",label:"Type"},{key:"status",label:"Status"},{key:"received_at",label:"Received"}]} /></div></div>}

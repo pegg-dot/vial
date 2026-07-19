@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { requireSellerBearerScope } from "@/server/auth/seller-token";
+import { getDatabase } from "@/server/db/client";
+export async function GET(request:Request){const gate=await requireSellerBearerScope(request,"evidence:read");if(gate.response)return gate.response;const db=await getDatabase();const rows=await db.query(`SELECT p.id,p.title,p.quantity_label,e.display_name compound_name,COUNT(l.id) FILTER(WHERE l.status='confirmed') confirmed_links FROM seller_products p LEFT JOIN canonical_entities e ON e.id=p.compound_entity_id LEFT JOIN seller_evidence_links l ON l.seller_product_id=p.id WHERE p.seller_id=$1 GROUP BY p.id,e.display_name HAVING COUNT(l.id) FILTER(WHERE l.status='confirmed')=0 ORDER BY p.updated_at DESC`,[gate.auth!.sellerId]);return NextResponse.json({gaps:rows.rows});}

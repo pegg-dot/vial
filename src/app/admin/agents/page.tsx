@@ -1,0 +1,4 @@
+import { requirePermission } from "@/server/auth/session";
+import { OpsPage } from "@/components/internal-ops/ops-page";
+import { listRows } from "@/server/internal-ops/repository";
+export default async function Page(){await requirePermission("admin:manage");const rows=await listRows("agent_evaluations","created_at DESC");return <OpsPage eyebrow="Agent control center" title="Evaluations and release gates" description="Versioned workflows, golden datasets, regression scores, failures, and release eligibility." stats={[["Evaluations", rows.length],["Passing", '3'],["Blocked releases", '0'],["Human gates", 'Required']]} rows={rows} columns={[{key:"workflow",label:"Workflow"},{key:"version",label:"Version"},{key:"dataset",label:"Dataset"},{key:"score",label:"Score"},{key:"pass",label:"Pass"},{key:"failures",label:"Failures"}]}/>}

@@ -1,0 +1,111 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, BadgeCheck, Building2, Clock3, MapPin, PackageSearch, ShieldCheck, Star } from "lucide-react";
+import { getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
+import { vendorStatusLabel } from "@/lib/format";
+import { ProductCard } from "@/components/product-card";
+import { VendorMark } from "@/components/vendor-mark";
+import { FollowButton } from "@/components/follow-button";
+import { getCurrentPrincipal } from "@/server/auth/principal";
+import { listFollows } from "@/server/consumer-intelligence/repository";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const vendor = await getVendorBySlug(slug);
+  if (!vendor) return {};
+  return {
+    title: vendor.name,
+    description: `View the fictional ${vendor.name} catalog, documentation freshness, profile status, and market history.`,
+  };
+}
+
+export default async function VendorPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const vendor = await getVendorBySlug(slug);
+  if (!vendor) notFound();
+  const [listings, principal] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal()]);
+  const follows = principal ? await listFollows(principal.id) : [];
+  const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
+
+  return (
+    <>
+      <section className="border-b border-black/[.06]">
+        <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
+          <Link href="/market" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-black"><ArrowLeft className="size-4" /> Back to market</Link>
+          <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+              <VendorMark initials={vendor.initials} accent={vendor.accent} size="lg" />
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700"><BadgeCheck className="size-3" /> {vendorStatusLabel(vendor.profileStatus)}</span>
+                  <span className="rounded-full bg-black/[.045] px-2.5 py-1 text-[11px] font-semibold text-black/55">Fictional profile</span>
+                </div>
+                <h1 className="mt-4 text-5xl font-semibold leading-[.94] tracking-[-.065em] sm:text-6xl">{vendor.name}</h1>
+                <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">{vendor.description}</p>
+                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
+                  <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>
+                  <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> First observed {vendor.founded}</span>
+                  <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>
+                </div>
+                <div className="mt-6"><FollowButton entityType="vendor" entitySlug={slug} initialFollowed={followed} authenticated={Boolean(principal)} /></div>
+              </div>
+            </div>
+            <div className="rounded-[28px] border border-black/[.07] bg-white p-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">Profile signal</p>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <VendorStat icon={ShieldCheck} value={`${vendor.documentationCurrent}%`} label="Current documents" />
+                <VendorStat icon={PackageSearch} value={String(vendor.productCount)} label="Products tracked" />
+                <VendorStat icon={Clock3} value={`${vendor.medianShipDays} days`} label="Median shipping" />
+                <VendorStat icon={Star} value={`${vendor.supportScore} / 5`} label="Support signal" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
+        <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
+          <div>
+            <div className="mb-7">
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Catalog</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">Observed listings</h2>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
+          </div>
+
+          <aside>
+            <div className="sticky top-28 rounded-[26px] border border-black/[.07] bg-white p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">History</p>
+              <div className="mt-5 space-y-0">
+                {vendor.history.map((item, index) => (
+                  <div key={`${item.date}-${item.event}`} className="relative flex gap-3 pb-6 last:pb-0">
+                    {index < vendor.history.length - 1 && <span className="absolute left-[6px] top-4 h-full w-px bg-black/[.08]" />}
+                    <span className="relative mt-1 size-3 shrink-0 rounded-full border-[3px] border-white bg-[var(--accent)] shadow-[0_0_0_1px_rgba(17,18,20,.12)]" />
+                    <div>
+                      <p className="text-xs font-semibold text-black/50">{item.date}</p>
+                      <p className="mt-1 text-sm leading-5">{item.event}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[.12em] text-[var(--muted)]">{item.type}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function VendorStat({ icon: Icon, value, label }: { icon: React.ComponentType<{ className?: string }>; value: string; label: string }) {
+  return (
+    <div className="rounded-2xl bg-black/[.035] p-4">
+      <Icon className="size-4 text-black/35" />
+      <p className="mt-4 text-lg font-semibold tracking-[-.03em]">{value}</p>
+      <p className="mt-1 text-[10px] text-[var(--muted)]">{label}</p>
+    </div>
+  );
+}

@@ -1,0 +1,65 @@
+name: VIAL verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:all
+      - run: npm run audit:security
+      - run: npm run db:backup-drill
+      - run: npm audit --audit-level=high
+      - run: npm run build
+      - run: npm run audit:roles
+      - run: npm run audit:accessibility
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+  postgres-contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: vial
+          POSTGRES_USER: vial
+          POSTGRES_PASSWORD: vial_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U vial -d vial"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Validate production environment
+        run: npm run env:check
+        env:
+          DATABASE_URL: postgres://vial:vial_ci@127.0.0.1:5432/vial
+          NEXT_PUBLIC_SITE_URL: https://vial.example
+          VIAL_SESSION_SECRET: ci-session-secret-at-least-32-characters
+          VIAL_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters
+      - name: Build against PostgreSQL contract
+        run: npm run build
+        env:
+          DATABASE_URL: postgres://vial:vial_ci@127.0.0.1:5432/vial
+          NEXT_PUBLIC_SITE_URL: https://vial.example
+          VIAL_SESSION_SECRET: ci-session-secret-at-least-32-characters
+          VIAL_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters
+          VIAL_SEED_FIXTURES: "true"
+          VIAL_SEED_DEMO_ACCOUNTS: "true"

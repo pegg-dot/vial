@@ -1,0 +1,1 @@
+import{NextResponse}from"next/server";import{requireApiPermission}from"@/server/auth/principal";import{getRecentAgentRuns}from"@/server/catalog/repository";export async function GET(){const a=await requireApiPermission("catalog:read");if(a.response)return a.response;return NextResponse.json({data:await getRecentAgentRuns(100)},{headers:{"cache-control":"no-store"}})}

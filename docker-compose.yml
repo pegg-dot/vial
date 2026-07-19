@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: vial
+      POSTGRES_USER: vial
+      POSTGRES_PASSWORD: vial_local_only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vial -d vial"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports: ["54329:5432"]
+    volumes: ["vial-postgres:/var/lib/postgresql/data"]
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      DATABASE_URL: postgres://vial:vial_local_only@postgres:5432/vial
+      VIAL_SESSION_SECRET: local-compose-session-secret-change-before-use-0001
+      VIAL_PRIVACY_HASH_SECRET: local-compose-privacy-secret-change-before-use-0002
+      VIAL_SEED_FIXTURES: "true"
+      VIAL_SEED_DEMO_ACCOUNTS: "true"
+    ports: ["3000:3000"]
+volumes:
+  vial-postgres:

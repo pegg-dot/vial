@@ -1,0 +1,3 @@
+import{requireApiPermission}from"@/server/auth/principal";import { NextRequest, NextResponse } from "next/server";
+import { submitDisputeEvidence } from "@/server/commerce/operations";
+export async function POST(request:NextRequest){const auth=await requireApiPermission("finance:write");if(auth.response)return auth.response;try{const b=await request.json();return NextResponse.json(await submitDisputeEvidence({disputeId:String(b.disputeId),type:String(b.type||"fulfillment"),content:String(b.content||"Sandbox evidence"),actor:String(b.actor||"sandbox-seller")}));}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Evidence failed"},{status:400});}}

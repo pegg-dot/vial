@@ -1,0 +1,1 @@
+import{AdminShell}from"@/components/admin/admin-shell";import{getStaffSession}from"@/server/auth/session";export default async function Layout({children}:{children:React.ReactNode}){const s=await getStaffSession();return s?<AdminShell role={s.role} principal={s.principal}>{children}</AdminShell>:children}

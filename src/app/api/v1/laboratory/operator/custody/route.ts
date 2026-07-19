@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireLaboratoryBearerScope } from "@/server/auth/laboratory-token";
+import { getDatabase } from "@/server/db/client";
+import { verifyCustodyChain } from "@/server/evidence-network/repository";
+export async function GET(request:Request){const gate=await requireLaboratoryBearerScope(request,"lab:read");if(gate.response)return gate.response;const sampleId=new URL(request.url).searchParams.get("sampleId");if(!sampleId)return NextResponse.json({error:"sampleId required"},{status:400});const db=await getDatabase();const owned=(await db.query(`SELECT s.id FROM laboratory_samples s JOIN laboratory_test_orders o ON o.id=s.test_order_id WHERE s.id=$1 AND o.laboratory_id=$2`,[sampleId,gate.auth!.laboratoryId])).rows[0];if(!owned)return NextResponse.json({error:"Sample not found"},{status:404});const events=(await db.query(`SELECT * FROM sample_custody_events WHERE sample_id=$1 ORDER BY sequence_number`,[sampleId])).rows;return NextResponse.json({events,verification:await verifyCustodyChain(sampleId,db)})}
