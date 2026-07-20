@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { QueryResultRow } from "pg";
 import { ingestionInputSchema, type ClaimCandidate, type IngestionInput } from "./schemas";
-import { extractClaimCandidates } from "./extract";
+import { getExtractor } from "./extractors";
 import { getDatabase, withTransaction, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { computeSnapshotDiff } from "@/server/refresh/diff";
@@ -188,7 +188,8 @@ export async function runSourceIngestion(raw: IngestionInput): Promise<PipelineR
         );
       }
 
-      const candidates = await recordTool(tx, runId, "Clerk", "claims.extract", { snapshotId, contentType: input.contentType, parserProfile: input.parserProfile }, () => extractClaimCandidates(input));
+      const extraction = await recordTool(tx, runId, "Clerk", "claims.extract", { snapshotId, contentType: input.contentType, parserProfile: input.parserProfile }, () => getExtractor().extract(input));
+      const candidates = extraction.candidates;
       const resolved = await recordTool(tx, runId, "Resolver", "entity.resolve", { targetListingSlug: input.targetListingSlug, candidateCount: candidates.length }, () => candidates.map((candidate) => ({ ...candidate, subjectType: "listing", subjectId: target.id })));
       const changed = await recordTool(tx, runId, "Verifier", "claims.diff", { listing: target.slug, candidateCount: resolved.length }, () => resolved
         .map((candidate) => {
@@ -211,8 +212,8 @@ export async function runSourceIngestion(raw: IngestionInput): Promise<PipelineR
           await tx.query(
             `INSERT INTO evidence_claims
              (id, subject_type, subject_id, predicate, value_json, previous_value_json, source_snapshot_id, agent_run_id, extractor_version, model_confidence, verification_status, review_status, risk_level, rationale)
-             VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7,$8,'deterministic-v2',$9,'source-observed','pending',$10,$11)`,
-            [id, candidate.subjectType, candidate.subjectId, candidate.predicate, JSON.stringify(candidate.value), JSON.stringify(candidate.previousValue), snapshotId, runId, candidate.confidence, candidate.riskLevel, candidate.rationale],
+             VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7,$8,$9,$10,'source-observed','pending',$11,$12)`,
+            [id, candidate.subjectType, candidate.subjectId, candidate.predicate, JSON.stringify(candidate.value), JSON.stringify(candidate.previousValue), snapshotId, runId, extraction.extractorVersion, candidate.confidence, candidate.riskLevel, candidate.rationale],
           );
         }
         return { route: changed.length ? "human-review" : "no-change", claimIds };
