@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { QueryResultRow } from "pg";
 import { ingestionInputSchema, type ClaimCandidate, type IngestionInput } from "./schemas";
 import { getExtractor } from "./extractors";
+import { logShadowRun } from "./control-repository";
 import { getDatabase, withTransaction, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { computeSnapshotDiff } from "@/server/refresh/diff";
@@ -190,6 +191,10 @@ export async function runSourceIngestion(raw: IngestionInput): Promise<PipelineR
 
       const extraction = await recordTool(tx, runId, "Clerk", "claims.extract", { snapshotId, contentType: input.contentType, parserProfile: input.parserProfile }, () => getExtractor().extract(input));
       const candidates = extraction.candidates;
+      const shadow = extraction.meta?.shadow as { modelExtractorVersion?: string; modelCandidates?: unknown; agreement?: number; modelCostCents?: number } | undefined;
+      if (shadow?.modelExtractorVersion) {
+        await logShadowRun(tx, { agentRunId: runId, modelExtractorVersion: shadow.modelExtractorVersion, deterministicClaims: candidates, modelClaims: shadow.modelCandidates ?? [], agreementRate: shadow.agreement ?? 0, costCents: shadow.modelCostCents ?? 0 });
+      }
       const resolved = await recordTool(tx, runId, "Resolver", "entity.resolve", { targetListingSlug: input.targetListingSlug, candidateCount: candidates.length }, () => candidates.map((candidate) => ({ ...candidate, subjectType: "listing", subjectId: target.id })));
       const changed = await recordTool(tx, runId, "Verifier", "claims.diff", { listing: target.slug, candidateCount: resolved.length }, () => resolved
         .map((candidate) => {

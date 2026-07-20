@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { scoreCase, aggregateBenchmark } from "@/server/agents/benchmark";
 import type { ClaimCandidate } from "@/server/agents/schemas";
-import type { ExpectedClaim } from "@/server/agents/benchmark";
 
 function claim(predicate: ClaimCandidate["predicate"], value: string | number | boolean): ClaimCandidate {
   return { predicate, value, confidence: 0.9, rationale: "test", riskLevel: "standard" };
