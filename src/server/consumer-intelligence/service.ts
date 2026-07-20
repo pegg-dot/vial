@@ -1,5 +1,6 @@
 import type { Product } from "@/lib/types";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { sendPushToUser } from "@/server/push/delivery";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { getAlertsForListingSlugs } from "@/server/intelligence/repository";
 import { searchMarket } from "@/server/search/engine";
@@ -81,4 +82,4 @@ export async function generateMarketChangeSummary(userId:string,connection?:SqlC
   return generated;
 }
 
-export async function syncWatchlistNotifications(userId:string){const slugs=await getWatchlistSlugs(userId);const alerts=await getAlertsForListingSlugs(slugs,75);for(const alert of alerts){const relevance=alert.severity==="warning"?0.9:alert.category.includes("price")?0.72:0.68;await upsertUserNotification(userId,{category:alert.category,title:alert.title,body:alert.message,actionHref:`/products/${alert.listingSlug}`,relevanceScore:relevance,dedupeKey:`alert:${alert.id}`});}return listUserNotifications(userId,{limit:100});}
+export async function syncWatchlistNotifications(userId:string){const slugs=await getWatchlistSlugs(userId);const alerts=await getAlertsForListingSlugs(slugs,75);for(const alert of alerts){const relevance=alert.severity==="warning"?0.9:alert.category.includes("price")?0.72:0.68;await upsertUserNotification(userId,{category:alert.category,title:alert.title,body:alert.message,actionHref:`/products/${alert.listingSlug}`,relevanceScore:relevance,dedupeKey:`alert:${alert.id}`});try{await sendPushToUser(userId,{title:alert.title,body:alert.message,url:`/products/${alert.listingSlug}`,tag:`alert:${alert.id}`});}catch{/* best-effort: push must never break notification creation */}}return listUserNotifications(userId,{limit:100});}

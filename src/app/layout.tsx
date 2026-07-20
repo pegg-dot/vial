@@ -4,6 +4,7 @@ import { MarketplaceProvider } from "@/components/marketplace-state";
 import { CommerceCartProvider } from "@/components/commerce-cart-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 import { siteConfig } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { getCurrentPrincipal } from "@/server/auth/principal";
@@ -64,6 +65,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <MobileRetentionNav authenticated={Boolean(principal)} />
           </CommerceCartProvider>
         </MarketplaceProvider>
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );

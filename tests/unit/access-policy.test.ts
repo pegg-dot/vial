@@ -34,6 +34,12 @@ describe("deny-by-default access policy", () => {
     }
   });
 
+  it("keeps well-known + PWA paths open (crawlers, service worker, manifest, offline shell)", () => {
+    for (const path of ["/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/sw.js", "/offline"]) {
+      expect(accessDecision(path, null).allowed, `${path} should be public`).toBe(true);
+    }
+  });
+
   it("keeps public API routes open to anonymous callers", () => {
     for (const path of ["/api/v1/health", "/api/v1/catalog", "/api/v1/alerts", "/api/openapi.json", "/api/v1/auth/login"]) {
       const d = accessDecision(path, null);
