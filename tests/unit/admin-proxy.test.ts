@@ -37,4 +37,15 @@ describe("deny-by-default route perimeter",()=>{
     const crossOrigin=proxy(new NextRequest("http://localhost/api/v1/account/preferences",{method:"POST",headers:{origin:"https://evil.example"}}));
     expect(crossOrigin.status).toBe(403);
   });
+  it("returns 401 JSON (not an HTML redirect) when an anonymous caller hits a protected API route",async()=>{
+    const response=proxy(new NextRequest("http://localhost/api/v1/notifications"));
+    expect(response.status).toBe(401);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect((await response.json()).error).toBeTruthy();
+  });
+  it("still redirects an anonymous caller to login for a protected page route",()=>{
+    const response=proxy(new NextRequest("http://localhost/internal-export"));
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("/login?next=%2Finternal-export");
+  });
 });

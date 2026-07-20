@@ -3,6 +3,7 @@ import { getDatabase, withTransaction } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { evaluateCurrentCart } from "./activation";
 import { getFraudProvider, getPaymentProcessor, getTaxProvider } from "./providers";
+import { assertLiveCommerceEnabled } from "./production-gate";
 import { finalizePreparedCheckout, prepareApprovedCheckoutAttempt } from "./repository";
 import { allocateOrderSettlement } from "./settlement";
 
@@ -109,6 +110,7 @@ export async function createApprovedCheckout(input: {
     activationDecisionId: activation.decisionId,
   });
   const database = await getDatabase();
+  await assertLiveCommerceEnabled(database);
   const sellerCommission = cart.lines.reduce((sum, line) => sum + Math.round(line.unitPrice * line.quantity * 0.025 * 100) / 100, 0);
   const directAccount = activation.chargeModel === "direct"
     ? (await database.query<QueryResultRow & { provider_account_id: string }>(`SELECT provider_account_id FROM commerce_provider_accounts WHERE seller_id=$1`, [activation.sellerIds[0]])).rows[0]?.provider_account_id
