@@ -19,8 +19,10 @@
     "audit:roles": "node scripts/http-role-audit.mjs",
     "audit:accessibility": "node scripts/structural-accessibility-audit.mjs",
     "verify:v1": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility",
-    "check": "npm run verify:v6",
-    "verify": "npm run verify:v6",
+    "check": "npm run verify:v7",
+    "verify": "npm run verify:v7",
+    "verify:v7": "npm run verify:v6",
+    "extract:smoke": "node --import tsx scripts/model-extractor-smoke.mjs",
     "test:v2": "vitest run tests/unit/market-data.test.ts tests/integration/market-data-engine.test.ts --maxWorkers=1 --no-file-parallelism",
     "verify:v2": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run audit:market-data && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility",
     "audit:market-data": "node --import tsx scripts/market-data-audit.mjs",
@@ -42,6 +44,7 @@
     "verify:v6": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run audit:market-data && npm run audit:consumer-intelligence && npm run audit:seller-ops && npm run audit:seller-mcp && npm run audit:commerce-v5 && npm run audit:evidence-v6 && npm run audit:lab-mcp && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.112.3",
     "@electric-sql/pglite": "^0.5.4",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@stripe/react-stripe-js": "^6.8.0",
