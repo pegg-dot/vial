@@ -6,6 +6,7 @@ import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVend
 import { formatCurrency, vendorStatusLabel } from "@/lib/format";
 import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
+import { DataOriginBadge } from "@/components/data-origin-badge";
 import { EvidenceMatrix } from "@/components/evidence-matrix";
 import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductActions } from "@/components/product-actions";
@@ -80,6 +81,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="flex flex-col">
             <div className="flex flex-wrap items-center gap-2">
               <EvidenceBadge level={product.evidenceLevel} label={product.evidenceLabel} />
+              <DataOriginBadge origin={product.origin} />
               <span className="rounded-full bg-black/[.045] px-2.5 py-1 text-[11px] font-semibold text-black/55">{compound.category}</span>
             </div>
             <p className="mt-6 text-sm font-semibold text-[var(--muted)]">{vendor.name}</p>
@@ -91,7 +93,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <p className="text-xs font-medium text-[var(--muted)]">Observed price</p>
                 <div className="mt-1 flex items-baseline gap-2">
                   <p className="text-4xl font-semibold tracking-[-.055em]">{formatCurrency(product.price)}</p>
-                  {product.previousPrice && product.previousPrice !== product.price && <span className="text-sm text-[var(--muted)] line-through">{formatCurrency(product.previousPrice)}</span>}
+                  {product.previousPrice && product.previousPrice !== product.price ? <span className="text-sm text-[var(--muted)] line-through">{formatCurrency(product.previousPrice)}</span> : null}
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-sm font-semibold"><Star className="size-4 fill-current" /> {product.rating} <span className="font-normal text-[var(--muted)]">({product.reviewCount})</span></div>
@@ -104,9 +106,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <Fact icon={CalendarDays} label="Report" value={product.reportDate} />
             </div>
 
-            <ProductActions slug={product.slug} vendorName={vendor.name} />
+            <ProductActions slug={product.slug} vendorName={vendor.name} origin={product.origin} externalUrl={product.externalUrl} />
             <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
-              Buying happens on the vendor&rsquo;s own site, never on VIAL. In this prototype the data is fictional, so vendor links stay switched off.
+              {product.origin === "live"
+                ? "This is a real listing aggregated from the vendor's public page. Buying happens on their site, never on VIAL — and outbound links stay off until the affiliate step is approved."
+                : "Buying happens on the vendor's own site, never on VIAL. In this prototype the data is fictional, so vendor links stay switched off."}
             </p>
           </div>
         </div>

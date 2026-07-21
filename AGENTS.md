@@ -12,12 +12,16 @@ Preserve a premium, evidence-first market interface in which every public claim 
 
 ## Product boundaries
 
-- Do not add live peptide purchase links, checkout, dosage guidance, injection guidance, or human-use recommendations.
-- Keep all seeded companies, laboratories, prices, reviews, batches, and source fixtures clearly fictional.
+- Do not add live peptide purchase links, checkout, dosage guidance, injection guidance, or human-use recommendations. (Outbound affiliate links to a vendor's own page are the intended model but stay INERT until explicitly approved — the "Buy at vendor" control shows a notice, it does not navigate.)
+- Data provenance is explicit via the `origin` column ('demo' | 'live'), surfaced with the `DataOriginBadge`:
+  - **Demo** — seeded fictional companies, labs, prices, reviews, batches, and fixtures. These stay clearly marked demo.
+  - **Live** — records aggregated from real public third-party sources (vendor product pages, the Janoshik public COA feed) through the reviewed ingestion pipeline. Real data is permitted and MUST be marked Live; it is never presented as endorsed, verified-safe, or a recommendation. Every value on a Live record must have arrived through snapshot → review → publish, never seeded.
+  - Global "everything is fictional" copy is therefore wrong: say "demo unless marked Live."
 - Do not label a product safe, approved, pure, or physically verified from a document alone.
 - Unknown evidence must remain visible.
 - Do not use an age gate or research-use modal as an eligibility shortcut.
 - Do not present opportunity signals as recommendations to buy or use a product.
+- Registering a Live HTTP source is gated behind `VIAL_LIVE_INGEST_APPROVED=true` (or an explicit `{ approved: true }`); live fetching is intentional, never a silent default. Real hostnames must be allowlisted per policy.
 
 ## Architecture
 

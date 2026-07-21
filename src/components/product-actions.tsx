@@ -4,20 +4,29 @@ import { ArrowUpRight, Bookmark, GitCompareArrows, ShieldCheck } from "lucide-re
 import { useState } from "react";
 import { useMarketplace } from "./marketplace-state";
 
-export function ProductActions({ slug, vendorName }: { slug: string; vendorName: string }) {
+export function ProductActions({ slug, vendorName, origin = "demo", externalUrl }: { slug: string; vendorName: string; origin?: "demo" | "live"; externalUrl?: string }) {
   const { isWatched, isCompared, toggleWatchlist, toggleCompare } = useMarketplace();
   const [notice, setNotice] = useState<string | null>(null);
   const watched = isWatched(slug);
   const compared = isCompared(slug);
 
+  const destinationHost = externalUrl ? (() => { try { return new URL(externalUrl).host.replace(/^www\./, ""); } catch { return null; } })() : null;
+  const clickNotice =
+    origin === "live" && destinationHost
+      ? `In the live product this opens ${destinationHost} in a new tab — VIAL never sells anything or touches your money, it just hands you off to the vendor. Outbound links are switched on once Nate approves the affiliate step.`
+      : `In the live product this button opens ${vendorName}'s own site — VIAL never sells anything or touches your money. Vendor links stay off while the data is fictional.`;
+
   return (
     <div>
       <button
-        onClick={() => setNotice(`In the live product this button opens ${vendorName}'s own site — VIAL never sells anything or touches your money. Vendor links stay off while the data is fictional.`)}
+        onClick={() => setNotice(clickNotice)}
         className="flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#111214] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black/85"
       >
         Buy at {vendorName} <ArrowUpRight className="size-4" />
       </button>
+      {origin === "live" && destinationHost && (
+        <p className="mt-2 text-center text-xs text-[var(--muted)]">Real listing — would link to {destinationHost}</p>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <button
           onClick={() => toggleWatchlist(slug)}

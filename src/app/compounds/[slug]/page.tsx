@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/format";
 import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
+import { DataOriginBadge } from "@/components/data-origin-badge";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
 
@@ -41,8 +42,11 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <Link href="/market" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-black"><ArrowLeft className="size-4" /> Back to market</Link>
           <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[.14em] text-black/55">
-                <span className="size-2 rounded-full" style={{ background: compound.accent[0] }} /> {compound.category}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[.14em] text-black/55">
+                  <span className="size-2 rounded-full" style={{ background: compound.accent[0] }} /> {compound.category}
+                </div>
+                {compound.origin === "live" && <DataOriginBadge origin="live" />}
               </div>
               <h1 className="mt-5 text-6xl font-semibold leading-[.9] tracking-[-.075em] sm:text-8xl">{compound.name}</h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">{compound.description}</p>

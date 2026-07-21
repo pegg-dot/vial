@@ -7,6 +7,7 @@ import { getVendorReputationBySlug, type ReputationDimension } from "@/server/re
 import { vendorStatusLabel } from "@/lib/format";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
+import { DataOriginBadge } from "@/components/data-origin-badge";
 import { FollowButton } from "@/components/follow-button";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
@@ -42,7 +43,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700"><BadgeCheck className="size-3" /> {vendorStatusLabel(vendor.profileStatus)}</span>
-                  <span className="rounded-full bg-black/[.045] px-2.5 py-1 text-[11px] font-semibold text-black/55">Fictional profile</span>
+                  <DataOriginBadge origin={vendor.origin} />
                 </div>
                 <h1 className="mt-4 text-5xl font-semibold leading-[.94] tracking-[-.065em] sm:text-6xl">{vendor.name}</h1>
                 <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">{vendor.description}</p>
