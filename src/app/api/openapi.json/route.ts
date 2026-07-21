@@ -6,8 +6,8 @@ export function GET() {
     openapi: "3.1.0",
     info: {
       title: "VIAL Evidence API",
-      version: "9.0.0",
-      description: "Published fictional market data plus authenticated consumer-intelligence endpoints, and a bearer-authenticated public API (/api/public/v1) for programmatic read access and exports over published, review-gated data.",
+      version: "10.0.0",
+      description: "Published fictional market data plus authenticated consumer-intelligence endpoints, and a bearer-authenticated public API (/api/public/v1) for programmatic read access, exports, and the category-standard identity registry over published, review-gated data.",
     },
     servers: [{ url: siteUrl }],
     components: {
@@ -20,6 +20,8 @@ export function GET() {
       "/api/public/v1/catalog": { get: { summary: "Published catalog projection (scope market:read)", security: [{ apiKey: [] }], responses: { "200": { description: "Normalized catalog snapshot" }, "401": { description: "Invalid key" }, "403": { description: "Missing scope" }, "429": { description: "Rate limited" } } } },
       "/api/public/v1/signals": { get: { summary: "Published opportunity signals (scope signals:read)", security: [{ apiKey: [] }], parameters: [{ name: "limit", in: "query", schema: { type: "integer" } }], responses: { "200": { description: "Opportunity signals" }, "403": { description: "Missing scope" } } } },
       "/api/public/v1/export": { get: { summary: "Bounded export of catalog or signals (scope export:read)", security: [{ apiKey: [] }], parameters: [{ name: "dataset", in: "query", schema: { type: "string", enum: ["catalog", "signals"] } }, { name: "format", in: "query", schema: { type: "string", enum: ["json", "csv"] } }], responses: { "200": { description: "Export payload" }, "400": { description: "Bad dataset/format" }, "403": { description: "Missing scope" } } } },
+      "/api/public/v1/id/{vialId}": { get: { summary: "Resolve a canonical VIAL ID to its registry record (scope identity:read)", security: [{ apiKey: [] }], parameters: [{ name: "vialId", in: "path", required: true, schema: { type: "string" }, description: "e.g. vial:compound:bpc-157, vial:lab:aperture-analytical, vial:batch:hx-bpc-2607" }], responses: { "200": { description: "Registry record with aliases, provenance URL, and relationships" }, "403": { description: "Missing scope" }, "404": { description: "Unknown VIAL ID" } } } },
+      "/api/public/v1/resolve": { get: { summary: "Map a real-world label to a canonical VIAL ID (scope identity:read)", security: [{ apiKey: [] }], parameters: [{ name: "label", in: "query", required: true, schema: { type: "string" } }, { name: "type", in: "query", schema: { type: "string", enum: ["compound", "vendor", "product", "lab", "batch", "source"] } }], responses: { "200": { description: "Best match plus ranked candidates" }, "400": { description: "Missing label" }, "403": { description: "Missing scope" } } } },
 
       "/api/v1/catalog": {
         get: {

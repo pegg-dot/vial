@@ -3,6 +3,7 @@ import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection, withTransaction } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { ensureSellerOpsSeed, resolveSellerMembership } from "@/server/seller/ops";
+import { projectEvidenceRegistry } from "@/server/registry/repository";
 
 const onboardingSteps = ["identity", "quality", "scope", "methods", "team", "security", "agreement", "review"] as const;
 
@@ -156,6 +157,7 @@ async function seedEvidenceNetwork() {
   }
   await db.query(`INSERT INTO evidence_conflicts(id,passport_id,dimension,left_result_id,right_result_id,severity,status,explanation) VALUES('conflict:hx-bpc-qty',$1,'quantity','result:A:qty','result:B:qty','high','open','Two separately sourced samples produced materially different measured quantities. The passport preserves both results rather than averaging them away.') ON CONFLICT(id) DO NOTHING`, [passportId]);
   await recomputePassport(passportId, db);
+  await projectEvidenceRegistry(db);
 }
 
 export async function ensureEvidenceNetworkSeed() {

@@ -1,12 +1,14 @@
 import type { QueryResultRow } from "pg";
 import type { SqlConnection } from "@/server/db/client";
 import { rebuildCanonicalGraph } from "./graph";
+import { projectMarketDataRegistry } from "@/server/registry/repository";
 import { seedBenchmarkProgram, runParserBenchmark } from "./benchmarks";
 import { recomputeFreshness, recomputeSourceReliability, seedFreshnessPolicies } from "./quality";
 import { rebuildSearchIndex, seedSearchEvaluations, seedSearchSynonyms } from "@/server/search/engine";
 
 export async function seedMarketDataEngine(db:SqlConnection){
  await rebuildCanonicalGraph(db);
+ await projectMarketDataRegistry(db);
  await seedFreshnessPolicies(db);
  await seedBenchmarkProgram(db);
  await seedSearchSynonyms(db);
