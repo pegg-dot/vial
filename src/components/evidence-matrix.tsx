@@ -2,6 +2,15 @@ import type { EvidenceDimension } from "@/lib/types";
 import { Check, CircleAlert, CircleDashed, Minus } from "lucide-react";
 
 export function EvidenceMatrix({ evidence }: { evidence: EvidenceDimension[] }) {
+  if (evidence.length === 0) {
+    return (
+      <div className="rounded-[24px] border border-dashed border-black/15 bg-black/[.015] px-5 py-8 text-center">
+        <CircleDashed className="mx-auto size-6 text-black/30" />
+        <p className="mt-3 text-sm font-semibold">No independent lab evidence located yet</p>
+        <p className="mt-1 text-sm leading-5 text-[var(--muted)]">We track this listing&rsquo;s price and availability from the vendor&rsquo;s public page. No third-party test has been matched to it yet — unknown stays visible.</p>
+      </div>
+    );
+  }
   return (
     <div className="overflow-hidden rounded-[24px] border border-black/[.07] bg-white">
       {evidence.map((dimension, index) => {

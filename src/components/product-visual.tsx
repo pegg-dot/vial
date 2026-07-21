@@ -43,7 +43,7 @@ export function ProductVisual({
           <div className="absolute bottom-[9px] left-1/2 h-[21px] w-[86px] -translate-x-1/2 rounded-[50%] border border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,.6),rgba(103,118,141,.12))]" />
         </div>
       </div>
-      <div className="absolute bottom-4 left-4 rounded-full border border-white/70 bg-white/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.16em] text-black/45 backdrop-blur">Concept render</div>
+      
     </div>
   );
 }

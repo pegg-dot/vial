@@ -3,7 +3,7 @@ import { MarketClient } from "@/components/market-client";
 
 export const metadata: Metadata = {
   title: "Market",
-  description: "Browse and compare normalized fictional peptide research listings with evidence and source context.",
+  description: "Browse and compare normalized peptide research listings (demo unless marked Live) with evidence and source context.",
 };
 
 export default function MarketPage() {
@@ -13,7 +13,7 @@ export default function MarketPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">The market</p>
         <h1 className="mt-3 text-5xl font-semibold leading-[.95] tracking-[-.065em] sm:text-6xl">The market, on one screen.</h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">
-          Every listing from every vendor, side by side &mdash; price, lab test, batch, and availability. All listings in this prototype are fictional.
+          Every listing from every vendor, side by side &mdash; price, lab test, batch, and availability. Listings are demo data unless marked Live.
         </p>
       </div>
       <MarketClient />

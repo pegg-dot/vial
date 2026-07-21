@@ -136,6 +136,7 @@ async function applyApprovedClaim(tx: SqlConnection, listing: ListingRow, predic
              price = $2,
              price_history = $3::jsonb,
              last_checked = 'just now',
+             evidence_label = CASE WHEN evidence_label = 'Awaiting first check' THEN 'Vendor page checked' ELSE evidence_label END,
              observed_at = NOW(),
              updated_at = NOW()
          WHERE id = $1`,
@@ -148,7 +149,9 @@ async function applyApprovedClaim(tx: SqlConnection, listing: ListingRow, predic
         throw new Error("Availability is outside the supported catalog vocabulary");
       }
       await tx.query(
-        `UPDATE listings SET availability = $2, last_checked = 'just now', observed_at = NOW(), updated_at = NOW() WHERE id = $1`,
+        `UPDATE listings SET availability = $2, last_checked = 'just now',
+             evidence_label = CASE WHEN evidence_label = 'Awaiting first check' THEN 'Vendor page checked' ELSE evidence_label END,
+             observed_at = NOW(), updated_at = NOW() WHERE id = $1`,
         [listing.id, String(value)],
       );
       break;

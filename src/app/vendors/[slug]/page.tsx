@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!vendor) return {};
   return {
     title: vendor.name,
-    description: `View the fictional ${vendor.name} catalog, documentation freshness, profile status, and market history.`,
+    description: `View the ${vendor.origin === "live" ? "real" : "demo"} ${vendor.name} catalog, documentation freshness, profile status, and market history.`,
   };
 }
 
@@ -48,9 +48,9 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                 <h1 className="mt-4 text-5xl font-semibold leading-[.94] tracking-[-.065em] sm:text-6xl">{vendor.name}</h1>
                 <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">{vendor.description}</p>
                 <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
-                  <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>
-                  <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> First observed {vendor.founded}</span>
-                  <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>
+                  {vendor.location && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>}
+                  {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> First observed {vendor.founded}</span>}
+                  {vendor.lastObserved && <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>}
                 </div>
                 <div className="mt-6"><FollowButton entityType="vendor" entitySlug={slug} initialFollowed={followed} authenticated={Boolean(principal)} /></div>
               </div>
@@ -58,8 +58,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             <div className="rounded-[28px] border border-black/[.07] bg-white p-6">
               <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">Profile signal</p>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <VendorStat icon={ShieldCheck} value={`${vendor.documentationCurrent}%`} label="Tests current" />
-                <VendorStat icon={PackageSearch} value={String(vendor.productCount)} label="Products tracked" />
+                <VendorStat icon={ShieldCheck} value={vendor.documentationCurrent > 0 ? `${vendor.documentationCurrent}%` : "—"} label="Tests current" />
+                <VendorStat icon={PackageSearch} value={String(vendor.productCount)} label={vendor.productCount === 1 ? "Product tracked" : "Products tracked"} />
               </div>
               <p className="mt-4 text-[11px] leading-4 text-[var(--muted)]">No single star rating here — just what we actually know about this vendor, piece by piece, below.</p>
             </div>
@@ -123,7 +123,7 @@ const PLAIN_DIMENSION_LABELS: Record<string, string> = {
   evidence_corroboration: "Independently tested?",
   operational_reliability: "Track record shipping",
   community_signal: "What buyers say",
-  risk_flags: "Scam & red flags",
+  open_risk_flags: "Scam & red flags",
 };
 
 function ReputationTile({ dimension }: { dimension: ReputationDimension }) {

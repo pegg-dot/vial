@@ -3,10 +3,10 @@ import { BookOpen, CircleHelp, Search, ShieldQuestion } from "lucide-react";
 import Link from "next/link";
 export const metadata:Metadata={title:"Help center",description:"Learn how to search, compare, interpret evidence, and use VIAL responsibly."};
 const faqs=[
-["Does VIAL sell products?","No. VIAL is where you research the purchase — when you're ready to buy, we link you to the vendor's own site. VIAL never handles payment or product. (In this prototype, vendor links are switched off because the data is fictional.)"],
+["Does VIAL sell products?","No. VIAL is where you research the purchase — when you're ready to buy, we link you to the vendor's own site. VIAL never handles payment or product. (In this prototype, outbound vendor links are switched off until the affiliate step is live.)"],
 ["What does issuer confirmed mean?","The lab named on a report confirmed it really issued it — the paper is genuine. It doesn't prove the vial you'd receive matches the tested sample."],
 ["Why is there no safety score?","Because identity, dose, sterility, and batch matching are different questions. One blended score would hide whichever answer is missing — so we show each answer separately, including unknown."],
-["Are the vendors and labs real?","No. Every vendor, listing, issuer, price, batch, rating, and review in this build is fictional demonstration data."],
+["Are the vendors and labs real?","Records are demo data unless marked Live. Live records are aggregated from real public sources (vendor pages, the Janoshik COA feed) — the labs and most vendors are still demo. A listing is never an endorsement either way."],
 ["Can VIAL recommend a compound?","No. VIAL organizes market and evidence information. It does not provide medical advice, dosing guidance, treatment selection, or product-use recommendations."],
 ["How do updates reach the public record?","Software captures a timestamped snapshot of the source and extracts the claims. A human reviewer approves each specific change before it appears publicly."],
 ];

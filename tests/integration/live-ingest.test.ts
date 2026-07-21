@@ -115,6 +115,9 @@ describe("live BPC-157 ingest end to end", () => {
     expect(after?.price).toBe(34.99);
     expect(after?.availability).toBe("In stock");
     expect(after?.origin).toBe("live"); // origin is preserved through publication
+    // Once a real price/availability publishes, the placeholder evidence label must
+    // advance — a listing can't show "$35 · checked just now · Awaiting first check".
+    expect(after?.evidenceLabel).not.toBe("Awaiting first check");
   });
 
   it("holds an out-of-range price for a human instead of publishing it", async () => {

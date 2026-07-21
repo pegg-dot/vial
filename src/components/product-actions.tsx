@@ -13,7 +13,7 @@ export function ProductActions({ slug, vendorName, origin = "demo", externalUrl 
   const destinationHost = externalUrl ? (() => { try { return new URL(externalUrl).host.replace(/^www\./, ""); } catch { return null; } })() : null;
   const clickNotice =
     origin === "live" && destinationHost
-      ? `In the live product this opens ${destinationHost} in a new tab — VIAL never sells anything or touches your money, it just hands you off to the vendor. Outbound links are switched on once Nate approves the affiliate step.`
+      ? `In the live product this opens ${destinationHost} in a new tab — VIAL never sells anything or touches your money, it just hands you off to the vendor. Outbound vendor links are switched on once the affiliate step is live.`
       : `In the live product this button opens ${vendorName}'s own site — VIAL never sells anything or touches your money. Vendor links stay off while the data is fictional.`;
 
   return (

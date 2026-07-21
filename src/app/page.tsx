@@ -56,9 +56,9 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
-            <Metric label="Listings tracked" value={String(products.length)} detail="Fictional demo catalog" icon={Database} />
-            <Metric label="Vendors tracked" value={String(vendors.length)} detail="With full price and test history" icon={Eye} />
-            <Metric label="Median price" value={formatCurrency(products.reduce((sum, product) => sum + product.price, 0) / products.length)} detail="Across active listings" icon={ChartNoAxesCombined} />
+            <Metric label="Listings tracked" value={String(products.length)} detail="Demo + live listings" icon={Database} />
+            <Metric label="Vendors tracked" value={String(vendors.length)} detail="Demo and live vendors" icon={Eye} />
+            <Metric label="Average price" value={formatCurrency(products.reduce((sum, product) => sum + product.price, 0) / products.length)} detail="Across active listings" icon={ChartNoAxesCombined} />
             <Metric label="Current lab tests" value={`${Math.round((products.filter((product) => !["stale", "public-only"].includes(product.evidenceLevel)).length / products.length) * 100)}%`} detail="Listings with an up-to-date report" icon={ShieldCheck} />
           </div>
         </div>

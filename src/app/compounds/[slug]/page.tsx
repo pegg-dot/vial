@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!compound) return {};
   return {
     title: `${compound.name} market`,
-    description: `Compare fictional ${compound.name} research listings, price history, and documentation coverage.`,
+    description: `Compare ${compound.name} research listings, price history, and documentation coverage.`,
   };
 }
 

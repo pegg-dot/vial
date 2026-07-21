@@ -97,7 +97,7 @@ async function listingContext(tx: SqlConnection, listingId: string) {
 
 async function recomputeCompound(tx: SqlConnection, context: ListingContext, parent: { id: string; rootEventId: string }) {
   const rows = await tx.query<QueryResultRow & { price: string | number; availability: string; report_date: string; report_confirmed: boolean }>(
-    `SELECT l.price, l.availability, l.report_date, l.report_confirmed
+    `SELECT l.price, l.availability, l.report_date, l.report_confirmed, l.price_history
      FROM listings l JOIN products p ON p.id = l.product_id
      WHERE p.compound_id = $1 AND p.status = 'active'`,
     [context.compound_id],
@@ -109,9 +109,19 @@ async function recomputeCompound(tx: SqlConnection, context: ListingContext, par
   const available = rows.rows.filter((row) => row.availability !== "Unavailable").length;
   const coverage = rows.rows.length ? Math.round((documented / rows.rows.length) * 100) : 0;
   const spread = prices.length > 1 && midpoint > 0 ? ((Math.max(...prices) - Math.min(...prices)) / midpoint) * 100 : 0;
+  // Recompute price_change from observed listing history instead of leaving the seeded
+  // value frozen (which made a compound show e.g. "-4.8%" that corresponded to nothing).
+  // It's the median per-listing % move across listings with at least two observations.
+  const moves = rows.rows
+    .map((row) => {
+      const h = Array.isArray(row.price_history) ? row.price_history.map(Number) : (() => { try { return JSON.parse(String(row.price_history)).map(Number); } catch { return []; } })();
+      return h.length >= 2 && h[0] > 0 ? ((h[h.length - 1] - h[0]) / h[0]) * 100 : null;
+    })
+    .filter((v): v is number => v !== null && Number.isFinite(v));
+  const priceChange = moves.length ? Number(median(moves).toFixed(1)) : 0;
   await tx.query(
-    `UPDATE compounds SET listing_count=$2, median_price=$3, documentation_coverage=$4, updated_at=NOW() WHERE id=$1`,
-    [context.compound_id, rows.rows.length, midpoint, coverage],
+    `UPDATE compounds SET listing_count=$2, median_price=$3, documentation_coverage=$4, price_change=$5, updated_at=NOW() WHERE id=$1`,
+    [context.compound_id, rows.rows.length, midpoint, coverage, priceChange],
   );
   const event = await createChildEvent(tx, parent, {
     eventType: "compound.metrics.recalculated",

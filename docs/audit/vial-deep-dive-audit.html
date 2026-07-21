@@ -1,0 +1,246 @@
+<title>VIAL — Deep-Dive Audit</title>
+<style>
+  :root {
+    --ground: #F5F2EC; --panel: #FBFAF6; --panel-2: #F0ECE3;
+    --ink: #17161C; --ink-soft: #413D4A; --muted: #6E6979; --hair: #E2DCCF; --hair-strong: #D3CCBB;
+    --violet: #6D4AFF; --violet-soft: #efeaff; --blue: #2E6BE6; --mint: #0E9B87; --amber: #B4740F; --red: #CF443B;
+    --p0-bg: #fbe6e3; --p0-ink: #ac2e26;
+    --p1-bg: #f7efdc; --p1-ink: #8f5a06;
+    --p2-bg: #e6eefc; --p2-ink: #1f56c4;
+    --good-bg: #e4f5f0; --good-ink: #0a6f61;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --maxw: 76ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #131218; --panel: #1a1922; --panel-2: #211f2b;
+      --ink: #F1EEF7; --ink-soft: #C7C2D2; --muted: #928DA0; --hair: #2b2936; --hair-strong: #3a3748;
+      --violet: #9d86ff; --violet-soft: #241f38; --blue: #6f9bff; --mint: #34c9b4; --amber: #d99a35; --red: #f0726a;
+      --p0-bg: #38201d; --p0-ink: #f0837b; --p1-bg: #322612; --p1-ink: #e0a94a;
+      --p2-bg: #16233f; --p2-ink: #85acff; --good-bg: #123029; --good-ink: #4fd6bf;
+    }
+  }
+  :root[data-theme="light"] { --ground:#F5F2EC;--panel:#FBFAF6;--panel-2:#F0ECE3;--ink:#17161C;--ink-soft:#413D4A;--muted:#6E6979;--hair:#E2DCCF;--hair-strong:#D3CCBB;--violet:#6D4AFF;--violet-soft:#efeaff;--blue:#2E6BE6;--mint:#0E9B87;--amber:#B4740F;--red:#CF443B;--p0-bg:#fbe6e3;--p0-ink:#ac2e26;--p1-bg:#f7efdc;--p1-ink:#8f5a06;--p2-bg:#e6eefc;--p2-ink:#1f56c4;--good-bg:#e4f5f0;--good-ink:#0a6f61; }
+  :root[data-theme="dark"] { --ground:#131218;--panel:#1a1922;--panel-2:#211f2b;--ink:#F1EEF7;--ink-soft:#C7C2D2;--muted:#928DA0;--hair:#2b2936;--hair-strong:#3a3748;--violet:#9d86ff;--violet-soft:#241f38;--blue:#6f9bff;--mint:#34c9b4;--amber:#d99a35;--red:#f0726a;--p0-bg:#38201d;--p0-ink:#f0837b;--p1-bg:#322612;--p1-ink:#e0a94a;--p2-bg:#16233f;--p2-ink:#85acff;--good-bg:#123029;--good-ink:#4fd6bf; }
+
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--serif); font-size:18px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px 120px; }
+  .col { max-width: var(--maxw); }
+  h1,h2,h3,.eyebrow,.chip,.u,.sev { font-family: var(--sans); }
+  h1 { font-size: clamp(2.2rem,5.5vw,3.3rem); line-height:1; letter-spacing:-.045em; font-weight:800; margin:0; text-wrap:balance; }
+  h2 { font-size: clamp(1.4rem,3vw,1.9rem); letter-spacing:-.03em; font-weight:750; margin:0 0 .2em; text-wrap:balance; }
+  h3 { font-size: 1.08rem; letter-spacing:-.015em; font-weight:700; margin:0 0 .3em; }
+  p { margin: 0 0 .9em; } a { color: var(--violet); } strong { font-weight:700; color:var(--ink); }
+  .lede { font-size:1.2rem; color:var(--ink-soft); } .muted { color:var(--muted); }
+  .eyebrow { font-size:.72rem; text-transform:uppercase; letter-spacing:.18em; font-weight:700; color:var(--violet); margin:0 0 .9rem; }
+  .u { font-family:var(--mono); font-size:.82em; background:var(--panel-2); border:1px solid var(--hair); border-radius:6px; padding:.05em .38em; color:var(--ink-soft); white-space:nowrap; }
+  header.hero { padding: 80px 0 34px; border-bottom:1px solid var(--hair); }
+  .kicker { display:inline-flex; align-items:center; gap:.55rem; font-family:var(--sans); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.16em; color:var(--muted); margin-bottom:24px; }
+  .kicker .dot { width:8px; height:8px; border-radius:50%; background:var(--red); box-shadow:0 0 0 4px var(--p0-bg); }
+  section { padding: 48px 0 0; scroll-margin-top: 20px; }
+  .rule { height:1px; background:var(--hair); border:0; margin:48px 0 0; }
+  .verdict { margin-top:30px; background:var(--panel); border:1px solid var(--hair-strong); border-left:4px solid var(--red); border-radius:14px; padding:24px 28px; }
+  .verdict h2 { font-size:1.1rem; color:var(--red); margin-bottom:.5rem; }
+  .verdict p:last-child { margin-bottom:0; }
+
+  nav.toc { position:sticky; top:0; background:color-mix(in srgb, var(--ground) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--hair); z-index:5; margin:0 -24px; padding:11px 24px; }
+  nav.toc ol { list-style:none; display:flex; flex-wrap:wrap; gap:4px 18px; margin:0 auto; padding:0; max-width:1000px; font-family:var(--sans); font-size:.78rem; font-weight:600; }
+  nav.toc a { color:var(--muted); text-decoration:none; } nav.toc a:hover { color:var(--violet); }
+
+  .sev { display:inline-flex; align-items:center; gap:.35em; font-size:.66rem; font-weight:800; letter-spacing:.06em; padding:.24em .5em; border-radius:6px; }
+  .p0 { background:var(--p0-bg); color:var(--p0-ink); } .p1 { background:var(--p1-bg); color:var(--p1-ink); } .p2 { background:var(--p2-bg); color:var(--p2-ink); } .good { background:var(--good-bg); color:var(--good-ink); }
+
+  .find { border:1px solid var(--hair-strong); border-radius:14px; padding:20px 22px; margin-top:16px; background:var(--panel); }
+  .find .top { display:flex; align-items:flex-start; gap:.7rem; margin-bottom:.5rem; }
+  .find h3 { margin:0; flex:1; }
+  .find .why { color:var(--ink-soft); }
+  .find .ev { font-family:var(--mono); font-size:.76rem; color:var(--muted); margin-top:.5em; display:block; word-break:break-word; }
+  .tag { font-family:var(--sans); font-size:.64rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+  .mine { display:inline-block; font-family:var(--sans); font-size:.6rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--amber); border:1px solid var(--amber); border-radius:5px; padding:.1em .4em; margin-left:.4em; vertical-align:middle; }
+
+  ul.clean { padding-left:1.15em; } ul.clean li { margin-bottom:.5em; }
+  .goodgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px; }
+  @media (max-width:720px){ .goodgrid { grid-template-columns:1fr; } }
+  .goodcard { background:var(--good-bg); border-radius:12px; padding:14px 16px; }
+  .goodcard h3 { color:var(--good-ink); font-size:.95rem; margin-bottom:.2em; } .goodcard p { font-size:.9rem; margin:0; color:var(--ink-soft); }
+  .steps { counter-reset:s; list-style:none; padding:0; margin:18px 0 0; }
+  .steps li { counter-increment:s; position:relative; padding:12px 0 12px 44px; border-top:1px solid var(--hair); }
+  .steps li::before { content:counter(s); position:absolute; left:0; top:12px; width:28px; height:28px; display:grid; place-items:center; background:var(--violet); color:#fff; border-radius:8px; font-family:var(--sans); font-weight:700; font-size:.85rem; }
+  html { scroll-behavior:smooth; } @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker"><span class="dot"></span> VIAL · Deep-dive audit · 21 Jul 2026 · 6 parallel auditors</div>
+    <h1>What's not done, not self-serve,<br>or doesn't add up — the honest list.</h1>
+    <p class="lede col" style="margin-top:20px">Six read-only agents went through self-serve, the buyer journey, frontend/UI, backend completeness, real/demo coherence, and the operator side — reading code and probing the running app with the real BPC-157 data live. This is the deduplicated, prioritized result. The good news: the core machinery is genuinely well-built. The issues cluster into five themes.</p>
+
+    <div class="verdict col">
+      <h2>The one-line verdict</h2>
+      <p>The buyer <em>research</em> experience works well for an anonymous guest, and the provenance/evidence/lab machinery underneath is real and strong. But <strong>the product is not launch-ready and not self-serve</strong>: nobody can create an account, the real data we just added makes real vendors look <em>less</em> trustworthy than the fake ones, an entire abandoned Stripe marketplace contradicts the affiliate model, and several headline surfaces silently show only demo data on a real deploy. <strong>5 P0 themes, ~16 P1s, ~11 P2s.</strong> None are fatal; all are fixable.</p>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Sections">
+    <ol>
+      <li><a href="#p0">5 blockers (P0)</a></li>
+      <li><a href="#p1">Major (P1)</a></li>
+      <li><a href="#p2">Polish (P2)</a></li>
+      <li><a href="#good">What's good</a></li>
+      <li><a href="#next">Sequencing</a></li>
+    </ol>
+  </nav>
+
+  <section id="p0">
+    <p class="eyebrow">The five blockers</p>
+    <div class="col"><h2>P0 — these break the mission or the launch</h2></div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p0">P0 · 1</span><h3>The real data makes real vendors look like the scams</h3></div>
+      <p class="why">The single most important finding, because it inverts the entire "don't get scammed" purpose. On <span class="u">/compounds/bpc-157</span>, the <strong>real</strong> Eternal Peptides ($34.99, cheapest, actually real) shows an <strong>empty evidence matrix, "★ 0 (0)" rating, "0% tests current," and "Open risk flags: 2"</strong> — while the <strong>fictional</strong> Northstar shows a full evidence matrix and "★ 4.8 (184)." The app steers buyers toward the fabricated vendors. Four compounding causes: the product-detail hero renders the 0-rating unconditionally (the card was already fixed, the detail page wasn't); the evidence matrix has no empty state so it's a blank white box; the reputation "risk flags" dimension counts benign Curator opportunity signals as "risk signals and fraud cases" and pins "2 open flags" on real companies; and freshly-ingested vendors read as "0% documented" (status <em>established</em>) instead of "unknown."</p>
+      <span class="ev">products/[slug]/page.tsx:99 · evidence-matrix.tsx:7 · reputation/repository.ts:106-119 (+ label-key bug: open_risk_flags vs risk_flags) · reputation/repository.ts:60-69</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p0">P0 · 2</span><h3>Nobody can create an account — for any role</h3></div>
+      <p class="why">There is <strong>no signup anywhere</strong> — no <span class="u">/register</span>, no create-account API, no "create account" link on the login page. The only accounts are 5 hardcoded demo users, seeded only when <span class="u">NODE_ENV!=="production"</span>. On a real prod deploy there are <strong>zero accounts and no way to make one</strong>. Every durable feature (account, saved searches, alerts, For-You) is unreachable by a real person. Vendor and lab "self-serve onboarding" are demo skins over single seeded tenants — an invited teammate gets no credentials and still can't log in. And adding a real vendor/source needs an engineer running a script with an env flag; no UI, even admin, can do it. <strong>The aggregator cannot aggregate a new vendor, and no user can become a user, without an engineer.</strong></p>
+      <span class="ev">auth/foundation-seed.ts (only accounts) · login/page.tsx (no signup) · seller/layout.tsx:7-9 · lab/layout.tsx:5 · scripts/ingest-real-bpc157.mjs (script-only)</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p0">P0 · 3</span><h3>An abandoned Stripe marketplace contradicts the whole affiliate pivot</h3></div>
+      <p class="why">VIAL ships a complete, wired, seeded transactional marketplace — cart → checkout → orders → settlements → payouts → disputes → underwriting → returns → fulfillment — that directly contradicts "VIAL never sells anything." It's ~33% of the admin surface, most of the seller experience (payments, payouts, chargeback evidence — all meaningless under affiliate-out), and a <strong>live-but-orphaned checkout you can still reach by URL</strong> even though the product copy swears it doesn't exist. The cart provider even fires <span class="u">/api/v1/commerce/cart</span> on every authenticated page load for this dead feature. Money is safely gated, but it's a large contradiction, maintenance burden, and trust hazard. Needs an explicit decision: <strong>delete, quarantine as "legacy," or revive.</strong></p>
+      <span class="ev">app/checkout · app/cart · commerce-cart-provider.tsx:44,52 · seller-shell nav (payments/payouts/disputes) · ~15 of 43 admin pages</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p0">P0 · 4</span><h3>Headline surfaces silently show only demo data on a real deploy</h3></div>
+      <p class="why">Three independent runtime gaps mean the real data can't actually flow through the product's advertised surfaces: <strong>(a) No runtime path to real evidence</strong> — batch passports are seed-only, so the live vendors can <em>never</em> get a real lab passport; the flagship "How we check" trust surface is permanently the one fictional Aperture demo. <strong>(b) No reliable scheduler</strong> — refresh + signals fire only from one Vercel cron; the checked-in <span class="u">docker-compose.yml</span> has none, plus a <span class="u">CRON_SECRET</span> footgun that 401s legit callers — so live prices go stale and signals freeze (the 5 signals showing are a stale one-off from a manual click). <strong>(c) Live entities never enter the registry</strong> — the public "citeable IDs" API resolves only demo data and excludes 100% of the real data.</p>
+      <span class="ev">evidence-network/repository.ts:152 (seed-only) · api/internal/cron/refresh/route.ts:8-17 · docker-compose.yml · registry projects from canonical_entities at seed only; live ingest never mints IDs</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p0">P0 · 5</span><h3>Wrong "observed" market numbers on real data <span class="mine">from the ingest</span></h3></div>
+      <p class="why">The publication cascade recomputes a compound's listing count, median, and doc-coverage on publish — but <strong>not <span class="u">price_change</span></strong>. So BPC-157 correctly recomputed to 6 listings / $46 median / 33% docs, but still renders the <strong>seeded "−4.8%"</strong> as a live "observed" trend (the real median actually dropped ~11.5% when the live vendors landed). It shows on the compound header and animates in the home ticker. Any future price-driven compound shows a stale trend forever. (Also: the home "Median price" tile is actually computing the mean.)</p>
+      <span class="ev">intelligence/cascade.ts:112-114 (price_change missing from recompute) · compounds/[slug]/page.tsx:62-64 · page.tsx:61,74</span>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="p1">
+    <p class="eyebrow">Major issues</p>
+    <div class="col"><h2>P1 — misleading, incoherent, or high-friction</h2>
+    <p class="muted">Grouped by theme. Several corroborated by multiple auditors.</p></div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>"Everything is fictional" copy still sits on top of real data</h3></div>
+      <p class="why">My earlier labeling sweep fixed the body copy but missed the <strong>static meta, hero, and FAQ</strong> copy. Now categorically false on real vendors: the market hero "All listings in this prototype are fictional," the Help FAQ "every vendor, listing, price… is fictional," <span class="u">/operations</span> "companies remain fictional," the home metric sublabel "Fictional demo catalog," and — worst for SEO — the page <span class="u">&lt;meta&gt;</span> + JSON-LD describe the real Eternal/Bluum/Biotech/BPC-157 pages as "fictional" to crawlers.</p>
+      <span class="ev">market/page.tsx:6,16 · help/page.tsx:9 · operations/page.tsx:16 · page.tsx:59 · products/[slug]/page.tsx:29,50 · vendors/[slug]/page.tsx:23 · compounds/[slug]/page.tsx:22 · layout.tsx:28,35</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>Buyer-facing copy leaks your name <span class="mine">mine — fix first</span></h3></div>
+      <p class="why">Clicking "Buy at vendor" on a live listing shows: <em>"Outbound links are switched on once <strong>Nate</strong> approves the affiliate step."</em> An internal name in end-user copy. This is mine from the affiliate-CTA work — trivial one-line fix.</p>
+      <span class="ev">product-actions.tsx:16</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>"Awaiting first check" contradicts the real price it just fetched</h3></div>
+      <p class="why">Approving a price/availability claim updates price, availability, and "checked just now" — but never advances <span class="u">evidence_level</span>/<span class="u">evidence_label</span>. So a live listing shows a real fetched $35, "In stock," "Checked just now," <em>and</em> the badge "Awaiting first check" simultaneously. Contradictory on its face.</p>
+      <span class="ev">review/repository.ts:126-185 (applyApprovedClaim never touches evidence_level) · live-sources.ts:110-113</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>The watchlist silently drops a buyer's saves at sign-in</h3></div>
+      <p class="why">A guest "Watch" writes to localStorage and the header badge increments — but "Saved" redirects to login, the localStorage watchlist is <strong>never merged to the server on sign-in</strong>, and the page even promises "synced across your devices." The core save-for-later action appears to work, then evaporates exactly when the buyer commits.</p>
+      <span class="ev">marketplace-state.tsx:45-54,76-83 · site-header.tsx:64-67 · watchlist/page.tsx:17</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>Extractor junk accumulates in review forever — and would publish if approved</h3></div>
+      <p class="why">Every live refresh files garbage claims the deterministic parser scraped from real HTML — the 5 currently pending are <span class="u">batchCode="SYNTHESIS"/"TRACKING"/"TING"</span> and <span class="u">reportIssuer="Reports Science Contact Us Bluum Search Login Cart…"</span>. There's no auto-reject or TTL, so on a real deploy (no reviewer) the queue grows unbounded — and a human who clicks approve would publish page-nav boilerplate as a real vendor's batch code.</p>
+      <span class="ev">no auto-reject anywhere in src/server · ingest/bpc157.ts approves only price/availability/shipping · extract.ts (deterministic parser can't handle messy real HTML)</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>~324KB of finished public product is unreachable in-app</h3></div>
+      <p class="why"><span class="u">/signals</span>, <span class="u">/operations</span>, and <span class="u">/developers</span> are full, polished pages linked from <em>nowhere</em> in the nav or footer — only from the sitemap, so Google can crawl them but a buyer can't find them (and SEO traffic lands with no funnel back). Either wire them in or explicitly retire them.</p>
+      <span class="ev">site-header.tsx / site-footer.tsx / mobile-retention-nav.tsx (no links) · only in sitemap.ts:10-11 + access-policy.ts:16-17</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>No loading or error states across all 119 pages</h3></div>
+      <p class="why">Zero <span class="u">loading.tsx</span> / <span class="u">error.tsx</span> for 119 routes, 58 of them dynamic DB-reading server components. A slow DB = blank hung navigation with no skeleton; any repository throw bubbles to Next's default error screen — no styled recovery anywhere. (A clean global 404 does exist.)</p>
+      <span class="ev">find src/app -name loading.tsx / error.tsx → 0 · 58 force-dynamic pages</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>Signals are mostly artifacts of the demo/live mixing</h3></div>
+      <p class="why">Three of the five "What's moving" signals a buyer is told are "worth knowing before you buy" are just "vendor evidence gap — 0 of 1 observed products have a dated public report" for the three vendors we <em>just</em> started tracking — not real market events. Combined with P0-4b (the sweep never runs automatically), this surface is both stale and noisy.</p>
+      <span class="ev">/signals · reputation/cascade-generated opportunity signals</span>
+    </div>
+
+    <div class="find col">
+      <div class="top"><span class="sev p1">P1</span><h3>Placeholder "Concept render" vials render on real listings</h3></div>
+      <p class="why">There are zero real images in the codebase — every product tile is a generated CSS vial stamped "VIAL index" + a "Concept render" chip. On a real vendor's listing this reads as prototype/unfinished. Also: fabricated "8-week price 0.0%" sparkline built from a single same-day point on live listings, and the compounds/vendors <em>list</em> pages don't badge live vs demo at all.</p>
+      <span class="ev">product-visual.tsx:38,46 · products/[slug]/page.tsx:42-44,134-139 · vendors/page.tsx + compounds/page.tsx (no DataOriginBadge)</span>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="p2">
+    <p class="eyebrow">Lower priority</p>
+    <div class="col"><h2>P2 — polish &amp; hygiene</h2>
+    <ul class="clean" style="margin-top:14px">
+      <li><strong>Design-token drift:</strong> the brand violet <span class="u">--accent</span> is used in 4 files while Tailwind <span class="u">violet-*</span> appears in 57; two "blacks" (<span class="u">bg-black</span> vs <span class="u">#111214</span>); two different evidence-status color systems. The Compare button is even a different violet on the card vs the detail page.</li>
+      <li><strong>Contrast:</strong> <span class="u">--muted</span> on the warm ground is ~4.4:1 (under AA 4.5) and used at 11px; <span class="u">text-black/30</span> placeholders fall well short.</li>
+      <li><strong>Admin:</strong> 43 ungrouped nav links mixing the real evidence console with dead marketplace ops; ~8 ops pages have hand-typed KPI tiles (off-brand for "every number traces to a source").</li>
+      <li><strong>Compound wears a "Live data" badge over a demo body</strong> (description, aliases, research note, price history all still demo) once any live listing merges in.</li>
+      <li><strong>Redundant dual mobile nav</strong> (bottom bar + hamburger overlap); <span class="u">/methodology</span> is a dead 308 alias still in the allowlist.</li>
+      <li><strong>Live vendor "First observed"</strong> renders blank; "1 Products tracked" is ungrammatical.</li>
+      <li><strong>No guided first-run</strong> — good individual empty states, but nothing connects browse → save → account (which doesn't exist anyway).</li>
+      <li><strong>Latent:</strong> the demo passport binds via <span class="u">listings LIKE '%bpc%'</span> — safe only because the demo listing is featured; a featured live BPC listing would attach the fictional passport to a real vendor.</li>
+      <li><strong>Login page prints demo passwords</strong> in non-prod; must never ship to prod.</li>
+    </ul></div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="good">
+    <p class="eyebrow">Don't break these</p>
+    <div class="col"><h2>What's genuinely good</h2></div>
+    <div class="goodgrid col" style="max-width:none">
+      <div class="goodcard"><h3>Search</h3><p>Fuzzy, typo-tolerant, and it finds the live vendors — "etarnal" still surfaces Eternal first.</p></div>
+      <div class="goodcard"><h3>/how-we-check</h3><p>Genuinely delivers the trust promise — evidence ladder, six-question COA breakdown, "unknown stays visible." Substance, not words.</p></div>
+      <div class="goodcard"><h3>/passports</h3><p>The best surface in the app: decomposed confidence, and it preserves conflicting lab results instead of averaging them.</p></div>
+      <div class="goodcard"><h3>The lab subsystem</h3><p>Deep and coherent with the pivot — hash-chained custody, real report issue/revoke, a real runtime path from lab report to buyer passport.</p></div>
+      <div class="goodcard"><h3>Provenance machinery</h3><p>snapshot → claim → review → publish → cascade is well-built and internally consistent. The bones are right.</p></div>
+      <div class="goodcard"><h3>Reputation honesty</h3><p>For live vendors it returns honest per-dimension "unknown" (aside from the risk-flags + 0%-docs bugs in P0-1).</p></div>
+      <div class="goodcard"><h3>Guest research flow</h3><p>Browse, search, compare, and a local watchlist all work with no login — the right part to be strong.</p></div>
+      <div class="goodcard"><h3>Safety interlocks</h3><p>MCP tools are proposal-only; commerce is triple-gated; the affiliate CTA stays inert. Security posture is sound.</p></div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="next">
+    <p class="eyebrow">If you want a sequence</p>
+    <div class="col"><h2>What I'd fix, in order</h2>
+    <p>Grouped so each phase is a coherent, shippable unit. Nothing here is started — this is an audit.</p>
+    <ol class="steps">
+      <li><strong>Kill the trust inversion + the embarrassing leaks (P0-1, the "Nate" leak, the "fictional" copy, "Awaiting first check").</strong> Mostly display logic already solved in ProductCard — branch the detail page the same way, give the evidence matrix an honest empty state, fix the risk-flags dimension, and finish the labeling sweep into meta/FAQ. Highest impact, lowest effort, and it stops actively hurting real vendors.</li>
+      <li><strong>Make the real data cohere (P0-5).</strong> Add <span class="u">price_change</span> to the cascade recompute and advance the evidence label off "Awaiting first check" on first publish; fix the median-vs-mean tile.</li>
+      <li><strong>Decide the commerce question (P0-3).</strong> One call — delete, quarantine as "legacy/simulation," or revive — then make the operator/seller surfaces consistent with it. This unblocks a lot of coherence.</li>
+      <li><strong>Close the real-data runtime edges (P0-4).</strong> A runtime path to real evidence, a scheduler that actually runs, and registry IDs for live entities — or scope those surfaces down until they exist.</li>
+      <li><strong>Answer the self-serve question (P0-2).</strong> This is a product decision as much as code: is launch buyer-only (guest research + affiliate-out, no accounts needed), or do accounts/vendor-onboarding come first? That decision reframes half of these findings.</li>
+      <li><strong>Then the frontend polish (P1/P2):</strong> wire or retire the orphaned pages, add loading/error states, real imagery, and consolidate the design tokens.</li>
+    </ol>
+    <p class="muted" style="margin-top:18px; font-size:.95rem">My recommendation: do phase 1 immediately (it's cheap and it's actively misleading buyers right now), then bring me the commerce and self-serve decisions — those two reframe everything else.</p>
+    </div>
+  </section>
+</div>

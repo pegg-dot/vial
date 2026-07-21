@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const vendor = await getVendorBySlug(product.vendorSlug);
   return {
     title: `${product.name} ${product.quantity} from ${vendor?.name ?? "vendor"}`,
-    description: `Compare the price, public documentation, batch linkage, and evidence limits for this fictional ${product.name} research listing.`,
+    description: `Compare the price, public documentation, batch linkage, and evidence limits for this ${product.origin === "live" ? "real" : "demo"} ${product.name} research listing.`,
   };
 }
 
@@ -47,14 +47,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     "@context": "https://schema.org",
     "@type": "Product",
     name: `${product.name} ${product.quantity}`,
-    description: `Fictional research listing from ${vendor.name}, shown for interface demonstration only.`,
+    description: `${product.origin === "live" ? `Research listing from ${vendor.name}, aggregated from their public product page.` : `Demo research listing from ${vendor.name}, shown for interface demonstration only.`}`,
     brand: { "@type": "Brand", name: vendor.name },
     sku: product.batchCode,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.rating,
-      reviewCount: product.reviewCount,
-    },
+    // Only advertise a rating when real reviews exist — never emit ratingValue 0 for a
+    // real vendor (search engines render it as a 0-star product).
+    ...(product.reviewCount > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.reviewCount } } : {}),
     offers: {
       "@type": "Offer",
       priceCurrency: "USD",
@@ -96,14 +94,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   {product.previousPrice && product.previousPrice !== product.price ? <span className="text-sm text-[var(--muted)] line-through">{formatCurrency(product.previousPrice)}</span> : null}
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 text-sm font-semibold"><Star className="size-4 fill-current" /> {product.rating} <span className="font-normal text-[var(--muted)]">({product.reviewCount})</span></div>
+              {product.reviewCount > 0
+                ? <div className="flex items-center gap-1.5 text-sm font-semibold"><Star className="size-4 fill-current" /> {product.rating} <span className="font-normal text-[var(--muted)]">({product.reviewCount})</span></div>
+                : <span className="text-xs text-[var(--muted)]">No buyer reviews yet</span>}
             </div>
 
             <div className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-4">
               <Fact icon={PackageCheck} label="Availability" value={product.availability} />
               <Fact icon={Truck} label="Shipping" value={product.shipping} />
               <Fact icon={Clock3} label="Checked" value={product.lastChecked} />
-              <Fact icon={CalendarDays} label="Report" value={product.reportDate} />
+              <Fact icon={CalendarDays} label="Report" value={product.reportDate || "None yet"} />
             </div>
 
             <ProductActions slug={product.slug} vendorName={vendor.name} origin={product.origin} externalUrl={product.externalUrl} />
@@ -128,17 +128,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <aside className="space-y-5">
+            {product.priceHistory.length >= 2 ? (
             <div className="rounded-[26px] border border-black/[.07] bg-white p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs text-[var(--muted)]">8-week price</p>
+                  <p className="text-xs text-[var(--muted)]">Price trend</p>
                   <p className={`mt-1 text-lg font-semibold ${priceChange <= 0 ? "text-emerald-700" : "text-rose-600"}`}>{priceChange > 0 ? "+" : ""}{priceChange.toFixed(1)}%</p>
                 </div>
                 <p className="text-xs text-[var(--muted)]">{formatCurrency(priceStart)} → {formatCurrency(priceEnd)}</p>
               </div>
               <div className="mt-5 h-28"><PriceSparkline values={product.priceHistory} accent={product.accent[0]} height={94} /></div>
             </div>
+            ) : null}
 
+            {product.reportIssuer ? (
             <div className="rounded-[26px] border border-black/[.07] bg-white p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">Report record</p>
               <dl className="mt-5 space-y-4 text-sm">
@@ -149,6 +152,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <Detail label="Issuer confirmed" value={product.reportConfirmed ? "Yes" : "No"} />
               </dl>
             </div>
+            ) : null}
 
             {passport && <Link href={`/passports/${String(passport.slug)}`} className="group block rounded-[26px] border border-violet-200 bg-violet-50 p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
               <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-violet-700">This batch has been tested</p>

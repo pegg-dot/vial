@@ -57,12 +57,16 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` },
   });
 
+  // A freshly-aggregated vendor has no documentation data yet — that is "unknown",
+  // NOT a genuine 0%. Rendering "0% · established" reads as "we assessed them and they
+  // scored zero," which unfairly brands a real vendor. Only claim established when > 0.
+  const docCurrent = Number(org.documentation_current);
   dimensions.push({
     key: "documentation_currency",
     label: "Documentation currency",
-    status: "established",
-    value: `${org.documentation_current}%`,
-    numericValue: Number(org.documentation_current),
+    status: docCurrent > 0 ? "established" : "unknown",
+    value: docCurrent > 0 ? `${docCurrent}%` : "No documentation observed yet",
+    numericValue: docCurrent,
     basis: "Share of observed listings exposing current documentation, recomputed on every reviewed publication.",
     provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` },
     series: await documentationSeries(db, org.id),
@@ -102,20 +106,23 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     ? { key: "community_signal", label: "Community signal", status: "established", value: `${reviewCount} verified · product ${Number(reviews!.product).toFixed(1)} · shipping ${Number(reviews!.shipping).toFixed(1)} · docs ${Number(reviews!.documentation).toFixed(1)}`, numericValue: reviewCount, basis: "Moderated, verified-purchase reviews kept as separate product, shipping, and documentation ratings.", provenance: { sourceType: "marketplace_reviews" } }
     : { key: "community_signal", label: "Community signal", status: "unknown", value: "No verified reviews", basis: "No moderated, verified-purchase reviews are recorded for this vendor's listings.", provenance: { sourceType: "marketplace_reviews" } });
 
-  // Open risk flags — a count of zero is an established observation ("we looked, found none").
-  const flags = (await db.query<QueryResultRow & { signals: string | number; fraud: string | number }>(
-    `SELECT (SELECT COUNT(*) FROM opportunity_signals WHERE entity_type='vendor' AND entity_id=$1 AND status='open') signals,
-            (SELECT COUNT(*) FROM fraud_cases WHERE subject_type='seller' AND subject_id=$1 AND status='open') fraud`, [org.id],
+  // Open risk flags — ONLY genuine adverse findings (fraud/abuse cases). Curator
+  // opportunity signals (e.g. "vendor evidence gap") are informational market-structure
+  // observations, not red flags — counting them here (as the old code did) branded a
+  // real vendor with "2 open flags · risk signals and fraud cases" for merely not having
+  // uploaded a COA yet. AGENTS.md: keep opportunity signals informational, not risk.
+  const flags = (await db.query<QueryResultRow & { fraud: string | number }>(
+    `SELECT (SELECT COUNT(*) FROM fraud_cases WHERE subject_type='seller' AND subject_id=$1 AND status='open') fraud`, [org.id],
   )).rows[0];
-  const openFlags = Number(flags?.signals ?? 0) + Number(flags?.fraud ?? 0);
+  const openFlags = Number(flags?.fraud ?? 0);
   dimensions.push({
     key: "open_risk_flags",
     label: "Open risk flags",
-    status: "established",
-    value: openFlags === 0 ? "0 open flags" : `${openFlags} open flag${openFlags === 1 ? "" : "s"}`,
+    status: openFlags === 0 ? "established" : "disputed",
+    value: openFlags === 0 ? "None on record" : `${openFlags} open case${openFlags === 1 ? "" : "s"}`,
     numericValue: openFlags,
-    basis: "Open, traceable risk signals and fraud cases affecting this vendor. Informational, not a recommendation.",
-    provenance: { sourceType: "opportunity_signals" },
+    basis: "Open, traceable fraud or abuse cases affecting this vendor. Informational, not a recommendation.",
+    provenance: { sourceType: "fraud_cases" },
   });
 
   return { vialId, subjectType: "vendor", displayName: org.display_name, slug: org.slug, asOf: asOfNow(), methodologyVersion: REPUTATION_METHODOLOGY_VERSION, dimensions };
