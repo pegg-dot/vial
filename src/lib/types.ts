@@ -12,6 +12,10 @@ export type CheckoutMode =
 
 export type VendorStatus = "participating" | "claimed" | "unclaimed";
 
+// Provenance of a record: seeded demo/fictional data vs data aggregated from a
+// real public third-party source. Never implies endorsement or human-use safety.
+export type DataOrigin = "demo" | "live";
+
 export interface Compound {
   slug: string;
   name: string;
@@ -25,6 +29,7 @@ export interface Compound {
   documentationCoverage: number;
   accent: [string, string, string];
   researchNote: string;
+  origin: DataOrigin;
 }
 
 export interface Vendor {
@@ -46,6 +51,7 @@ export interface Vendor {
     event: string;
     type: "catalog" | "document" | "profile" | "policy";
   }>;
+  origin: DataOrigin;
 }
 
 export interface EvidenceDimension {
@@ -82,6 +88,8 @@ export interface Product {
   priceHistory: number[];
   accent: [string, string, string];
   evidence: EvidenceDimension[];
+  origin: DataOrigin;
+  externalUrl?: string;
 }
 
 export interface CatalogSnapshot {

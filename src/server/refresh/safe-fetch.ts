@@ -44,6 +44,23 @@ export function isPublicAddress(address: string) {
   return false;
 }
 
+/**
+ * Build the DNS `lookup` shim that pins a connection to a pre-validated IP. Node's
+ * http agent may call it with `{ all: true }` (expecting an array) or without
+ * (expecting address + family). Honoring only one form makes the request throw
+ * "Invalid IP address: undefined" against hosts that trigger the other — so both
+ * are handled here, and this is unit-tested to prevent regression.
+ */
+export function pinnedLookup(resolvedIp: string): net.LookupFunction {
+  return ((_hostname: string, lookupOptions: { all?: boolean }, callback: (err: NodeJS.ErrnoException | null, address: string | Array<{ address: string; family: number }>, family?: number) => void) => {
+    if (lookupOptions && typeof lookupOptions === "object" && lookupOptions.all === true) {
+      callback(null, [{ address: resolvedIp, family: net.isIP(resolvedIp) }]);
+    } else {
+      callback(null, resolvedIp, net.isIP(resolvedIp));
+    }
+  }) as unknown as net.LookupFunction;
+}
+
 export async function validateFetchUrl(value: string, allowedHostnames: string[]) {
   const url = new URL(value);
   if (!["http:", "https:"].includes(url.protocol)) throw new SafeFetchError("Only HTTP and HTTPS sources are supported", "unsupported-protocol");
@@ -73,7 +90,10 @@ interface FetchOptions {
 
 async function requestOnce(value: string, options: FetchOptions): Promise<SafeFetchResult & { location?: string }> {
   const validated = await validateFetchUrl(value, options.allowedHostnames);
-  const resolvedIp = validated.addresses[0];
+  // Prefer an already-validated IPv4 address for the connection (many sandboxes and
+  // hosts lack an IPv6 route; Cloudflare-fronted vendors return IPv6 first). Every
+  // address here passed isPublicAddress, so the anti-rebinding pin still holds.
+  const resolvedIp = validated.addresses.find((address) => net.isIP(address) === 4) ?? validated.addresses[0];
   const transport = validated.url.protocol === "https:" ? https : http;
   return new Promise((resolve, reject) => {
     const request = transport.request(validated.url, {
@@ -84,7 +104,7 @@ async function requestOnce(value: string, options: FetchOptions): Promise<SafeFe
         ...(options.etag ? { "if-none-match": options.etag } : {}),
         ...(options.lastModified ? { "if-modified-since": options.lastModified } : {}),
       },
-      lookup: (_hostname, _options, callback) => callback(null, resolvedIp, net.isIP(resolvedIp)),
+      lookup: pinnedLookup(resolvedIp),
       servername: validated.hostname,
       timeout: options.timeoutMs,
     }, (response) => {

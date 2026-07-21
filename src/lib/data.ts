@@ -1,6 +1,13 @@
 import type { AgentRun, Compound, Product, Vendor } from "./types";
 
-export const compounds: Compound[] = [
+// Seeded demo records omit `origin`; it defaults to 'demo' in the DB and mapper.
+// The public Compound/Vendor/Product types require `origin` because every record
+// read back from the DB always carries it.
+type SeedCompound = Omit<Compound, "origin">;
+type SeedVendor = Omit<Vendor, "origin">;
+type SeedProduct = Omit<Product, "origin" | "externalUrl">;
+
+export const compounds: SeedCompound[] = [
   {
     slug: "bpc-157",
     name: "BPC-157",
@@ -99,7 +106,7 @@ export const compounds: Compound[] = [
   },
 ];
 
-export const vendors: Vendor[] = [
+export const vendors: SeedVendor[] = [
   {
     slug: "northstar-research",
     name: "Northstar Research",
@@ -227,7 +234,7 @@ export const vendors: Vendor[] = [
   },
 ];
 
-export const products: Product[] = [
+export const products: SeedProduct[] = [
   {
     slug: "northstar-bpc-157-10mg",
     name: "BPC-157",
