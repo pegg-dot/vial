@@ -8,6 +8,7 @@ beforeEach(async () => {
   process.env.VIAL_SEED_FIXTURES = "true";
   process.env.VIAL_SEED_DEMO_ACCOUNTS = "true";
   delete (globalThis as { __vialEvidenceSeedPromise?: unknown }).__vialEvidenceSeedPromise;
+  delete (globalThis as { __vialSellerOpsSeedPromise?: unknown }).__vialSellerOpsSeedPromise;
   await resetDatabaseForTests();
 });
 

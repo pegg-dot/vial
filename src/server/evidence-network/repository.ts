@@ -172,7 +172,7 @@ export async function recomputePassport(passportId: string, connection?: SqlConn
   const passport = (await db.query<QueryResultRow & { sampling_level: string }>(`SELECT sampling_level FROM batch_passports WHERE id=$1`, [passportId])).rows[0];
   if (!passport) throw new Error("Passport not found");
   const rows = (await db.query<QueryResultRow & Record<string, unknown>>(
-    `SELECT ar.*,lr.id report_id,lr.report_number,lr.version,lr.status report_status,lr.issued_at,ls.sampling_model,lp.accreditation_status
+    `SELECT ar.*,lr.id report_id,lr.report_number,lr.version,lr.status report_status,lr.issued_at,ls.sampling_model,lp.accreditation_status,lp.display_name laboratory_name,run.method_id
      FROM passport_evidence_links pel
      JOIN laboratory_reports lr ON lr.id=pel.report_id
      JOIN analytical_results ar ON ar.id=pel.result_id
@@ -185,7 +185,7 @@ export async function recomputePassport(passportId: string, connection?: SqlConn
   const dimensions: Record<string, unknown> = {};
   for (const row of rows) {
     const dimension = String(row.dimension);
-    const entry = { resultId: row.id, reportId: row.report_id, reportNumber: row.report_number, value: row.result_type === "numeric" ? Number(row.value_numeric) : row.value_text, unit: row.unit, conclusion: row.conclusion, samplingModel: row.sampling_model, issuedAt: row.issued_at };
+    const entry = { resultId: row.id, reportId: row.report_id, reportNumber: row.report_number, value: row.result_type === "numeric" ? Number(row.value_numeric) : row.value_text, unit: row.unit, conclusion: row.conclusion, samplingModel: row.sampling_model, laboratory: row.laboratory_name, issuedAt: row.issued_at };
     const current = dimensions[dimension] as { observations: unknown[] } | undefined;
     if (current) current.observations.push(entry); else dimensions[dimension] = { status: "established", observations: [entry] };
   }
@@ -194,9 +194,91 @@ export async function recomputePassport(passportId: string, connection?: SqlConn
   const required = ["identity", "purity", "quantity", "sterility", "endotoxin", "particulates"];
   const limitations = required.filter(key => !dimensions[key]).map(key => `${key} not established`);
   const report = (await db.query<QueryResultRow & { id: string }>(`SELECT lr.id FROM passport_evidence_links pel JOIN laboratory_reports lr ON lr.id=pel.report_id WHERE pel.passport_id=$1 AND pel.status='active' AND lr.status='issued' ORDER BY lr.issued_at DESC LIMIT 1`, [passportId])).rows[0];
-  const confidence = samplingConfidence(passport.sampling_level) * (conflicts.length ? .86 : 1);
-  await db.query(`UPDATE batch_passports SET dimensions=$2::jsonb,limitations=$3::jsonb,evidence_confidence=$4,current_report_id=$5,last_evidence_at=NOW(),updated_at=NOW() WHERE id=$1`, [passportId, JSON.stringify(dimensions), JSON.stringify(limitations), confidence, report?.id ?? null]);
-  return { dimensions, limitations, confidence };
+  const base = samplingConfidence(passport.sampling_level);
+  const conflictApplied = conflicts.length > 0;
+  const factor = conflictApplied ? .86 : 1;
+  const confidence = base * factor;
+  // The headline confidence is preserved but never a black box: its components are
+  // emitted so any consumer can see which labs, sampling models, and dimensions produced it.
+  const dimensionStatus = (status: string) => Object.keys(dimensions).filter(key => (dimensions[key] as { status?: string }).status === status);
+  const confidenceBasis: BatchConfidenceBasis = {
+    headline: confidence,
+    samplingLevel: passport.sampling_level,
+    samplingBaseConfidence: base,
+    conflictPenaltyApplied: conflictApplied,
+    conflictPenaltyFactor: factor,
+    independence: {
+      samplingModels: [...new Set(rows.map(row => String(row.sampling_model)))],
+      independentSampleCount: new Set(rows.filter(row => row.sampling_model === "blind_purchase").map(row => row.report_id)).size,
+      totalObservations: rows.length,
+    },
+    laboratories: [...new Set(rows.map(row => String(row.laboratory_name)))],
+    methods: [...new Set(rows.map(row => String(row.method_id)))],
+    dimensionSummary: { established: dimensionStatus("established"), conflicting: dimensionStatus("conflicting"), unknown: required.filter(key => !dimensions[key]) },
+  };
+  await db.query(`UPDATE batch_passports SET dimensions=$2::jsonb,limitations=$3::jsonb,evidence_confidence=$4,current_report_id=$5,confidence_basis=$6::jsonb,last_evidence_at=NOW(),updated_at=NOW() WHERE id=$1`, [passportId, JSON.stringify(dimensions), JSON.stringify(limitations), confidence, report?.id ?? null, JSON.stringify(confidenceBasis)]);
+  // Append an immutable version when content materially changes. A cited passport URL
+  // is a record, not a mutable row — its history must be reconstructable.
+  const contentHash = hash({ dimensions, limitations, confidence, confidenceBasis });
+  const latest = (await db.query<QueryResultRow & { version: number; content_hash: string }>(`SELECT version,content_hash FROM passport_versions WHERE passport_id=$1 ORDER BY version DESC LIMIT 1`, [passportId])).rows[0];
+  if (!latest || latest.content_hash !== contentHash) {
+    const nextVersion = Number(latest?.version ?? 0) + 1;
+    await db.query(`INSERT INTO passport_versions(id,passport_id,version,evidence_confidence,sampling_level,dimensions,limitations,confidence_basis,content_hash,current_report_id) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9,$10) ON CONFLICT(passport_id,version) DO NOTHING`, [newId("passport-version"), passportId, nextVersion, confidence, passport.sampling_level, JSON.stringify(dimensions), JSON.stringify(limitations), JSON.stringify(confidenceBasis), contentHash, report?.id ?? null]);
+  }
+  return { dimensions, limitations, confidence, confidenceBasis };
+}
+
+export interface BatchConfidenceBasis {
+  headline: number;
+  samplingLevel: string;
+  samplingBaseConfidence: number;
+  conflictPenaltyApplied: boolean;
+  conflictPenaltyFactor: number;
+  independence: { samplingModels: string[]; independentSampleCount: number; totalObservations: number };
+  laboratories: string[];
+  methods: string[];
+  dimensionSummary: { established: string[]; conflicting: string[]; unknown: string[] };
+}
+
+export interface BatchStandardRecord {
+  vialId: string;
+  declaredBatchCode: string;
+  slug: string;
+  status: string;
+  vendorId: string | null;
+  productId: string | null;
+  evidenceConfidence: number;
+  confidenceBasis: BatchConfidenceBasis;
+  dimensions: Record<string, unknown>;
+  limitations: string[];
+  versions: { version: number; evidenceConfidence: number; samplingLevel: string; confidenceBasis: BatchConfidenceBasis; createdAt: string }[];
+  provenanceUrl: string;
+}
+
+// The public batch-history standard record: resolves a vial:batch ID to its current
+// decomposed passport plus the full append-only version history.
+export async function getBatchStandardRecord(vialBatchId: string, connection?: SqlConnection): Promise<BatchStandardRecord | null> {
+  await ensureEvidenceNetworkSeed();
+  const db = connection ?? await getDatabase();
+  const reg = (await db.query<QueryResultRow & { source_entity_id: string; provenance_url: string }>(`SELECT source_entity_id,provenance_url FROM registry_identifiers WHERE vial_id=$1 AND entity_type='batch'`, [vialBatchId])).rows[0];
+  if (!reg) return null;
+  const passport = (await db.query<QueryResultRow & Record<string, unknown>>(`SELECT * FROM batch_passports WHERE id=$1 AND status='published'`, [reg.source_entity_id])).rows[0];
+  if (!passport) return null;
+  const versions = (await db.query<QueryResultRow & { version: number; evidence_confidence: string | number; sampling_level: string; confidence_basis: unknown; created_at: string }>(`SELECT version,evidence_confidence,sampling_level,confidence_basis,created_at FROM passport_versions WHERE passport_id=$1 ORDER BY version DESC`, [passport.id])).rows;
+  return {
+    vialId: vialBatchId,
+    declaredBatchCode: String(passport.declared_batch_code),
+    slug: String(passport.slug),
+    status: String(passport.status),
+    vendorId: (passport.vendor_id as string | null) ?? null,
+    productId: (passport.product_id as string | null) ?? null,
+    evidenceConfidence: Number(passport.evidence_confidence),
+    confidenceBasis: json<BatchConfidenceBasis>(passport.confidence_basis, {} as BatchConfidenceBasis),
+    dimensions: json<Record<string, unknown>>(passport.dimensions, {}),
+    limitations: json<string[]>(passport.limitations, []),
+    versions: versions.map(v => ({ version: Number(v.version), evidenceConfidence: Number(v.evidence_confidence), samplingLevel: v.sampling_level, confidenceBasis: json<BatchConfidenceBasis>(v.confidence_basis, {} as BatchConfidenceBasis), createdAt: String(v.created_at) })),
+    provenanceUrl: reg.provenance_url,
+  };
 }
 
 export async function getLaboratoryContext(email: string) {
