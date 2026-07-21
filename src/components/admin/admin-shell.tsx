@@ -84,7 +84,7 @@ const links: Array<{href:string;label:string;icon:typeof LayoutDashboard;permiss
   { href: "/admin/publications", label: "Publications", icon: FileCheck2 },
   { href: "/admin/runs", label: "Run receipts", icon: Radar },
   { href: "/admin/ingest", permission: "catalog:write", label: "Manual ingest", icon: DatabaseZap },
-  { href: "/methodology", label: "Methodology", icon: ScrollText },
+  { href: "/how-we-check", label: "How we check", icon: ScrollText },
 ];
 
 export function AdminShell({ role, principal, children }: { role: StaffRole; principal: Principal; children: React.ReactNode }) {

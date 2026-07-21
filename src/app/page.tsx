@@ -17,7 +17,7 @@ export default async function HomePage() {
     "@type": "WebSite",
     name: "VIAL",
     url: "https://vial.example",
-    description: "An evidence-first peptide market intelligence prototype.",
+    description: "Every peptide vendor's price, lab test, and reputation on one screen.",
     potentialAction: {
       "@type": "SearchAction",
       target: "https://vial.example/market?q={search_term_string}",
@@ -36,30 +36,30 @@ export default async function HomePage() {
         <div className="mx-auto max-w-[1320px] px-5 pb-16 pt-20 sm:px-8 sm:pb-24 sm:pt-28 lg:pb-28 lg:pt-32">
           <div className="mx-auto max-w-5xl text-center">
             <div className="fade-up mx-auto inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[.14em] text-black/55 shadow-sm backdrop-blur">
-              <Sparkles className="size-3.5 text-[var(--accent)]" /> Evidence-first market intelligence
+              <Sparkles className="size-3.5 text-[var(--accent)]" /> The peptide market, on one screen
             </div>
             <h1 className="fade-up fade-up-delay-1 mt-7 text-balance text-[clamp(3.4rem,8.4vw,7.3rem)] font-semibold leading-[.88] tracking-[-.075em]">
-              The peptide market,
-              <span className="block text-gradient">made legible.</span>
+              Don&rsquo;t get scammed
+              <span className="block text-gradient">buying peptides.</span>
             </h1>
             <p className="fade-up fade-up-delay-2 mx-auto mt-7 max-w-2xl text-balance text-base leading-7 text-[var(--muted)] sm:text-lg">
-              One polished market for normalized listings, vendor history, pricing, public documentation, and clear evidence limits. No more fifteen tabs and anonymous forum threads.
+              Every vendor&rsquo;s price, lab test, and reputation on one screen &mdash; the research you&rsquo;d normally do across fifteen tabs and anonymous forum threads, done for you. Free, and we don&rsquo;t sell anything.
             </p>
             <div className="fade-up fade-up-delay-3 mx-auto mt-9 max-w-2xl">
               <SearchTrigger />
             </div>
             <div className="fade-up fade-up-delay-3 mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--muted)]">
-              <span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-emerald-600" /> Standardized comparison</span>
-              <span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-emerald-600" /> Source-level provenance</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-emerald-600" /> Prices compared across vendors</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-emerald-600" /> Lab tests matched to batches</span>
               <span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-emerald-600" /> No black-box safety score</span>
             </div>
           </div>
 
           <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
-            <Metric label="Normalized listings" value={String(products.length)} detail="Across the prototype catalog" icon={Database} />
-            <Metric label="Vendors observed" value={String(vendors.length)} detail="Claimed and independent profiles" icon={Eye} />
-            <Metric label="Median listing" value={formatCurrency(products.reduce((sum, product) => sum + product.price, 0) / products.length)} detail="Across active demo offers" icon={ChartNoAxesCombined} />
-            <Metric label="Current evidence" value={`${Math.round((products.filter((product) => !["stale", "public-only"].includes(product.evidenceLevel)).length / products.length) * 100)}%`} detail="Report located within policy window" icon={ShieldCheck} />
+            <Metric label="Listings tracked" value={String(products.length)} detail="Fictional demo catalog" icon={Database} />
+            <Metric label="Vendors tracked" value={String(vendors.length)} detail="With full price and test history" icon={Eye} />
+            <Metric label="Median price" value={formatCurrency(products.reduce((sum, product) => sum + product.price, 0) / products.length)} detail="Across active listings" icon={ChartNoAxesCombined} />
+            <Metric label="Current lab tests" value={`${Math.round((products.filter((product) => !["stale", "public-only"].includes(product.evidenceLevel)).length / products.length) * 100)}%`} detail="Listings with an up-to-date report" icon={ShieldCheck} />
           </div>
         </div>
       </section>
@@ -79,9 +79,9 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
         <SectionHeading
-          eyebrow="Market signal"
+          eyebrow="Worth a look"
           title="Listings worth a closer look"
-          description="Featured records combine fresher documentation, stronger provenance, or meaningful price movement. Every card still exposes what remains unknown."
+          description="Fresher lab tests, stronger proof, or a real price move. Every card still shows what's missing."
           href="/market"
           linkLabel="View full market"
         />
@@ -96,19 +96,19 @@ export default async function HomePage() {
           <div className="pointer-events-none absolute -bottom-48 left-[28%] size-[480px] rounded-full bg-[radial-gradient(circle,#50d9bc_0%,rgba(80,217,188,.13)_44%,transparent_70%)] blur-xl" />
           <div className="relative grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-white/45">The hidden product</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-white/45">Under the hood</p>
               <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-[.98] tracking-[-.055em] sm:text-5xl">Evidence over vibes.</h2>
               <p className="mt-5 max-w-xl text-base leading-7 text-white/58">
-                The storefront stays simple. Underneath, every visible claim points to a source, a timestamp, a named entity, and an explicit confidence state.
+                The surface stays simple. Underneath, every claim points to a source, a timestamp, and a named lab or vendor &mdash; with how sure we are spelled out.
               </p>
-              <Link href="/methodology" className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-white/90">
-                Explore methodology <ArrowRight className="size-4" />
+              <Link href="/how-we-check" className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-white/90">
+                See how we check <ArrowRight className="size-4" />
               </Link>
             </div>
             <div className="grid gap-3">
-              <DarkEvidence icon={Database} title="Source snapshots" detail="Immutable records preserve what a vendor, lab, or official source showed at a specific time." />
-              <DarkEvidence icon={CircleDashed} title="Unknown stays visible" detail="Missing sterility, quantity, or batch evidence is shown as unknown, not silently converted into trust." />
-              <DarkEvidence icon={ShieldCheck} title="Human publication gates" detail="Agents extract and compare. High-impact claims, legal states, and accusations require review." />
+              <DarkEvidence icon={Database} title="We keep the receipts" detail="A saved, timestamped copy of what every vendor and lab actually showed." />
+              <DarkEvidence icon={CircleDashed} title="Unknown stays visible" detail="Missing sterility, dose, or batch evidence shows as unknown &mdash; never quietly rounded up to trust." />
+              <DarkEvidence icon={ShieldCheck} title="A human checks the big claims" detail="Software gathers and compares. Scam flags, legal notes, and accusations wait for a person to review." />
             </div>
           </div>
         </div>
@@ -117,9 +117,9 @@ export default async function HomePage() {
       <section className="border-y border-black/[.06] bg-white/60">
         <div className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24">
           <SectionHeading
-            eyebrow="Vendor graph"
-            title="Persistent profiles, not disposable domains"
-            description="Each profile separates seller participation from the independent record VIAL has assembled over time."
+            eyebrow="Vendor track records"
+            title="A shady seller can't just change domains"
+            description="We keep every vendor's history &mdash; prices, test coverage, complaints &mdash; so a fresh coat of paint can't hide the record."
             href="/market"
             linkLabel="Browse listings"
           />
@@ -137,7 +137,7 @@ export default async function HomePage() {
                       <ArrowRight className="size-4 text-black/25 transition group-hover:translate-x-0.5 group-hover:text-black" />
                     </div>
                     <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                      <MiniMetric value={`${vendor.documentationCurrent}%`} label="Current docs" />
+                      <MiniMetric value={`${vendor.documentationCurrent}%`} label="Tests current" />
                       <MiniMetric value={String(vendor.productCount)} label="Products" />
                       <MiniMetric value={String(vendor.history.length)} label="Observed events" />
                     </div>
@@ -153,16 +153,16 @@ export default async function HomePage() {
         <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
           <div className="lg:sticky lg:top-28">
             <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">How it works</p>
-            <h2 className="mt-3 text-4xl font-semibold leading-[1] tracking-[-.055em] sm:text-5xl">Simple outside. Rigorous underneath.</h2>
+            <h2 className="mt-3 text-4xl font-semibold leading-[1] tracking-[-.055em] sm:text-5xl">Simple to use. Serious underneath.</h2>
             <p className="mt-5 max-w-md text-base leading-7 text-[var(--muted)]">
-              VIAL is designed like a premium marketplace, but the internal object model behaves more like a financial data terminal.
+              You get a clean, side-by-side view. Behind it, every price and lab result is tracked, dated, and traceable back to where it came from.
             </p>
           </div>
           <div className="grid gap-3">
-            <Step number="01" title="Normalize the market" detail="Vendor names, quantities, forms, batches, prices, and shipping claims become comparable records." />
-            <Step number="02" title="Attach evidence" detail="Every report, confirmation, snapshot, and regulatory event is linked to the exact entity it supports." />
-            <Step number="03" title="Track change" detail="Price, availability, documents, policies, and seller identities develop a persistent history." />
-            <Step number="04" title="Gate transactions" detail="The interface can support checkout later, but only where seller, processor, catalog, and policy eligibility align." />
+            <Step number="01" title="Every vendor, one format" detail="Prices, sizes, and claims lined up so you can actually compare them." />
+            <Step number="02" title="Lab tests, matched to the batch" detail="We find the third-party test for the exact batch being sold &mdash; or show you there isn't one." />
+            <Step number="03" title="Watch it change" detail="Prices, stock, and test coverage tracked over time, so you can spot a vendor slipping." />
+            <Step number="04" title="Buy direct from the vendor" detail="When you've decided, we send you to the vendor's own site. VIAL never touches your money or the product." />
           </div>
         </div>
       </section>

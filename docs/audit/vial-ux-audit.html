@@ -1,0 +1,392 @@
+<title>VIAL — Product & UX Audit</title>
+<style>
+  :root {
+    --ground: #F5F2EC;
+    --panel: #FBFAF6;
+    --panel-2: #F0ECE3;
+    --ink: #17161C;
+    --ink-soft: #413D4A;
+    --muted: #6E6979;
+    --hair: #E2DCCF;
+    --hair-strong: #D3CCBB;
+    --violet: #6D4AFF;
+    --violet-soft: #efeaff;
+    --blue: #2E6BE6;
+    --mint: #0E9B87;
+    --amber: #B4740F;
+    --red: #CF443B;
+    --keep-bg: #e4f5f0; --keep-ink: #0a6f61;
+    --merge-bg: #e6eefc; --merge-ink: #1f56c4;
+    --demote-bg: #f7efdc; --demote-ink: #8f5a06;
+    --cut-bg: #fbe6e3; --cut-ink: #ac2e26;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --maxw: 74ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #131218; --panel: #1a1922; --panel-2: #211f2b;
+      --ink: #F1EEF7; --ink-soft: #C7C2D2; --muted: #928DA0;
+      --hair: #2b2936; --hair-strong: #3a3748;
+      --violet: #9d86ff; --violet-soft: #241f38;
+      --blue: #6f9bff; --mint: #34c9b4; --amber: #d99a35; --red: #f0726a;
+      --keep-bg: #123029; --keep-ink: #4fd6bf;
+      --merge-bg: #16233f; --merge-ink: #85acff;
+      --demote-bg: #322612; --demote-ink: #e0a94a;
+      --cut-bg: #38201d; --cut-ink: #f0837b;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #F5F2EC; --panel: #FBFAF6; --panel-2: #F0ECE3;
+    --ink: #17161C; --ink-soft: #413D4A; --muted: #6E6979; --hair: #E2DCCF; --hair-strong: #D3CCBB;
+    --violet: #6D4AFF; --violet-soft: #efeaff; --blue: #2E6BE6; --mint: #0E9B87; --amber: #B4740F; --red: #CF443B;
+    --keep-bg: #e4f5f0; --keep-ink: #0a6f61; --merge-bg: #e6eefc; --merge-ink: #1f56c4;
+    --demote-bg: #f7efdc; --demote-ink: #8f5a06; --cut-bg: #fbe6e3; --cut-ink: #ac2e26;
+  }
+  :root[data-theme="dark"] {
+    --ground: #131218; --panel: #1a1922; --panel-2: #211f2b;
+    --ink: #F1EEF7; --ink-soft: #C7C2D2; --muted: #928DA0; --hair: #2b2936; --hair-strong: #3a3748;
+    --violet: #9d86ff; --violet-soft: #241f38; --blue: #6f9bff; --mint: #34c9b4; --amber: #d99a35; --red: #f0726a;
+    --keep-bg: #123029; --keep-ink: #4fd6bf; --merge-bg: #16233f; --merge-ink: #85acff;
+    --demote-bg: #322612; --demote-ink: #e0a94a; --cut-bg: #38201d; --cut-ink: #f0837b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--serif); font-size: 18px; line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px 120px; }
+  .col { max-width: var(--maxw); }
+
+  h1, h2, h3, .eyebrow, .chip, .u { font-family: var(--sans); }
+  h1 { font-size: clamp(2.3rem, 6vw, 3.5rem); line-height: .98; letter-spacing: -.045em; font-weight: 800; margin: 0; text-wrap: balance; }
+  h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); letter-spacing: -.03em; font-weight: 750; margin: 0 0 .2em; text-wrap: balance; }
+  h3 { font-size: 1.12rem; letter-spacing: -.015em; font-weight: 700; margin: 0 0 .3em; }
+  p { margin: 0 0 1em; }
+  a { color: var(--violet); text-underline-offset: 3px; }
+  strong { font-weight: 700; color: var(--ink); }
+  .lede { font-size: 1.22rem; color: var(--ink-soft); }
+  .muted { color: var(--muted); }
+
+  .eyebrow { font-size: .72rem; text-transform: uppercase; letter-spacing: .18em; font-weight: 700; color: var(--violet); margin: 0 0 .9rem; }
+  .u { font-family: var(--mono); font-size: .82em; background: var(--panel-2); border: 1px solid var(--hair); border-radius: 6px; padding: .06em .4em; color: var(--ink-soft); white-space: nowrap; }
+
+  header.hero { padding: 88px 0 40px; border-bottom: 1px solid var(--hair); }
+  .kicker { display: inline-flex; align-items: center; gap: .55rem; font-family: var(--sans); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .16em; color: var(--muted); margin-bottom: 26px; }
+  .kicker .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 4px var(--violet-soft); }
+
+  section { padding: 56px 0 0; scroll-margin-top: 24px; }
+  .rule { height: 1px; background: var(--hair); border: 0; margin: 56px 0 0; }
+
+  /* verdict callout */
+  .verdict { margin-top: 34px; background: var(--panel); border: 1px solid var(--hair-strong); border-left: 4px solid var(--violet); border-radius: 14px; padding: 26px 30px; }
+  .verdict h2 { font-size: 1.15rem; color: var(--violet); letter-spacing: .01em; margin-bottom: .5rem; }
+  .verdict p:last-child { margin-bottom: 0; }
+
+  /* chips */
+  .chip { display: inline-flex; align-items: center; gap: .4em; font-size: .68rem; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; padding: .28em .6em; border-radius: 999px; white-space: nowrap; }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: currentColor; }
+  .keep { background: var(--keep-bg); color: var(--keep-ink); }
+  .merge { background: var(--merge-bg); color: var(--merge-ink); }
+  .demote { background: var(--demote-bg); color: var(--demote-ink); }
+  .cut { background: var(--cut-bg); color: var(--cut-ink); }
+
+  /* nav collapse */
+  .navcols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 26px; }
+  @media (max-width: 720px) { .navcols { grid-template-columns: 1fr; } }
+  .navcard { background: var(--panel); border: 1px solid var(--hair); border-radius: 14px; padding: 20px 22px; }
+  .navcard h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin-bottom: 14px; }
+  .navcard.after h3 { color: var(--mint); }
+  .navlist { display: flex; flex-wrap: wrap; gap: 7px; list-style: none; margin: 0; padding: 0; }
+  .navlist li { font-family: var(--sans); font-size: .84rem; font-weight: 600; padding: .35em .7em; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--hair); color: var(--ink-soft); }
+  .navcard.after .navlist li { background: var(--violet-soft); border-color: transparent; color: var(--ink); }
+  .navnote { font-family: var(--sans); font-size: .82rem; color: var(--muted); margin: 12px 0 0; }
+
+  /* surface map table */
+  .tablewrap { overflow-x: auto; margin-top: 24px; border: 1px solid var(--hair-strong); border-radius: 14px; }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; font-family: var(--sans); font-size: .9rem; }
+  thead th { background: var(--panel-2); text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; padding: 12px 16px; border-bottom: 1px solid var(--hair-strong); }
+  tbody td { padding: 13px 16px; border-bottom: 1px solid var(--hair); vertical-align: top; color: var(--ink-soft); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: var(--panel); }
+  td .route { font-family: var(--mono); font-size: .82em; color: var(--ink); font-weight: 600; display: block; margin-bottom: 2px; }
+  td .job { color: var(--muted); font-size: .86em; }
+  .grouprow td { background: var(--panel-2); font-weight: 750; color: var(--ink); font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; padding: 9px 16px; }
+
+  /* copy rewrite cards */
+  .rw { display: grid; grid-template-columns: 1fr; gap: 0; margin: 18px 0 0; border: 1px solid var(--hair-strong); border-radius: 14px; overflow: hidden; }
+  .rw .loc { font-family: var(--mono); font-size: .74rem; color: var(--muted); background: var(--panel-2); padding: 9px 18px; border-bottom: 1px solid var(--hair); letter-spacing: .02em; }
+  .rw .before, .rw .after { padding: 15px 18px; }
+  .rw .before { border-bottom: 1px dashed var(--hair-strong); }
+  .rw .tag { font-family: var(--sans); font-size: .62rem; font-weight: 750; text-transform: uppercase; letter-spacing: .12em; display: inline-block; margin-bottom: 7px; }
+  .rw .before .tag { color: var(--red); }
+  .rw .after .tag { color: var(--mint); }
+  .rw .before .txt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--hair-strong); font-family: var(--serif); }
+  .rw .after .txt { color: var(--ink); font-family: var(--serif); }
+  .rw .after .txt strong { color: var(--ink); }
+  .rw .after .h { font-family: var(--sans); font-weight: 750; letter-spacing: -.02em; font-size: 1.08em; display: block; margin-bottom: .1em; }
+
+  ul.clean { padding-left: 1.15em; }
+  ul.clean li { margin-bottom: .55em; }
+  .tstamp { font-family: var(--sans); font-size: .74rem; color: var(--muted); }
+
+  /* section anchor label */
+  .sec-k { font-family: var(--sans); font-size: .72rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+
+  /* mini toc */
+  nav.toc { position: sticky; top: 0; background: color-mix(in srgb, var(--ground) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--hair); z-index: 5; margin: 0 -24px; padding: 11px 24px; }
+  nav.toc ol { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 auto; padding: 0; max-width: 980px; font-family: var(--sans); font-size: .78rem; font-weight: 600; }
+  nav.toc a { color: var(--muted); text-decoration: none; }
+  nav.toc a:hover { color: var(--violet); }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+  html { scroll-behavior: smooth; }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker"><span class="dot"></span> VIAL · Product &amp; UX audit · 21 Jul 2026</div>
+    <h1>You built a Bloomberg Terminal.<br>Now make it talk like a person.</h1>
+    <p class="lede col" style="margin-top:22px">A section-by-section walk of every buyer-facing surface — who each is for, its one job, what's confusing, and whether to keep, merge, or cut it. The engine underneath is strong. The problem is that it introduces itself in architecture jargon and spreads one buyer across thirty screens.</p>
+
+    <div class="verdict col">
+      <h2>The one-line verdict</h2>
+      <p>There is <strong>one buyer</strong> and <strong>one job</strong>: <em>"look up a peptide or a vendor, see who's actually legit, and buy without getting scammed."</em> Everything that serves that job stays and gets rewritten in human language. Everything that serves the <em>machine</em> — the control plane, the registry, the developer API, the sandbox checkout — comes out of the buyer's path. That collapses <strong>~13 nav items to 5</strong> and <strong>~31 surfaces to a tight spine of about 10.</strong></p>
+      <p style="margin-top:.6em"><span class="chip cut">Confirmed</span> &nbsp;We're going <strong>affiliate-out</strong>, not native checkout. That single decision deletes the entire cart / checkout / orders branch — the most jargon-heavy, least buyer-shaped part of the app.</p>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Sections">
+    <ol>
+      <li><a href="#north">North star</a></li>
+      <li><a href="#nav">Nav collapse</a></li>
+      <li><a href="#map">Surface map</a></li>
+      <li><a href="#copy">Copy rewrites</a></li>
+      <li><a href="#affiliate">Affiliate shift</a></li>
+      <li><a href="#next">What's next</a></li>
+    </ol>
+  </nav>
+
+  <section id="north">
+    <p class="eyebrow">The north star</p>
+    <div class="col">
+      <h2>Who this is for, in one sentence</h2>
+      <p>A fitness / weight-loss / longevity buyer — <strong>not a scientist</strong> — who is about to spend $50–$300 on a peptide and is scared of buying a fake. They don't want a "provenance control plane." They want the answer to three questions:</p>
+      <ul class="clean">
+        <li><strong>Is it real?</strong> — has this exact batch been independently lab-tested, and did it pass?</li>
+        <li><strong>Will I get scammed?</strong> — is this vendor trustworthy, or a fresh domain with astroturfed reviews?</li>
+        <li><strong>Where's the best price?</strong> — same compound, every vendor, side by side.</li>
+      </ul>
+      <p>VIAL already computes all three. The audit below is about getting them <em>to the surface</em> and getting the machinery <em>out of the way.</em> The framing to hold the whole time: <strong>powerful terminal underneath, dead-simple on top, science tucked behind a "details" link for the 5% who want it.</strong></p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="nav">
+    <p class="eyebrow">Structural fix #1 — the nav</p>
+    <div class="col">
+      <h2>From a directory of the codebase to a shop you can walk</h2>
+      <p>Today's top nav exposes the <em>internal object model</em> — For&nbsp;you, Market, Search, Compounds, Vendors, Evidence, Passports, Signals — plus an "Intelligence" footer column that lists Labs, Testing, Operations, Status. A buyer can't tell Evidence from Passports from Testing, because those are three views of one idea: <em>proof.</em></p>
+    </div>
+    <div class="navcols">
+      <div class="navcard before">
+        <h3>Today · 13 primary destinations</h3>
+        <ul class="navlist">
+          <li>For you</li><li>Market</li><li>Search</li><li>Compounds</li><li>Vendors</li><li>Evidence</li><li>Passports</li><li>Signals</li><li>Labs</li><li>Testing</li><li>Compare</li><li>Operations</li><li>Status</li>
+        </ul>
+        <p class="navnote">One buyer, thirteen doors, no obvious first click.</p>
+      </div>
+      <div class="navcard after">
+        <h3>Proposed · 5 doors + search</h3>
+        <ul class="navlist">
+          <li>Market</li><li>Compounds</li><li>Vendors</li><li>How we check</li><li>Watchlist</li>
+        </ul>
+        <p class="navnote">Search becomes the omnibox in the header, not a page. "How we check" absorbs Evidence + Passports + Labs + Testing + Methodology. Signals, Operations, Status, Developers move to a trust/footer or staff-only.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="map">
+    <p class="eyebrow">The full surface map</p>
+    <div class="col">
+      <h2>Every screen, one verdict each</h2>
+      <p>Read the verdict column first. <span class="chip keep">Keep</span> = core buyer spine. <span class="chip merge">Merge</span> = real, but folds into another surface. <span class="chip demote">Demote</span> = keep the code, pull it out of the buyer's path. <span class="chip cut">Cut</span> = remove from the buyer product entirely.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Surface</th><th>Who / one job</th><th>Verdict</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr class="grouprow"><td colspan="4">The buyer spine — keep &amp; polish</td></tr>
+          <tr><td><span class="route">/</span></td><td>Everyone · pitch the value in 5 seconds</td><td><span class="chip keep">Keep</span></td><td>Hero + "how it works" copy is the worst jargon offender. Rewrite (below).</td></tr>
+          <tr><td><span class="route">/market</span></td><td>Buyer · the whole market on one screen</td><td><span class="chip keep">Keep</span></td><td>This is the terminal. Make it the default landing for signed-in users. Absorb Search + Compare here.</td></tr>
+          <tr><td><span class="route">/compounds/[slug]</span></td><td>Buyer · the "ticker" for one peptide</td><td><span class="chip keep">Keep</span></td><td>Price range, listings, aliases. Core. Good bones.</td></tr>
+          <tr><td><span class="route">/vendors/[slug]</span></td><td>Buyer · "is this seller a scam?"</td><td><span class="chip keep">Keep</span></td><td>The decomposed reputation record is the crown jewel. Relabel dimensions in plain words.</td></tr>
+          <tr><td><span class="route">/products/[slug]</span></td><td>Buyer · decide + buy this listing</td><td><span class="chip keep">Keep</span></td><td>Evidence matrix is excellent. Swap "Add to sandbox cart" → affiliate "Buy at vendor".</td></tr>
+          <tr><td><span class="route">/compounds</span></td><td>Buyer · browse all peptides</td><td><span class="chip keep">Keep</span></td><td>Fine as a browse entry. It's a filtered face of Market — acceptable overlap.</td></tr>
+          <tr><td><span class="route">/vendors</span></td><td>Buyer · browse all sellers</td><td><span class="chip keep">Keep</span></td><td>Same. Keep.</td></tr>
+          <tr><td><span class="route">/watchlist</span></td><td>Buyer · things I'm tracking</td><td><span class="chip keep">Keep</span></td><td>Keep, but it's one of four "my stuff" pages — see merge block.</td></tr>
+
+          <tr class="grouprow"><td colspan="4">Proof surfaces — merge into one "How we check"</td></tr>
+          <tr><td><span class="route">/research</span></td><td>Buyer · what a lab report proves</td><td><span class="chip merge">Merge</span></td><td>"Evidence library." Real content, wrong altitude for nav. → How we check.</td></tr>
+          <tr><td><span class="route">/testing</span></td><td>Buyer · who picked the sample</td><td><span class="chip merge">Merge</span></td><td>The S1–S4 sampling ladder is a genuinely great trust idea. Fold in as a section.</td></tr>
+          <tr><td><span class="route">/passports</span> · <span class="route">/passports/[slug]</span></td><td>Buyer · one batch's test record</td><td><span class="chip merge">Merge</span></td><td>Passport detail stays (linked from a product's evidence). The index page leaves top nav.</td></tr>
+          <tr><td><span class="route">/labs</span> · <span class="route">/labs/[slug]</span></td><td>Buyer · who ran the test</td><td><span class="chip merge">Merge</span></td><td>Lab detail becomes a drill-down from a report, not a browsable "network."</td></tr>
+          <tr><td><span class="route">/methodology</span></td><td>Buyer · the evidence ladder</td><td><span class="chip merge">Merge</span></td><td>Best-written page in the app. Make it the backbone of "How we check."</td></tr>
+
+          <tr class="grouprow"><td colspan="4">Merge into Market</td></tr>
+          <tr><td><span class="route">/search</span></td><td>Buyer · find a record</td><td><span class="chip merge">Merge</span></td><td>A standalone search page is redundant with the header omnibox + Market filters.</td></tr>
+          <tr><td><span class="route">/compare</span></td><td>Buyer · listings side by side</td><td><span class="chip merge">Merge</span></td><td>It's a mode, not a place. Multi-select in Market → Compare. Kill the canned example.</td></tr>
+          <tr><td><span class="route">/terminal</span></td><td>Buyer · one-screen dashboard</td><td><span class="chip merge">Merge</span></td><td>Near-duplicate of Market with less. Fold its "movers" strip into Market/For&nbsp;you.</td></tr>
+
+          <tr class="grouprow"><td colspan="4">Personal area — 6 pages want to be 3</td></tr>
+          <tr><td><span class="route">/for-you</span></td><td>Buyer · my personalized home</td><td><span class="chip keep">Keep</span></td><td>Make this the signed-in home. Merge terminal's movers + watchlist preview in.</td></tr>
+          <tr><td><span class="route">/saved-searches</span></td><td>Buyer · re-run a saved query</td><td><span class="chip merge">Merge</span></td><td>Combine with Watchlist into one "Saved" surface (searches + listings).</td></tr>
+          <tr><td><span class="route">/account/history</span></td><td>Buyer · what I've looked at</td><td><span class="chip demote">Demote</span></td><td>Nice-to-have. Bury one level under account; not a nav peer.</td></tr>
+          <tr><td><span class="route">/account/notifications</span></td><td>Buyer · alerts feed</td><td><span class="chip keep">Keep</span></td><td>Keep. Copy is close to human already.</td></tr>
+          <tr><td><span class="route">/account/preferences</span></td><td>Buyer · tune ranking &amp; alerts</td><td><span class="chip merge">Merge</span></td><td>Fold into one Settings page with notifications + security.</td></tr>
+          <tr><td><span class="route">/account/security</span></td><td>Buyer · sessions</td><td><span class="chip merge">Merge</span></td><td>Into Settings.</td></tr>
+
+          <tr class="grouprow"><td colspan="4">Machine / operator surfaces — out of the buyer path</td></tr>
+          <tr><td><span class="route">/signals</span></td><td>Buyer(?) · market-structure signals</td><td><span class="chip demote">Demote</span></td><td>Currently empty + speaks operator ("issuer concentration"). Surface the 1–2 buyer-relevant ones (price drops, evidence gaps) inline instead.</td></tr>
+          <tr><td><span class="route">/operations</span></td><td>Staff · the control plane</td><td><span class="chip cut">Cut</span></td><td>Literally says "Open staff workspace." Remove from buyer nav entirely.</td></tr>
+          <tr><td><span class="route">/updates</span></td><td>Trust · public change ledger</td><td><span class="chip demote">Demote</span></td><td>Good trust artifact, empty today. Footer/trust link, not primary nav.</td></tr>
+          <tr><td><span class="route">/status</span></td><td>Trust · system health</td><td><span class="chip demote">Demote</span></td><td>Footer link. Fine as-is.</td></tr>
+          <tr><td><span class="route">/developers</span> · <span class="route">/account/developer</span></td><td>Integrator · the API</td><td><span class="chip demote">Demote</span></td><td>Handoff §9: hide until buyers exist. Keep code, remove from buyer nav.</td></tr>
+          <tr><td><span class="route">/sell</span></td><td>Vendor · onboard a store</td><td><span class="chip demote">Demote</span></td><td>Secondary user. One "For vendors" footer link is enough for now.</td></tr>
+
+          <tr class="grouprow"><td colspan="4">Native checkout — cut (affiliate model)</td></tr>
+          <tr><td><span class="route">/cart</span></td><td>—</td><td><span class="chip cut">Cut</span></td><td>"Commerce sandbox." Replaced by an outbound affiliate link on the product page.</td></tr>
+          <tr><td><span class="route">/checkout</span></td><td>—</td><td><span class="chip cut">Cut</span></td><td>"Policy-gated checkout." Deletes the whole underwriting-at-checkout story from the buyer view.</td></tr>
+          <tr><td><span class="route">/account/orders</span></td><td>—</td><td><span class="chip cut">Cut</span></td><td>No orders in an affiliate model. VIAL never sees the transaction.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="col muted" style="margin-top:18px; font-size:.95rem">Everything marked Cut/Demote keeps its code and can come back — this is about what the <em>buyer</em> sees, not deleting the engine. The commerce, registry, and API work stays in the repo as the "later, downstream of buyers" layer the handoff describes.</p>
+  </section>
+
+  <hr class="rule">
+
+  <section id="copy">
+    <p class="eyebrow">Copy rewrites — before → after</p>
+    <div class="col">
+      <h2>Say it the way a buyer would</h2>
+      <p>The pattern to fix everywhere: <strong>every page opens with an abstract noun the buyer never uses</strong> — "Normalize the market," "Persistent identity graph," "Provenance control plane," "Decision continuity." Lead instead with the buyer's stake. Here are the highest-leverage rewrites, top of funnel down.</p>
+    </div>
+
+    <div class="col">
+      <h3 style="margin-top:34px">Home — hero</h3>
+      <div class="rw">
+        <div class="loc">/ · hero headline + subhead</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">The peptide market, made legible. — One polished market for normalized listings, vendor history, pricing, public documentation, and clear evidence limits. No more fifteen tabs and anonymous forum threads.</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><span class="h">Don't get scammed buying peptides.</span>Every vendor's price, lab test, and reputation on one screen — the research you'd do across fifteen tabs, done for you. Free, and we don't sell anything.</div></div>
+      </div>
+
+      <h3 style="margin-top:34px">Home — "how it works" (the one you flagged)</h3>
+      <div class="rw">
+        <div class="loc">/ · section intro</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Simple outside. Rigorous underneath. — VIAL is designed like a premium marketplace, but the internal object model behaves more like a financial data terminal.</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><span class="h">Simple to use. Serious underneath.</span>You get a clean, side-by-side view. Behind it, every price and lab result is tracked, dated, and traceable back to where it came from.</div></div>
+      </div>
+      <div class="rw">
+        <div class="loc">/ · the four steps</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">01 Normalize the market · 02 Attach evidence · 03 Track change · 04 Gate transactions</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><strong>01 Every vendor, one format</strong> — prices, sizes, and claims lined up so you can actually compare them.<br><strong>02 Lab tests, matched to the batch</strong> — we pull the third-party test for the exact batch being sold, or show you there isn't one.<br><strong>03 Watch it change</strong> — prices, stock, and test coverage tracked over time, so you can spot a vendor slipping.<br><strong>04 Buy direct</strong> — when you've decided, we send you to the vendor's own site. We never touch your money or the product.</div></div>
+      </div>
+      <p class="muted col" style="font-size:.92rem; margin-top:10px">Note: step 04 changes meaning entirely under the affiliate model — "Gate transactions / checkout later" becomes "hand off to the vendor." That's the honest version and it's a stronger trust story.</p>
+
+      <h3 style="margin-top:34px">Home — the "hidden product" trio</h3>
+      <div class="rw">
+        <div class="loc">/ · feature cards</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Source snapshots · Unknown stays visible · Human publication gates</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><strong>We keep the receipts</strong> — a saved, timestamped copy of what each vendor and lab actually showed.<br><strong>We don't hide what's missing</strong> — no sterility test? We say so, instead of quietly rounding it up to "trusted."<br><strong>A human checks the big claims</strong> — software gathers the data; before a scam flag or legal issue goes public, a person reviews it.</div></div>
+      </div>
+
+      <h3 style="margin-top:34px">Vendors — index</h3>
+      <div class="rw">
+        <div class="loc">/vendors · header</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Persistent identity graph — Vendors beyond the storefront. Profiles preserve documentation coverage, catalog history, participation state, and observed changes even when a domain or brand presentation evolves.</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><span class="h">A vendor's real track record.</span>A shady seller can spin up a new website overnight. We keep the history — prices, test coverage, complaints — so a fresh coat of paint can't hide it.</div></div>
+      </div>
+
+      <h3 style="margin-top:34px">Vendor detail — the reputation record</h3>
+      <div class="rw">
+        <div class="loc">/vendors/[slug] · reputation intro</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Composed from evidence, not scored — Reputation is composed below from provenance-linked evidence — never a single score.</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><span class="h">We don't boil it down to one rating.</span>A single star score hides too much. Here's exactly what we know about this vendor — and, just as important, what we don't.</div></div>
+      </div>
+      <div class="rw">
+        <div class="loc">/vendors/[slug] · dimension labels</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Documentation currency · Independent evidence corroboration · Operational reliability · Community signal · Open risk flags</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt">How current their lab tests are · Independently tested? · Track record shipping · What buyers say · Scam &amp; red flags</div></div>
+      </div>
+
+      <h3 style="margin-top:34px">Product — the evidence matrix</h3>
+      <div class="rw">
+        <div class="loc">/products/[slug] · matrix heading + CTA</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Evidence matrix — What is actually established. … [Add to sandbox cart]</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><span class="h">What we could verify.</span>Each row answers a different question — passing identity doesn't mean it's sterile or correctly dosed. &nbsp;<strong>[ Buy at Northstar Research → ]</strong> (opens the vendor's site)</div></div>
+      </div>
+
+      <h3 style="margin-top:34px">Batch passports</h3>
+      <div class="rw">
+        <div class="loc">/passports · header</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">A living evidence record for a declared batch. Passports connect samples, custody, methods, structured results, report lifecycle, conflicts, and limitations.</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><span class="h">The lab results for a specific batch.</span>When a batch gets independently tested, the full result lives here — including when two tests disagree, which we show instead of averaging away.</div></div>
+      </div>
+
+      <h3 style="margin-top:34px">Signals (if kept)</h3>
+      <div class="rw">
+        <div class="loc">/signals · header</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Signals hiding inside the catalog. VIAL turns source-backed observations into higher-order market intelligence: price fragmentation, evidence gaps, thin availability, issuer concentration, and source coverage.</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt"><span class="h">What's moving right now.</span>Price drops, vendors going quiet, batches losing their test coverage — the stuff worth knowing before you buy.</div></div>
+      </div>
+
+      <h3 style="margin-top:34px">Personal pages</h3>
+      <div class="rw">
+        <div class="loc">/for-you &amp; /saved-searches · headers</div>
+        <div class="before"><span class="tag">Before</span><div class="txt">Personal market — VIAL ranks records against the preferences you chose. · Decision continuity — Never repeat the same market research.</div></div>
+        <div class="after"><span class="tag">After</span><div class="txt">Your feed — the vendors and compounds you follow, and what changed since you last looked. · Saved searches — save a search and get a ping when something changes.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="affiliate">
+    <p class="eyebrow">The affiliate shift</p>
+    <div class="col">
+      <h2>What "affiliate-out, not checkout" actually removes</h2>
+      <p>Confirming your call: VIAL is Yahoo Finance, not the brokerage. It shows the market and links you out. Concretely, that decision:</p>
+      <ul class="clean">
+        <li><strong>Deletes three buyer surfaces</strong> — <span class="u">/cart</span>, <span class="u">/checkout</span>, <span class="u">/account/orders</span> — and everything they drag in (the "policy-gated checkout / underwriting" narrative the buyer never needed to read).</li>
+        <li><strong>Turns one button into the whole business model</strong> — "Add to sandbox cart" becomes <strong>"Buy at [Vendor] →"</strong>, an outbound affiliate link. That's the revenue line and it keeps VIAL's hands clean of money and product.</li>
+        <li><strong>Protects neutrality</strong> — because VIAL earns on the click-out, not on ratings, the money layer stays separate from the truth layer. Guard this hard: a paying vendor must never be able to buy a better reputation record.</li>
+        <li><strong>Removes a legal gray zone</strong> — no payments, no fulfillment, no "did VIAL sell me a research chemical" exposure.</li>
+      </ul>
+      <p>One honest caveat to decide together: the sandbox-commerce engine (v5) is real, working code. Cutting it from the buyer path is the right call — but it's a chunk of the app going dormant. It stays in the repo; we just stop routing buyers through it.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="next">
+    <p class="eyebrow">What I'd do next — your call on each</p>
+    <div class="col">
+      <h2>Sequenced, and nothing touched yet</h2>
+      <p>This is an audit, so I've changed <strong>zero code.</strong> The moment you're aligned on the map above, the execution order I'd suggest:</p>
+      <ul class="clean">
+        <li><strong>1 · Copy pass.</strong> Land every rewrite above plus the rest of the surfaces. Pure text, low risk, instantly makes the product feel human. This is the fastest visible win.</li>
+        <li><strong>2 · Nav &amp; merge.</strong> Collapse to the 5-door nav; build "How we check"; move machine surfaces out of the buyer path. Reversible, no data touched.</li>
+        <li><strong>3 · Affiliate swap.</strong> Replace cart/checkout with the outbound "Buy at vendor" link; retire the three commerce surfaces from nav.</li>
+        <li><strong>4 · Make the data real.</strong> Point the existing ingestion engine at Janoshik's public COA DB + ~3 real vendor sites for <em>one compound end-to-end</em>, as proof the pipeline works on live data.</li>
+        <li><strong>5 · Visual polish.</strong> The design pass — once the surfaces are the right ones and the words are right, so we polish the final thing, not a draft.</li>
+      </ul>
+      <p class="muted" style="font-size:.95rem">My recommendation: start with the copy pass on the home page and the vendor/product detail views — that's the buyer's actual path to a decision, and it's where the jargon does the most damage. Tell me which surfaces to start on and I'll execute.</p>
+    </div>
+  </section>
+</div>

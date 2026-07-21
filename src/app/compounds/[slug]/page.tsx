@@ -68,9 +68,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={Layers3} label="Active listings" value={String(compound.listings)} />
-          <Stat icon={FileSearch} label="Documentation coverage" value={`${compound.documentationCoverage}%`} />
+          <Stat icon={FileSearch} label="Listings with current tests" value={`${compound.documentationCoverage}%`} />
           <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />
-          <Stat icon={BookOpen} label="Aliases normalized" value={String(compound.aliases.length + 1)} />
+          <Stat icon={BookOpen} label="Known aliases" value={String(compound.aliases.length + 1)} />
         </div>
 
         <div className="mt-14 mb-7">
@@ -83,7 +83,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <div className="flex items-start gap-4">
             <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-amber-100"><CircleAlert className="size-4 text-amber-800" /></span>
             <div>
-              <h2 className="text-lg font-semibold tracking-[-.025em]">Research context is not product verification</h2>
+              <h2 className="text-lg font-semibold tracking-[-.025em]">Research notes aren&rsquo;t product proof</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-amber-950/70">{compound.researchNote}</p>
             </div>
           </div>

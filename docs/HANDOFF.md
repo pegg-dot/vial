@@ -29,7 +29,7 @@ it aggregates public data and links you to your broker. VIAL **never tests a pep
 aggregates data that already exists publicly and presents it like a terminal. → No lab, no
 scientists, no touching product. This is a "founder behind a computer with Claude Code" business.
 
-**Corollary — VIAL probably does NOT need real checkout.** Like Yahoo links you to your broker,
+**Corollary — CONFIRMED (Nate, 2026-07-21): affiliate-out, no native checkout.** Like Yahoo links you to your broker,
 VIAL links the buyer out to the vendor (affiliate link). VIAL never touches money → this sidesteps
 the payments / legal-gray-zone problem **and** preserves neutrality. The cart/checkout that exists
 today is likely the wrong model (see §8).
@@ -157,14 +157,36 @@ visual polish with Fable 5 / Cloud Design.
 
 ## 11. Roadmap from here (sequenced — do NOT build more versions)
 
-1. **Product + UX audit** — section by section; define the ONE buyer experience; keep/cut/merge
-   every surface.
+1. ~~**Product + UX audit**~~ **DONE 2026-07-21** — full audit doc at `docs/audit/vial-ux-audit.html`.
 2. **Make the data real** — point the ingestion engine at Janoshik's public DB + ~3 real vendor
-   sites + reviews; replace fixtures for **one compound end-to-end** as proof it works.
-3. **UX cleanup** — rewrite copy in buyer language; collapse the tab sprawl, per the audit.
+   sites + reviews; replace fixtures for **one compound end-to-end** as proof it works. ← **NEXT**
+3. ~~**UX cleanup**~~ **DONE 2026-07-21** — see progress log below.
 4. **Design polish** — Fable 5 / Cloud Design visual pass on the cleaned surfaces.
-5. **Monetization** — affiliate-out model.
+5. **Monetization** — affiliate-out model (decision CONFIRMED by Nate 2026-07-21; the product
+   page CTA is already "Buy at [Vendor] →", inert until data is real).
 6. **Deploy** — Vercel + managed Postgres (the DB layer is already built for this).
+
+### Progress log — 2026-07-21 (audit + UX cleanup executed)
+
+- **Nav collapsed 13 → 5 doors:** Market · Compounds · Vendors · How we check (+ For you when
+  signed in). Search is the header omnibox. Watchlist is now "Saved" and pairs with saved
+  searches via tab pills. Cart/checkout/orders are out of every menu (code kept, routes alive).
+- **New `/how-we-check`** absorbs methodology + evidence/testing/passports/labs framing in buyer
+  language; `/methodology` permanently redirects there. Route added to the public perimeter in
+  `access-policy.ts`.
+- **Copy pass, buyer language, all buyer surfaces:** home ("Don't get scammed buying peptides"),
+  market, search, compounds, vendors (+ plain-English reputation labels, UI-side only — the API
+  keeps formal labels), product ("What we could verify", affiliate CTA), passports, labs,
+  research, signals, personal pages, help FAQs, about.
+- **Bug fixed (pre-existing, real):** logging in wiped the user's server-side comparison —
+  the marketplace provider survives the login redirect with stale `[]` state and PUT-synced it
+  over the seeded comparison. Now syncs only after a real user change (`compareDirty` ref).
+- **e2e suite green for the first time on this machine (11/11):** Playwright harness moved from
+  `127.0.0.1` to `localhost` (CSRF origin check requires it — same rule as dev), a stale
+  test targeting a long-gone hero button now uses the header search, and CSP's
+  `upgrade-insecure-requests` is emitted only when `NEXT_PUBLIC_SITE_URL` is https (it broke
+  http-localhost production builds). Build for local e2e with
+  `NEXT_PUBLIC_SITE_URL=http://localhost:3000 npm run build`.
 
 **Guardrail: no new infrastructure or "11.0" until the buyer experience is real and legible.**
 
@@ -173,7 +195,7 @@ visual polish with Fable 5 / Cloud Design.
 - **Repo:** `/Users/natepegg/vial` · `github.com/pegg-dot/vial` (private) · `main` @ 10.0.0, schema v13.
 - **Run:** `npm run dev` → **http://localhost:3000** (use `localhost`, NOT `127.0.0.1` — CSRF blocks
   the login POST on `127.0.0.1`).
-- **Demo logins** (dev-seeded; password `Vial<Role>!2026`, e.g. `VialCustomer!2026`):
+- **Demo logins** (dev-seeded; password `VialDemo<Role>!2026`, e.g. `VialDemoCustomer!2026`):
   customer `nora@example.test` · seller `marcus@helixtest.test` · lab `elena@aperture.test` ·
   admin `jon@vial.test` · reviewer `maya@vial.test`.
 - **Verify:** `npm run verify:v10` (lint · typecheck · tests · 9 audits · build). Known: `audit:roles`

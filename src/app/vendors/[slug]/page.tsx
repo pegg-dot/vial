@@ -57,10 +57,10 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             <div className="rounded-[28px] border border-black/[.07] bg-white p-6">
               <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">Profile signal</p>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <VendorStat icon={ShieldCheck} value={`${vendor.documentationCurrent}%`} label="Current documents" />
+                <VendorStat icon={ShieldCheck} value={`${vendor.documentationCurrent}%`} label="Tests current" />
                 <VendorStat icon={PackageSearch} value={String(vendor.productCount)} label="Products tracked" />
               </div>
-              <p className="mt-4 text-[11px] leading-4 text-[var(--muted)]">Reputation is composed below from provenance-linked evidence — never a single score.</p>
+              <p className="mt-4 text-[11px] leading-4 text-[var(--muted)]">No single star rating here — just what we actually know about this vendor, piece by piece, below.</p>
             </div>
           </div>
         </div>
@@ -70,15 +70,15 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-20">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Reputation record</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">Composed from evidence, not scored</h2>
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Reputation</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">We don&rsquo;t boil it down to one rating</h2>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/[.045] px-3 py-1 text-[11px] font-semibold text-black/55"><Layers className="size-3" /> methodology {reputation.methodologyVersion}</span>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {reputation.dimensions.map((d) => <ReputationTile key={d.key} dimension={d} />)}
           </div>
-          <p className="mt-5 max-w-3xl text-xs leading-5 text-[var(--muted)]">Every dimension stands on its own and cites its source. Where evidence is absent, the record shows &ldquo;unknown&rdquo; rather than inventing a number — VIAL never collapses these into a single safety or quality score.</p>
+          <p className="mt-5 max-w-3xl text-xs leading-5 text-[var(--muted)]">Each answer stands on its own and cites its source. Where we don&rsquo;t have the evidence, it says unknown — we never invent a number or blend everything into one score.</p>
         </section>
       )}
 
@@ -87,7 +87,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <div>
             <div className="mb-7">
               <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Catalog</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">Observed listings</h2>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">What they sell</h2>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
           </div>
@@ -116,6 +116,15 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   );
 }
 
+const PLAIN_DIMENSION_LABELS: Record<string, string> = {
+  identity_claim: "Who they are",
+  documentation_currency: "Lab tests current?",
+  evidence_corroboration: "Independently tested?",
+  operational_reliability: "Track record shipping",
+  community_signal: "What buyers say",
+  risk_flags: "Scam & red flags",
+};
+
 function ReputationTile({ dimension }: { dimension: ReputationDimension }) {
   const tone = dimension.status === "established"
     ? { chip: "bg-emerald-50 text-emerald-800", Icon: CheckCircle2, iconClass: "text-emerald-700", card: "border-black/[.07] bg-white" }
@@ -125,7 +134,7 @@ function ReputationTile({ dimension }: { dimension: ReputationDimension }) {
   return (
     <div className={`rounded-[26px] border p-5 ${tone.card}`}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">{dimension.label}</h3>
+        <h3 className="text-sm font-semibold">{PLAIN_DIMENSION_LABELS[dimension.key] ?? dimension.label}</h3>
         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${tone.chip}`}><tone.Icon className={`size-3 ${tone.iconClass}`} />{dimension.status}</span>
       </div>
       <p className="mt-3 text-lg font-semibold tracking-[-.02em]">{dimension.value}</p>

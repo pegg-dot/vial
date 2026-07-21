@@ -104,9 +104,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <Fact icon={CalendarDays} label="Report" value={product.reportDate} />
             </div>
 
-            <ProductActions slug={product.slug} checkoutPending={product.checkoutMode === "marketplace-pending"} />
+            <ProductActions slug={product.slug} vendorName={vendor.name} />
             <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
-              This prototype does not sell or link to products. The displayed price and fulfillment information are fictional interface data.
+              Buying happens on the vendor&rsquo;s own site, never on VIAL. In this prototype the data is fictional, so vendor links stay switched off.
             </p>
           </div>
         </div>
@@ -116,9 +116,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="grid gap-7 lg:grid-cols-[1.25fr_.75fr]">
           <div>
             <div className="mb-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Evidence matrix</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">What is actually established</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">Each row answers a different question. A positive identity result does not fill in missing sterility, quantity, or sampling evidence.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">The lab evidence</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">What we could verify</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">Each row answers a different question. Passing the identity test doesn&rsquo;t mean it&rsquo;s sterile or correctly dosed — we show each answer separately.</p>
             </div>
             <EvidenceMatrix evidence={product.evidence} />
           </div>
@@ -147,9 +147,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {passport && <Link href={`/passports/${String(passport.slug)}`} className="group block rounded-[26px] border border-violet-200 bg-violet-50 p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
-              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-violet-700">Batch passport available</p>
-              <p className="mt-3 text-lg font-semibold">Trace samples, custody, reports, and conflicts</p>
-              <p className="mt-2 text-xs leading-5 text-violet-950/60">Sampling level {String(passport.sampling_level)} · {Math.round(Number(passport.evidence_confidence) * 100)}% evidence confidence. This describes linked evidence, not safety or inventory-wide identity.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-violet-700">This batch has been tested</p>
+              <p className="mt-3 text-lg font-semibold">See the full lab record for this batch</p>
+              <p className="mt-2 text-xs leading-5 text-violet-950/60">Sampling level {String(passport.sampling_level)} · {Math.round(Number(passport.evidence_confidence) * 100)}% evidence confidence. This describes the tested samples — not every vial in the batch.</p>
               <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-violet-800">Open passport <ExternalLink className="size-4 transition group-hover:translate-x-1"/></span>
             </Link>}
 
@@ -163,7 +163,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ExternalLink className="size-4 text-black/30 transition group-hover:text-black" />
               </div>
               <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                <MiniStat value={`${vendor.documentationCurrent}%`} label="Current docs" />
+                <MiniStat value={`${vendor.documentationCurrent}%`} label="Tests current" />
                 <MiniStat value={String(vendor.history.length)} label="Observed events" />
                 <MiniStat value={String(vendor.productCount)} label="Listings" />
               </div>

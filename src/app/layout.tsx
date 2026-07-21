@@ -16,7 +16,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "VIAL — The peptide market, made legible",
+    default: "VIAL — Don't get scammed buying peptides",
     template: "%s · VIAL",
   },
   description: siteConfig.description,
@@ -24,15 +24,15 @@ export const metadata: Metadata = {
   keywords: ["peptide market", "research products", "vendor comparison", "batch evidence", "market intelligence"],
   openGraph: {
     type: "website",
-    title: "VIAL — The peptide market, made legible",
-    description: "Compare fictional peptide research listings through a premium evidence-first interface.",
+    title: "VIAL — Don't get scammed buying peptides",
+    description: "Every vendor's price, lab test, and reputation on one screen. Fictional demo data.",
     siteName: "VIAL",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VIAL marketplace interface" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "VIAL — The peptide market, made legible",
-    description: "An evidence-first peptide market intelligence prototype.",
+    title: "VIAL — Don't get scammed buying peptides",
+    description: "Every vendor's price, lab test, and reputation on one screen. Fictional demo data.",
     images: ["/og-image.png"],
   },
   icons: {

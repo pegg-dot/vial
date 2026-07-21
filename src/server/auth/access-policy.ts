@@ -13,7 +13,7 @@ export interface AccessDecision {
 
 // Public page routes (browseable with no session). Exact matches or path prefixes.
 const PUBLIC_PAGE_EXACT = new Set([
-  "/", "/market", "/compare", "/search", "/methodology", "/about", "/help",
+  "/", "/market", "/compare", "/search", "/methodology", "/how-we-check", "/about", "/help",
   "/status", "/operations", "/signals", "/research", "/updates", "/testing", "/offline", "/developers",
   "/login", "/admin/login", "/sell",
   // Well-known / PWA paths: crawlers and the service worker are unauthenticated by nature.
