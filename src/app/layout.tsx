@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DisclosureBanner } from "@/components/disclosure-banner";
 import { MarketplaceProvider } from "@/components/marketplace-state";
-import { CommerceCartProvider } from "@/components/commerce-cart-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
@@ -57,13 +56,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="en">
       <body className="min-h-screen bg-[var(--background)] pb-20 text-[var(--foreground)] antialiased md:pb-0">
         <MarketplaceProvider catalog={catalog} initialWatchlist={watchlist} initialCompare={comparison?.listingSlugs ?? []} authenticated={Boolean(principal)}>
-          <CommerceCartProvider authenticated={Boolean(principal)}>
-            <DisclosureBanner />
-            <SiteHeader authenticated={Boolean(principal)} />
-            <main>{children}</main>
-            <SiteFooter />
-            <MobileRetentionNav authenticated={Boolean(principal)} />
-          </CommerceCartProvider>
+          <DisclosureBanner />
+          <SiteHeader authenticated={Boolean(principal)} />
+          <main>{children}</main>
+          <SiteFooter />
+          <MobileRetentionNav authenticated={Boolean(principal)} />
         </MarketplaceProvider>
         <ServiceWorkerRegistrar />
       </body>

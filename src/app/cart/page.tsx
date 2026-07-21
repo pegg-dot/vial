@@ -1,5 +1,8 @@
-import { CartPageClient } from "@/components/cart-page-client";
-export const metadata = { title: "Sandbox cart" };
+import { permanentRedirect } from "next/navigation";
+
+// Quarantined: VIAL is affiliate-out (buying happens on the vendor's own site), so the
+// sandbox cart is no longer part of the buyer path. The commerce code is kept in the
+// repo as a dormant simulation; this route just sends buyers back to the market.
 export default function CartPage() {
-  return <section className="mx-auto max-w-[1200px] px-5 py-12 sm:px-8"><p className="text-xs font-semibold uppercase tracking-[.18em] text-violet-600">Commerce sandbox</p><h1 className="mt-3 text-5xl font-semibold tracking-[-.06em]">Cart</h1><p className="mb-9 mt-4 max-w-2xl text-[var(--muted)]">A complete multi-seller cart running against fictional products and a test payment provider.</p><CartPageClient /></section>;
+  permanentRedirect("/market");
 }

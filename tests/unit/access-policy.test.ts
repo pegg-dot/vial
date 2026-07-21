@@ -50,7 +50,7 @@ describe("deny-by-default access policy", () => {
   it("still enforces account-family ownership", () => {
     expect(accessDecision("/admin/users", session("customer")).allowed).toBe(false);
     expect(accessDecision("/admin/users", session("staff")).allowed).toBe(true);
-    expect(accessDecision("/checkout", session("seller")).allowed).toBe(false);
-    expect(accessDecision("/checkout", session("customer")).allowed).toBe(true);
+    expect(accessDecision("/for-you", session("seller")).allowed).toBe(false);
+    expect(accessDecision("/for-you", session("customer")).allowed).toBe(true);
   });
 });

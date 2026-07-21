@@ -14,6 +14,7 @@ export interface AccessDecision {
 // Public page routes (browseable with no session). Exact matches or path prefixes.
 const PUBLIC_PAGE_EXACT = new Set([
   "/", "/market", "/compare", "/search", "/methodology", "/how-we-check", "/about", "/help",
+  "/cart", "/checkout", // quarantined commerce → these routes just redirect to /market
   "/status", "/operations", "/signals", "/research", "/updates", "/testing", "/offline", "/developers",
   "/login", "/admin/login", "/sell",
   // Well-known / PWA paths: crawlers and the service worker are unauthenticated by nature.
@@ -56,8 +57,6 @@ export function accessDecision(path: string, session: SessionEnvelope | null): A
     path === "/watchlist" ||
     path === "/for-you" ||
     path === "/saved-searches" ||
-    path === "/cart" ||
-    path === "/checkout" ||
     path.startsWith("/orders/")
   ) {
     return { protected: true, allowed: session?.accountType === "customer", loginPath: "/login" };

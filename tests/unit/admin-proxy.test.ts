@@ -30,10 +30,10 @@ describe("deny-by-default route perimeter",()=>{
     const sellerCookie=`${SESSION_COOKIE}=${cookie("seller",["seller_owner"])}`;
     const customerAtSeller=proxy(new NextRequest("http://localhost/seller",{headers:{cookie:customerCookie}}));
     expect(customerAtSeller.status).toBe(307);
-    const sellerAtCheckout=proxy(new NextRequest("http://localhost/checkout",{headers:{cookie:sellerCookie}}));
-    expect(sellerAtCheckout.status).toBe(307);
-    const customerAtCheckout=proxy(new NextRequest("http://localhost/checkout",{headers:{cookie:customerCookie}}));
-    expect(customerAtCheckout.headers.get("x-middleware-next")).toBe("1");
+    const sellerAtForYou=proxy(new NextRequest("http://localhost/for-you",{headers:{cookie:sellerCookie}}));
+    expect(sellerAtForYou.status).toBe(307);
+    const customerAtForYou=proxy(new NextRequest("http://localhost/for-you",{headers:{cookie:customerCookie}}));
+    expect(customerAtForYou.headers.get("x-middleware-next")).toBe("1");
     const crossOrigin=proxy(new NextRequest("http://localhost/api/v1/account/preferences",{method:"POST",headers:{origin:"https://evil.example"}}));
     expect(crossOrigin.status).toBe(403);
   });
