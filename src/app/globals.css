@@ -5,7 +5,7 @@
   --surface: #ffffff;
   --surface-soft: #f0f0ec;
   --foreground: #111214;
-  --muted: #6e7078;
+  --muted: #61636b; /* meets WCAG AA (~4.8:1) on --background, incl. 11px labels */
   --line: rgba(17, 18, 20, 0.08);
   --accent: #6d5dfc;
   --accent-2: #b777ff;

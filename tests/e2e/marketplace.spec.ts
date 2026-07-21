@@ -33,9 +33,9 @@ test("home page and command search expose the market", async ({ page }) => {
 
 test("market filters update the listing grid", async ({ page }) => {
   await page.goto("/market");
-  await expect(page.getByText("12 listings")).toBeVisible();
+  await expect(page.getByTestId("market-count")).toHaveText("12 listings");
   await page.getByLabel("Compound").selectOption("mots-c");
-  await expect(page.getByText("2 listings")).toBeVisible();
+  await expect(page.getByTestId("market-count")).toHaveText("2 listings");
   await expect(page.getByRole("link", { name: /MOTS-c 10 mg/i }).first()).toBeVisible();
 });
 

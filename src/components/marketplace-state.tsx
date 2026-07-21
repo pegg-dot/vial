@@ -15,6 +15,7 @@ interface MarketplaceContextValue {
   toggleCompare: (slug: string) => void;
   clearCompare: () => void;
   openSearch: () => void;
+  authenticated: boolean;
 }
 
 const MarketplaceContext = createContext<MarketplaceContextValue | null>(null);
@@ -117,7 +118,8 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
     toggleCompare,
     clearCompare: () => { compareDirty.current = true; setCompare([]); },
     openSearch: () => setSearchOpen(true),
-  }), [catalog, compare, toggleCompare, toggleWatchlist, watchlist]);
+    authenticated,
+  }), [authenticated, catalog, compare, toggleCompare, toggleWatchlist, watchlist]);
 
   return <MarketplaceContext.Provider value={value}>
     {children}
