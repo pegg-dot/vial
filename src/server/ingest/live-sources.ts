@@ -10,6 +10,7 @@
 // the commerce double-gate. Live fetching is intentional, never a silent default.
 
 import type { SqlConnection } from "@/server/db/client";
+import { mintVialId } from "@/server/registry/repository";
 
 export class LiveIngestNotApprovedError extends Error {
   constructor() {
@@ -71,6 +72,10 @@ export async function upsertLiveVendor(db: SqlConnection, input: LiveVendorInput
       new Date().toISOString().slice(0, 10),
     ],
   );
+  // Mint a public, resolvable vial:vendor: ID so live vendors appear in the registry /
+  // public ID API alongside demo entities (the ingest previously skipped this, so the
+  // "citeable identity" product excluded 100% of real data).
+  await mintVialId(db, { entityType: "vendor", sourceEntityType: "organization", sourceEntityId: id, displayName: input.name, slug: input.slug, currentEntityId: id });
   return id;
 }
 
@@ -115,6 +120,7 @@ export async function upsertLiveListing(db: SqlConnection, input: LiveListingInp
        SET external_url = EXCLUDED.external_url, origin = 'live', checkout_mode = 'outbound', updated_at = NOW()`,
     [listingId, input.slug, productId, JSON.stringify(input.accent ?? ["#6d5dfc", "#8a7bff", "#b777ff"]), input.externalUrl],
   );
+  await mintVialId(db, { entityType: "product", sourceEntityType: "product", sourceEntityId: productId, displayName: input.name, slug: input.slug, currentEntityId: productId });
   return { productId, listingId };
 }
 

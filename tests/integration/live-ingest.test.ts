@@ -25,6 +25,7 @@ type Mods = {
   LiveIngestNotApprovedError: typeof import("@/server/ingest/live-sources").LiveIngestNotApprovedError;
   runSourceIngestion: typeof import("@/server/agents/pipeline").runSourceIngestion;
   getCatalogSnapshot: typeof import("@/server/catalog/repository").getCatalogSnapshot;
+  resolveToRegistry: typeof import("@/server/registry/repository").resolveToRegistry;
 };
 
 describe("live BPC-157 ingest end to end", () => {
@@ -32,12 +33,13 @@ describe("live BPC-157 ingest end to end", () => {
 
   beforeAll(async () => {
     (globalThis as typeof globalThis & { __vialDbPromise?: unknown }).__vialDbPromise = undefined;
-    const [client, bpc, live, pipeline, catalog] = await Promise.all([
+    const [client, bpc, live, pipeline, catalog, registry] = await Promise.all([
       import("@/server/db/client"),
       import("@/server/ingest/bpc157"),
       import("@/server/ingest/live-sources"),
       import("@/server/agents/pipeline"),
       import("@/server/catalog/repository"),
+      import("@/server/registry/repository"),
     ]);
     m = {
       getDatabase: client.getDatabase,
@@ -48,6 +50,7 @@ describe("live BPC-157 ingest end to end", () => {
       LiveIngestNotApprovedError: live.LiveIngestNotApprovedError,
       runSourceIngestion: pipeline.runSourceIngestion,
       getCatalogSnapshot: catalog.getCatalogSnapshot,
+      resolveToRegistry: registry.resolveToRegistry,
     };
     await m.getDatabase();
   });
@@ -88,6 +91,36 @@ describe("live BPC-157 ingest end to end", () => {
       `SELECT transport, allowed_hostnames FROM source_refresh_policies WHERE id = 'policy:live:eternal-peptides'`,
     );
     expect(policy.rows[0]?.transport).toBe("http");
+
+    // Live vendors must be resolvable in the public registry (not excluded like before).
+    const resolved = await m.resolveToRegistry("Eternal Peptides", "vendor");
+    expect(resolved.best?.vialId).toBe("vial:vendor:eternal-peptides");
+  });
+
+  it("auto-rejects storefront-scraped evidence noise instead of leaving it pending", async () => {
+    const spec = m.REAL_BPC157_VENDORS[2]; // biotech-peptides
+    // A vendor storefront page whose text yields a junk "batch code" (page boilerplate).
+    await m.runSourceIngestion({
+      sourceType: "vendor-page",
+      canonicalLocation: spec.productUrl,
+      label: `${spec.name} test`,
+      targetListingSlug: spec.listingSlug,
+      rawContent: `<html><body><h1>BPC-157</h1><p>Batch: TRACKING</p><p>$52.00 in stock</p></body></html>`,
+      contentType: "text/html",
+      parserProfile: "jsonld",
+      actor: "test",
+      workflow: "test-ingest",
+      captureMode: "scheduled",
+    });
+    const result = await m.approveSaneLiveClaims();
+    const rejected = result.heldForReview.find((h) => h.predicate === "batchCode");
+    expect(rejected?.reason).toContain("storefront noise");
+    const db = await m.getDatabase();
+    const pending = await db.query<{ n: string }>(
+      `SELECT COUNT(*) n FROM evidence_claims ec JOIN listings l ON l.id=ec.subject_id
+       WHERE ec.review_status='pending' AND l.origin='live' AND ec.predicate IN ('batchCode','reportIssuer','reportDate')`,
+    );
+    expect(Number(pending.rows[0]?.n)).toBe(0); // no junk left pending
   });
 
   it("publishes a real price through snapshot→extract→review onto the live listing", async () => {

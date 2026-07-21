@@ -25,6 +25,26 @@ services:
       VIAL_PRIVACY_HASH_SECRET: local-compose-privacy-secret-change-before-use-0002
       VIAL_SEED_FIXTURES: "true"
       VIAL_SEED_DEMO_ACCOUNTS: "true"
+      # Without a scheduler, live prices never refresh and /signals never populates.
+      CRON_SECRET: local-compose-cron-secret-change-before-use-0003
     ports: ["3000:3000"]
+  # Refresh + intelligence sweep on an interval (Vercel deploys use vercel.json cron;
+  # a plain docker deploy had NO scheduler, so live data went stale forever). Hits the
+  # same guarded cron route the platform cron would, with the shared secret.
+  scheduler:
+    image: curlimages/curl:8.11.0
+    depends_on:
+      app:
+        condition: service_started
+    environment:
+      CRON_SECRET: local-compose-cron-secret-change-before-use-0003
+      SWEEP_INTERVAL_SECONDS: "3600"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          sleep "$${SWEEP_INTERVAL_SECONDS}";
+          curl -fsS -H "Authorization: Bearer $${CRON_SECRET}" http://app:3000/api/internal/cron/refresh || echo "sweep call failed";
+        done
 volumes:
   vial-postgres:

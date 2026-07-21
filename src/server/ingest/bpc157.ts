@@ -177,9 +177,24 @@ export async function approveSaneLiveClaims(db?: SqlConnection): Promise<Pick<In
   const approved: IngestReport["approved"] = [];
   const heldForReview: IngestReport["heldForReview"] = [];
 
+  // Evidence predicates (batch code, report metadata) must come from a real lab/COA
+  // source, NOT a vendor storefront page — the deterministic parser scrapes page nav and
+  // boilerplate into these (e.g. batchCode "SYNTHESIS", reportIssuer "...Search Login Cart").
+  // Auto-REJECT that noise on live listings so the review queue never fills with garbage
+  // and a human can't accidentally publish page-chrome as a real batch code.
+  const STOREFRONT_NOISE = new Set(["batchCode", "reportDate", "reportIssuer", "reportConfirmed"]);
+
   for (const claim of pending.rows) {
     let value: unknown;
     try { value = JSON.parse(claim.value_json); } catch { value = claim.value_json; }
+
+    if (STOREFRONT_NOISE.has(claim.predicate)) {
+      try {
+        await reviewClaim({ claimId: claim.id, decision: "reject", actor: "script:ingest-real-bpc157", role: "admin", notes: "Evidence claim scraped from a vendor storefront page — not a valid COA source." });
+      } catch { /* best-effort cleanup */ }
+      heldForReview.push({ claimId: claim.id, predicate: claim.predicate, value, reason: "auto-rejected: storefront noise, not a COA source" });
+      continue;
+    }
 
     const inRange =
       claim.predicate === "price"
