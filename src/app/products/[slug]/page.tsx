@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock3, ExternalLink, PackageCheck, Star, Truck } from "lucide-react";
 import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVendorBySlug } from "@/server/catalog/repository";
-import { formatCurrency, vendorStatusLabel } from "@/lib/format";
+import { formatCurrency, formatPricePerMg, vendorStatusLabel } from "@/lib/format";
 import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
 import { DataOriginBadge } from "@/components/data-origin-badge";
@@ -91,6 +91,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <p className="text-xs font-medium text-[var(--muted)]">Observed price</p>
                 <div className="mt-1 flex items-baseline gap-2">
                   <p className="text-4xl font-semibold tracking-[-.055em]">{formatCurrency(product.price)}</p>
+                  {product.pricePerMg ? <span className="rounded-full bg-black/[.05] px-2.5 py-1 text-xs font-semibold tabular-nums text-black/70">{formatPricePerMg(product.pricePerMg)}</span> : null}
                   {product.previousPrice && product.previousPrice !== product.price ? <span className="text-sm text-[var(--muted)] line-through">{formatCurrency(product.previousPrice)}</span> : null}
                 </div>
               </div>

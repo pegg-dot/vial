@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
+import { PriceLeaderboard } from "@/components/price-leaderboard";
 import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 import { getDatabase } from "@/server/db/client";
 import { getCurrentPrincipal } from "@/server/auth/principal";
@@ -79,8 +80,12 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />
           <Stat icon={BookOpen} label="Known aliases" value={String(compound.aliases.length + 1)} />
         </div>
+      </section>
 
-        <div className="mt-14 mb-7">
+      <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
+
+      <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
+        <div className="mb-7">
           <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Current market</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">All {compound.name} listings</h2>
         </div>

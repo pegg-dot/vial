@@ -153,14 +153,20 @@ export async function registerLiveHttpSource(db: SqlConnection, input: LiveSourc
   const listingId = `lst:${input.targetListingSlug}`;
   const ownerId = input.ownerVendorSlug ? `org:${input.ownerVendorSlug}` : null;
 
-  await db.query(
+  // A source row may already exist for this URL from a prior ingest. ON CONFLICT keeps the
+  // EXISTING row's id, so we must link the listing to the ACTUAL id (via RETURNING), not the
+  // id we tried to insert — otherwise listing.source_id dangles and the freshness recompute
+  // (which copies it into an FK-constrained table) crashes every page.
+  const src = await db.query<{ id: string }>(
     `INSERT INTO sources (id, source_type, canonical_location, owner_organization_id, label, status, origin)
      VALUES ($1,$2,$3,$4,$5,'active','live')
      ON CONFLICT (canonical_location) DO UPDATE
-       SET owner_organization_id = EXCLUDED.owner_organization_id, label = EXCLUDED.label, origin = 'live', updated_at = NOW()`,
+       SET owner_organization_id = EXCLUDED.owner_organization_id, label = EXCLUDED.label, origin = 'live', updated_at = NOW()
+     RETURNING id`,
     [sourceId, input.sourceType, input.canonicalLocation, ownerId, input.label],
   );
-  await db.query(`UPDATE listings SET source_id = $2 WHERE id = $1`, [listingId, sourceId]);
+  const realSourceId = src.rows[0]?.id ?? sourceId;
+  await db.query(`UPDATE listings SET source_id = $2 WHERE id = $1`, [listingId, realSourceId]);
   await db.query(
     `INSERT INTO source_refresh_policies
        (id, source_id, target_listing_id, transport, parser_profile, enabled, interval_minutes, next_run_at, allowed_hostnames, allowed_content_types, timeout_ms, max_response_bytes)
@@ -170,7 +176,7 @@ export async function registerLiveHttpSource(db: SqlConnection, input: LiveSourc
            allowed_hostnames = EXCLUDED.allowed_hostnames, next_run_at = NOW(), updated_at = NOW()`,
     [
       policyId,
-      sourceId,
+      realSourceId,
       listingId,
       input.parserProfile,
       input.intervalMinutes ?? 720,
@@ -178,7 +184,7 @@ export async function registerLiveHttpSource(db: SqlConnection, input: LiveSourc
       JSON.stringify(["text/html", "application/json", "application/ld+json", "text/plain"]),
     ],
   );
-  return { sourceId, policyId };
+  return { sourceId: realSourceId, policyId };
 }
 
 /** Mark an existing compound record as backed by live data (badges the compound page). */
@@ -262,13 +268,15 @@ export async function recordCatalogListing(
 ): Promise<{ productId: string; listingId: string }> {
   const { productId, listingId } = await upsertLiveListing(db, input);
   const sourceId = `src:catalog:${input.slug}`;
-  await db.query(
+  const src = await db.query<{ id: string }>(
     `INSERT INTO sources (id, source_type, canonical_location, owner_organization_id, label, status, origin)
      VALUES ($1,'vendor-page',$2,$3,$4,'active','live')
-     ON CONFLICT (canonical_location) DO UPDATE SET label = EXCLUDED.label, origin = 'live', updated_at = NOW()`,
+     ON CONFLICT (canonical_location) DO UPDATE SET label = EXCLUDED.label, origin = 'live', updated_at = NOW()
+     RETURNING id`,
     [sourceId, input.sourceUrl, `org:${input.vendorSlug}`, input.sourceLabel],
   );
-  await db.query(`UPDATE listings SET source_id = COALESCE(source_id, $2) WHERE id = $1`, [listingId, sourceId]);
+  const realSourceId = src.rows[0]?.id ?? sourceId;
+  await db.query(`UPDATE listings SET source_id = $2 WHERE id = $1`, [listingId, realSourceId]);
   await db.query(
     `UPDATE listings
      SET price = $2, availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',

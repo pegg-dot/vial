@@ -97,6 +97,30 @@ describe("live BPC-157 ingest end to end", () => {
     expect(resolved.best?.vialId).toBe("vial:vendor:eternal-peptides");
   });
 
+  it("links a listing to the REAL source id when the URL already has a source (no dangling FK)", async () => {
+    const db = await m.getDatabase();
+    const live = await import("@/server/ingest/live-sources");
+    const url = "https://sharedurl.example/products/x";
+    await live.upsertLiveVendor(db, { slug: "shared-vendor", name: "Shared Vendor", domains: ["sharedurl.example"], description: "test" });
+    // First ingest records a catalog listing + its source.
+    await live.recordCatalogListing(db, {
+      compoundSlug: "bpc-157", vendorSlug: "shared-vendor", slug: "shared-vendor-a", name: "A", quantity: "5mg",
+      externalUrl: url, price: 40, availability: "In stock", sourceUrl: url, sourceLabel: "A",
+    });
+    // Second ingest reuses the SAME url via registerLiveHttpSource (different intended id) —
+    // the listing must end up pointing at a source that actually exists.
+    await live.registerLiveHttpSource(db, {
+      key: "shared-vendor", sourceType: "vendor-page", canonicalLocation: url, label: "B",
+      targetListingSlug: "shared-vendor-a", parserProfile: "jsonld", allowedHostnames: ["sharedurl.example"],
+    }, { approved: true });
+    const row = await db.query<{ source_id: string | null; exists: boolean }>(
+      `SELECT l.source_id, EXISTS(SELECT 1 FROM sources s WHERE s.id = l.source_id) AS exists
+       FROM listings l WHERE l.id = 'lst:shared-vendor-a'`,
+    );
+    expect(row.rows[0]?.source_id).toBeTruthy();
+    expect(row.rows[0]?.exists).toBe(true); // no dangling reference
+  });
+
   it("auto-rejects storefront-scraped evidence noise instead of leaving it pending", async () => {
     const spec = m.REAL_BPC157_VENDORS[2]; // biotech-peptides
     // A vendor storefront page whose text yields a junk "batch code" (page boilerplate).

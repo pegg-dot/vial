@@ -66,6 +66,8 @@ export interface Product {
   compoundSlug: string;
   vendorSlug: string;
   quantity: string;
+  mg?: number;
+  pricePerMg?: number;
   form: string;
   price: number;
   previousPrice?: number;
