@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, Building2, Clock3, MapPin, PackageSearch, ShieldCheck, Star } from "lucide-react";
+import { AlertTriangle, ArrowLeft, BadgeCheck, Building2, CheckCircle2, CircleDashed, Clock3, Layers, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
 import { getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
+import { getVendorReputationBySlug, type ReputationDimension } from "@/server/reputation/repository";
 import { vendorStatusLabel } from "@/lib/format";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
@@ -26,7 +27,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal()]);
+  const [listings, principal, reputation] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug)]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
 
@@ -58,13 +59,28 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <VendorStat icon={ShieldCheck} value={`${vendor.documentationCurrent}%`} label="Current documents" />
                 <VendorStat icon={PackageSearch} value={String(vendor.productCount)} label="Products tracked" />
-                <VendorStat icon={Clock3} value={`${vendor.medianShipDays} days`} label="Median shipping" />
-                <VendorStat icon={Star} value={`${vendor.supportScore} / 5`} label="Support signal" />
               </div>
+              <p className="mt-4 text-[11px] leading-4 text-[var(--muted)]">Reputation is composed below from provenance-linked evidence — never a single score.</p>
             </div>
           </div>
         </div>
       </section>
+
+      {reputation && (
+        <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-20">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Reputation record</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">Composed from evidence, not scored</h2>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/[.045] px-3 py-1 text-[11px] font-semibold text-black/55"><Layers className="size-3" /> methodology {reputation.methodologyVersion}</span>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {reputation.dimensions.map((d) => <ReputationTile key={d.key} dimension={d} />)}
+          </div>
+          <p className="mt-5 max-w-3xl text-xs leading-5 text-[var(--muted)]">Every dimension stands on its own and cites its source. Where evidence is absent, the record shows &ldquo;unknown&rdquo; rather than inventing a number — VIAL never collapses these into a single safety or quality score.</p>
+        </section>
+      )}
 
       <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
@@ -97,6 +113,24 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         </div>
       </section>
     </>
+  );
+}
+
+function ReputationTile({ dimension }: { dimension: ReputationDimension }) {
+  const tone = dimension.status === "established"
+    ? { chip: "bg-emerald-50 text-emerald-800", Icon: CheckCircle2, iconClass: "text-emerald-700", card: "border-black/[.07] bg-white" }
+    : dimension.status === "disputed"
+    ? { chip: "bg-amber-50 text-amber-800", Icon: AlertTriangle, iconClass: "text-amber-700", card: "border-amber-200 bg-amber-50" }
+    : { chip: "bg-black/[.05] text-black/55", Icon: CircleDashed, iconClass: "text-black/35", card: "border-dashed border-black/15 bg-black/[.015]" };
+  return (
+    <div className={`rounded-[26px] border p-5 ${tone.card}`}>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">{dimension.label}</h3>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${tone.chip}`}><tone.Icon className={`size-3 ${tone.iconClass}`} />{dimension.status}</span>
+      </div>
+      <p className="mt-3 text-lg font-semibold tracking-[-.02em]">{dimension.value}</p>
+      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{dimension.basis}</p>
+    </div>
   );
 }
 
