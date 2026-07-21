@@ -19,6 +19,7 @@ const SCOPES = [
   { id: "market:read", label: "Market data (catalog, compounds, vendors)" },
   { id: "signals:read", label: "Opportunity signals" },
   { id: "export:read", label: "Data exports (CSV / JSON)" },
+  { id: "feeds:read", label: "Risk-signal feeds" },
 ];
 
 export function DeveloperKeys({ initialKeys }: { initialKeys: KeyRow[] }) {
