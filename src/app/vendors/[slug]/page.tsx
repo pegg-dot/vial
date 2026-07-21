@@ -8,6 +8,8 @@ import { vendorStatusLabel } from "@/lib/format";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
+import { VendorVerdictBanner } from "@/components/vendor-verdict-banner";
+import { verdictForVendorSlug } from "@/server/verify";
 import { FollowButton } from "@/components/follow-button";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
@@ -31,12 +33,14 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const [listings, principal, reputation] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug)]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
+  const verdict = verdictForVendorSlug(slug);
 
   return (
     <>
       <section className="border-b border-black/[.06]">
         <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
           <Link href="/market" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-black"><ArrowLeft className="size-4" /> Back to market</Link>
+          {verdict && <div className="mt-6"><VendorVerdictBanner verdict={verdict.verdict} summary={verdict.summary} /></div>}
           <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               <VendorMark initials={vendor.initials} accent={vendor.accent} size="lg" />

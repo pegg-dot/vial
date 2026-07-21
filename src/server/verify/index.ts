@@ -96,6 +96,18 @@ export function findKnownVendor(query: string, domain: string | null): KnownVend
   }) ?? null;
 }
 
+export function findKnownVendorBySlug(slug: string): KnownVendor | null {
+  return (knownVendors as KnownVendor[]).find((v) => v.slug === slug) ?? null;
+}
+
+/** A compact vendor verdict for surfacing on the vendor page. Null for vendors we don't rate. */
+export function verdictForVendorSlug(slug: string): { verdict: Verdict; headline: string; summary: string } | null {
+  const v = findKnownVendorBySlug(slug);
+  if (!v) return null;
+  const r = vendorVerdict(v);
+  return { verdict: r.verdict, headline: r.headline, summary: r.summary };
+}
+
 export function vendorVerdict(v: KnownVendor): VerifyResult {
   const rep = v.reputationSummary ?? "";
   const avoid = v.redFlag || /shut ?down|defunct|do not buy|scam|impersonat|dead|parked|avoid/i.test(rep);
