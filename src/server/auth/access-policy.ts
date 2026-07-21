@@ -16,7 +16,7 @@ const PUBLIC_PAGE_EXACT = new Set([
   "/", "/market", "/compare", "/search", "/methodology", "/how-we-check", "/about", "/help",
   "/cart", "/checkout", // quarantined commerce → these routes just redirect to /market
   "/status", "/operations", "/signals", "/research", "/updates", "/testing", "/offline", "/developers",
-  "/login", "/admin/login", "/sell",
+  "/login", "/register", "/admin/login", "/sell",
   // Well-known / PWA paths: crawlers and the service worker are unauthenticated by nature.
   "/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/sw.js",
 ]);

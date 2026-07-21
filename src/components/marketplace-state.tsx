@@ -44,12 +44,25 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      if (!authenticated) setWatchlist(readStoredList(WATCHLIST_KEY));
-      if (!authenticated) setCompare(readStoredList(COMPARE_KEY));
+      if (!authenticated) {
+        setWatchlist(readStoredList(WATCHLIST_KEY));
+        setCompare(readStoredList(COMPARE_KEY));
+      } else {
+        // Merge any watchlist a guest saved BEFORE signing in/up — otherwise those
+        // saves were silently dropped at exactly the moment the buyer committed.
+        const guestSaves = readStoredList(WATCHLIST_KEY).filter((slug) => !initialWatchlist.includes(slug));
+        if (guestSaves.length) {
+          setWatchlist((current) => Array.from(new Set([...current, ...guestSaves])));
+          for (const slug of guestSaves) {
+            void fetch("/api/v1/watchlist", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, watched: true }) });
+          }
+        }
+        window.localStorage.removeItem(WATCHLIST_KEY);
+      }
       setHydrated(true);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [authenticated]);
+  }, [authenticated, initialWatchlist]);
 
   useEffect(() => { if (hydrated && !authenticated) window.localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist)); }, [authenticated, hydrated, watchlist]);
   useEffect(() => {
