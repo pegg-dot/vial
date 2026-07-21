@@ -13,7 +13,7 @@ export interface AccessDecision {
 
 // Public page routes (browseable with no session). Exact matches or path prefixes.
 const PUBLIC_PAGE_EXACT = new Set([
-  "/", "/market", "/compare", "/search", "/methodology", "/how-we-check", "/about", "/help",
+  "/", "/market", "/compare", "/search", "/verify", "/methodology", "/how-we-check", "/about", "/help",
   "/cart", "/checkout", // quarantined commerce → these routes just redirect to /market
   "/status", "/operations", "/signals", "/research", "/updates", "/testing", "/offline", "/developers",
   "/login", "/register", "/admin/login", "/sell",
@@ -26,7 +26,7 @@ const PUBLIC_PAGE_PREFIX = ["/compounds", "/vendors", "/products", "/legal", "/p
 // (public read, bearer token, or webhook signature) and must never be session-gated
 // by the perimeter, or legitimate no-session callers (cron, Stripe) would be blocked.
 const PUBLIC_API_EXACT = new Set([
-  "/api/search", "/api/openapi.json",
+  "/api/search", "/api/openapi.json", "/api/v1/verify",
   "/api/v1/health", "/api/v1/catalog", "/api/v1/alerts",
   "/api/v1/commerce/provider/webhook", "/api/internal/cron/refresh",
 ]);
