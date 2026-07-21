@@ -12,4 +12,16 @@ describe("CSV export serializer", () => {
   it("renders numbers/booleans/null/undefined safely", () => {
     expect(toCsv([{ a: 1, b: true, c: null, d: undefined }], ["a", "b", "c", "d"])).toBe("a,b,c,d\r\n1,true,,\r\n");
   });
+
+  it("neutralizes spreadsheet formula injection in text cells", () => {
+    // A cell beginning with =, +, -, @, tab, or CR gets a leading apostrophe so
+    // Excel/Sheets treat it as text, not an executable formula.
+    expect(toCsv([{ a: "+SUM(A1)" }, { a: "@x" }, { a: "-cmd" }], ["a"])).toBe("a\r\n'+SUM(A1)\r\n'@x\r\n'-cmd\r\n");
+    expect(toCsv([{ a: '=HYPERLINK("http://evil")' }], ["a"])).toBe('a\r\n"\'=HYPERLINK(""http://evil"")"\r\n');
+  });
+
+  it("leaves genuine numbers (including negatives) untouched", () => {
+    // Only attacker-controllable text is neutralized; a real -5 stays a number.
+    expect(toCsv([{ a: -5, b: 3.14 }], ["a", "b"])).toBe("a,b\r\n-5,3.14\r\n");
+  });
 });
