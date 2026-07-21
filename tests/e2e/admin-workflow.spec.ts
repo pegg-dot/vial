@@ -110,5 +110,5 @@ test("a controlled fixture change creates one visible cascade", async ({ page })
   await expect(page.getByText("opportunity.opened", { exact: true }).first()).toBeVisible();
 
   await page.goto("/signals");
-  await expect(page.getByRole("heading", { name: "Signals hiding inside the catalog." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /moving right now/i })).toBeVisible();
 });

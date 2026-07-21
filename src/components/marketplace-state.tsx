@@ -3,7 +3,7 @@
 import type { CatalogSnapshot, Product } from "@/lib/types";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
-import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 interface MarketplaceContextValue {
   catalog: CatalogSnapshot;
@@ -36,6 +36,11 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
   const [compare, setCompare] = useState<string[]>(initialCompare);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  // The provider survives client-side transitions (e.g. the login redirect), so its
+  // state can be stale [] while `authenticated` flips true. Only sync the comparison
+  // to the server after the user actually changed it in this session — otherwise the
+  // first authenticated render would overwrite the stored comparison with [].
+  const compareDirty = useRef(false);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -50,7 +55,7 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
   useEffect(() => {
     if (!hydrated) return;
     if (authenticated) {
-      void fetch("/api/v1/comparisons", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ listingSlugs: compare }) });
+      if (compareDirty.current) void fetch("/api/v1/comparisons", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ listingSlugs: compare }) });
     } else {
       window.localStorage.setItem(COMPARE_KEY, JSON.stringify(compare));
     }
@@ -81,6 +86,7 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
   }, [authenticated, validSlugs]);
   const toggleCompare = useCallback((slug: string) => {
     if (!validSlugs.has(slug)) return;
+    compareDirty.current = true;
     setCompare((current) => {
       const next = current.includes(slug) ? current.filter((item) => item !== slug) : current.length >= 4 ? [...current.slice(1), slug] : [...current, slug];
       if (authenticated) void fetch("/api/v1/decision-events", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ eventType: "comparison_updated", subjectType: "comparison", subjectId: "default", metadata: { listingSlugs: next } }) });
@@ -96,14 +102,14 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
     isCompared: (slug) => compare.includes(slug),
     toggleWatchlist,
     toggleCompare,
-    clearCompare: () => setCompare([]),
+    clearCompare: () => { compareDirty.current = true; setCompare([]); },
     openSearch: () => setSearchOpen(true),
   }), [catalog, compare, toggleCompare, toggleWatchlist, watchlist]);
 
   return <MarketplaceContext.Provider value={value}>
     {children}
     {searchOpen && <SearchOverlay catalog={catalog} onClose={() => setSearchOpen(false)} />}
-    <CompareDock products={catalog.products} selected={compare} onClear={() => setCompare([])} />
+    <CompareDock products={catalog.products} selected={compare} onClear={() => { compareDirty.current = true; setCompare([]); }} />
   </MarketplaceContext.Provider>;
 }
 

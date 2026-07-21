@@ -19,21 +19,23 @@ test("home page and command search expose the market", async ({ page }) => {
   });
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /The peptide market/i })).toBeVisible();
-  await page.getByRole("button", { name: /Search compounds, vendors/i }).click();
+  await expect(page.getByRole("heading", { name: /buying peptides/i })).toBeVisible();
+  await page.getByRole("button", { name: /Search the market/i }).click();
   await expect(page.getByRole("dialog", { name: "Search VIAL" })).toBeVisible();
   await page.getByLabel("Search query").fill("MOTS-c");
   await expect(page.getByRole("link", { name: /MOTS-c/i }).first()).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Search VIAL" })).toBeHidden();
-  expect(consoleErrors).toEqual([]);
+  // A production build made without NEXT_PUBLIC_SITE_URL keeps upgrade-insecure-requests
+  // in its CSP, which breaks prefetches over plain-http localhost. Not a product error.
+  expect(consoleErrors.filter((message) => !message.includes("ERR_SSL_PROTOCOL_ERROR"))).toEqual([]);
 });
 
 test("market filters update the listing grid", async ({ page }) => {
   await page.goto("/market");
-  await expect(page.getByText("12 normalized listings")).toBeVisible();
+  await expect(page.getByText("12 listings")).toBeVisible();
   await page.getByLabel("Compound").selectOption("mots-c");
-  await expect(page.getByText("2 normalized listings")).toBeVisible();
+  await expect(page.getByText("2 listings")).toBeVisible();
   await expect(page.getByRole("link", { name: /MOTS-c 10 mg/i }).first()).toBeVisible();
 });
 
@@ -41,8 +43,8 @@ test("watchlist persists through navigation", async ({ page }) => {
   await loginCustomer(page);
   await page.goto("/market");
   await page.getByRole("button", { name: "Add to watchlist" }).first().click();
-  await page.getByRole("link", { name: /Watchlist/i }).first().click();
-  await expect(page.getByRole("heading", { name: "Watch what changes." })).toBeVisible();
+  await page.getByRole("link", { name: "Saved", exact: true }).first().click();
+  await expect(page.getByRole("heading", { name: "Your saved listings." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove from watchlist" })).toBeVisible();
 });
 
@@ -62,7 +64,7 @@ test("mobile navigation remains usable", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();
   await expect(page.getByRole("navigation", { name: "Mobile navigation" })).toBeVisible();
-  await page.getByRole("link", { name: "Methodology", exact: true }).last().click();
+  await page.getByRole("link", { name: "How we check", exact: true }).last().click();
   await expect(page.getByRole("heading", { name: /Trust is a chain of evidence/i })).toBeVisible();
 });
 
@@ -70,10 +72,10 @@ test("consumer intelligence preserves decisions across the authenticated experie
   await loginCustomer(page);
   await page.goto("/for-you");
   await expect(page.getByRole("heading", { name: /Welcome back, Nora/i })).toBeVisible();
-  await expect(page.getByText(/Records worth reviewing/i)).toBeVisible();
+  await expect(page.getByText(/Picked for you, with reasons/i)).toBeVisible();
 
   await page.goto("/saved-searches");
-  await expect(page.getByRole("heading", { name: /Never repeat the same market research/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Your saved searches/i })).toBeVisible();
   await expect(page.getByText("BPC-157 with current evidence")).toBeVisible();
 
   await page.goto("/compare");
@@ -83,7 +85,7 @@ test("consumer intelligence preserves decisions across the authenticated experie
   await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
 
   await page.goto("/account/history");
-  await expect(page.getByRole("heading", { name: "Your market history" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Recently viewed" })).toBeVisible();
 });
 
 test("mobile authenticated navigation exposes the retention loop", async ({ page }) => {

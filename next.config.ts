@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
+// upgrade-insecure-requests breaks production builds served over plain http
+// (e.g. the local e2e server on http://localhost): the browser upgrades
+// same-origin requests to https and they fail. Only emit it when the canonical
+// site URL is https.
+const servesOverHttps = !(process.env.NEXT_PUBLIC_SITE_URL ?? "https://vial.example").startsWith("http://");
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -14,7 +19,7 @@ const contentSecurityPolicy = [
   "connect-src 'self' https://api.stripe.com https://r.stripe.com https://q.stripe.com",
   "frame-src https://js.stripe.com https://hooks.stripe.com",
   "worker-src 'self' blob:",
-  isProduction ? "upgrade-insecure-requests" : "",
+  isProduction && servesOverHttps ? "upgrade-insecure-requests" : "",
 ].filter(Boolean).join("; ");
 
 const securityHeaders = [
