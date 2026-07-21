@@ -41,7 +41,7 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public API routes open to anonymous callers", () => {
-    for (const path of ["/api/v1/health", "/api/v1/catalog", "/api/v1/alerts", "/api/openapi.json", "/api/v1/auth/login"]) {
+    for (const path of ["/api/v1/health", "/api/v1/catalog", "/api/v1/alerts", "/api/openapi.json", "/api/v1/auth/login", "/api/public/v1/catalog", "/api/public/v1/export"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }

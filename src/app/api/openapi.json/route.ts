@@ -6,11 +6,21 @@ export function GET() {
     openapi: "3.1.0",
     info: {
       title: "VIAL Evidence API",
-      version: "3.0.0",
-      description: "Published fictional market data plus authenticated consumer-intelligence endpoints for preferences, saved searches, comparisons, follows, notifications, and change summaries.",
+      version: "9.0.0",
+      description: "Published fictional market data plus authenticated consumer-intelligence endpoints, and a bearer-authenticated public API (/api/public/v1) for programmatic read access and exports over published, review-gated data.",
     },
     servers: [{ url: siteUrl }],
+    components: {
+      securitySchemes: {
+        apiKey: { type: "http", scheme: "bearer", description: "A VIAL API key (vial_pk_…) with the required scope." },
+      },
+    },
     paths: {
+      "/api/public/v1/me": { get: { summary: "Echo the calling key's owner and scopes", security: [{ apiKey: [] }], responses: { "200": { description: "Key identity" }, "401": { description: "Missing or invalid key" } } } },
+      "/api/public/v1/catalog": { get: { summary: "Published catalog projection (scope market:read)", security: [{ apiKey: [] }], responses: { "200": { description: "Normalized catalog snapshot" }, "401": { description: "Invalid key" }, "403": { description: "Missing scope" }, "429": { description: "Rate limited" } } } },
+      "/api/public/v1/signals": { get: { summary: "Published opportunity signals (scope signals:read)", security: [{ apiKey: [] }], parameters: [{ name: "limit", in: "query", schema: { type: "integer" } }], responses: { "200": { description: "Opportunity signals" }, "403": { description: "Missing scope" } } } },
+      "/api/public/v1/export": { get: { summary: "Bounded export of catalog or signals (scope export:read)", security: [{ apiKey: [] }], parameters: [{ name: "dataset", in: "query", schema: { type: "string", enum: ["catalog", "signals"] } }, { name: "format", in: "query", schema: { type: "string", enum: ["json", "csv"] } }], responses: { "200": { description: "Export payload" }, "400": { description: "Bad dataset/format" }, "403": { description: "Missing scope" } } } },
+
       "/api/v1/catalog": {
         get: {
           summary: "Published catalog projection",

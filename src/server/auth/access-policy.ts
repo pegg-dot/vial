@@ -29,7 +29,7 @@ const PUBLIC_API_EXACT = new Set([
   "/api/v1/health", "/api/v1/catalog", "/api/v1/alerts",
   "/api/v1/commerce/provider/webhook", "/api/internal/cron/refresh",
 ]);
-const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/"];
+const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", "/api/public/"];
 
 function isPublic(path: string): boolean {
   if (PUBLIC_PAGE_EXACT.has(path) || PUBLIC_API_EXACT.has(path)) return true;
