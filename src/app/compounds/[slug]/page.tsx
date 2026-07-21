@@ -8,6 +8,9 @@ import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
 import { DataOriginBadge } from "@/components/data-origin-badge";
+import { LabTestsPanel } from "@/components/lab-tests-panel";
+import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
+import { getDatabase } from "@/server/db/client";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
 
@@ -27,7 +30,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
-  const [listings, principal] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal()]);
+  const [listings, principal, labTests] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "compound" && item.entitySlug === slug);
   const averageHistory = listings[0]?.priceHistory.map((_, index) => {
@@ -82,8 +85,12 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">All {compound.name} listings</h2>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
+      </section>
 
-        <div className="mt-16 rounded-[28px] border border-amber-200 bg-amber-50 p-6 sm:p-8">
+      <LabTestsPanel tests={labTests} heading={`${compound.name} — independent lab tests`} />
+
+      <section className="mx-auto max-w-[1320px] px-5 pb-14 sm:px-8 sm:pb-20">
+        <div className="mt-4 rounded-[28px] border border-amber-200 bg-amber-50 p-6 sm:p-8">
           <div className="flex items-start gap-4">
             <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-amber-100"><CircleAlert className="size-4 text-amber-800" /></span>
             <div>

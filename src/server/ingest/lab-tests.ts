@@ -1,0 +1,118 @@
+// Independent lab-test (COA) records — the evidence-depth layer.
+//
+// parseJanoshikFeed() reads Janoshik's public test feed (server-rendered HTML) into entries.
+// recordLabTest() stores a real COA reference — resolving the compound and (where possible)
+// the vendor — including the measured purity read from the certificate image via vision.
+
+import type { SqlConnection } from "@/server/db/client";
+import { newId } from "@/server/db/ids";
+import { matchCompound, type CompoundRef } from "./shopify-import";
+
+export interface JanoshikEntry {
+  testId: string;
+  sampleName: string;
+  manufacturer: string;
+  client: string;
+  verifyUrl: string;
+  verifyKey: string;
+}
+
+/** Parse the server-rendered Janoshik public feed into structured entries. */
+export function parseJanoshikFeed(html: string): JanoshikEntry[] {
+  const blocks = html.split('<li data-test-id="').slice(1);
+  const entries: JanoshikEntry[] = [];
+  const strip = (s: string) => s.replace(/<[^>]+>/g, "").trim();
+  for (const b of blocks) {
+    const testId = b.slice(0, b.indexOf('"'));
+    const href = /href="(https:\/\/verify\.janoshik\.com\/tests\/[^"]+)"/.exec(b);
+    const sample = /<span class="sample">([\s\S]*?)<\/span>/.exec(b);
+    const client = /<span class="client">([\s\S]*?)<\/span>/.exec(b);
+    const mfr = /manufacturer">\s*Made By\s*([\s\S]*?)<\/span>/.exec(b);
+    if (!href || !sample) continue;
+    const url = href[1];
+    const keyMatch = /_([A-Z0-9]{8,})$/.exec(url);
+    entries.push({
+      testId,
+      sampleName: strip(sample[1]),
+      manufacturer: mfr ? strip(mfr[1]) : "Unknown",
+      client: client ? strip(client[1]) : "",
+      verifyUrl: url,
+      verifyKey: keyMatch ? keyMatch[1] : "",
+    });
+  }
+  return entries;
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** Best-effort resolution of a COA manufacturer string to a known vendor slug. */
+export function matchVendor(manufacturer: string, vendors: { slug: string; name: string; domain: string }[]): string | null {
+  const m = norm(manufacturer);
+  if (!m) return null;
+  for (const v of vendors) {
+    const keys = [norm(v.name), norm(v.domain.replace(/\.[a-z]+$/, ""))].filter((k) => k.length >= 5);
+    if (keys.some((k) => m.includes(k) || k.includes(m))) return v.slug;
+  }
+  return null;
+}
+
+export interface LabTestInput {
+  testId: string;
+  verifyUrl: string;
+  verifyKey?: string;
+  sampleName: string;
+  manufacturer: string;
+  batchCode?: string;
+  purityPct?: number | null;
+  measuredContent?: string | null;
+  testedAt?: string | null;
+  lab?: string;
+}
+
+/** Record (idempotently, keyed on verify_url) a real independent lab test. */
+export async function recordLabTest(
+  db: SqlConnection,
+  input: LabTestInput,
+  resolve: { compounds: CompoundRef[]; vendors: { slug: string; name: string; domain: string }[] },
+): Promise<{ id: string; compoundSlug: string | null; vendorSlug: string | null }> {
+  const compoundSlug = matchCompound(input.sampleName, resolve.compounds);
+  const vendorSlug = matchVendor(input.manufacturer, resolve.vendors);
+  const id = newId("labtest");
+  await db.query(
+    `INSERT INTO lab_test_records
+       (id, lab, test_id, verify_url, verify_key, compound_slug, sample_name, manufacturer, vendor_slug, batch_code, purity_pct, measured_content, tested_at, origin)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'live')
+     ON CONFLICT (verify_url) DO UPDATE
+       SET purity_pct = COALESCE(EXCLUDED.purity_pct, lab_test_records.purity_pct),
+           measured_content = COALESCE(EXCLUDED.measured_content, lab_test_records.measured_content),
+           batch_code = COALESCE(EXCLUDED.batch_code, lab_test_records.batch_code),
+           compound_slug = COALESCE(EXCLUDED.compound_slug, lab_test_records.compound_slug),
+           vendor_slug = COALESCE(EXCLUDED.vendor_slug, lab_test_records.vendor_slug),
+           tested_at = COALESCE(EXCLUDED.tested_at, lab_test_records.tested_at),
+           updated_at = NOW()`,
+    [id, input.lab ?? "Janoshik Analytical", input.testId, input.verifyUrl, input.verifyKey ?? null, compoundSlug, input.sampleName, input.manufacturer, vendorSlug, input.batchCode ?? null, input.purityPct ?? null, input.measuredContent ?? null, input.testedAt ?? null],
+  );
+  return { id, compoundSlug, vendorSlug };
+}
+
+export interface LabTestRow {
+  lab: string; test_id: string | null; verify_url: string; compound_slug: string | null;
+  sample_name: string; manufacturer: string; vendor_slug: string | null; batch_code: string | null;
+  purity_pct: string | number | null; measured_content: string | null; tested_at: string | null;
+}
+
+export async function getLabTestsForCompound(db: SqlConnection, compoundSlug: string, limit = 12): Promise<LabTestRow[]> {
+  return (await db.query<LabTestRow>(
+    `SELECT lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at
+     FROM lab_test_records WHERE compound_slug = $1 ORDER BY purity_pct DESC NULLS LAST, updated_at DESC LIMIT $2`,
+    [compoundSlug, limit],
+  )).rows;
+}
+
+export async function getLabTestsForVendor(db: SqlConnection, vendorSlug: string, limit = 12): Promise<LabTestRow[]> {
+  return (await db.query<LabTestRow>(
+    `SELECT lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at
+     FROM lab_test_records WHERE vendor_slug = $1 ORDER BY updated_at DESC LIMIT $2`,
+    [vendorSlug, limit],
+  )).rows;
+}

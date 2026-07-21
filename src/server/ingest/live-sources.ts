@@ -185,3 +185,97 @@ export async function registerLiveHttpSource(db: SqlConnection, input: LiveSourc
 export async function markCompoundLive(db: SqlConnection, compoundSlug: string): Promise<void> {
   await db.query(`UPDATE compounds SET origin = 'live', updated_at = NOW() WHERE slug = $1`, [compoundSlug]);
 }
+
+/**
+ * Recompute every compound's listing_count / median_price / documentation_coverage from
+ * its active listings. Catalog imports (recordCatalogListing) don't go through the publish
+ * cascade, so their compound-level stats need a post-import recompute to stay coherent.
+ */
+export async function recomputeCompoundStats(db: SqlConnection): Promise<void> {
+  await db.query(`
+    WITH stats AS (
+      SELECT p.compound_id,
+             COUNT(*) AS n,
+             percentile_cont(0.5) WITHIN GROUP (ORDER BY l.price) AS med,
+             ROUND(100.0 * COUNT(*) FILTER (WHERE l.report_date <> '' AND l.report_date <> 'Not located') / COUNT(*)) AS docs
+      FROM listings l JOIN products p ON p.id = l.product_id WHERE p.status = 'active'
+      GROUP BY p.compound_id
+    )
+    UPDATE compounds c
+    SET listing_count = COALESCE(s.n, 0),
+        median_price = COALESCE(s.med, c.median_price),
+        documentation_coverage = COALESCE(s.docs, 0),
+        updated_at = NOW()
+    FROM stats s WHERE s.compound_id = c.id
+  `);
+  // Compounds with zero active listings → reflect that honestly.
+  await db.query(`
+    UPDATE compounds c SET listing_count = 0, updated_at = NOW()
+    WHERE NOT EXISTS (SELECT 1 FROM products p JOIN listings l ON l.product_id = p.id WHERE p.compound_id = c.id AND p.status = 'active')
+      AND c.listing_count <> 0
+  `);
+}
+
+export interface LiveCompoundInput {
+  slug: string;
+  name: string;
+  shorthand: string;
+  category: string;
+  description: string;
+  aliases: string[];
+  accent?: [string, string, string];
+  researchNote?: string;
+}
+
+const DEFAULT_RESEARCH_NOTE =
+  "Research summaries describe published literature and market data only. They do not establish the identity, quality, safety, or legal status of any listed physical product.";
+
+/** Create (idempotently) a real compound record marked origin='live'. Returns its id. */
+export async function upsertLiveCompound(db: SqlConnection, input: LiveCompoundInput): Promise<string> {
+  const id = `cmp:${input.slug}`;
+  await db.query(
+    `INSERT INTO compounds (id, slug, canonical_name, shorthand, category, description, aliases, accent, research_note, origin)
+     VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9,'live')
+     ON CONFLICT (slug) DO UPDATE
+       SET canonical_name = EXCLUDED.canonical_name, shorthand = EXCLUDED.shorthand, category = EXCLUDED.category,
+           description = EXCLUDED.description, aliases = EXCLUDED.aliases, origin = 'live', updated_at = NOW()`,
+    [
+      id, input.slug, input.name, input.shorthand, input.category, input.description,
+      JSON.stringify(input.aliases), JSON.stringify(input.accent ?? ["#6d5dfc", "#8a7bff", "#b777ff"]),
+      input.researchNote ?? DEFAULT_RESEARCH_NOTE,
+    ],
+  );
+  await mintVialId(db, { entityType: "compound", sourceEntityType: "compound", sourceEntityId: id, displayName: input.name, slug: input.slug, currentEntityId: id });
+  return id;
+}
+
+/**
+ * Directly record an observed listing price from a vendor's own structured catalog feed
+ * (e.g. Shopify /products.json) with honest provenance. This is first-party structured
+ * data — the vendor's declared price — so it is recorded as an observation (evidence_level
+ * 'public-only', label "Vendor catalog") linked to a source, NOT passed off as lab evidence.
+ * A live HTTP source can still be registered separately to keep it fresh via the pipeline.
+ */
+export async function recordCatalogListing(
+  db: SqlConnection,
+  input: LiveListingInput & { price: number; availability: "In stock" | "Low stock" | "Unavailable"; sourceUrl: string; sourceLabel: string },
+): Promise<{ productId: string; listingId: string }> {
+  const { productId, listingId } = await upsertLiveListing(db, input);
+  const sourceId = `src:catalog:${input.slug}`;
+  await db.query(
+    `INSERT INTO sources (id, source_type, canonical_location, owner_organization_id, label, status, origin)
+     VALUES ($1,'vendor-page',$2,$3,$4,'active','live')
+     ON CONFLICT (canonical_location) DO UPDATE SET label = EXCLUDED.label, origin = 'live', updated_at = NOW()`,
+    [sourceId, input.sourceUrl, `org:${input.vendorSlug}`, input.sourceLabel],
+  );
+  await db.query(`UPDATE listings SET source_id = COALESCE(source_id, $2) WHERE id = $1`, [listingId, sourceId]);
+  await db.query(
+    `UPDATE listings
+     SET price = $2, availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
+         last_checked = 'just now', price_history = CASE WHEN price_history = '[]'::jsonb THEN $4::jsonb ELSE price_history END,
+         observed_at = NOW(), updated_at = NOW()
+     WHERE id = $1`,
+    [listingId, input.price, input.availability, JSON.stringify([input.price])],
+  );
+  return { productId, listingId };
+}
