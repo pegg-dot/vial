@@ -36,6 +36,16 @@ function slugify(value: string): string {
   return normalizeTerm(value).replace(/\s+/g, "-");
 }
 
+// Route params may already be decoded by the framework; a second decode of a bare '%'
+// throws URIError. Degrade to the raw value so an unknown ID becomes a clean 404, not a 500.
+export function decodeVialId(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 // A registry ID's provenance URL is the canonical VIAL page for that record — the
 // human-readable authority a citation points a reader to.
 export function provenanceUrlFor(entityType: RegistryEntityType, slug: string): string {
@@ -104,18 +114,23 @@ export async function mintVialId(db: SqlConnection, input: MintInput): Promise<{
     return { vialId: existing.vial_id, minted: false };
   }
 
-  // Mint a fresh, human-legible ID, suffixing on collision with a *different* source.
+  // Mint a fresh, human-legible ID, suffixing on collision with a *different* source. The
+  // canonical_slug carries the SAME suffix so the collided entity stays resolvable by its
+  // own identity (the base slug still points a reader to the shared source page).
   const base = `vial:${input.entityType}:${input.slug}`;
   let vialId = base;
-  for (let attempt = 2; attempt < 1000; attempt += 1) {
+  let canonicalSlug = input.slug;
+  for (let attempt = 2; ; attempt += 1) {
     const clash = (await db.query<{ vial_id: string }>(`SELECT vial_id FROM registry_identifiers WHERE vial_id=$1`, [vialId])).rows[0];
     if (!clash) break;
+    if (attempt > 999) throw new Error(`Unable to mint a unique VIAL ID for ${base}`);
     vialId = `${base}-${attempt}`;
+    canonicalSlug = `${input.slug}-${attempt}`;
   }
   await db.query(
     `INSERT INTO registry_identifiers(vial_id,entity_type,source_entity_type,source_entity_id,current_entity_id,display_name,canonical_slug,provenance_url,attributes)
      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)`,
-    [vialId, input.entityType, input.sourceEntityType, input.sourceEntityId, input.currentEntityId ?? null, input.displayName, input.slug, provenanceUrl, attributes],
+    [vialId, input.entityType, input.sourceEntityType, input.sourceEntityId, input.currentEntityId ?? null, input.displayName, canonicalSlug, provenanceUrl, attributes],
   );
   return { vialId, minted: true };
 }
@@ -182,7 +197,7 @@ export async function resolveToRegistry(label: string, type?: RegistryEntityType
   const alias = (await db.query<RegistryRow & { matched_alias: string }>(
     `SELECT ri.*,a.alias matched_alias FROM registry_identifier_aliases a
      JOIN registry_identifiers ri ON ri.vial_id=a.vial_id
-     WHERE a.normalized_alias=$1 ${type ? "AND ri.entity_type=$2" : ""} ORDER BY a.created_at LIMIT 1`,
+     WHERE a.normalized_alias=$1 AND ri.status='active' ${type ? "AND ri.entity_type=$2" : ""} ORDER BY a.created_at LIMIT 1`,
     type ? [normalized, type] : [normalized],
   )).rows[0];
   if (alias) return { best: { vialId: alias.vial_id, displayName: alias.display_name, entityType: alias.entity_type, score: 0.97, matchedOn: alias.matched_alias }, candidates: [] };
@@ -206,15 +221,24 @@ export async function resolveToRegistry(label: string, type?: RegistryEntityType
 // Idempotent — reruns update, never duplicate.
 export async function projectMarketDataRegistry(connection?: SqlConnection) {
   const db = connection ?? (await getDatabase());
+  // Order newest-first and de-dupe by source identity: a rename leaves an orphaned OLD
+  // canonical_entities row with the same source_entity_id, so we must project only the
+  // CURRENT (most-recently-updated) row — a stale row must never regress the record.
   const rows = (await db.query<QueryResultRow & { id: string; entity_type: string; canonical_key: string; display_name: string; attributes: unknown; source_entity_type: string; source_entity_id: string }>(
     `SELECT id,entity_type,canonical_key,display_name,attributes,source_entity_type,source_entity_id
-     FROM canonical_entities WHERE source_entity_id IS NOT NULL AND entity_type IN ('organization','compound','product')`,
+     FROM canonical_entities WHERE source_entity_id IS NOT NULL AND entity_type IN ('organization','compound','product')
+     ORDER BY updated_at DESC, id`,
   )).rows;
+  const seen = new Set<string>();
   let minted = 0;
   for (const row of rows) {
-    const orgType = String((toAttributes(row.attributes).organizationType ?? ""));
-    // Laboratories are minted from the real evidence-network record, not the org row.
-    if (row.entity_type === "organization" && orgType === "laboratory") continue;
+    // Only real vendor organizations become vendor IDs; laboratories are minted from the
+    // evidence-network record, and any other org type is out of the market-data scope
+    // (which the reputation loader also assumes — keep the two aligned).
+    if (row.entity_type === "organization" && String(toAttributes(row.attributes).organizationType ?? "") !== "vendor") continue;
+    const sourceKey = `${row.source_entity_type}:${row.source_entity_id}`;
+    if (seen.has(sourceKey)) continue;
+    seen.add(sourceKey);
     const entityType: RegistryEntityType = row.entity_type === "compound" ? "compound" : row.entity_type === "product" ? "product" : "vendor";
     const result = await mintVialId(db, {
       entityType,
@@ -227,7 +251,7 @@ export async function projectMarketDataRegistry(connection?: SqlConnection) {
     });
     if (result.minted) minted += 1;
   }
-  return { count: rows.length, minted };
+  return { count: seen.size, minted };
 }
 
 // Projects the evidence spine (real laboratories, published batch passports) into the

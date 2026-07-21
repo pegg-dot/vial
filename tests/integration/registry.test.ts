@@ -88,4 +88,45 @@ describe("VIAL 10.0 identity registry", () => {
     expect(after).toBe(before);
     expect(before).toBeGreaterThan(0);
   });
+
+  it("keeps the current slug after a rename and stays idempotent (no orphan-row ping-pong)", async () => {
+    const db = await getDatabase();
+    const before = await getRegistryRecord("vial:compound:bpc-157");
+    expect(before).toBeTruthy();
+    // Simulate rebuildCanonicalGraph leaving an orphaned OLD canonical row after a rename:
+    // same source_entity_id, OLDER updated_at, a stale slug/name.
+    await db.query(
+      `INSERT INTO canonical_entities(id,entity_type,canonical_key,display_name,normalized_name,source_entity_type,source_entity_id,updated_at)
+       VALUES('entity:compound:stale-bpc','compound','stale-bpc','Stale BPC','stale bpc','compound',$1,'2020-01-01T00:00:00Z')
+       ON CONFLICT(entity_type,canonical_key) DO NOTHING`, [before!.sourceEntityId]);
+    await projectMarketDataRegistry(db);
+    const after1 = await getRegistryRecord("vial:compound:bpc-157");
+    expect(after1!.slug).toBe("bpc-157"); // must not regress to the stale slug
+    expect(after1!.provenanceUrl).toBe("/compounds/bpc-157");
+    const aliasCount = after1!.aliases.length;
+    await projectMarketDataRegistry(db); // rerun must be idempotent
+    const after2 = await getRegistryRecord("vial:compound:bpc-157");
+    expect(after2!.slug).toBe("bpc-157");
+    expect(after2!.aliases.length).toBe(aliasCount); // no alias growth on rerun
+  });
+
+  it("resolves a collided second entity by its own suffixed slug", async () => {
+    const db = await getDatabase();
+    const a = await mintVialId(db, { entityType: "compound", sourceEntityType: "compound", sourceEntityId: "cmp:collide-a", displayName: "Collide A", slug: "collide" });
+    const b = await mintVialId(db, { entityType: "compound", sourceEntityType: "compound", sourceEntityId: "cmp:collide-b", displayName: "Collide B", slug: "collide" });
+    expect(a.vialId).toBe("vial:compound:collide");
+    expect(b.vialId).toBe("vial:compound:collide-2");
+    // The collided second entity must be resolvable by its own (suffixed) identity.
+    const resolved = await resolveToRegistry("collide-2", "compound");
+    expect(resolved.best?.vialId).toBe("vial:compound:collide-2");
+  });
+
+  it("does not resolve a former slug to a redirected (tombstone) identifier", async () => {
+    const db = await getDatabase();
+    const minted = await mintVialId(db, { entityType: "compound", sourceEntityType: "compound", sourceEntityId: "cmp:tomb", displayName: "Tomb", slug: "tomb-current" });
+    await db.query(`INSERT INTO registry_identifier_aliases(id,vial_id,alias,normalized_alias,alias_type) VALUES('regalias:tomb',$1,'legacy-name','legacy name','former-slug')`, [minted.vialId]);
+    await db.query(`UPDATE registry_identifiers SET status='redirected',redirects_to='vial:compound:merge-target' WHERE vial_id=$1`, [minted.vialId]);
+    const resolved = await resolveToRegistry("legacy-name", "compound");
+    expect(resolved.best?.vialId).not.toBe(minted.vialId); // must not surface the dead tombstone
+  });
 });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiKey } from "@/server/api-access/bearer";
 import { ensureEvidenceNetworkSeed } from "@/server/evidence-network/repository";
-import { getRegistryRecord } from "@/server/registry/repository";
+import { getRegistryRecord, decodeVialId } from "@/server/registry/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ vial
   if (auth.response) return auth.response;
   await ensureEvidenceNetworkSeed();
   const { vialId } = await params;
-  const record = await getRegistryRecord(decodeURIComponent(vialId));
+  const record = await getRegistryRecord(decodeVialId(vialId));
   if (!record) return NextResponse.json({ error: "Unknown VIAL ID" }, { status: 404 });
   return NextResponse.json(
     { data: record, meta: { standard: "vial-registry", version: "v1", readonly: true } },

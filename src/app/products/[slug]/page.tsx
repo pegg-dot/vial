@@ -164,7 +164,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
               <div className="mt-5 grid grid-cols-3 gap-2 text-center">
                 <MiniStat value={`${vendor.documentationCurrent}%`} label="Current docs" />
-                <MiniStat value={`${vendor.medianShipDays}d`} label="Median ship" />
+                <MiniStat value={String(vendor.history.length)} label="Observed events" />
                 <MiniStat value={String(vendor.productCount)} label="Listings" />
               </div>
             </Link>

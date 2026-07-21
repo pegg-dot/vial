@@ -139,7 +139,7 @@ export default async function HomePage() {
                     <div className="mt-5 grid grid-cols-3 gap-2 text-center">
                       <MiniMetric value={`${vendor.documentationCurrent}%`} label="Current docs" />
                       <MiniMetric value={String(vendor.productCount)} label="Products" />
-                      <MiniMetric value={`${vendor.medianShipDays}d`} label="Shipping" />
+                      <MiniMetric value={String(vendor.history.length)} label="Observed events" />
                     </div>
                   </div>
                 </div>

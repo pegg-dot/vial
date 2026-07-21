@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireLaboratoryBearerScope } from "@/server/auth/laboratory-token";
 import { submitEvidenceProposal } from "@/server/evidence-network/repository";
+import { decodeVialId } from "@/server/registry/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ via
   }
   const { vialId } = await params;
   const payload = body.payload && typeof body.payload === "object" && !Array.isArray(body.payload) ? (body.payload as Record<string, unknown>) : {};
-  const result = await submitEvidenceProposal({ laboratoryId: gate.auth!.laboratoryId, tokenId: gate.auth!.tokenId, vialId: decodeURIComponent(vialId), proposalType: String(body.proposalType ?? ""), payload });
+  const result = await submitEvidenceProposal({ laboratoryId: gate.auth!.laboratoryId, tokenId: gate.auth!.tokenId, vialId: decodeVialId(vialId), proposalType: String(body.proposalType ?? ""), payload });
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.code });
   return NextResponse.json(
     { data: { id: result.id, status: result.status }, meta: { standard: "vial-registry", proposalOnly: true, note: "Submitted for human review — not published." } },

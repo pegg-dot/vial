@@ -37,6 +37,13 @@ describe("VIAL 10.0 registry public API", () => {
     expect(res.status).toBe(404);
   });
 
+  it("returns 404 rather than a 500 for a malformed VIAL ID param", async () => {
+    const key = await createApiKey({ ownerId: "user:reg", name: "id", scopes: ["identity:read"] });
+    // A bare '%' would throw URIError from a naive decodeURIComponent — must degrade to 404.
+    const res = await getById(bearer(key.plaintext, "https://api.vial.test/api/public/v1/id/%25"), { params: Promise.resolve({ vialId: "%" }) });
+    expect(res.status).toBe(404);
+  });
+
   it("resolves a messy label through the resolve endpoint", async () => {
     const key = await createApiKey({ ownerId: "user:reg", name: "id", scopes: ["identity:read"] });
     const res = await getResolve(bearer(key.plaintext, "https://api.vial.test/api/public/v1/resolve?label=BPC157&type=compound"));

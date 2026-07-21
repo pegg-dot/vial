@@ -354,11 +354,13 @@ export async function submitEvidenceProposal(input: { laboratoryId: string; toke
   if (serialized.length > 8192) return { ok: false, code: 400, error: "Payload exceeds 8KB" };
 
   const db = await getDatabase();
-  const reg = (await db.query<QueryResultRow & { source_entity_type: string; source_entity_id: string; entity_type: string }>(`SELECT source_entity_type,source_entity_id,entity_type FROM registry_identifiers WHERE vial_id=$1 AND status='active'`, [input.vialId])).rows[0];
-  if (!reg) return { ok: false, code: 404, error: "Unknown VIAL ID" };
-
+  // Throttle FIRST, on the authenticated lab, so the unknown-ID (404) path cannot be used
+  // to spin unbounded DB reads from a single credential.
   const limit = await consumeRateLimit({ bucket: "evidence-proposal", key: input.laboratoryId, limit: 30, windowSeconds: 60 });
   if (!limit.allowed) return { ok: false, code: 429, error: "Rate limit exceeded" };
+
+  const reg = (await db.query<QueryResultRow & { source_entity_type: string; source_entity_id: string; entity_type: string }>(`SELECT source_entity_type,source_entity_id,entity_type FROM registry_identifiers WHERE vial_id=$1 AND status='active'`, [input.vialId])).rows[0];
+  if (!reg) return { ok: false, code: 404, error: "Unknown VIAL ID" };
 
   const id = newId("lab-proposal");
   await db.query(
