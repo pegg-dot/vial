@@ -28,7 +28,7 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public catalog routes open to anonymous visitors", () => {
-    for (const path of ["/", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/passports", "/labs", "/testing", "/methodology", "/legal/privacy", "/search"]) {
+    for (const path of ["/", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/passports", "/labs", "/testing", "/methodology", "/developers", "/legal/privacy", "/search"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }
@@ -41,7 +41,7 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public API routes open to anonymous callers", () => {
-    for (const path of ["/api/v1/health", "/api/v1/catalog", "/api/v1/alerts", "/api/openapi.json", "/api/v1/auth/login", "/api/public/v1/catalog", "/api/public/v1/export"]) {
+    for (const path of ["/api/v1/health", "/api/v1/catalog", "/api/v1/alerts", "/api/openapi.json", "/api/v1/auth/login", "/api/public/v1/catalog", "/api/public/v1/export", "/api/public/v1/id/vial:compound:bpc-157", "/api/public/v1/reputation/vial:vendor:x"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }

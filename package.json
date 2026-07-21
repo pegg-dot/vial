@@ -1,6 +1,6 @@
 {
   "name": "vial-marketplace",
-  "version": "7.0.0",
+  "version": "10.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -19,8 +19,8 @@
     "audit:roles": "node scripts/http-role-audit.mjs",
     "audit:accessibility": "node scripts/structural-accessibility-audit.mjs",
     "verify:v1": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility",
-    "check": "npm run verify:v9",
-    "verify": "npm run verify:v9",
+    "check": "npm run verify:v10",
+    "verify": "npm run verify:v10",
     "verify:v8": "npm run verify:v6",
     "verify:v7": "npm run verify:v6",
     "extract:smoke": "node --import tsx scripts/model-extractor-smoke.mjs",
@@ -43,7 +43,10 @@
     "audit:evidence-v6": "node --import tsx scripts/evidence-v6-audit.mjs",
     "audit:lab-mcp": "node --import tsx scripts/lab-mcp-audit.mjs",
     "verify:v6": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run audit:market-data && npm run audit:consumer-intelligence && npm run audit:seller-ops && npm run audit:seller-mcp && npm run audit:commerce-v5 && npm run audit:evidence-v6 && npm run audit:lab-mcp && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility",
-    "verify:v9": "npm run verify:v6"
+    "verify:v9": "npm run verify:v6",
+    "audit:registry": "node --import tsx scripts/registry-audit.mjs",
+    "test:v10": "node scripts/run-isolated-tests.mjs tests/integration/registry.test.ts tests/integration/registry-api.test.ts tests/integration/batch-standard.test.ts tests/integration/reputation.test.ts tests/integration/migration-integrity.test.ts",
+    "verify:v10": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run audit:market-data && npm run audit:consumer-intelligence && npm run audit:seller-ops && npm run audit:seller-mcp && npm run audit:commerce-v5 && npm run audit:evidence-v6 && npm run audit:lab-mcp && npm run audit:registry && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.3",

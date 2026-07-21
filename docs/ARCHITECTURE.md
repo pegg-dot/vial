@@ -213,20 +213,28 @@ Deferred. Current listing checkout mode is information-only. No payment or trans
 
 ## Current limitations
 
-- Startup still uses idempotent schema creation instead of versioned migrations.
-- Source artifacts are stored in PostgreSQL rather than object storage.
+- Migrations are versioned and version-gated (`schema_migrations`, `CURRENT_SCHEMA_VERSION`),
+  but each migration body is a `CREATE TABLE / ADD COLUMN IF NOT EXISTS` snapshot: editing an
+  already-applied schema module does not re-run, so column type/constraint changes on populated
+  tables are not yet expressible. A drift guard (`audit:registry`, `migration-integrity` test)
+  fails if the version count diverges from the registered migrations.
+- Source artifacts are stored in PostgreSQL rather than content-addressed object storage, and the
+  rendered report/raw-data artifacts behind `document_hash`/`raw_data_hash` are not persisted — so
+  verification confirms a hash VIAL holds but cannot yet reproduce the artifact for an outsider.
 - No real external source is enabled in the fictional seed.
 - No robots or terms policy evaluation is automated.
-- The extractor is deterministic rather than an external language model.
+- The extractor is deterministic; the model provider seam exists but stays inert until benchmarked
+  and approved.
 - Anonymous watchlists remain browser-local.
-- No email, push, or durable user notification delivery exists.
+- Web push delivery ships (self-hosted VAPID); email and durable cross-device notification delivery
+  do not.
 - Reviewer assignment, queue aging, and second-review rules are not implemented.
 
 ## Scaling path
 
 1. Labeled extraction and change-detection benchmark
-2. Versioned database migrations
-3. Object storage for large source artifacts
+2. Delta (non-snapshot) database migrations for evolving populated tables
+3. Object storage for large source artifacts and reproducible report/raw-data verification
 4. Reviewer assignment and alert delivery service
 5. Authenticated accounts and durable watchlists
 6. Seller feeds and correction workflows
