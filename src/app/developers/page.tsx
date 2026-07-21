@@ -95,6 +95,7 @@ export default function DevelopersPage() {
           <div>
             <div className="flex items-center gap-2"><GitBranch className="size-4 text-violet-700" /><h2 className="text-2xl font-semibold tracking-[-.03em]">Batch history is versioned</h2></div>
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">A cited passport is a record, not a mutable row. Every material change appends an immutable version, and the headline confidence is decomposed into its basis — which labs, sampling independence, methods, and the established / conflicting / unknown split. Disagreement between independent samples is preserved, never averaged away.</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">An accredited laboratory can attach corroborating evidence to a batch by posting to <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[12px]">/api/public/v1/id/&#123;vialId&#125;/evidence-proposals</code> with an <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[12px]">evidence:propose</code> token. Submissions land in human review — they never publish automatically.</p>
           </div>
           <div>
             <div className="flex items-center gap-2"><ScrollText className="size-4 text-violet-700" /><h2 className="text-2xl font-semibold tracking-[-.03em]">Reputation, methodology {`reputation-v1`}</h2></div>

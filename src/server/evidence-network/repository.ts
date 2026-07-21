@@ -4,6 +4,7 @@ import { getDatabase, type SqlConnection, withTransaction } from "@/server/db/cl
 import { newId } from "@/server/db/ids";
 import { ensureSellerOpsSeed, resolveSellerMembership } from "@/server/seller/ops";
 import { projectEvidenceRegistry } from "@/server/registry/repository";
+import { consumeRateLimit } from "@/server/security/rate-limit";
 
 const onboardingSteps = ["identity", "quality", "scope", "methods", "team", "security", "agreement", "review"] as const;
 
@@ -337,4 +338,34 @@ export async function revokeLaboratoryReport(input: { laboratoryId: string; repo
 
 export async function createLaboratoryApiToken(input: { laboratoryId: string; label: string; scopes: string[]; actorId: string }) { const raw = `vlab_${randomBytes(24).toString("base64url")}`; const id = newId("lab-token"); const db = await getDatabase(); await db.query(`INSERT INTO laboratory_api_tokens(id,laboratory_id,label,token_prefix,token_hash,scopes,created_by) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7)`, [id, input.laboratoryId, input.label, raw.slice(0, 12), tokenHash(raw), JSON.stringify(input.scopes), input.actorId]); return { id, token: raw, prefix: raw.slice(0, 12) }; }
 export async function revokeLaboratoryApiToken(input: { laboratoryId: string; tokenId: string }) { const db = await getDatabase(); const result = await db.query(`UPDATE laboratory_api_tokens SET status='revoked',revoked_at=NOW() WHERE id=$1 AND laboratory_id=$2 AND status='active' RETURNING id`, [input.tokenId, input.laboratoryId]); return Boolean(result.rows[0]); }
+
+const EVIDENCE_PROPOSAL_TYPES = new Set(["evidence-link", "batch-claim", "report-reference"]);
+export type EvidenceProposalResult = { ok: true; id: string; status: string } | { ok: false; code: number; error: string };
+
+// The external-submission flywheel: an authenticated lab attaches evidence against a
+// public VIAL ID. It ALWAYS lands as a pending proposal in the human review queue and can
+// NEVER publish, issue, or approve (AGENTS: no bearer/MCP path may publish or approve
+// evidence). Extracted/submitted content is inert data until a human reviews it.
+// Authentication + scope are enforced by the route's requireLaboratoryBearerScope gate;
+// this function receives the already-authenticated laboratory identity.
+export async function submitEvidenceProposal(input: { laboratoryId: string; tokenId: string; vialId: string; proposalType: string; payload: Record<string, unknown> }): Promise<EvidenceProposalResult> {
+  if (!EVIDENCE_PROPOSAL_TYPES.has(input.proposalType)) return { ok: false, code: 400, error: `Unknown proposal type. Allowed: ${[...EVIDENCE_PROPOSAL_TYPES].join(", ")}` };
+  const serialized = JSON.stringify(input.payload ?? {});
+  if (serialized.length > 8192) return { ok: false, code: 400, error: "Payload exceeds 8KB" };
+
+  const db = await getDatabase();
+  const reg = (await db.query<QueryResultRow & { source_entity_type: string; source_entity_id: string; entity_type: string }>(`SELECT source_entity_type,source_entity_id,entity_type FROM registry_identifiers WHERE vial_id=$1 AND status='active'`, [input.vialId])).rows[0];
+  if (!reg) return { ok: false, code: 404, error: "Unknown VIAL ID" };
+
+  const limit = await consumeRateLimit({ bucket: "evidence-proposal", key: input.laboratoryId, limit: 30, windowSeconds: 60 });
+  if (!limit.allowed) return { ok: false, code: 429, error: "Rate limit exceeded" };
+
+  const id = newId("lab-proposal");
+  await db.query(
+    `INSERT INTO laboratory_work_proposals(id,laboratory_id,proposal_type,subject_type,subject_id,payload,status,created_by)
+     VALUES($1,$2,$3,$4,$5,$6::jsonb,'pending',$7)`,
+    [id, input.laboratoryId, input.proposalType, reg.source_entity_type, reg.source_entity_id, JSON.stringify({ vialId: input.vialId, entityType: reg.entity_type, submitted: input.payload ?? {} }), `lab-token:${input.tokenId}`],
+  );
+  return { ok: true, id, status: "pending" };
+}
 export async function authenticateLaboratoryApiToken(raw: string) { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); const row = (await db.query<QueryResultRow & { id: string; laboratory_id: string; scopes: unknown }>(`SELECT id,laboratory_id,scopes FROM laboratory_api_tokens WHERE token_hash=$1 AND status='active' AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>NOW())`, [tokenHash(raw)])).rows[0]; if (!row) return null; await db.query(`UPDATE laboratory_api_tokens SET last_used_at=NOW() WHERE id=$1`, [row.id]); return { tokenId: row.id, laboratoryId: row.laboratory_id, scopes: json<string[]>(row.scopes, []) }; }

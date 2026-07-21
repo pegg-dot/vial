@@ -13,6 +13,7 @@ export function GET() {
     components: {
       securitySchemes: {
         apiKey: { type: "http", scheme: "bearer", description: "A VIAL API key (vial_pk_…) with the required scope." },
+        labToken: { type: "http", scheme: "bearer", description: "A laboratory API token (vlab_…) with the evidence:propose scope." },
       },
     },
     paths: {
@@ -24,6 +25,7 @@ export function GET() {
       "/api/public/v1/resolve": { get: { summary: "Map a real-world label to a canonical VIAL ID (scope identity:read)", security: [{ apiKey: [] }], parameters: [{ name: "label", in: "query", required: true, schema: { type: "string" } }, { name: "type", in: "query", schema: { type: "string", enum: ["compound", "vendor", "product", "lab", "batch", "source"] } }], responses: { "200": { description: "Best match plus ranked candidates" }, "400": { description: "Missing label" }, "403": { description: "Missing scope" } } } },
       "/api/public/v1/batches/{vialBatchId}": { get: { summary: "Batch-history standard record: decomposed passport + append-only version history (scope market:read)", security: [{ apiKey: [] }], parameters: [{ name: "vialBatchId", in: "path", required: true, schema: { type: "string" }, description: "e.g. vial:batch:hx-bpc-2607" }], responses: { "200": { description: "Decomposed confidence basis, dimensions, and version history" }, "403": { description: "Missing scope" }, "404": { description: "Unknown batch VIAL ID" } } } },
       "/api/public/v1/reputation/{vialId}": { get: { summary: "Reputation record: decomposable, provenance-linked dimensions for a vendor or lab — never a composite score (scope reputation:read)", security: [{ apiKey: [] }], parameters: [{ name: "vialId", in: "path", required: true, schema: { type: "string" }, description: "e.g. vial:vendor:northstar-research, vial:lab:aperture-analytical" }], responses: { "200": { description: "Dimensioned reputation record with methodology version" }, "403": { description: "Missing scope" }, "404": { description: "Unknown VIAL ID" } } } },
+      "/api/public/v1/id/{vialId}/evidence-proposals": { post: { summary: "Submit external evidence against a VIAL ID — proposal-only, lands in human review, never publishes (laboratory token, evidence:propose)", security: [{ labToken: [] }], parameters: [{ name: "vialId", in: "path", required: true, schema: { type: "string" } }], requestBody: { required: true, content: { "application/json": { schema: { type: "object", properties: { proposalType: { type: "string", enum: ["evidence-link", "batch-claim", "report-reference"] }, payload: { type: "object" } }, required: ["proposalType"] } } } }, responses: { "201": { description: "Proposal created with status pending" }, "400": { description: "Bad proposal type or payload" }, "401": { description: "Missing/invalid token" }, "403": { description: "Missing evidence:propose scope" }, "404": { description: "Unknown VIAL ID" }, "429": { description: "Rate limited" } } } },
 
       "/api/v1/catalog": {
         get: {
