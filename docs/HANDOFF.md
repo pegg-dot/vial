@@ -170,6 +170,32 @@ visual polish with Fable 5 / Cloud Design.
    page CTA is already "Buy at [Vendor] →", inert until data is real).
 6. **Deploy** — Vercel + managed Postgres (the DB layer is already built for this).
 
+### Progress log — 2026-07-21 (deep-dive audit + full remediation)
+
+Full audit at `docs/audit/vial-deep-dive-audit.html` (6 parallel auditors). Every
+finding was then fixed across 5 committed batches (all pushed):
+- **B1 trust inversion + labeling:** real vendors no longer look worse than fake ones
+  (empty-evidence state, no "0 (0)" rating, risk-flags count only fraud not opportunity
+  signals, "unknown" not "0%" docs); cascade recomputes price_change; evidence label
+  advances off "Awaiting first check"; swept remaining "fictional" copy; removed a
+  buyer-facing name leak.
+- **B2 commerce quarantine:** cart provider off the global layout; /cart & /checkout
+  308→/market (code kept, dormant); admin nav grouped with a "Legacy · simulation"
+  section; /signals, /operations, /developers de-orphaned into the footer.
+- **B3 backend edges:** live entities now mint vial: registry IDs (resolvable via the
+  public API); docker `scheduler` service + CRON_SECRET (was: no scheduler → stale
+  data); storefront junk claims auto-reject (queue no longer fills with garbage).
+  ⚠️ Deferred with reason: a runtime path to create REAL batch passports needs COA
+  OCR + batch matching — building it without real lab data would fabricate evidence,
+  so live listings honestly show "no lab evidence yet".
+- **B4 buyer self-serve signup:** `/register` + registerCustomer (customer-only;
+  vendors are discovered, not self-onboarded) + guest-watchlist merge on sign-in.
+- **B5 polish:** styled error boundary, AA-contrast muted text, guest signup nudge.
+- Verify across all batches: 80 unit, 25 integration suites (+9 new), e2e 11/11,
+  build, lint, registry+security audits — all green.
+- ⚠️ Two product calls I made (flag if you disagree): commerce = quarantine not delete;
+  self-serve = buyer signup only (no vendor/lab self-onboarding).
+
 ### Progress log — 2026-07-21 (real data executed)
 
 - **BPC-157 is real, end to end.** `origin` column ('demo'|'live') is the keystone (migration 14).
