@@ -158,13 +158,39 @@ visual polish with Fable 5 / Cloud Design.
 ## 11. Roadmap from here (sequenced — do NOT build more versions)
 
 1. ~~**Product + UX audit**~~ **DONE 2026-07-21** — full audit doc at `docs/audit/vial-ux-audit.html`.
-2. **Make the data real** — point the ingestion engine at Janoshik's public DB + ~3 real vendor
-   sites + reviews; replace fixtures for **one compound end-to-end** as proof it works. ← **NEXT**
+2. ~~**Make the data real**~~ **DONE 2026-07-21** — BPC-157 is live end-to-end. 3 real vendors
+   (Eternal $34.99, Bluum $42, Biotech $49.40) fetched live from their real product pages +
+   the Janoshik public COA feed, run through snapshot→extract→review→publish, marked **Live**.
+   Run it: `VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-real-bpc157.mjs`
+   (dev server stopped first — file-backed PGlite is single-writer). Network-only proof:
+   `node --import tsx scripts/live-source-smoke.mjs`. See progress log below.
 3. ~~**UX cleanup**~~ **DONE 2026-07-21** — see progress log below.
 4. **Design polish** — Fable 5 / Cloud Design visual pass on the cleaned surfaces.
 5. **Monetization** — affiliate-out model (decision CONFIRMED by Nate 2026-07-21; the product
    page CTA is already "Buy at [Vendor] →", inert until data is real).
 6. **Deploy** — Vercel + managed Postgres (the DB layer is already built for this).
+
+### Progress log — 2026-07-21 (real data executed)
+
+- **BPC-157 is real, end to end.** `origin` column ('demo'|'live') is the keystone (migration 14).
+  New create-path `src/server/ingest/live-sources.ts` (was gap #1/#2) inserts real vendors/listings
+  and registers real `transport='http'` policies, gated by `VIAL_LIVE_INGEST_APPROVED`.
+  `src/server/ingest/bpc157.ts` provisions Eternal/Bluum/Biotech + the Janoshik feed and runs the
+  real fetch → snapshot → extract → review → publish; only sane in-range price/availability
+  auto-approves, junk (batch/issuer regex noise) is **held for a human** — the review gate on real data.
+- **⭐ Production bug fixed (found by live smoke, not units):** `safe-fetch`'s DNS pin shim returned a
+  single address when Node's http agent called `lookup` with `{ all: true }` → real fetches errored
+  "Invalid IP address: undefined". Would have broken ALL real ingestion. Now `pinnedLookup()`, IPv4-preferring, unit-tested.
+- **Honest labeling (the connected keystone):** `DataOriginBadge` Live/Demo on cards + product/vendor/
+  compound; banner/footer/legal reworded to "demo unless marked Live"; live vendors no longer say
+  "Fictional profile". `AGENTS.md` product boundaries updated to codify demo/live + inert-affiliate.
+- **Affiliate CTA is real-aware but still INERT:** live listings show the real destination host and a
+  "would link to …" note; it does not navigate until Nate approves the affiliate step.
+- **Known small gaps (not blockers):** COA purity lives in a JPG on Janoshik verify pages → needs
+  OCR/vision (deferred); a live vendor with no extracted availability shows "Unavailable" (no "Unknown"
+  in the enum); freshly-ingested live vendors show 0% docs / empty reputation dims (honest "unknown").
+- **Verify:** lint, typecheck, 80 unit, all integration (+4 new), build, e2e 11/11, audit:registry,
+  audit:security all green.
 
 ### Progress log — 2026-07-21 (audit + UX cleanup executed)
 
