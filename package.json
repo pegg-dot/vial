@@ -46,7 +46,8 @@
     "verify:v9": "npm run verify:v6",
     "audit:registry": "node --import tsx scripts/registry-audit.mjs",
     "test:v10": "node scripts/run-isolated-tests.mjs tests/integration/registry.test.ts tests/integration/registry-api.test.ts tests/integration/batch-standard.test.ts tests/integration/reputation.test.ts tests/integration/migration-integrity.test.ts",
-    "verify:v10": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run audit:market-data && npm run audit:consumer-intelligence && npm run audit:seller-ops && npm run audit:seller-mcp && npm run audit:commerce-v5 && npm run audit:evidence-v6 && npm run audit:lab-mcp && npm run audit:registry && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility"
+    "verify:v10": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run audit:market-data && npm run audit:consumer-intelligence && npm run audit:seller-ops && npm run audit:seller-mcp && npm run audit:commerce-v5 && npm run audit:evidence-v6 && npm run audit:lab-mcp && npm run audit:registry && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility",
+    "ingest:reddit": "node --import tsx scripts/ingest-reddit.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.3",

@@ -16,6 +16,9 @@ import { ProductCard } from "@/components/product-card";
 import { ProductVisual } from "@/components/product-visual";
 import { VendorMark } from "@/components/vendor-mark";
 import { getPublicPassportForBatchCode } from "@/server/evidence-network/repository";
+import { CoaCrossCheckPanel } from "@/components/coa-cross-check-panel";
+import { crossCheckCoa } from "@/server/verify/coa-cross-check";
+import { getDatabase } from "@/server/db/client";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +42,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!vendor || !compound) notFound();
 
   const related = (await getProductsByCompoundSlug(product.compoundSlug)).filter((item) => item.slug !== product.slug).slice(0, 3);
+  const coaCheck = await crossCheckCoa(await getDatabase(), {
+    vendorSlug: product.vendorSlug, vendorName: vendor.name,
+    compoundSlug: product.compoundSlug, compoundName: compound.name,
+    reportIssuer: product.reportIssuer, reportConfirmed: product.reportConfirmed, batchCode: product.batchCode,
+  });
   const priceStart = product.priceHistory[0];
   const priceEnd = product.priceHistory.at(-1) ?? product.price;
   const priceChange = ((priceEnd - priceStart) / priceStart) * 100;
@@ -129,6 +137,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <aside className="space-y-5">
+            <CoaCrossCheckPanel check={coaCheck} />
+
             {product.priceHistory.length >= 2 ? (
             <div className="rounded-[26px] border border-black/[.07] bg-white p-5">
               <div className="flex items-center justify-between gap-4">

@@ -13,6 +13,9 @@ import { verdictForVendorSlug } from "@/server/verify";
 import { FollowButton } from "@/components/follow-button";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
+import { CommunitySignalCard } from "@/components/community-signal-card";
+import { getStoredCommunitySignal } from "@/server/ingest/reddit";
+import { getDatabase } from "@/server/db/client";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +33,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug)]);
+  const [listings, principal, reputation, communitySignal] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
   const verdict = verdictForVendorSlug(slug);
@@ -86,6 +89,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <p className="mt-5 max-w-3xl text-xs leading-5 text-[var(--muted)]">Each answer stands on its own and cites its source. Where we don&rsquo;t have the evidence, it says unknown — we never invent a number or blend everything into one score.</p>
         </section>
       )}
+
+      {communitySignal && <CommunitySignalCard signal={communitySignal} />}
 
       <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-[1fr_340px]">

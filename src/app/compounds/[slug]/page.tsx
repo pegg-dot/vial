@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3 } from "lucide-react";
+import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3, Sparkles } from "lucide-react";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
 import { formatCurrency } from "@/lib/format";
+import { educationFor } from "@/lib/compound-education";
+import { GoalTags } from "@/components/goal-tags";
 import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
@@ -32,6 +34,12 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
   const [listings, principal, labTests] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug))]);
+  const edu = educationFor(slug);
+  // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
+  // (so we only ever link to compounds we actually track) and carry its cheapest listing price.
+  const stacked = edu?.stackedWith?.length
+    ? (await Promise.all(edu.stackedWith.map((s) => getCompoundBySlug(s)))).filter((c): c is NonNullable<typeof c> => Boolean(c))
+    : [];
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "compound" && item.entitySlug === slug);
   const averageHistory = listings[0]?.priceHistory.map((_, index) => {
@@ -53,6 +61,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                 {compound.origin === "live" && <DataOriginBadge origin="live" />}
               </div>
               <h1 className="mt-5 text-6xl font-semibold leading-[.9] tracking-[-.075em] sm:text-8xl">{compound.name}</h1>
+              {edu?.goals?.length ? <div className="mt-5"><GoalTags goals={edu.goals} size="md" /></div> : null}
               <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">{compound.description}</p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {compound.aliases.map((alias) => <span key={alias} className="rounded-full bg-black/[.045] px-3 py-1.5 text-xs text-black/55">{alias}</span>)}
@@ -82,6 +91,23 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
+      {edu?.summary ? (
+        <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
+          <div className="rounded-[28px] border border-black/[.07] bg-white p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-violet-50"><Sparkles className="size-4 text-violet-700" /></span>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">In plain English</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-.035em]">What {compound.name} is for</h2>
+                <p className="mt-3 max-w-3xl text-[15px] leading-7 text-black/70">{edu.summary}</p>
+                {edu.goals?.length ? <div className="mt-4"><GoalTags goals={edu.goals} size="md" /></div> : null}
+                <p className="mt-4 text-xs text-[var(--muted)]">Plain-English research context — not medical, dosing, or human-use advice.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
 
       <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
@@ -91,6 +117,34 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
       </section>
+
+      {stacked.length ? (
+        <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
+          <div className="mb-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Commonly researched together</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">Often stacked with {compound.name}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">Compounds the research community frequently discusses alongside {compound.name}. Not a protocol or a recommendation — a starting point for what to read about next.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {stacked.map((c) => {
+              const cEdu = educationFor(c.slug);
+              return (
+                <Link key={c.slug} href={`/compounds/${c.slug}`} className="group flex flex-col gap-3 rounded-[24px] border border-black/[.07] bg-white p-5 transition hover:-translate-y-0.5 hover:border-black/[.14] hover:shadow-[0_16px_50px_rgba(23,25,30,.08)]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-semibold tracking-[-.03em]">{c.name}</p>
+                      <p className="mt-0.5 text-xs text-[var(--muted)]">{c.category}</p>
+                    </div>
+                    <span className="shrink-0 text-right text-sm font-semibold tabular-nums">{c.listings > 0 ? formatCurrency(c.medianPrice) : "—"}<span className="mt-0.5 block text-[10px] font-medium text-[var(--muted)]">{c.listings > 0 ? "median" : "no listings"}</span></span>
+                  </div>
+                  {cEdu?.goals?.length ? <GoalTags goals={cEdu.goals} limit={2} /> : null}
+                  {cEdu?.summary ? <p className="line-clamp-2 text-xs leading-5 text-black/60">{cEdu.summary}</p> : null}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <LabTestsPanel tests={labTests} heading={`${compound.name} — independent lab tests`} />
 

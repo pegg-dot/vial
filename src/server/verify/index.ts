@@ -6,6 +6,7 @@
 
 import knownVendors from "./known-vendors.json";
 import { getDatabase } from "@/server/db/client";
+import { searchPeptides, classifyPost } from "@/server/ingest/reddit";
 
 export type Verdict = "trusted" | "caution" | "avoid" | "high-risk" | "unproven" | "info";
 export interface Signal { ok: boolean | null; label: string; detail: string }
@@ -56,19 +57,15 @@ async function checkDomainAge(domain: string): Promise<Signal> {
 }
 
 async function checkReddit(name: string): Promise<Signal> {
-  try {
-    const q = encodeURIComponent(`"${name}"`);
-    const res = await fetch(`https://www.reddit.com/r/Peptides/search.json?q=${q}&restrict_sr=1&limit=10&sort=relevance`, { headers: { "user-agent": UA }, signal: AbortSignal.timeout(9000) });
-    if (!res.ok) return { ok: null, label: "Community (r/Peptides)", detail: "Could not search Reddit right now." };
-    const data = (await res.json()) as { data?: { children?: { data: { title: string } }[] } };
-    const posts = data.data?.children ?? [];
-    if (posts.length === 0) return { ok: false, label: "Community (r/Peptides)", detail: "No mentions found. Real vendors get talked about — silence is a mild warning." };
-    const scammy = posts.filter((p) => /scam|fake|ripped?\s*off|didn.?t (arrive|receive|ship)|underdos|counterfeit|avoid/i.test(p.data.title));
-    if (scammy.length > 0) return { ok: false, label: "Community (r/Peptides)", detail: `${posts.length} mentions, and ${scammy.length} look like scam/quality complaints. Read them before buying.` };
-    return { ok: true, label: "Community (r/Peptides)", detail: `${posts.length} mentions found and none flagged as scams in the titles.` };
-  } catch {
-    return { ok: null, label: "Community (r/Peptides)", detail: "Reddit search unavailable." };
-  }
+  // Uses authenticated Reddit search when credentials are configured (the public endpoint
+  // blocks datacenter IPs); degrades to "unavailable" rather than a false all-clear.
+  const result = await searchPeptides(name, { limit: 10 });
+  if (!result) return { ok: null, label: "Community (r/Peptides)", detail: "Reddit search unavailable right now." };
+  const posts = result.posts;
+  if (posts.length === 0) return { ok: false, label: "Community (r/Peptides)", detail: "No mentions found. Real vendors get talked about — silence is a mild warning." };
+  const scammy = posts.filter((p) => classifyPost(p) === "negative");
+  if (scammy.length > 0) return { ok: false, label: "Community (r/Peptides)", detail: `${posts.length} mentions, and ${scammy.length} look like scam/quality complaints. Read them before buying.` };
+  return { ok: true, label: "Community (r/Peptides)", detail: `${posts.length} mentions found and none flagged as scams.` };
 }
 
 async function coaSignal(domain: string): Promise<Signal> {
