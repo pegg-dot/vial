@@ -67,6 +67,7 @@ export interface LabTestInput {
   measuredContent?: string | null;
   testedAt?: string | null;
   lab?: string;
+  vendorSlug?: string | null;   // pre-resolved vendor (e.g. from the COA client field); overrides matchVendor
 }
 
 /** Record (idempotently, keyed on verify_url) a real independent lab test. */
@@ -76,7 +77,7 @@ export async function recordLabTest(
   resolve: { compounds: CompoundRef[]; vendors: { slug: string; name: string; domain: string }[] },
 ): Promise<{ id: string; compoundSlug: string | null; vendorSlug: string | null }> {
   const compoundSlug = matchCompound(input.sampleName, resolve.compounds);
-  const vendorSlug = matchVendor(input.manufacturer, resolve.vendors);
+  const vendorSlug = input.vendorSlug ?? matchVendor(input.manufacturer, resolve.vendors);
   const id = newId("labtest");
   await db.query(
     `INSERT INTO lab_test_records

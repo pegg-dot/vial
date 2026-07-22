@@ -1,33 +1,1202 @@
 {
-  "202438": {"purityPct": 97.701, "batch": "BWFM6CH4", "measuredContent": "11.79 mg", "testedAt": "09 JUL 2026"},
-  "202437": {"purityPct": 99.885, "batch": "BBSXADDG", "measuredContent": "10.10 mg", "testedAt": "10 JUL 2026"},
-  "171262": {"purityPct": 99.685, "batch": null, "measuredContent": "17.37 mg", "testedAt": "23 JUN 2026"},
-  "202439": {"purityPct": 98.710, "batch": "BAZPEMCK", "measuredContent": "10.65 mg", "testedAt": "09 JUL 2026"},
-  "149759": {"purityPct": 99.576, "batch": "2026", "measuredContent": "22.99 mg", "testedAt": "11 MAY 2026"},
-  "123809": {"purityPct": 99.889, "batch": "2026", "measuredContent": "33.67 mg", "testedAt": "15 APR 2026"},
-  "125224": {"purityPct": 99.282, "batch": null, "measuredContent": "5.68 mg", "testedAt": "17 APR 2026"},
-  "155227": {"purityPct": 99.262, "batch": "CP-2604-SEM5", "measuredContent": "5.23 mg", "testedAt": "27 MAY 2026"},
-  "172950": {"purityPct": 99.160, "batch": null, "measuredContent": "9.77 mg", "testedAt": "17 JUN 2026"},
-  "165373": {"purityPct": 99.795, "batch": null, "measuredContent": "9.92 mg", "testedAt": "10 JUN 2026"},
-  "137659": {"purityPct": 99.940, "batch": null, "measuredContent": "33.89 mg", "testedAt": "15 APR 2026"},
-  "202440": {"purityPct": 99.914, "batch": "B33LSYXL", "measuredContent": "10.30 mg", "testedAt": "09 JUL 2026"},
-  "155230": {"purityPct": 99.301, "batch": "CP-2605-MOT10", "measuredContent": "10.09 mg", "testedAt": "28 MAY 2026"},
-  "167675": {"purityPct": 99.905, "batch": "CS-nasa10-0509", "measuredContent": "12.55 mg", "testedAt": "26 MAY 2026"},
-  "171946": {"purityPct": 99.679, "batch": null, "measuredContent": "5.64 mg", "testedAt": "10 JUN 2026"},
-  "165375": {"purityPct": 99.602, "batch": null, "measuredContent": "18.40 mg", "testedAt": "10 JUN 2026"},
-  "87710": {"purityPct": 99.043, "batch": "2025-11", "measuredContent": "10.38 mg", "testedAt": "13 NOV 2025"},
-  "171887": {"purityPct": 99.893, "batch": null, "measuredContent": "5.56 mg", "testedAt": "16 JUN 2026"},
-  "155231": {"purityPct": 99.719, "batch": "CP-2604-MT210", "measuredContent": "10.01 mg", "testedAt": "28 MAY 2026"},
-  "165363": {"purityPct": 99.749, "batch": null, "measuredContent": "41.95 mg", "testedAt": "10 JUN 2026"},
-  "100580": {"purityPct": 99.331, "batch": "CS-tb10-0111", "measuredContent": "11.61 mg", "testedAt": "19 JAN 2026"},
-  "121827": {"purityPct": 99.675, "batch": null, "measuredContent": "123.28 mg", "testedAt": "17 MAR 2026"},
-  "165759": {"purityPct": 99.453, "batch": "2026", "measuredContent": "44.74 mg", "testedAt": "20 MAY 2026"},
-  "155233": {"purityPct": 99.171, "batch": "CP-2605-TB55", "measuredContent": "5.51 mg", "testedAt": "28 MAY 2026"},
-  "125227": {"purityPct": 99.203, "batch": null, "measuredContent": "10.56 mg", "testedAt": "17 APR 2026"},
-  "165365": {"purityPct": 99.174, "batch": null, "measuredContent": "55.17 mg", "testedAt": "10 JUN 2026"},
-  "121837": {"purityPct": 99.793, "batch": null, "measuredContent": "11.55 mg", "testedAt": "17 MAR 2026"},
-  "165760": {"purityPct": 99.052, "batch": "2026", "measuredContent": "1529.69 mg", "testedAt": "20 MAY 2026"},
-  "172219": {"purityPct": 99.634, "batch": "CP-2605-SS31", "measuredContent": "53.35 mg", "testedAt": "19 JUN 2026"},
-  "172925": {"purityPct": 99.493, "batch": null, "measuredContent": "10.40 mg", "testedAt": "15 JUN 2026"},
-  "165369": {"purityPct": 99.908, "batch": null, "measuredContent": "4.71 mg", "testedAt": "10 JUN 2026"}
+ "49668": {
+  "purityPct": 99.702,
+  "batch": null,
+  "measuredContent": "11.81 mg",
+  "testedAt": "30 SEP 2024"
+ },
+ "49669": {
+  "purityPct": 99.699,
+  "batch": null,
+  "measuredContent": "29.73 mg",
+  "testedAt": "30 SEP 2024"
+ },
+ "49670": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "615.23 mg",
+  "testedAt": "26 SEP 2024"
+ },
+ "57046": {
+  "purityPct": 99.506,
+  "batch": "1st Feb, 2025",
+  "measuredContent": "10.73 mg",
+  "testedAt": "04 FEB 2025"
+ },
+ "62743": {
+  "purityPct": 99.859,
+  "batch": "RT2503608",
+  "measuredContent": "35.73 mg",
+  "testedAt": "18 APR 2025"
+ },
+ "69929": {
+  "purityPct": 99.856,
+  "batch": null,
+  "measuredContent": "11.22 mg",
+  "testedAt": "03 JUL 2025"
+ },
+ "69934": {
+  "purityPct": 99.974,
+  "batch": null,
+  "measuredContent": "31.40 mg",
+  "testedAt": "03 JUL 2025"
+ },
+ "71591": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "684.48 mg",
+  "testedAt": "18 JUL 2025"
+ },
+ "71592": {
+  "purityPct": 99.657,
+  "batch": null,
+  "measuredContent": "11.01 mg",
+  "testedAt": "19 JUL 2025"
+ },
+ "71595": {
+  "purityPct": 99.656,
+  "batch": null,
+  "measuredContent": "10.60 mg",
+  "testedAt": "19 JUL 2025"
+ },
+ "71597": {
+  "purityPct": 99.076,
+  "batch": null,
+  "measuredContent": "10.04 mg",
+  "testedAt": "19 JUL 2025"
+ },
+ "71599": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "12.31 mg",
+  "testedAt": "18 JUL 2025"
+ },
+ "71600": {
+  "purityPct": 99.784,
+  "batch": null,
+  "measuredContent": "34.38 mg",
+  "testedAt": "22 JUL 2025"
+ },
+ "71744": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "5.76 mg",
+  "testedAt": "18 JUL 2025"
+ },
+ "71870": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "684.48 mg",
+  "testedAt": "18 JUL 2025"
+ },
+ "71881": {
+  "purityPct": 99.657,
+  "batch": null,
+  "measuredContent": "11.01 mg",
+  "testedAt": "19 JUL 2025"
+ },
+ "71884": {
+  "purityPct": 99.076,
+  "batch": null,
+  "measuredContent": "10.04 mg",
+  "testedAt": "19 JUL 2025"
+ },
+ "72096": {
+  "purityPct": 99.784,
+  "batch": null,
+  "measuredContent": "34.38 mg",
+  "testedAt": "22 JUL 2025"
+ },
+ "79432": {
+  "purityPct": 99.798,
+  "batch": "BN-25RT20",
+  "measuredContent": "25.41 mg",
+  "testedAt": "22 SEP 2025"
+ },
+ "82282": {
+  "purityPct": 99.72,
+  "batch": "reta40100926g",
+  "measuredContent": "44.33 mg",
+  "testedAt": "09 OCT 2025"
+ },
+ "87708": {
+  "purityPct": null,
+  "batch": "2025-11",
+  "measuredContent": "GHK-Cu 71.36 mg; BPC-157 12.41 mg; TB-500 (TB4) 11.12 mg; KPV 11.75 mg",
+  "testedAt": "13 NOV 2025"
+ },
+ "87710": {
+  "purityPct": 99.043,
+  "batch": "2025-11",
+  "measuredContent": "10.38 mg",
+  "testedAt": "13 NOV 2025"
+ },
+ "89403": {
+  "purityPct": 99.931,
+  "batch": null,
+  "measuredContent": "134.16 mg",
+  "testedAt": "20 NOV 2025"
+ },
+ "95031": {
+  "purityPct": 96.246,
+  "batch": "(from 10.12.2025",
+  "measuredContent": "8.53 mg / 25.59 IU",
+  "testedAt": "22 DEC 2025"
+ },
+ "95361": {
+  "purityPct": 97.31,
+  "batch": "2026",
+  "measuredContent": "8.39 mg / 25.17 IU",
+  "testedAt": "30 DEC 2025"
+ },
+ "95886": {
+  "purityPct": 99.95,
+  "batch": "T60/2025-12-18-B",
+  "measuredContent": "60.24 mg; 62.11 mg.",
+  "testedAt": "31 DEC 2025"
+ },
+ "95887": {
+  "purityPct": 99.898,
+  "batch": "T100/2025-12-18-B",
+  "measuredContent": "108.29 mg; 107.92 mg.",
+  "testedAt": "31 DEC 2025"
+ },
+ "97031": {
+  "purityPct": 99.676,
+  "batch": "BN-26RT10-001 | Small-Batch Crafted",
+  "measuredContent": "11.41 mg; 11.50 mg.",
+  "testedAt": "07 JAN 2026"
+ },
+ "99767": {
+  "purityPct": 99.487,
+  "batch": "BN-26RT20-002",
+  "measuredContent": "23.87 mg; 23.15 mg.",
+  "testedAt": "16 JAN 2026"
+ },
+ "100491": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "12.02 mg",
+  "testedAt": "21 JAN 2026"
+ },
+ "100537": {
+  "purityPct": 96.327,
+  "batch": null,
+  "measuredContent": "13.71 mg / 41.13 IU",
+  "testedAt": "22 JAN 2026"
+ },
+ "100580": {
+  "purityPct": 99.331,
+  "batch": "CS-tb10-0111",
+  "measuredContent": "11.61 mg",
+  "testedAt": "19 JAN 2026"
+ },
+ "100755": {
+  "purityPct": 99.883,
+  "batch": null,
+  "measuredContent": "136.17 mg",
+  "testedAt": "21 JAN 2026"
+ },
+ "101082": {
+  "purityPct": 99.627,
+  "batch": "RT10/2026-01-09-A",
+  "measuredContent": "10.36 mg; 10.06 mg",
+  "testedAt": "22 JAN 2026"
+ },
+ "101176": {
+  "purityPct": 99.71,
+  "batch": "RT201025-GY",
+  "measuredContent": "20.94 mg",
+  "testedAt": "28 JAN 2026"
+ },
+ "101518": {
+  "purityPct": 99.898,
+  "batch": "2026",
+  "measuredContent": "32.05 mg",
+  "testedAt": "23 JAN 2026"
+ },
+ "121827": {
+  "purityPct": 99.675,
+  "batch": null,
+  "measuredContent": "123.28 mg",
+  "testedAt": "17 MAR 2026"
+ },
+ "121829": {
+  "purityPct": 99.482,
+  "batch": null,
+  "measuredContent": "33.05 mg",
+  "testedAt": "17 MAR 2026"
+ },
+ "121832": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "536.16 mg",
+  "testedAt": "18 MAR 2026"
+ },
+ "121834": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "7.27 mg",
+  "testedAt": "17 MAR 2026"
+ },
+ "121837": {
+  "purityPct": 99.793,
+  "batch": null,
+  "measuredContent": "11.55 mg",
+  "testedAt": "17 MAR 2026"
+ },
+ "122734": {
+  "purityPct": 99.89,
+  "batch": "T-031026-01",
+  "measuredContent": "24.54 mg",
+  "testedAt": "25 MAR 2026"
+ },
+ "122735": {
+  "purityPct": 99.571,
+  "batch": "R-031026-01",
+  "measuredContent": "22.71 mg",
+  "testedAt": "25 MAR 2026"
+ },
+ "123419": {
+  "purityPct": null,
+  "batch": "2026/03",
+  "measuredContent": "BPC-157 5.32 mg; TB-500 (TB4) 5.24 mg",
+  "testedAt": "24 MAR 2026"
+ },
+ "123809": {
+  "purityPct": 99.889,
+  "batch": "2026",
+  "measuredContent": "33.67 mg",
+  "testedAt": "15 APR 2026"
+ },
+ "125224": {
+  "purityPct": 99.282,
+  "batch": null,
+  "measuredContent": "5.68 mg",
+  "testedAt": "17 APR 2026"
+ },
+ "125225": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "BPC-157 5.46 mg; TB-500 (TB4) 5.47 mg",
+  "testedAt": "17 APR 2026"
+ },
+ "125227": {
+  "purityPct": 99.203,
+  "batch": null,
+  "measuredContent": "10.56 mg",
+  "testedAt": "17 APR 2026"
+ },
+ "125228": {
+  "purityPct": 99.754,
+  "batch": null,
+  "measuredContent": "21.79 mg",
+  "testedAt": "17 APR 2026"
+ },
+ "125229": {
+  "purityPct": 99.802,
+  "batch": null,
+  "measuredContent": "42.72 mg",
+  "testedAt": "17 APR 2026"
+ },
+ "134404": {
+  "purityPct": 99.656,
+  "batch": "RSP20260317",
+  "measuredContent": "32.42 mg",
+  "testedAt": "12 MAY 2026"
+ },
+ "134407": {
+  "purityPct": 99.85,
+  "batch": "RSP20260315",
+  "measuredContent": "32.74 mg",
+  "testedAt": "12 MAY 2026"
+ },
+ "134410": {
+  "purityPct": 98.472,
+  "batch": "RSP20260325",
+  "measuredContent": "10.59 mg",
+  "testedAt": "13 MAY 2026"
+ },
+ "135077": {
+  "purityPct": 99.644,
+  "batch": "4",
+  "measuredContent": "22.81 mg",
+  "testedAt": "13 APR 2026"
+ },
+ "135095": {
+  "purityPct": 99.623,
+  "batch": "4",
+  "measuredContent": "65.59 mg",
+  "testedAt": "04 JUN 2026"
+ },
+ "135104": {
+  "purityPct": 99.598,
+  "batch": "4",
+  "measuredContent": "124.36 mg",
+  "testedAt": "04 JUN 2026"
+ },
+ "136726": {
+  "purityPct": 99.425,
+  "batch": null,
+  "measuredContent": "45.07 mg",
+  "testedAt": "20 APR 2026"
+ },
+ "136727": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": null,
+  "testedAt": "17 APR 2026"
+ },
+ "136728": {
+  "purityPct": 99.036,
+  "batch": null,
+  "measuredContent": "5.62 mg",
+  "testedAt": "20 APR 2026"
+ },
+ "136729": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "6.48 mg",
+  "testedAt": "21 APR 2026"
+ },
+ "136730": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "45.17 mg",
+  "testedAt": "21 APR 2026"
+ },
+ "137638": {
+  "purityPct": 99.786,
+  "batch": "CS-re10-0322",
+  "measuredContent": "11.86 mg",
+  "testedAt": "10 APR 2026"
+ },
+ "137659": {
+  "purityPct": 99.94,
+  "batch": null,
+  "measuredContent": "33.89 mg",
+  "testedAt": "15 APR 2026"
+ },
+ "147008": {
+  "purityPct": 99.754,
+  "batch": "24th Feb 2026",
+  "measuredContent": "10.51 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147011": {
+  "purityPct": 99.839,
+  "batch": "24th Feb 2026",
+  "measuredContent": "34.01 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147022": {
+  "purityPct": 99.22,
+  "batch": "24th Feb 2026",
+  "measuredContent": "10.51 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147023": {
+  "purityPct": 99.742,
+  "batch": "24th Feb 2026",
+  "measuredContent": "10.31 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147035": {
+  "purityPct": 98.026,
+  "batch": "CS-h10-0408",
+  "measuredContent": "3.80 mg / 11.4 IU",
+  "testedAt": "22 APR 2026"
+ },
+ "147042": {
+  "purityPct": 99.764,
+  "batch": "CS-ze10-0408",
+  "measuredContent": "12.13 mg",
+  "testedAt": "27 APR 2026"
+ },
+ "147062": {
+  "purityPct": 99.563,
+  "batch": "CS-nasa10-0408",
+  "measuredContent": "13.08 mg",
+  "testedAt": "23 APR 2026"
+ },
+ "147066": {
+  "purityPct": 99.676,
+  "batch": "CS-te10-0408",
+  "measuredContent": "11.60 mg",
+  "testedAt": "23 APR 2026"
+ },
+ "147080": {
+  "purityPct": 99.72,
+  "batch": "CS-ad5-0408",
+  "measuredContent": "5.65 mg",
+  "testedAt": "23 APR 2026"
+ },
+ "147610": {
+  "purityPct": 99.818,
+  "batch": "2026",
+  "measuredContent": "22.39 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147611": {
+  "purityPct": 99.818,
+  "batch": "2026",
+  "measuredContent": "22.39 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147613": {
+  "purityPct": 99.818,
+  "batch": "2026",
+  "measuredContent": "22.39 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147614": {
+  "purityPct": 99.818,
+  "batch": "2026",
+  "measuredContent": "22.39 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147615": {
+  "purityPct": 99.818,
+  "batch": "2026",
+  "measuredContent": "22.39 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147616": {
+  "purityPct": 99.81,
+  "batch": "2026",
+  "measuredContent": "22.86 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147618": {
+  "purityPct": 99.81,
+  "batch": "2026",
+  "measuredContent": "22.86 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147737": {
+  "purityPct": 99.435,
+  "batch": "2026",
+  "measuredContent": "77.27 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147738": {
+  "purityPct": 99.435,
+  "batch": "2026",
+  "measuredContent": "77.27 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "147739": {
+  "purityPct": 99.435,
+  "batch": "2026",
+  "measuredContent": "77.27 mg",
+  "testedAt": "14 APR 2026"
+ },
+ "149759": {
+  "purityPct": 99.576,
+  "batch": "2026",
+  "measuredContent": "22.99 mg",
+  "testedAt": "11 MAY 2026"
+ },
+ "150446": {
+  "purityPct": 98.391,
+  "batch": "24th April 2026",
+  "measuredContent": "561.52 mg",
+  "testedAt": "19 MAY 2026"
+ },
+ "150447": {
+  "purityPct": 99.942,
+  "batch": "24th April 2026",
+  "measuredContent": "9.46 mg",
+  "testedAt": "19 MAY 2026"
+ },
+ "153030": {
+  "purityPct": 99.731,
+  "batch": "N002604/2030",
+  "measuredContent": "44.28 mg/3ml",
+  "testedAt": "30 APR 2026"
+ },
+ "155226": {
+  "purityPct": 99.502,
+  "batch": "CP-2604-TIR5",
+  "measuredContent": "5.48 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "155227": {
+  "purityPct": 99.262,
+  "batch": "CP-2604-SEM5",
+  "measuredContent": "5.23 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "155230": {
+  "purityPct": 99.301,
+  "batch": "CP-2605-MOT10",
+  "measuredContent": "10.09 mg",
+  "testedAt": "28 MAY 2026"
+ },
+ "155231": {
+  "purityPct": 99.719,
+  "batch": "CP-2604-MT210",
+  "measuredContent": "10.01 mg",
+  "testedAt": "28 MAY 2026"
+ },
+ "155233": {
+  "purityPct": 99.171,
+  "batch": "CP-2605-TB55",
+  "measuredContent": "5.51 mg",
+  "testedAt": "28 MAY 2026"
+ },
+ "155554": {
+  "purityPct": 99.631,
+  "batch": "SG260407",
+  "measuredContent": "10.96 mg",
+  "testedAt": "07 MAY 2026"
+ },
+ "155710": {
+  "purityPct": null,
+  "batch": "BB2020CP",
+  "measuredContent": "TB-500 11.14 mg; BPC-157 11.32 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "155718": {
+  "purityPct": null,
+  "batch": "HCG5k71CP",
+  "measuredContent": "8692 IU",
+  "testedAt": "25 MAY 2026"
+ },
+ "155722": {
+  "purityPct": 97.986,
+  "batch": "GH3663Cp",
+  "measuredContent": "10.73 mg / 32.19 IU",
+  "testedAt": "25 MAY 2026"
+ },
+ "155728": {
+  "purityPct": null,
+  "batch": "IP1053CP",
+  "measuredContent": null,
+  "testedAt": "04 JUN 2026"
+ },
+ "155734": {
+  "purityPct": 99.168,
+  "batch": "KPV5483AA",
+  "measuredContent": "10.18 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "155750": {
+  "purityPct": 99.015,
+  "batch": "Se1010CP",
+  "measuredContent": "9.58 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "155755": {
+  "purityPct": 99.931,
+  "batch": "TB1045Cp",
+  "measuredContent": "10.17 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "155763": {
+  "purityPct": 99.763,
+  "batch": "TA0514CP",
+  "measuredContent": "5.55 mg",
+  "testedAt": "20 MAY 2026"
+ },
+ "155764": {
+  "purityPct": null,
+  "batch": "BA2133CP",
+  "measuredContent": "8.89 mg/ml",
+  "testedAt": "19 MAY 2026"
+ },
+ "155862": {
+  "purityPct": 99.331,
+  "batch": "RT10/2026-04-06A",
+  "measuredContent": "10.47 mg; 10.86 mg",
+  "testedAt": "07 MAY 2026"
+ },
+ "155863": {
+  "purityPct": 99.493,
+  "batch": "RT20/2026-04-06A",
+  "measuredContent": "21.40 mg; 20.93 mg",
+  "testedAt": "07 MAY 2026"
+ },
+ "155864": {
+  "purityPct": 99.949,
+  "batch": "RT30/2026-04-06A",
+  "measuredContent": "31.88 mg",
+  "testedAt": "07 MAY 2026"
+ },
+ "156679": {
+  "purityPct": null,
+  "batch": "05/2032",
+  "measuredContent": "190.87 mg/ml",
+  "testedAt": "15 MAY 2026"
+ },
+ "156861": {
+  "purityPct": 99.777,
+  "batch": "2026",
+  "measuredContent": "64.06 mg",
+  "testedAt": "03 JUN 2026"
+ },
+ "157282": {
+  "purityPct": 99.415,
+  "batch": "GHK-02272026-3",
+  "measuredContent": "96.90 mg (80.80 mg) [16.10 mg]",
+  "testedAt": "08 JUN 2026"
+ },
+ "157283": {
+  "purityPct": 99.415,
+  "batch": "GHK-02272026-3",
+  "measuredContent": "96.90 mg (80.80 mg) [16.10 mg]",
+  "testedAt": "08 JUN 2026"
+ },
+ "157285": {
+  "purityPct": null,
+  "batch": "260420-01",
+  "measuredContent": "5.88 mg",
+  "testedAt": "08 JUN 2026"
+ },
+ "157286": {
+  "purityPct": null,
+  "batch": "260420-01",
+  "measuredContent": "5.88 mg",
+  "testedAt": "08 JUN 2026"
+ },
+ "157288": {
+  "purityPct": 99.869,
+  "batch": "260513-RT20",
+  "measuredContent": "22.46 mg",
+  "testedAt": "05 JUN 2026"
+ },
+ "157289": {
+  "purityPct": 99.869,
+  "batch": "260513-RT20",
+  "measuredContent": "22.46 mg",
+  "testedAt": "05 JUN 2026"
+ },
+ "157311": {
+  "purityPct": null,
+  "batch": "ET5088CP",
+  "measuredContent": null,
+  "testedAt": "22 MAY 2026"
+ },
+ "157314": {
+  "purityPct": 99.682,
+  "batch": "CU1002026-02",
+  "measuredContent": "94.44 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "157318": {
+  "purityPct": null,
+  "batch": "NAD1023Cp",
+  "measuredContent": "929.05 mg",
+  "testedAt": "15 MAY 2026"
+ },
+ "162868": {
+  "purityPct": 97.461,
+  "batch": "CS-h10-0509",
+  "measuredContent": "3.78 mg / 11.34 IU",
+  "testedAt": "22 MAY 2026"
+ },
+ "162877": {
+  "purityPct": null,
+  "batch": "CS-na500-0509",
+  "measuredContent": "687.87 mg",
+  "testedAt": "22 MAY 2026"
+ },
+ "163522": {
+  "purityPct": null,
+  "batch": "ANR1103",
+  "measuredContent": "23.00 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "163523": {
+  "purityPct": null,
+  "batch": "EXP:04/2030",
+  "measuredContent": "22.02 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "163524": {
+  "purityPct": null,
+  "batch": "AN1103",
+  "measuredContent": "51.68 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "163525": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "9.32 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "163529": {
+  "purityPct": null,
+  "batch": "EXP: 03/2030",
+  "measuredContent": "23.48 mg/ml",
+  "testedAt": "27 MAY 2026"
+ },
+ "163530": {
+  "purityPct": null,
+  "batch": "CP1103",
+  "measuredContent": "259.29 mg/ml",
+  "testedAt": "26 MAY 2026"
+ },
+ "163533": {
+  "purityPct": null,
+  "batch": "EN01/2030",
+  "measuredContent": "293.12 mg/ml",
+  "testedAt": "26 MAY 2026"
+ },
+ "163571": {
+  "purityPct": 99.039,
+  "batch": "RT1051Cp",
+  "measuredContent": "11.63 mg",
+  "testedAt": "25 MAY 2026"
+ },
+ "163572": {
+  "purityPct": 99.744,
+  "batch": "RT6423CP",
+  "measuredContent": "22.43 mg",
+  "testedAt": "25 MAY 2026"
+ },
+ "163573": {
+  "purityPct": 99.852,
+  "batch": "RT3026CP",
+  "measuredContent": "31.81 mg",
+  "testedAt": "25 MAY 2026"
+ },
+ "164626": {
+  "purityPct": 99.748,
+  "batch": null,
+  "measuredContent": "5.83 mg; 5.74 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "164656": {
+  "purityPct": 99.814,
+  "batch": null,
+  "measuredContent": "108.46 mg; 97.73 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "164662": {
+  "purityPct": 99.867,
+  "batch": null,
+  "measuredContent": "134.42 mg; 132.84 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "164668": {
+  "purityPct": null,
+  "batch": null,
+  "measuredContent": "Ipamorelin 10.61 mg; 10.69 mg / Tesamorelin 10.80 mg; 10.83 mg",
+  "testedAt": "27 MAY 2026"
+ },
+ "165363": {
+  "purityPct": 99.749,
+  "batch": null,
+  "measuredContent": "41.95 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165365": {
+  "purityPct": 99.174,
+  "batch": null,
+  "measuredContent": "55.17 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165367": {
+  "purityPct": 99.768,
+  "batch": "3rd June 2026",
+  "measuredContent": "50.60 mg",
+  "testedAt": "11 JUN 2026"
+ },
+ "165369": {
+  "purityPct": 99.908,
+  "batch": null,
+  "measuredContent": "4.71 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165371": {
+  "purityPct": 99.728,
+  "batch": "3rd June 2026",
+  "measuredContent": "10.04 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165373": {
+  "purityPct": 99.795,
+  "batch": null,
+  "measuredContent": "9.92 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165375": {
+  "purityPct": 99.602,
+  "batch": null,
+  "measuredContent": "18.40 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165379": {
+  "purityPct": 99.85,
+  "batch": "3rd June 2026",
+  "measuredContent": "9.21 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165383": {
+  "purityPct": 99.316,
+  "batch": "3rd June 2026",
+  "measuredContent": "7.83 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "165694": {
+  "purityPct": 99.802,
+  "batch": null,
+  "measuredContent": "32.89 mg",
+  "testedAt": "12 JUN 2026"
+ },
+ "165759": {
+  "purityPct": 99.453,
+  "batch": "2026",
+  "measuredContent": "44.74 mg",
+  "testedAt": "20 MAY 2026"
+ },
+ "165760": {
+  "purityPct": 99.052,
+  "batch": "2026",
+  "measuredContent": "1529.69 mg",
+  "testedAt": "20 MAY 2026"
+ },
+ "166431": {
+  "purityPct": 99.858,
+  "batch": "RT30",
+  "measuredContent": "34.13 mg",
+  "testedAt": "05 JUN 2026"
+ },
+ "167347": {
+  "purityPct": 99.508,
+  "batch": null,
+  "measuredContent": "22.53 mg",
+  "testedAt": "02 JUN 2026"
+ },
+ "167355": {
+  "purityPct": 99.594,
+  "batch": null,
+  "measuredContent": "17.68 mg",
+  "testedAt": "02 JUN 2026"
+ },
+ "167649": {
+  "purityPct": 99.791,
+  "batch": "IP1053CP",
+  "measuredContent": "9.28 mg",
+  "testedAt": "25 MAY 2026"
+ },
+ "167674": {
+  "purityPct": 99.901,
+  "batch": "CS-gu100-0509",
+  "measuredContent": "12.31 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "167675": {
+  "purityPct": 99.905,
+  "batch": "CS-nasa10-0509",
+  "measuredContent": "12.55 mg",
+  "testedAt": "26 MAY 2026"
+ },
+ "171207": {
+  "purityPct": 99.845,
+  "batch": null,
+  "measuredContent": "35.58 mg",
+  "testedAt": "23 JUN 2026"
+ },
+ "171215": {
+  "purityPct": 99.472,
+  "batch": null,
+  "measuredContent": "34.92 mg",
+  "testedAt": "23 JUN 2026"
+ },
+ "171262": {
+  "purityPct": 99.685,
+  "batch": null,
+  "measuredContent": "17.37 mg",
+  "testedAt": "23 JUN 2026"
+ },
+ "171453": {
+  "purityPct": 98.385,
+  "batch": "10th June 2026",
+  "measuredContent": "29.08 mg",
+  "testedAt": "29 JUN 2026"
+ },
+ "171456": {
+  "purityPct": 99.827,
+  "batch": "10th June 2026",
+  "measuredContent": "96.11 mg",
+  "testedAt": "30 JUN 2026"
+ },
+ "171459": {
+  "purityPct": 98.654,
+  "batch": "10th June 2026",
+  "measuredContent": "90.83 mg",
+  "testedAt": "29 JUN 2026"
+ },
+ "171887": {
+  "purityPct": 99.893,
+  "batch": null,
+  "measuredContent": "5.56 mg",
+  "testedAt": "16 JUN 2026"
+ },
+ "171888": {
+  "purityPct": 99.035,
+  "batch": null,
+  "measuredContent": "11.14 mg",
+  "testedAt": "16 JUN 2026"
+ },
+ "171889": {
+  "purityPct": 99.65,
+  "batch": "2026",
+  "measuredContent": "16.64 mg",
+  "testedAt": "16 JUN 2026"
+ },
+ "171938": {
+  "purityPct": null,
+  "batch": "Blue",
+  "measuredContent": "10.91 mg; 10.53 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "171946": {
+  "purityPct": 99.679,
+  "batch": null,
+  "measuredContent": "5.64 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "171948": {
+  "purityPct": 99.637,
+  "batch": "White",
+  "measuredContent": "11.45 mg; 11.39 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "172211": {
+  "purityPct": 99.814,
+  "batch": null,
+  "measuredContent": "34.73 mg",
+  "testedAt": "25 JUN 2026"
+ },
+ "172219": {
+  "purityPct": 99.634,
+  "batch": "CP-2605-SS31",
+  "measuredContent": "53.35 mg",
+  "testedAt": "19 JUN 2026"
+ },
+ "172228": {
+  "purityPct": 99.344,
+  "batch": "CP-2605-RT15",
+  "measuredContent": "20.14 mg",
+  "testedAt": "19 JUN 2026"
+ },
+ "172231": {
+  "purityPct": 99.596,
+  "batch": "CP-2605-TR10",
+  "measuredContent": "11.24 mg",
+  "testedAt": "19 JUN 2026"
+ },
+ "172416": {
+  "purityPct": 99.904,
+  "batch": null,
+  "measuredContent": "67.18 mg; 64.76 mg",
+  "testedAt": "10 JUN 2026"
+ },
+ "172706": {
+  "purityPct": 99.707,
+  "batch": "CS-ze10-0603",
+  "measuredContent": "12.35 mg",
+  "testedAt": "22 JUN 2026"
+ },
+ "172720": {
+  "purityPct": 99.748,
+  "batch": "CS-re20-0603",
+  "measuredContent": "24.81 mg",
+  "testedAt": "17 JUN 2026"
+ },
+ "172922": {
+  "purityPct": 99.689,
+  "batch": "blue",
+  "measuredContent": "45.42 mg; 44.96 mg",
+  "testedAt": "16 JUN 2026"
+ },
+ "172925": {
+  "purityPct": 99.493,
+  "batch": null,
+  "measuredContent": "10.40 mg",
+  "testedAt": "15 JUN 2026"
+ },
+ "172928": {
+  "purityPct": null,
+  "batch": "white",
+  "measuredContent": "10.90 mg; 10.92 mg",
+  "testedAt": "16 JUN 2026"
+ },
+ "172938": {
+  "purityPct": 99.862,
+  "batch": null,
+  "measuredContent": "45.34 mg; 44.64 mg",
+  "testedAt": "17 JUN 2026"
+ },
+ "172940": {
+  "purityPct": null,
+  "batch": "white",
+  "measuredContent": "22.76 mg; 23.92 mg",
+  "testedAt": "16 JUN 2026"
+ },
+ "172950": {
+  "purityPct": 99.16,
+  "batch": null,
+  "measuredContent": "9.77 mg",
+  "testedAt": "17 JUN 2026"
+ },
+ "173791": {
+  "purityPct": 99.876,
+  "batch": "6",
+  "measuredContent": "60.92 mg",
+  "testedAt": "16 JUN 2026"
+ },
+ "193715": {
+  "purityPct": null,
+  "batch": "CS-c/i55-0605",
+  "measuredContent": "Ipamorelin 5.54 mg; CJC-1295 (mod GRF 1-29) 5.00 mg",
+  "testedAt": "22 JUN 2026"
+ },
+ "193720": {
+  "purityPct": 99.198,
+  "batch": "CS-mc20-0605",
+  "measuredContent": "23.38 mg",
+  "testedAt": "22 JUN 2026"
+ },
+ "194486": {
+  "purityPct": 97.313,
+  "batch": "number of batch on gh",
+  "measuredContent": "3.81 mg; 3.71 mg; 3.80 mg.",
+  "testedAt": "17 JUN 2026"
+ },
+ "194487": {
+  "purityPct": 95.906,
+  "batch": "number of batch on gh",
+  "measuredContent": "12.75 mg; 12.80 mg; 13.02 mg.",
+  "testedAt": "17 JUN 2026"
+ },
+ "194577": {
+  "purityPct": 99.691,
+  "batch": "June 12, 2026",
+  "measuredContent": "32.31 mg",
+  "testedAt": "08 JUL 2026"
+ },
+ "194578": {
+  "purityPct": 99.689,
+  "batch": "June 12, 2026",
+  "measuredContent": "31.96 mg",
+  "testedAt": "08 JUL 2026"
+ },
+ "194668": {
+  "purityPct": 99.252,
+  "batch": null,
+  "measuredContent": "32.91 mg",
+  "testedAt": "09 JUL 2026"
+ },
+ "195337": {
+  "purityPct": 99.733,
+  "batch": "0582",
+  "measuredContent": "49.94 mg",
+  "testedAt": "30 JUN 2026"
+ },
+ "195587": {
+  "purityPct": 99.302,
+  "batch": "168H39FC",
+  "measuredContent": "8.93 mg",
+  "testedAt": "04 JUL 2026"
+ },
+ "195588": {
+  "purityPct": 99.302,
+  "batch": "168H16H",
+  "measuredContent": "8.93 mg",
+  "testedAt": "04 JUL 2026"
+ },
+ "196378": {
+  "purityPct": 99.772,
+  "batch": "89 96",
+  "measuredContent": "9.74 mg",
+  "testedAt": "10 JUL 2026"
+ },
+ "196379": {
+  "purityPct": 99.772,
+  "batch": "58H39F8",
+  "measuredContent": "9.74 mg",
+  "testedAt": "10 JUL 2026"
+ },
+ "196381": {
+  "purityPct": 99.772,
+  "batch": "16888",
+  "measuredContent": "9.74 mg",
+  "testedAt": "10 JUL 2026"
+ },
+ "198264": {
+  "purityPct": 99.509,
+  "batch": "RP-RET30 -JL26",
+  "measuredContent": "32.44 mg",
+  "testedAt": "02 JUL 2026"
+ },
+ "198410": {
+  "purityPct": 99.673,
+  "batch": null,
+  "measuredContent": "10.31 mg",
+  "testedAt": "29 JUN 2026"
+ },
+ "199598": {
+  "purityPct": null,
+  "batch": "Sample B",
+  "measuredContent": null,
+  "testedAt": "07 JUL 2026"
+ },
+ "199953": {
+  "purityPct": null,
+  "batch": "20260624",
+  "measuredContent": "GHK-Cu 61.36 mg (GHK 54.18 mg) [Copper 7.18 mg]; BPC-157 10.07 mg; TB-500 (TB4) 9.82 mg; KPV 10.75 mg",
+  "testedAt": "15 JUL 2026"
+ },
+ "199964": {
+  "purityPct": 99.728,
+  "batch": "20260624",
+  "measuredContent": "51.10 mg (GHK 42.52 mg) [Copper 8.58 mg]",
+  "testedAt": "16 JUL 2026"
+ },
+ "199967": {
+  "purityPct": 99.855,
+  "batch": "20260624",
+  "measuredContent": "21.42 mg",
+  "testedAt": "15 JUL 2026"
+ },
+ "199969": {
+  "purityPct": 99.878,
+  "batch": "20260624",
+  "measuredContent": "31.78 mg",
+  "testedAt": "15 JUL 2026"
+ },
+ "202437": {
+  "purityPct": 99.885,
+  "batch": "BBSXADDG",
+  "measuredContent": "10.10 mg",
+  "testedAt": "10 JUL 2026"
+ },
+ "202438": {
+  "purityPct": 97.701,
+  "batch": "BWFM6CH4",
+  "measuredContent": "11.79 mg",
+  "testedAt": "09 JUL 2026"
+ },
+ "202439": {
+  "purityPct": 98.71,
+  "batch": "BAZPEMCK",
+  "measuredContent": "10.65 mg",
+  "testedAt": "09 JUL 2026"
+ },
+ "202440": {
+  "purityPct": 99.914,
+  "batch": "B33LSYXL",
+  "measuredContent": "10.30 mg",
+  "testedAt": "09 JUL 2026"
+ },
+ "208290": {
+  "purityPct": 98,
+  "batch": "Sample x",
+  "measuredContent": null,
+  "testedAt": "21 JUL 2026"
+ }
 }

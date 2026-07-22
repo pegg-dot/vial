@@ -16,6 +16,8 @@ import { listFollows } from "@/server/consumer-intelligence/repository";
 import { CommunitySignalCard } from "@/components/community-signal-card";
 import { getStoredCommunitySignal } from "@/server/ingest/reddit";
 import { getDatabase } from "@/server/db/client";
+import { LabTestsPanel } from "@/components/lab-tests-panel";
+import { getLabTestsForVendor } from "@/server/ingest/lab-tests";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +35,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug))]);
+  const [listings, principal, reputation, communitySignal, vendorLabTests] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
   const verdict = verdictForVendorSlug(slug);
@@ -89,6 +91,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <p className="mt-5 max-w-3xl text-xs leading-5 text-[var(--muted)]">Each answer stands on its own and cites its source. Where we don&rsquo;t have the evidence, it says unknown — we never invent a number or blend everything into one score.</p>
         </section>
       )}
+
+      {vendorLabTests.length > 0 && <LabTestsPanel tests={vendorLabTests} heading={`${vendor.name} — independent lab tests on record`} />}
 
       {communitySignal && <CommunitySignalCard signal={communitySignal} />}
 
