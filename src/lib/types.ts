@@ -27,6 +27,8 @@ export interface Compound {
   medianPrice: number;
   priceChange: number;
   documentationCoverage: number;
+  coaCount: number;         // independent + all lab certificates on record for this compound
+  medianPurity: number | null;
   accent: [string, string, string];
   researchNote: string;
   origin: DataOrigin;
@@ -53,6 +55,12 @@ export interface Vendor {
   }>;
   origin: DataOrigin;
   kind: "storefront" | "manufacturer";
+  // Real, computed-from-source evidence (not the stale denormalized columns).
+  coaCount: number;         // independent third-party certificates on record
+  medianPurity: number | null;
+  passportCount: number;    // published batch passports
+  reviewCount: number;      // gathered buyer-reputation records
+  latestTestedAt: string | null;
 }
 
 export interface EvidenceDimension {

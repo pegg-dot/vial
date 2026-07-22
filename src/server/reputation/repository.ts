@@ -66,17 +66,25 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
   // A freshly-aggregated vendor has no documentation data yet — that is "unknown",
   // NOT a genuine 0%. Rendering "0% · established" reads as "we assessed them and they
   // scored zero," which unfairly brands a real vendor. Only claim established when > 0.
+  // Independent third-party certificates for this vendor — computed once, used by both the
+  // "lab tests current" and "independently tested" dimensions below (never the stale denormalized
+  // documentation_current column, which is 0 for every COA-only vendor).
+  const coa = (await db.query<QueryResultRow & { n: string | number; purities: number[] | null; latest: string | null }>(
+    `SELECT COUNT(*) n, array_agg(purity_pct) FILTER(WHERE purity_pct IS NOT NULL) purities, MAX(tested_at) latest
+     FROM lab_test_records WHERE vendor_slug=$1 AND is_independent=TRUE`, [org.slug],
+  )).rows[0];
+  const coaCount = Number(coa?.n ?? 0);
+  const coaPurities = (coa?.purities ?? []).map(Number).filter((v) => Number.isFinite(v));
+  const coaMedian = coaPurities.length ? median(coaPurities) : null;
+
+  // "Lab tests current?" now reflects the vendor's real independent certificates and how recent the
+  // newest one is — not a listing-only documentation share that reads 0 for a vendor with no store.
   const docCurrent = Number(org.documentation_current);
-  dimensions.push({
-    key: "documentation_currency",
-    label: "Documentation currency",
-    status: docCurrent > 0 ? "established" : "unknown",
-    value: docCurrent > 0 ? `${docCurrent}%` : "No documentation observed yet",
-    numericValue: docCurrent,
-    basis: "Share of observed listings exposing current documentation, recomputed on every reviewed publication.",
-    provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` },
-    series: await documentationSeries(db, org.id),
-  });
+  dimensions.push(coaCount > 0
+    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${coaCount} certificate${coaCount === 1 ? "" : "s"} on file${coa?.latest ? ` · latest tested ${coa.latest}` : ""}`, numericValue: coaCount, basis: "Independent third-party certificates on record for this vendor, newest first.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } }
+    : docCurrent > 0
+    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${docCurrent}%`, numericValue: docCurrent, basis: "Share of observed listings exposing current documentation.", provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` }, series: await documentationSeries(db, org.id) }
+    : { key: "documentation_currency", label: "Documentation currency", status: "unknown", value: "No lab tests on record yet", basis: "No independent third-party certificate is on record for this vendor yet.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } });
 
   // Independent evidence corroboration — independent lab tests (COAs) and published batch
   // passports linked to this vendor. COAs are the primary, most common signal: a vendor with
@@ -89,16 +97,6 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
   )).rows[0];
   const passportCount = Number(passports?.passports ?? 0);
   const openConflicts = Number(passports?.conflicts ?? 0);
-  // Only INDEPENDENT third-party certificates count as independent corroboration — a vendor's own
-  // self-branded COA (is_independent=false) is shown elsewhere but never inflates this dimension.
-  const coa = (await db.query<QueryResultRow & { n: string | number; with_purity: string | number; purities: number[] | null; latest: string | null }>(
-    `SELECT COUNT(*) n, COUNT(*) FILTER(WHERE purity_pct IS NOT NULL) with_purity,
-            array_agg(purity_pct) FILTER(WHERE purity_pct IS NOT NULL) purities, MAX(tested_at) latest
-     FROM lab_test_records WHERE vendor_slug=$1 AND is_independent=TRUE`, [org.slug],
-  )).rows[0];
-  const coaCount = Number(coa?.n ?? 0);
-  const coaPurities = (coa?.purities ?? []).map(Number).filter((v) => Number.isFinite(v));
-  const coaMedian = coaPurities.length ? median(coaPurities) : null;
   if (coaCount > 0 || passportCount > 0) {
     const parts: string[] = [];
     if (coaCount > 0) parts.push(`${coaCount} independent COA${coaCount === 1 ? "" : "s"} on record${coaMedian != null ? ` · median ${coaMedian.toFixed(1)}%` : ""}`);

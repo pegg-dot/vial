@@ -88,7 +88,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={Layers3} label="Active listings" value={String(compound.listings)} />
-          <Stat icon={FileSearch} label="Listings with current tests" value={`${compound.documentationCoverage}%`} />
+          <Stat icon={FileSearch} label="Independent lab tests" value={compound.medianPurity != null ? `${compound.coaCount} · ${compound.medianPurity.toFixed(1)}%` : String(compound.coaCount)} />
           <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />
           <Stat icon={BookOpen} label="Known aliases" value={String(compound.aliases.length + 1)} />
         </div>
