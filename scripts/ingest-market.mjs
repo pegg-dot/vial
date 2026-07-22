@@ -9,6 +9,7 @@ import { importShopifyCatalog } from "../src/server/ingest/shopify-import.ts";
 import { importWooCommerceCatalog } from "../src/server/ingest/woocommerce-import.ts";
 import { parseJanoshikFeed, recordLabTest } from "../src/server/ingest/lab-tests.ts";
 import { deriveCoaVendors } from "../src/server/ingest/coa-vendors.ts";
+import { detectVendorCoaFlags, writeVendorFlags } from "../src/server/verify/coa-integrity.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
   console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true.");
@@ -133,6 +134,27 @@ if (existsSync(vendorCoaFile)) {
     if (res.compoundSlug && res.vendorSlug) green += 1;
   }
   console.log(`  ${green}/${vcoas.length} tied a vendor listing to its own independent COA`);
+}
+
+// Vendor integrity flags — derive "salvage title" red flags from vendors whose published
+// certificates don't hold up (reused lot, self-issued, mismatched, undated, stale).
+const flaggedFile = new URL("vendor-coas-flagged.json", DATA);
+if (existsSync(flaggedFile)) {
+  const suspect = readJson("vendor-coas-flagged.json");
+  const byVendor = new Map();
+  for (const c of suspect) {
+    let e = byVendor.get(c.vendorSlug);
+    if (!e) { e = { name: c.vendorName, coas: [] }; byVendor.set(c.vendorSlug, e); }
+    e.coas.push(c);
+  }
+  const nowYear = new Date().getUTCFullYear();
+  let flaggedVendors = 0, totalFlags = 0;
+  for (const [slug, { name, coas }] of byVendor) {
+    const flags = detectVendorCoaFlags(name, coas, nowYear);
+    await writeVendorFlags(db, slug, flags);
+    if (flags.length) { flaggedVendors += 1; totalFlags += flags.length; }
+  }
+  console.log(`\nDerived integrity flags: ${totalFlags} flags across ${flaggedVendors} vendors.`);
 }
 
 console.log(`\nRecomputing compound stats…`);

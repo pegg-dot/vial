@@ -9,6 +9,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import type { ListingTrust, ListingTrustStatus } from "@/lib/types";
 import { coaStatusFrom, claimsRealTesting } from "./coa-cross-check";
+import { getFlaggedVendorSlugs } from "./coa-integrity";
 
 export type { ListingTrust };
 
@@ -51,6 +52,7 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
   const out = new Map<string, ListingTrust>();
   if (listings.length === 0) return out;
 
+  const flaggedVendors = await getFlaggedVendorSlugs(db);
   const compoundSlugs = [...new Set(listings.map((l) => l.compoundSlug))];
   const records = (await db.query<LabRow>(
     `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct
@@ -119,8 +121,14 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
     const compoundCoas = agg?.count ?? 0;
     const compoundMedianPurity = agg && agg.purities.length ? median(agg.purities) : null;
 
+    // Real cost per active mg: prefer THIS vendor's measured purity, fall back to the compound
+    // median. Only computed where we have a real purity and a real $/mg.
+    const effectivePurity = bestPurity ?? compoundMedianPurity;
+    const purityBasis: "vendor" | "compound" | null = bestPurity != null ? "vendor" : compoundMedianPurity != null ? "compound" : null;
+    const adjustedPricePerMg = l.pricePerMg && l.pricePerMg > 0 && effectivePurity && effectivePurity > 0 ? l.pricePerMg / (effectivePurity / 100) : null;
+
     const chip = CHIP[status];
-    out.set(l.slug, { status, tone: chip.tone, label: chip.label, detail: chip.detail, priceFlag, priceNote, compoundCoas, compoundMedianPurity });
+    out.set(l.slug, { status, tone: chip.tone, label: chip.label, detail: chip.detail, priceFlag, priceNote, compoundCoas, compoundMedianPurity, vendorFlagged: flaggedVendors.has(l.vendorSlug), adjustedPricePerMg, purityBasis });
   }
 
   return out;

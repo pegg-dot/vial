@@ -18,6 +18,8 @@ import { getStoredCommunitySignal } from "@/server/ingest/reddit";
 import { getDatabase } from "@/server/db/client";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { getLabTestsForVendor } from "@/server/ingest/lab-tests";
+import { VendorFlagsBanner } from "@/components/vendor-flags-banner";
+import { getVendorFlags } from "@/server/verify/coa-integrity";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal, vendorLabTests] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24))]);
+  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
   const verdict = verdictForVendorSlug(slug);
@@ -45,6 +47,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       <section className="border-b border-black/[.06]">
         <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
           <Link href="/market" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-black"><ArrowLeft className="size-4" /> Back to market</Link>
+          {vendorFlags.length > 0 && <div className="mt-6"><VendorFlagsBanner flags={vendorFlags} vendorName={vendor.name} /></div>}
           {verdict && <div className="mt-6"><VendorVerdictBanner verdict={verdict.verdict} summary={verdict.summary} /></div>}
           <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">

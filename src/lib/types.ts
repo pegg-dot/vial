@@ -75,6 +75,12 @@ export interface ListingTrust {
   // isn't verified. Count of COAs on record for the compound + their median measured purity.
   compoundCoas: number;
   compoundMedianPurity: number | null;
+  // The vendor carries a derived integrity red flag (reused/self-issued/mismatched COA, etc.).
+  vendorFlagged?: boolean;
+  // Real cost per ACTIVE milligram: raw $/mg divided by measured purity. The honest
+  // apples-to-apples value number — a 90%-pure vial costs more per real mg than the sticker says.
+  adjustedPricePerMg: number | null;
+  purityBasis: "vendor" | "compound" | null;   // whose purity we adjusted by
 }
 
 export interface Product {

@@ -33,6 +33,12 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
   // Crown the cheapest listing that ISN'T suspiciously cheap — the best legit deal.
   const cheapest = ranked.find((p) => !isSuspicious(p)) ?? ranked[0];
 
+  // Best TRUE value: lowest cost per active mg once adjusted for measured purity — among the
+  // listings we actually have a purity for. The cheapest sticker isn't always the best mg.
+  const activeCost = (p: Product) => p.pricePerMg! / (purityByVendor.get(p.vendorSlug)! / 100);
+  const withPurity = ranked.filter((p) => purityByVendor.has(p.vendorSlug));
+  const bestValue = withPurity.length ? withPurity.reduce((a, b) => (activeCost(a) <= activeCost(b) ? a : b)) : null;
+
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
       <div className="mb-6">
@@ -50,6 +56,7 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
               <th className="px-5 py-3 font-medium">Price</th>
               <th className="px-5 py-3 font-medium">Per mg</th>
               <th className="px-5 py-3 font-medium">Tested purity</th>
+              <th className="px-5 py-3 font-medium">Real $/active mg</th>
               <th className="px-5 py-3 font-medium"></th>
             </tr>
           </thead>
@@ -74,6 +81,11 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
                       ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 tabular-nums">{purity.toFixed(1)}%</span>
                       : <span className="text-xs text-[var(--muted)]">—</span>}
                   </td>
+                  <td className="px-5 py-3">
+                    {purity != null
+                      ? <span className={`font-semibold tabular-nums ${p.slug === bestValue?.slug ? "text-emerald-700" : ""}`}>{formatPricePerMg(p.pricePerMg! / (purity / 100))}{p.slug === bestValue?.slug && <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">best value</span>}</span>
+                      : <span className="text-xs text-[var(--muted)]">—</span>}
+                  </td>
                   <td className="px-5 py-3"><Link href={`/products/${p.slug}`} className="inline-flex items-center gap-1 text-xs font-semibold text-violet-700 hover:underline">View <ExternalLink className="size-3" /></Link></td>
                 </tr>
               );
@@ -81,7 +93,7 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-xs text-[var(--muted)]"><span className="font-semibold text-amber-700">Too cheap?</span> means a listing is priced far below the market rate for this compound — often a sign of underdosing or a fake, not a deal. The crown marks the cheapest listing that <em>isn&rsquo;t</em> an outlier. Purity and vendor reputation still matter.</p>
+      <p className="mt-3 text-xs text-[var(--muted)]"><span className="font-semibold text-emerald-700">Real $/active mg</span> divides the price-per-mg by the measured purity — the honest cost of the actual peptide, so a 90%-pure vial isn&rsquo;t compared as if it were 99%. <span className="font-semibold text-amber-700">Too cheap?</span> flags a listing far below the market rate — often underdosing or a fake, not a deal. The crown marks the cheapest non-outlier; <span className="font-semibold text-emerald-700">best value</span> marks the lowest real cost per active mg.</p>
     </section>
   );
 }

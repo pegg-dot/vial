@@ -111,6 +111,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   {product.pricePerMg ? <span className="rounded-full bg-black/[.05] px-2.5 py-1 text-xs font-semibold tabular-nums text-black/70">{formatPricePerMg(product.pricePerMg)}</span> : null}
                   {product.previousPrice && product.previousPrice !== product.price ? <span className="text-sm text-[var(--muted)] line-through">{formatCurrency(product.previousPrice)}</span> : null}
                   <PriceFlag trust={product.trust} />
+                  {product.trust?.adjustedPricePerMg ? <span title={`Real cost per active milligram — price per mg adjusted for ${product.trust.purityBasis === "vendor" ? "this vendor's measured purity" : "the compound's typical measured purity"}.`} className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 tabular-nums">{formatPricePerMg(product.trust.adjustedPricePerMg)} / active mg</span> : null}
                 </div>
               </div>
               {product.reviewCount > 0

@@ -11,6 +11,16 @@ const TONE: Record<ListingTrust["tone"], string> = {
 export function TrustChip({ trust, showNeutral = false }: { trust?: ListingTrust; showNeutral?: boolean }) {
   if (!trust) return null;
 
+  // 0. A derived integrity red flag on the vendor outranks everything — a buyer needs to see
+  //    "this vendor's paperwork doesn't hold up" before any purity or price signal.
+  if (trust.vendorFlagged) {
+    return (
+      <span title="This vendor carries a certificate-integrity red flag — see its page." className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
+        <ShieldAlert className="size-3" /> Vendor flagged
+      </span>
+    );
+  }
+
   // 1. A vendor-specific verdict (green tested / amber low-purity / red mismatch) always wins —
   //    it's the strongest, most specific signal, and it always shows.
   if (trust.tone !== "neutral") {

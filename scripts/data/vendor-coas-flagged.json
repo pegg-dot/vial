@@ -1,0 +1,229 @@
+[
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "retatrutide",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "bpc-157",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "cjc-1295",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "mots-c",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "kisspeptin-10",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "ipamorelin",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "ghk-cu",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "tesamorelin",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "melanotan-2",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "igf-1-lr3",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "pt-141",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "selank",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "aod-9604",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "melanotan-1",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "sermorelin",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "vendorName": "Cernum Biosciences",
+  "compound": "semax",
+  "lot": "201-139-35496",
+  "lab": "Cernum Biosciences (in-house)",
+  "testedAt": null
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "bpc-157",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Semax"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "semaglutide",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "N-Acetyl Semax"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "tesamorelin",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "DSIP"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "epitalon",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "DSIP"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "ll-37",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Semax"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "ara-290",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Semax"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "nad-plus",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Aniracetam"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "cjc-1295",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Semax"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "ghrp-2",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Selank"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "ghk-cu",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Selank"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "vendorName": "Nootropic Source",
+  "compound": "pt-141",
+  "lot": null,
+  "lab": "Nootropic Source (in-house)",
+  "testedAt": "2016",
+  "coaProduct": "Semax"
+ }
+]
