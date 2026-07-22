@@ -32,6 +32,9 @@ export function CoaCrossCheckPanel({ check }: { check: CoaCrossCheck }) {
           </li>
         ))}
       </ul>
+      {check.testedAt ? (
+        <p className="mt-3 text-xs text-black/55">Certificate analyzed <span className="font-semibold text-black/70">{check.testedAt}</span>{check.stale ? <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">years old — may not describe current stock</span> : null}</p>
+      ) : null}
       {check.independentUrl ? (
         <a href={check.independentUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700 hover:underline">
           Open the independent certificate <ExternalLink className="size-3.5" />

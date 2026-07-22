@@ -32,6 +32,16 @@ export interface CoaCrossCheck {
   // Compound-level independent evidence (all manufacturers, not this vendor) — surfaced when
   // the vendor itself isn't verified, so the buyer still sees what real testing looks like.
   compoundEvidence?: { count: number; medianPurity: number | null; compoundSlug: string };
+  testedAt?: string | null;     // when the backing certificate was analyzed (as printed)
+  stale?: boolean;              // that certificate is years old — describes an old batch
+}
+
+// Rough "is this printed date years old" test. Accepts bare years and common formats.
+function isStale(testedAt: string | null | undefined): boolean {
+  if (!testedAt) return false;
+  const m = testedAt.match(/(20\d{2})/);
+  if (!m) return false;
+  return new Date().getUTCFullYear() - Number(m[1]) >= 2;
 }
 
 function median(values: number[]): number {
@@ -56,7 +66,7 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 interface LabRow {
   vendor_slug: string | null; manufacturer: string; compound_slug: string | null;
-  batch_code: string | null; purity_pct: string | number | null; verify_url: string; sample_name: string;
+  batch_code: string | null; purity_pct: string | number | null; verify_url: string; sample_name: string; tested_at: string | null;
 }
 
 /** Whether a listing's advertised issuer names a real independent lab. */
@@ -106,7 +116,7 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
   // All independent records for this COMPOUND (evidence the vendor can't edit). We derive both
   // the vendor-specific matches and the compound-wide aggregate from one read.
   const compoundRecords = (await db.query<LabRow>(
-    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name
+    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name,tested_at
        FROM lab_test_records WHERE compound_slug = $1 ORDER BY purity_pct DESC NULLS LAST`,
     [input.compoundSlug],
   )).rows;
@@ -121,7 +131,7 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
   if (input.batchCode && input.batchCode.trim().length >= 4) {
     const bc = norm(input.batchCode);
     const byBatch = (await db.query<LabRow>(
-      `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name
+      `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name,tested_at
          FROM lab_test_records
         WHERE batch_code IS NOT NULL AND REGEXP_REPLACE(LOWER(batch_code),'[^a-z0-9]','','g') = $1
         LIMIT 1`,
@@ -149,6 +159,7 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
         claimedIssuer: input.reportIssuer,
         independentPurity: p,
         independentUrl: byBatch.verify_url,
+        testedAt: byBatch.tested_at, stale: isStale(byBatch.tested_at),
         headline: `This exact batch was independently tested${p != null ? ` at ${p.toFixed(2)}%` : ""}`,
         detail: `The batch this listing cites matches an independent record from the lab's own feed, attributed to ${vendorLabel}. That's the same batch, tested by a third party — the best documentary evidence available. It still isn't a promise about the vial you'll receive.`,
         signals: [
@@ -185,6 +196,7 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
       claimedIssuer: input.reportIssuer,
       independentPurity: bestPurity,
       independentUrl: best.verify_url,
+      testedAt: best.tested_at, stale: isStale(best.tested_at),
       headline: low
         ? `Independently tested — but measured ${bestPurity!.toFixed(2)}%`
         : `Testing claim is backed by an independent record`,
@@ -206,6 +218,7 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
       status: low ? "low-purity" : "verified",
       independentPurity: bestPurity,
       independentUrl: best.verify_url,
+      testedAt: best.tested_at, stale: isStale(best.tested_at),
       headline: low
         ? `Independent test on record — but only ${bestPurity!.toFixed(2)}%`
         : `Independent test on record${bestPurity != null ? ` — ${bestPurity.toFixed(2)}%` : ""}`,

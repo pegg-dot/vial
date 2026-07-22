@@ -122,27 +122,73 @@ export function vendorVerdict(v: KnownVendor): VerifyResult {
   };
 }
 
-async function coaVerdict(code: string): Promise<VerifyResult> {
+function coaIsStale(testedAt: string | null): boolean {
+  if (!testedAt) return false;
+  const m = testedAt.match(/(20\d{2})/);
+  return m ? new Date().getUTCFullYear() - Number(m[1]) >= 2 : false;
+}
+
+// Live existence check for a pasted Janoshik verify URL we don't hold — does it resolve to a
+// real certificate image? Confirms authenticity even for codes outside our index.
+async function janoshikResolves(url: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(url, { headers: { "user-agent": UA, "x-requested-with": "XMLHttpRequest" }, signal: AbortSignal.timeout(9000) });
+    if (!res.ok) return false;
+    const html = await res.text();
+    return /img\/[a-f0-9]+\.png/i.test(html);
+  } catch {
+    return null;
+  }
+}
+
+async function coaVerdict(code: string, url?: string): Promise<VerifyResult> {
   const db = await getDatabase();
-  const r = await db.query<{ sample_name: string; manufacturer: string; purity_pct: string | number | null; verify_url: string; compound_slug: string | null }>(
-    `SELECT sample_name,manufacturer,purity_pct,verify_url,compound_slug FROM lab_test_records WHERE verify_key = $1 LIMIT 1`,
+  const r = await db.query<{ sample_name: string; manufacturer: string; purity_pct: string | number | null; verify_url: string; compound_slug: string | null; vendor_slug: string | null; tested_at: string | null }>(
+    `SELECT sample_name,manufacturer,purity_pct,verify_url,compound_slug,vendor_slug,tested_at FROM lab_test_records WHERE verify_key = $1 LIMIT 1`,
     [code.toUpperCase()],
   );
   const row = r.rows[0];
   if (row) {
-    const purity = row.purity_pct != null ? `${Number(row.purity_pct).toFixed(2)}% purity` : "purity on the certificate";
+    const purity = row.purity_pct != null ? `${Number(row.purity_pct).toFixed(2)}% purity` : "the purity printed on the certificate";
+    const stale = coaIsStale(row.tested_at);
+    const signals: Signal[] = [
+      { ok: true, label: "Certificate", detail: "Resolves to a real, public, vendor-immutable lab record." },
+      { ok: true, label: "Attribution", detail: `Made by ${row.manufacturer}${row.vendor_slug ? ` — a vendor VIAL tracks.` : "."}` },
+    ];
+    if (row.tested_at) signals.push({ ok: !stale, label: "Freshness", detail: stale ? `Analyzed ${row.tested_at} — years old, so it describes an old batch, not necessarily current stock.` : `Analyzed ${row.tested_at}.` });
     return {
       query: code, kind: "coa", verdict: "trusted",
       headline: `Real COA — ${row.sample_name} by ${row.manufacturer}`,
-      summary: `We have this Janoshik test on record: ${purity}. It resolves to a public, vendor-immutable certificate.`,
-      signals: [{ ok: true, label: "Certificate", detail: "Resolves to a real Janoshik record." }],
-      link: { href: row.verify_url, label: "Open the certificate on Janoshik" },
+      summary: `This resolves to a genuine lab record: ${purity}. Confirm the compound and the “Made By” name match the product you're buying — a real certificate for someone else's product proves nothing about yours.`,
+      signals,
+      link: row.vendor_slug ? { href: `/vendors/${row.vendor_slug}`, label: `See ${row.manufacturer} on VIAL` } : { href: row.verify_url, label: "Open the certificate on the lab" },
     };
+  }
+  // Not in our index — if a full URL was pasted, check whether it resolves live.
+  if (url) {
+    const resolves = await janoshikResolves(url);
+    if (resolves === true) {
+      return {
+        query: code || url, kind: "coa", verdict: "unproven",
+        headline: "Real certificate — but check who it belongs to",
+        summary: "This certificate resolves at the lab, so it's genuine. We don't have it indexed, so open it and confirm the compound and the manufacturer match the exact product you're buying — a borrowed or reused certificate is the most common trick.",
+        signals: [{ ok: true, label: "Certificate", detail: "Resolves to a live lab record." }, { ok: null, label: "Attribution", detail: "Not in our index — verify the “Made By” name and compound yourself." }],
+        link: { href: url, label: "Open the certificate" },
+      };
+    }
+    if (resolves === false) {
+      return {
+        query: code || url, kind: "coa", verdict: "high-risk",
+        headline: "This certificate does NOT resolve at the lab",
+        summary: "The URL you pasted doesn't return a real certificate. A COA that won't verify at the issuing lab is fabricated — do not trust it.",
+        signals: [{ ok: false, label: "Certificate", detail: "Does not resolve to a real lab record — fabricated." }],
+      };
+    }
   }
   return {
     query: code, kind: "coa", verdict: "unproven",
     headline: "We don't have this COA code on record",
-    summary: "That doesn't mean it's fake — verify it directly at janoshik.com/verify. If it doesn't resolve there, the certificate is fabricated.",
+    summary: "That doesn't mean it's fake — verify it directly at janoshik.com/verify. If it doesn't resolve there, the certificate is fabricated. Paste the full verify URL here and we'll check it live.",
     signals: [{ ok: null, label: "Certificate", detail: "Not in our index. Check janoshik.com/verify to confirm it's real." }],
     link: { href: `https://janoshik.com/verify`, label: "Verify at Janoshik" },
   };
@@ -163,7 +209,11 @@ async function topAlternatives(): Promise<{ slug: string; name: string }[]> {
 
 export async function runVerification(rawQuery: string): Promise<VerifyResult> {
   const query = rawQuery.trim();
-  if (!query) return { query, kind: "nothing", verdict: "info", headline: "Enter something to check", summary: "A vendor name or domain, a compound, or a Janoshik COA code.", signals: [] };
+  if (!query) return { query, kind: "nothing", verdict: "info", headline: "Enter something to check", summary: "A vendor name or domain, a compound, a Janoshik COA code, or a pasted COA verify link.", signals: [] };
+
+  // 0. A pasted Janoshik verify URL — extract the code and check it (live if we don't hold it).
+  const janoUrl = query.match(/https?:\/\/(?:www\.)?verify\.janoshik\.com\/tests\/\S+/i)?.[0];
+  if (janoUrl) return coaVerdict(janoUrl.match(/_([A-Za-z0-9]{8,})\/?$/)?.[1] ?? "", janoUrl);
 
   const domain = extractDomain(query);
 

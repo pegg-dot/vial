@@ -43,7 +43,7 @@ export default function VerifyPage() {
       <form onSubmit={(e) => { e.preventDefault(); void check(query); }} className="mt-8 flex flex-col gap-2 rounded-[24px] border border-black/[.09] bg-white p-2 shadow-[0_14px_40px_rgba(18,20,24,.07)] sm:flex-row">
         <label className="flex min-h-13 flex-1 items-center gap-3 rounded-2xl bg-black/[.035] px-4">
           <Search className="size-5 text-black/40" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="vendor.com, BPC-157, or a COA code" className="min-w-0 flex-1 bg-transparent text-base font-medium outline-none placeholder:font-normal placeholder:text-black/35" aria-label="Check a vendor, compound, or COA" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="vendor.com, BPC-157, a COA code, or a COA verify link" className="min-w-0 flex-1 bg-transparent text-base font-medium outline-none placeholder:font-normal placeholder:text-black/35" aria-label="Check a vendor, compound, or COA" />
         </label>
         <button disabled={pending} className="flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-[#111214] px-6 text-sm font-semibold text-white transition hover:bg-black/85 disabled:opacity-60">{pending ? "Checking…" : "Check"} <ArrowRight className="size-4" /></button>
       </form>
