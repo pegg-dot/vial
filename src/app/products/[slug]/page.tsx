@@ -19,6 +19,8 @@ import { getPublicPassportForBatchCode } from "@/server/evidence-network/reposit
 import { CoaCrossCheckPanel } from "@/components/coa-cross-check-panel";
 import { crossCheckCoa } from "@/server/verify/coa-cross-check";
 import { getDatabase } from "@/server/db/client";
+import { CompoundKnowledge } from "@/components/compound-knowledge";
+import { educationFor } from "@/lib/compound-education";
 
 export const dynamic = "force-dynamic";
 
@@ -42,11 +44,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!vendor || !compound) notFound();
 
   const related = (await getProductsByCompoundSlug(product.compoundSlug)).filter((item) => item.slug !== product.slug).slice(0, 3);
-  const coaCheck = await crossCheckCoa(await getDatabase(), {
+  const db = await getDatabase();
+  const coaCheck = await crossCheckCoa(db, {
     vendorSlug: product.vendorSlug, vendorName: vendor.name,
     compoundSlug: product.compoundSlug, compoundName: compound.name,
     reportIssuer: product.reportIssuer, reportConfirmed: product.reportConfirmed, batchCode: product.batchCode,
   });
+  const education = educationFor(product.compoundSlug);
+  const stackedBriefs = education?.stackedWith?.length
+    ? (await db.query<{ slug: string; canonical_name: string }>(`SELECT slug, canonical_name FROM compounds WHERE slug = ANY($1)`, [education.stackedWith])).rows.map((r) => ({ slug: r.slug, name: r.canonical_name }))
+    : [];
   const priceStart = product.priceHistory[0];
   const priceEnd = product.priceHistory.at(-1) ?? product.price;
   const priceChange = ((priceEnd - priceStart) / priceStart) * 100;
@@ -124,6 +131,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </section>
+
+      {education ? (
+        <section className="mx-auto max-w-[1320px] px-5 pb-2 sm:px-8">
+          <CompoundKnowledge name={compound.name} education={education} stacked={stackedBriefs} />
+        </section>
+      ) : null}
 
       <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
         <div className="grid gap-7 lg:grid-cols-[1.25fr_.75fr]">

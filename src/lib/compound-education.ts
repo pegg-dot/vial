@@ -12,20 +12,21 @@ export interface CompoundEducation {
   stackedWith?: string[];     // compound slugs commonly discussed together
 }
 
-// Canonical goal tags, with the color the UI tints them.
-export const GOAL_TAGS: Record<string, { label: string; tone: string }> = {
-  recovery: { label: "Recovery & healing", tone: "emerald" },
-  gut: { label: "Gut health", tone: "emerald" },
-  gh: { label: "Growth hormone support", tone: "blue" },
-  metabolic: { label: "Weight & metabolic", tone: "violet" },
-  longevity: { label: "Longevity & anti-aging", tone: "violet" },
-  cognitive: { label: "Cognitive & mood", tone: "blue" },
-  skin: { label: "Skin & cosmetic", tone: "amber" },
-  tanning: { label: "Tanning & libido", tone: "amber" },
-  immune: { label: "Immune & thymic", tone: "emerald" },
-  muscle: { label: "Muscle & performance", tone: "blue" },
-  sleep: { label: "Sleep", tone: "violet" },
-  hormonal: { label: "Reproductive & hormonal", tone: "violet" },
+// Canonical goal tags: the short label + tint for the chip, and a plain-English blurb that
+// explains what that research area actually is (research context only — never efficacy).
+export const GOAL_TAGS: Record<string, { label: string; tone: string; blurb: string }> = {
+  recovery: { label: "Recovery & healing", tone: "emerald", blurb: "Studied in tissue-repair research — tendon, ligament, muscle, and wound-healing models." },
+  gut: { label: "Gut health", tone: "emerald", blurb: "Studied in gastrointestinal research, including gut-lining integrity and inflammatory-condition models." },
+  gh: { label: "Growth hormone support", tone: "blue", blurb: "Studied for how it interacts with the body's own growth-hormone axis in research settings." },
+  metabolic: { label: "Weight & metabolic", tone: "violet", blurb: "Studied in weight, appetite, blood-sugar, and fat-metabolism research." },
+  longevity: { label: "Longevity & anti-aging", tone: "violet", blurb: "Studied in aging, cellular-senescence, and mitochondrial-function research." },
+  cognitive: { label: "Cognitive & mood", tone: "blue", blurb: "Studied in memory, focus, mood, and neuroprotection research." },
+  skin: { label: "Skin & cosmetic", tone: "amber", blurb: "Studied in cosmetic and skin research — collagen, elasticity, and appearance." },
+  tanning: { label: "Tanning & libido", tone: "amber", blurb: "Studied in melanocortin research — skin pigmentation and related pathways." },
+  immune: { label: "Immune & thymic", tone: "emerald", blurb: "Studied in immune-modulation and thymic-function research." },
+  muscle: { label: "Muscle & performance", tone: "blue", blurb: "Studied in muscle-growth, repair, and physical-performance research." },
+  sleep: { label: "Sleep", tone: "violet", blurb: "Studied in sleep-cycle and stress-recovery research." },
+  hormonal: { label: "Reproductive & hormonal", tone: "violet", blurb: "Studied in reproductive-hormone and endocrine-axis research." },
 };
 
 export const COMPOUND_EDUCATION: Record<string, CompoundEducation> = {
@@ -97,4 +98,8 @@ export function educationFor(slug: string): CompoundEducation | undefined {
 
 export function goalLabel(key: string): string {
   return GOAL_TAGS[key]?.label ?? key;
+}
+
+export function goalBlurb(key: string): string {
+  return GOAL_TAGS[key]?.blurb ?? "";
 }

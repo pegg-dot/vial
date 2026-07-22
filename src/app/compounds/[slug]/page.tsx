@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3 } from "lucide-react";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
 import { formatCurrency } from "@/lib/format";
 import { educationFor } from "@/lib/compound-education";
 import { GoalTags } from "@/components/goal-tags";
+import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
@@ -63,6 +64,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
               <h1 className="mt-5 text-6xl font-semibold leading-[.9] tracking-[-.075em] sm:text-8xl">{compound.name}</h1>
               {edu?.goals?.length ? <div className="mt-5"><GoalTags goals={edu.goals} size="md" /></div> : null}
               <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">{compound.description}</p>
+              {/* hero chips give the glance; the full knowledge panel sits below the stats */}
               <div className="mt-6 flex flex-wrap gap-2">
                 {compound.aliases.map((alias) => <span key={alias} className="rounded-full bg-black/[.045] px-3 py-1.5 text-xs text-black/55">{alias}</span>)}
               </div>
@@ -91,20 +93,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
-      {edu?.summary ? (
+      {edu ? (
         <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
-          <div className="rounded-[28px] border border-black/[.07] bg-white p-6 sm:p-8">
-            <div className="flex items-start gap-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-violet-50"><Sparkles className="size-4 text-violet-700" /></span>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">In plain English</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-.035em]">What {compound.name} is for</h2>
-                <p className="mt-3 max-w-3xl text-[15px] leading-7 text-black/70">{edu.summary}</p>
-                {edu.goals?.length ? <div className="mt-4"><GoalTags goals={edu.goals} size="md" /></div> : null}
-                <p className="mt-4 text-xs text-[var(--muted)]">Plain-English research context — not medical, dosing, or human-use advice.</p>
-              </div>
-            </div>
-          </div>
+          <CompoundKnowledge name={compound.name} education={edu} showStacks={false} />
         </section>
       ) : null}
 
