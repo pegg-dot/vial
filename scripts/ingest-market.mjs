@@ -10,6 +10,7 @@ import { importWooCommerceCatalog } from "../src/server/ingest/woocommerce-impor
 import { parseJanoshikFeed, recordLabTest } from "../src/server/ingest/lab-tests.ts";
 import { deriveCoaVendors } from "../src/server/ingest/coa-vendors.ts";
 import { detectVendorCoaFlags, writeVendorFlags } from "../src/server/verify/coa-integrity.ts";
+import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
   console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true.");
@@ -156,6 +157,15 @@ if (existsSync(flaggedFile)) {
   }
   console.log(`\nDerived integrity flags: ${totalFlags} flags across ${flaggedVendors} vendors.`);
 }
+
+// Record today's price for every live listing, then project each listing's observations into
+// its price-history trail (real points over time, seeded further back by the Wayback backfill).
+const liveListings = (await db.query(`SELECT l.slug, o.slug vendor, c.slug compound, l.price FROM listings l JOIN products p ON p.id=l.product_id JOIN compounds c ON c.id=p.compound_id JOIN organizations o ON o.id=p.vendor_id WHERE l.origin='live'`)).rows;
+const nowTs = new Date();
+for (const l of liveListings) await recordPriceObservation(db, { listingSlug: l.slug, vendorSlug: l.vendor, compoundSlug: l.compound, price: Number(l.price), source: "live", observedAt: nowTs });
+let rebuilt = 0;
+for (const l of liveListings) { if ((await rebuildListingPriceHistory(db, l.slug)) > 0) rebuilt += 1; }
+console.log(`\nRecorded ${liveListings.length} price observations · rebuilt ${rebuilt} listing price trails.`);
 
 console.log(`\nRecomputing compound stats…`);
 await recomputeCompoundStats(db);

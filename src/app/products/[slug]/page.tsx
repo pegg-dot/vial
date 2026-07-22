@@ -23,6 +23,7 @@ import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { educationFor } from "@/lib/compound-education";
 import { PriceFlag } from "@/components/listing-trust-chip";
 import { UsLegalNotice } from "@/components/us-legal-notice";
+import { getListingPriceMeta } from "@/server/ingest/price-history";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     compoundSlug: product.compoundSlug, compoundName: compound.name,
     reportIssuer: product.reportIssuer, reportConfirmed: product.reportConfirmed, batchCode: product.batchCode,
   });
+  const priceMeta = await getListingPriceMeta(db, product.slug);
   const education = educationFor(product.compoundSlug);
   const stackedBriefs = education?.stackedWith?.length
     ? (await db.query<{ slug: string; canonical_name: string }>(`SELECT slug, canonical_name FROM compounds WHERE slug = ANY($1)`, [education.stackedWith])).rows.map((r) => ({ slug: r.slug, name: r.canonical_name }))
@@ -167,6 +169,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <p className="text-xs text-[var(--muted)]">{formatCurrency(priceStart)} → {formatCurrency(priceEnd)}</p>
               </div>
               <div className="mt-5 h-28"><PriceSparkline values={product.priceHistory} accent={product.accent[0]} height={94} /></div>
+              {priceMeta.days >= 2 && priceMeta.since ? <p className="mt-3 text-[11px] leading-4 text-black/45">{priceMeta.days} price checks since {new Date(priceMeta.since).toLocaleDateString()} — from live catalog fetches and archived catalog snapshots. Real observed prices, not a projection.</p> : null}
             </div>
             ) : null}
 
