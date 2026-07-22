@@ -13,7 +13,7 @@ if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to
 
 const db = await getDatabase();
 console.log("Fetching Janoshik public feed…");
-const entries = await fetchJanoshikPortal();
+const { entries } = await fetchJanoshikPortal();
 console.log(`  live portal lists ${entries.length} public tests.`);
 const res = await annotateJanoshikListings(db, entries);
 console.log(`Checked ${res.keysChecked} stored COAs — ${res.stillListed} still publicly listed, ${res.keysChecked - res.stillListed} not currently in the public feed.`);

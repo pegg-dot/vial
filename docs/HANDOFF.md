@@ -170,6 +170,24 @@ visual polish with Fable 5 / Cloud Design.
    page CTA is already "Buy at [Vendor] →", inert until data is real).
 6. **Deploy** — Vercel + managed Postgres (the DB layer is already built for this).
 
+### Progress log — 2026-07-22 (Janoshik NEW-test discovery)
+
+- **Discovery closes the Janoshik loop:** `src/server/ingest/janoshik-discovery.ts` +
+  `scripts/collect-janoshik-discover.mjs` (gated, `--offline` re-pass supported). One run now:
+  refreshes the on-disk feed snapshot, ingests tests we don't hold (minting newly-named client
+  vendors), backfills vision-read purities (`applyPurities`, COALESCE — never overwrites),
+  runs the liveness pass, and recomputes linkage + compound stats. The portal shows a bounded
+  window and verify URLs stay valid after roll-off, so each run grows history the feed later
+  drops (moat A). "Not in current feed" wording = rolled off OR delisted; feed can't distinguish.
+- **⭐ Real parser bug found by the first live run:** the portal pins blind-test results as
+  `<li class="sticky" data-test-id=…>`; the parser split on the literal `<li data-test-id="` and
+  had NEVER seen any sticky entry (50 in today's feed, incl. Janoshik's GLP-1 blind-test program).
+  Now attribute-order-robust + feed-level dedupe (49 stickies were pinned duplicates). Net new
+  today: **#101083** Retatrutide 20mg (InnoPeptide) — ingested, cert vision-read
+  (99.814% low-vial, batch RT20/2026-01-09-A, 22 JAN 2026), dose-check "100%: the dose is there",
+  live-verified on the vendor page. 201 COAs stored (163 with purity).
+- Verify: lint · typecheck · 129 unit · 33 integration files · build · e2e 11/11 all green.
+
 ### Progress log — 2026-07-21 (deep-dive audit + full remediation)
 
 Full audit at `docs/audit/vial-deep-dive-audit.html` (6 parallel auditors). Every

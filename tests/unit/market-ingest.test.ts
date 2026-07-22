@@ -39,6 +39,28 @@ describe("Janoshik feed parsing", () => {
     expect(entries[1].sampleName).toBe("Retatrutide 20mg");
     expect(entries[1].verifyUrl).toContain("149759");
   });
+
+  it("parses pinned entries whose <li> carries other attributes before data-test-id", () => {
+    // The live portal pins blind-test results as <li class="sticky" data-test-id="…">.
+    const sticky = `
+      <li class="sticky" data-test-id="101083"><a href="https://verify.janoshik.com/tests/101083-Retatrutide_20mg_N7PPUVKCQ7GD">
+        <span class="sample">Retatrutide 20mg</span>
+        <span class="client">InnoPeptide</span>
+        <span class="float-right manufacturer">Made By www.innopeptide.com</span></a></li>`;
+    const entries = parseJanoshikFeed(sticky);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ testId: "101083", sampleName: "Retatrutide 20mg", client: "InnoPeptide", verifyKey: "N7PPUVKCQ7GD" });
+  });
+
+  it("collapses a pinned duplicate of a main-list entry to one record", () => {
+    const dup = `
+      <li class="sticky" data-test-id="202438"><a href="https://verify.janoshik.com/tests/202438-BPC157_F8IKXANLGX1R">
+        <span class="sample">BPC-157</span></a></li>
+      ${html}`;
+    const entries = parseJanoshikFeed(dup);
+    expect(entries.filter((e) => e.testId === "202438")).toHaveLength(1);
+    expect(entries).toHaveLength(2);
+  });
 });
 
 describe("manufacturer → vendor matching", () => {

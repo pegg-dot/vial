@@ -17,10 +17,13 @@ export interface JanoshikEntry {
   verifyKey: string;
 }
 
-/** Parse the server-rendered Janoshik public feed into structured entries. */
+/** Parse the server-rendered Janoshik public feed into structured entries.
+ *  Handles both plain rows and pinned ones (`<li class="sticky" data-test-id="…">`); a pinned
+ *  duplicate of a main-list row collapses to one entry (first occurrence wins). */
 export function parseJanoshikFeed(html: string): JanoshikEntry[] {
-  const blocks = html.split('<li data-test-id="').slice(1);
+  const blocks = html.split(/<li[^>]*?data-test-id="/).slice(1);
   const entries: JanoshikEntry[] = [];
+  const seen = new Set<string>();
   const strip = (s: string) => s.replace(/<[^>]+>/g, "").trim();
   for (const b of blocks) {
     const testId = b.slice(0, b.indexOf('"'));
@@ -30,6 +33,8 @@ export function parseJanoshikFeed(html: string): JanoshikEntry[] {
     const mfr = /manufacturer">\s*Made By\s*([\s\S]*?)<\/span>/.exec(b);
     if (!href || !sample) continue;
     const url = href[1];
+    if (seen.has(url)) continue;
+    seen.add(url);
     const keyMatch = /_([A-Z0-9]{8,})$/.exec(url);
     entries.push({
       testId,

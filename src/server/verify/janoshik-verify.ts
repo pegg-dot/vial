@@ -12,11 +12,13 @@ import { parseJanoshikFeed, type JanoshikEntry } from "@/server/ingest/lab-tests
 const PORTAL_URL = "https://public.janoshik.com/";
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36";
 
-/** Fetch and parse the live Janoshik public feed. Collector-only (live network). */
-export async function fetchJanoshikPortal(): Promise<JanoshikEntry[]> {
+/** Fetch and parse the live Janoshik public feed. Collector-only (live network). Returns the
+ *  raw HTML too so collectors can refresh the on-disk snapshot the offline ingest reads. */
+export async function fetchJanoshikPortal(): Promise<{ html: string; entries: JanoshikEntry[] }> {
   const res = await fetch(PORTAL_URL, { headers: { "user-agent": UA }, signal: AbortSignal.timeout(20000) });
   if (!res.ok) throw new Error(`Janoshik portal returned ${res.status}`);
-  return parseJanoshikFeed(await res.text());
+  const html = await res.text();
+  return { html, entries: parseJanoshikFeed(html) };
 }
 
 export interface JanoshikSyncResult {
