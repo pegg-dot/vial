@@ -8,7 +8,7 @@ process.env.VIAL_SESSION_SECRET = "janoshik-verify-test-secret-at-least-32-chara
 process.env.VIAL_PRIVACY_HASH_SECRET = "janoshik-verify-privacy-secret-at-least-32-characters";
 
 const resolve = { compounds: [], vendors: [{ slug: "acme-peptide", name: "Acme Peptide", domain: "acme.com" }] };
-const entry = (verifyKey: string, manufacturer = "acme.com") => ({ testId: verifyKey, sampleName: "BPC-157 5mg", manufacturer, client: "", verifyUrl: `https://verify.janoshik.com/tests/1-BPC157_${verifyKey}`, verifyKey });
+const entry = (verifyKey: string, manufacturer = "acme.com") => ({ testId: verifyKey, sampleName: "BPC-157 5mg", manufacturer, client: "", verifyUrl: `https://verify.janoshik.com/tests/1-BPC157_${verifyKey}`, verifyKey, note: "" });
 
 describe("janoshik live re-verification", () => {
   beforeAll(async () => {

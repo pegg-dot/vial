@@ -15,6 +15,29 @@ export interface JanoshikEntry {
   client: string;
   verifyUrl: string;
   verifyKey: string;
+  note: string; // the feed's test-type label, e.g. "Common GLP-1 peptide blind test (…)"
+}
+
+export type TestType = "purity" | "blend" | "sterility" | "endotoxin" | "heavy-metals" | "dimer" | "identity" | "screening";
+
+/**
+ * Classify a Janoshik feed note into an analysis category + a blind flag. Blind = a sample the
+ * lab (or a buyer) obtained independently, so the vendor couldn't hand-pick it — the strongest
+ * independence signal a certificate carries. Safety categories (sterility/endotoxin/heavy-metals)
+ * prove something a purity test does not, so they're kept distinct rather than lumped as "purity".
+ */
+export function classifyTestNote(note: string): { testType: TestType; isBlind: boolean } {
+  const n = (note ?? "").toLowerCase();
+  const isBlind = /\bblind\b/.test(n);
+  let testType: TestType = "purity";
+  if (/sterilit/.test(n)) testType = "sterility";
+  else if (/endotoxin/.test(n)) testType = "endotoxin";
+  else if (/heavy metal/.test(n)) testType = "heavy-metals";
+  else if (/\bdimer\b/.test(n)) testType = "dimer";
+  else if (/screening/.test(n)) testType = "screening";
+  else if (/\bblend\b|klow|glow|\bkpv\b.*\btb|(?:\/\s*(?:ghk|tb-?500|bpc-?157|kpv|ipamorelin|mod\s*grf))/.test(n)) testType = "blend";
+  else if (/bac water|benzyl alcohol|\bwater\b/.test(n)) testType = "identity";
+  return { testType, isBlind };
 }
 
 /** Parse the server-rendered Janoshik public feed into structured entries.
@@ -31,6 +54,7 @@ export function parseJanoshikFeed(html: string): JanoshikEntry[] {
     const sample = /<span class="sample">([\s\S]*?)<\/span>/.exec(b);
     const client = /<span class="client">([\s\S]*?)<\/span>/.exec(b);
     const mfr = /manufacturer">\s*Made By\s*([\s\S]*?)<\/span>/.exec(b);
+    const note = /<span class="[^"]*\btiny\b[^"]*">([\s\S]*?)<\/span>/.exec(b);
     if (!href || !sample) continue;
     const url = href[1];
     if (seen.has(url)) continue;
@@ -43,6 +67,7 @@ export function parseJanoshikFeed(html: string): JanoshikEntry[] {
       client: client ? strip(client[1]) : "",
       verifyUrl: url,
       verifyKey: keyMatch ? keyMatch[1] : "",
+      note: note ? strip(note[1]) : "",
     });
   }
   return entries;
@@ -73,6 +98,9 @@ export interface LabTestInput {
   testedAt?: string | null;
   lab?: string;
   vendorSlug?: string | null;   // pre-resolved vendor (e.g. from the COA client field); overrides matchVendor
+  testType?: TestType;
+  isBlind?: boolean;
+  testNote?: string | null;
 }
 
 /** Record (idempotently, keyed on verify_url) a real independent lab test. */
@@ -86,8 +114,8 @@ export async function recordLabTest(
   const id = newId("labtest");
   await db.query(
     `INSERT INTO lab_test_records
-       (id, lab, test_id, verify_url, verify_key, compound_slug, sample_name, manufacturer, vendor_slug, batch_code, purity_pct, measured_content, tested_at, origin)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'live')
+       (id, lab, test_id, verify_url, verify_key, compound_slug, sample_name, manufacturer, vendor_slug, batch_code, purity_pct, measured_content, tested_at, test_type, is_blind, test_note, origin)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'live')
      ON CONFLICT (verify_url) DO UPDATE
        SET purity_pct = COALESCE(EXCLUDED.purity_pct, lab_test_records.purity_pct),
            measured_content = COALESCE(EXCLUDED.measured_content, lab_test_records.measured_content),
@@ -95,8 +123,11 @@ export async function recordLabTest(
            compound_slug = COALESCE(EXCLUDED.compound_slug, lab_test_records.compound_slug),
            vendor_slug = COALESCE(EXCLUDED.vendor_slug, lab_test_records.vendor_slug),
            tested_at = COALESCE(EXCLUDED.tested_at, lab_test_records.tested_at),
+           test_type = EXCLUDED.test_type,
+           is_blind = lab_test_records.is_blind OR EXCLUDED.is_blind,
+           test_note = COALESCE(EXCLUDED.test_note, lab_test_records.test_note),
            updated_at = NOW()`,
-    [id, input.lab ?? "Janoshik Analytical", input.testId, input.verifyUrl, input.verifyKey ?? null, compoundSlug, input.sampleName, input.manufacturer, vendorSlug, input.batchCode ?? null, input.purityPct ?? null, input.measuredContent ?? null, input.testedAt ?? null],
+    [id, input.lab ?? "Janoshik Analytical", input.testId, input.verifyUrl, input.verifyKey ?? null, compoundSlug, input.sampleName, input.manufacturer, vendorSlug, input.batchCode ?? null, input.purityPct ?? null, input.measuredContent ?? null, input.testedAt ?? null, input.testType ?? "purity", input.isBlind ?? false, input.testNote ?? null],
   );
   return { id, compoundSlug, vendorSlug };
 }
@@ -106,20 +137,21 @@ export interface LabTestRow {
   sample_name: string; manufacturer: string; vendor_slug: string | null; batch_code: string | null;
   purity_pct: string | number | null; measured_content: string | null; tested_at: string | null;
   janoshik_listed: boolean | null; janoshik_made_by: string | null; janoshik_checked_at: string | null;
+  test_type: string; is_blind: boolean; test_note: string | null;
 }
 
-const LAB_TEST_COLS = `lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at,janoshik_listed,janoshik_made_by,janoshik_checked_at`;
+const LAB_TEST_COLS = `lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at,janoshik_listed,janoshik_made_by,janoshik_checked_at,test_type,is_blind,test_note`;
 
 export async function getLabTestsForCompound(db: SqlConnection, compoundSlug: string, limit = 12): Promise<LabTestRow[]> {
   return (await db.query<LabTestRow>(
-    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE compound_slug = $1 ORDER BY purity_pct DESC NULLS LAST, updated_at DESC LIMIT $2`,
+    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE compound_slug = $1 ORDER BY is_blind DESC, purity_pct DESC NULLS LAST, updated_at DESC LIMIT $2`,
     [compoundSlug, limit],
   )).rows;
 }
 
 export async function getLabTestsForVendor(db: SqlConnection, vendorSlug: string, limit = 12): Promise<LabTestRow[]> {
   return (await db.query<LabTestRow>(
-    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE vendor_slug = $1 ORDER BY updated_at DESC LIMIT $2`,
+    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE vendor_slug = $1 ORDER BY is_blind DESC, updated_at DESC LIMIT $2`,
     [vendorSlug, limit],
   )).rows;
 }

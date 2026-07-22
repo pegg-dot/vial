@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, FlaskConical, BadgeCheck } from "lucide-react";
+import { ExternalLink, FileText, FlaskConical, BadgeCheck, EyeOff, ShieldCheck } from "lucide-react";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { checkContent } from "@/server/verify/content-check";
 
@@ -8,12 +8,22 @@ function isImageDoc(url: string): boolean {
   return /\.(png|webp|jpe?g)(\?|$)/i.test(url);
 }
 
+// Human labels for the non-purity analysis categories. Purity is the default and needs no label;
+// the safety categories (sterility / endotoxin / heavy-metals) prove something a purity test does
+// not, so they're worth calling out on the row.
+const TEST_TYPE_LABEL: Record<string, string> = {
+  sterility: "Sterility", endotoxin: "Endotoxin", "heavy-metals": "Heavy metals",
+  dimer: "Dimer/aggregation", blend: "Blend", screening: "ID screen", identity: "Identity",
+};
+const SAFETY_TYPES = new Set(["sterility", "endotoxin", "heavy-metals"]);
+
 // Surfaces real independent lab-test records (COAs). Purity, when present, was read from
 // the certificate image. This is evidence about a specific tested batch, never a claim
 // that every vial matches or an endorsement of the vendor.
 export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { tests: LabTestRow[]; heading?: string }) {
   if (tests.length === 0) return null;
   const withPurity = tests.filter((t) => t.purity_pct != null);
+  const blindCount = tests.filter((t) => t.is_blind).length;
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -45,12 +55,20 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
             </details>
           </div>
         </div>
-        {withPurity.length > 0 && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
-            <p className="text-2xl font-semibold tabular-nums text-emerald-800">{Math.max(...withPurity.map((t) => Number(t.purity_pct))).toFixed(1)}%</p>
-            <p className="text-[11px] font-semibold text-emerald-700">highest tested purity</p>
-          </div>
-        )}
+        <div className="flex gap-3">
+          {blindCount > 0 && (
+            <div className="rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-center" title="Blind tests: the sample was obtained independently, so the vendor could not hand-pick which vial was tested. This is the strongest independence signal a certificate can carry.">
+              <p className="flex items-center justify-center gap-1 text-2xl font-semibold tabular-nums text-violet-800"><EyeOff className="size-4" />{blindCount}</p>
+              <p className="text-[11px] font-semibold text-violet-700">blind {blindCount === 1 ? "test" : "tests"}</p>
+            </div>
+          )}
+          {withPurity.length > 0 && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
+              <p className="text-2xl font-semibold tabular-nums text-emerald-800">{Math.max(...withPurity.map((t) => Number(t.purity_pct))).toFixed(1)}%</p>
+              <p className="text-[11px] font-semibold text-emerald-700">highest tested purity</p>
+            </div>
+          )}
+        </div>
       </div>
       <div className="overflow-x-auto rounded-[24px] border border-black/[.07] bg-white">
         <table className="w-full min-w-[760px] text-left text-sm">
@@ -80,7 +98,19 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
                       )
                       : <span className="grid size-12 place-items-center rounded-lg border border-black/[.08] bg-black/[.02] text-black/30"><FileText className="size-5" /></span>}
                   </td>
-                  <td className="px-5 py-3 font-semibold">{t.manufacturer}</td>
+                  <td className="px-5 py-3">
+                    <span className="font-semibold">{t.manufacturer}</span>
+                    {(t.is_blind || (t.test_type && t.test_type !== "purity")) && (
+                      <span className="mt-1 flex flex-wrap items-center gap-1">
+                        {t.is_blind && (
+                          <span title="Blind test — the sample was obtained independently, so the vendor could not choose which vial was tested. The gold standard." className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-800"><EyeOff className="size-3" /> Blind</span>
+                        )}
+                        {t.test_type && t.test_type !== "purity" && TEST_TYPE_LABEL[t.test_type] && (
+                          <span title={SAFETY_TYPES.has(t.test_type) ? "A safety test — distinct from a purity test. Proves this specific check, not overall purity." : "Analysis type as labeled by the lab."} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${SAFETY_TYPES.has(t.test_type) ? "bg-sky-100 text-sky-800" : "bg-black/[.06] text-black/60"}`}>{SAFETY_TYPES.has(t.test_type) && <ShieldCheck className="size-3" />}{TEST_TYPE_LABEL[t.test_type]}</span>
+                        )}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-5 py-3 font-mono text-xs text-[var(--muted)]">{t.batch_code || "—"}</td>
                   <td className="px-5 py-3">
                     {t.purity_pct != null

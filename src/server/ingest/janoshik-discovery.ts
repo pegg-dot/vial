@@ -8,7 +8,7 @@
 // a verifiable independent-lab history, exactly like the original bulk ingest.
 
 import type { SqlConnection } from "@/server/db/client";
-import { recordLabTest, type JanoshikEntry } from "./lab-tests";
+import { recordLabTest, classifyTestNote, type JanoshikEntry } from "./lab-tests";
 import { deriveCoaVendors } from "./coa-vendors";
 import { upsertLiveVendor } from "./live-sources";
 import type { CompoundRef } from "./shopify-import";
@@ -77,6 +77,7 @@ export async function ingestNewJanoshikTests(
     const p = purities[e.testId] ?? {};
     const vendorSlug = vendorByTestId.get(e.testId) ?? null;
     if (vendorSlug) vendorLinked += 1;
+    const cls = classifyTestNote(e.note);
     const res = await recordLabTest(db, {
       testId: e.testId,
       verifyUrl: e.verifyUrl,
@@ -88,11 +89,36 @@ export async function ingestNewJanoshikTests(
       measuredContent: p.measuredContent ?? null,
       testedAt: p.testedAt ?? null,
       vendorSlug,
+      testType: cls.testType,
+      isBlind: cls.isBlind,
+      testNote: e.note || null,
     }, resolve);
     if (res.compoundSlug) compoundMatched += 1;
   }
 
   return { feedSize: feedEntries.length, newTests, newVendors, compoundMatched, vendorLinked };
+}
+
+/**
+ * Annotate stored COAs with the analysis type + blind flag read from the current feed note.
+ * Same-source (the note lives in the same feed the COA came from), idempotent, and safe to run
+ * on every pass — it back-fills rows ingested before test-type classification existed. Only writes
+ * when the classification actually changes, and never clears a blind flag once set. Returns updated.
+ */
+export async function annotateTestTypes(db: SqlConnection, feedEntries: JanoshikEntry[]): Promise<number> {
+  let updated = 0;
+  for (const e of feedEntries) {
+    if (!e.verifyUrl) continue;
+    const { testType, isBlind } = classifyTestNote(e.note);
+    const r = await db.query(
+      `UPDATE lab_test_records
+         SET test_type = $1, is_blind = is_blind OR $2, test_note = COALESCE($3, test_note), updated_at = NOW()
+       WHERE verify_url = $4 AND (test_type <> $1 OR (is_blind = FALSE AND $2 = TRUE) OR test_note IS DISTINCT FROM COALESCE($3, test_note))`,
+      [testType, isBlind, e.note || null, e.verifyUrl],
+    );
+    updated += r.rowCount ?? 0;
+  }
+  return updated;
 }
 
 /**

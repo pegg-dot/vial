@@ -7,7 +7,7 @@ import { getDatabase } from "../src/server/db/client.ts";
 import { upsertLiveCompound, upsertLiveVendor, recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
 import { importShopifyCatalog } from "../src/server/ingest/shopify-import.ts";
 import { importWooCommerceCatalog } from "../src/server/ingest/woocommerce-import.ts";
-import { parseJanoshikFeed, recordLabTest } from "../src/server/ingest/lab-tests.ts";
+import { parseJanoshikFeed, recordLabTest, classifyTestNote } from "../src/server/ingest/lab-tests.ts";
 import { deriveCoaVendors } from "../src/server/ingest/coa-vendors.ts";
 import { detectVendorCoaFlags, writeVendorFlags } from "../src/server/verify/coa-integrity.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
@@ -103,10 +103,11 @@ if (existsSync(feedFile)) {
     const p = purities[e.testId] ?? {};
     const vendorSlug = vendorByTestId.get(e.testId) ?? null;
     if (vendorSlug) vendorLinked += 1;
+    const cls = classifyTestNote(e.note);
     const res = await recordLabTest(db, {
       testId: e.testId, verifyUrl: e.verifyUrl, verifyKey: e.verifyKey, sampleName: e.sampleName, manufacturer: e.manufacturer,
       batchCode: p.batch ?? undefined, purityPct: p.purityPct ?? null, measuredContent: p.measuredContent ?? null, testedAt: p.testedAt ?? null,
-      vendorSlug,
+      vendorSlug, testType: cls.testType, isBlind: cls.isBlind, testNote: e.note || null,
     }, { compounds: compoundRefs, vendors: vendorRefs });
     if (res.compoundSlug) matched += 1;
   }

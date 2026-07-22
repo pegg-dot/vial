@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { recordLabTest } from "@/server/ingest/lab-tests";
-import { ingestNewJanoshikTests, applyPurities } from "@/server/ingest/janoshik-discovery";
+import { ingestNewJanoshikTests, applyPurities, annotateTestTypes } from "@/server/ingest/janoshik-discovery";
 
 process.env.VIAL_PGLITE_MEMORY = "true";
 process.env.VIAL_SESSION_SECRET = "janoshik-discovery-test-secret-at-least-32-chars";
@@ -19,6 +19,7 @@ const entry = (testId: string, over: Partial<Record<"sampleName" | "manufacturer
   client: over.client ?? "",
   verifyUrl: `https://verify.janoshik.com/tests/${testId}-SAMPLE_QQ${testId}ZZ99`,
   verifyKey: `QQ${testId}ZZ99`,
+  note: "",
 });
 
 describe("janoshik new-test discovery", () => {
@@ -76,5 +77,27 @@ describe("janoshik new-test discovery", () => {
     expect(row.batch_code).toBe("LOT-77");
     // Second application is a no-op (values already present).
     expect(await applyPurities(db, { "501": { purityPct: 11 } })).toBe(0);
+  });
+
+  it("annotateTestTypes backfills blind flag + analysis type from the feed note, idempotently", async () => {
+    const db = await getDatabase();
+    const feed = [
+      { ...entry("501"), note: "Common GLP-1 peptide blind test (Semaglutide)" },
+      { ...entry("502"), note: "Sterility Testing" },
+    ];
+    const n1 = await annotateTestTypes(db, feed);
+    expect(n1).toBe(2);
+    const rows = (await db.query<{ test_id: string; test_type: string; is_blind: boolean }>(
+      `SELECT test_id, test_type, is_blind FROM lab_test_records WHERE test_id IN ('501','502') ORDER BY test_id`,
+    )).rows;
+    expect(rows).toEqual([
+      { test_id: "501", test_type: "purity", is_blind: true },
+      { test_id: "502", test_type: "sterility", is_blind: false },
+    ]);
+    // Re-running with the same feed changes nothing, and a blind flag never gets cleared.
+    expect(await annotateTestTypes(db, feed)).toBe(0);
+    expect(await annotateTestTypes(db, [{ ...entry("501"), note: "Assessment of a peptide vial or vials." }])).toBe(1); // test_type flips back to purity note but stays blind
+    const stillBlind = (await db.query<{ is_blind: boolean }>(`SELECT is_blind FROM lab_test_records WHERE test_id='501'`)).rows[0];
+    expect(stillBlind.is_blind).toBe(true);
   });
 });

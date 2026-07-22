@@ -1,0 +1,42 @@
+{
+  "labs": [
+    { "slug": "janoshik-analytical", "displayName": "Janoshik Analytical", "legalName": "Janoshik s.r.o.", "country": "Czech Republic (Prague)", "website": "https://janoshik.com",
+      "accreditation": { "isoStandard": null, "confirmed": false }, "iso17025": false,
+      "techniques": ["HPLC-UV", "LC-MS / LC-MS/MS", "GC-MS", "ICP-MS heavy metals (on request)", "LAL endotoxin (on request)"],
+      "publicVerification": true,
+      "verificationSystem": "Every genuine certificate carries a task number + QR code; anyone can enter it at public.janoshik.com (no login) and get the archived, unalterable report. Has directly caught doctored certificates.",
+      "reputationNotes": "The de-facto standard, most-referenced third-party tester in the English-speaking research-peptide community. Trusted for blind-testing culture and high volume. HONESTY: NOT ISO 17025 accredited — vendor sites falsely claim it is; community trusts it as the best available option in an unregulated market, not regulatory-grade QC. Stated error margins ~5% (oils/orals) up to ~10% (liquid suspensions). Registered Oct 2022, founder Peter Magic.",
+      "sourceUrls": ["https://www.peptideprotocolwiki.com/blog/janoshik-analytical-review", "https://peptigrity.com/blog/third-party-peptide-testing-labs"] },
+    { "slug": "mz-biolabs", "displayName": "MZ Biolabs", "legalName": "MZ Biolabs", "country": "United States (Tucson, Arizona)", "website": "https://www.mzbiolabs.com",
+      "accreditation": { "isoStandard": null, "confirmed": false }, "iso17025": false,
+      "techniques": ["HPLC-UV", "QTOF high-resolution MS", "MS2 fragmentation", "UPLC", "ion-trap MS"],
+      "publicVerification": false,
+      "verificationSystem": "No self-serve public COA-lookup portal; COAs issued directly for submitted samples.",
+      "reputationNotes": "US analytical lab specializing in peptides/SARMs/nootropics; notable DEA Schedule III license and high-resolution QTOF. HONESTY: NOT ISO 17025 accredited; its own site states its purity test does not test for activity, sterility/endotoxins, heavy metals, or pH. Well regarded for identity work.",
+      "sourceUrls": ["https://www.mzbiolabs.com/mzbiolabs/coa-testing/", "https://peptigrity.com/testing-labs/mz-biolabs"] },
+    { "slug": "colmaric-analyticals", "displayName": "Colmaric Analyticals", "legalName": "Colmaric Analyticals LLC", "country": "United States (St. Petersburg, Florida)", "website": "https://www.colmaricanalyticals.com",
+      "accreditation": { "isoStandard": "ISO/IEC 17025:2017", "body": "Perry Johnson Laboratory Accreditation (PJLA)", "number": "86258", "confirmed": true, "scopeVerified": false }, "iso17025": true,
+      "techniques": ["HPLC", "LC-MS", "chromatography & spectroscopy", "ICP metals", "compendial USP/AOAC methods"],
+      "publicVerification": false,
+      "verificationSystem": "No public self-serve lookup; reports issued directly to the client for submitted samples.",
+      "reputationNotes": "Conventional contract analytical lab (nutraceutical/supplement/pharma) that also tests peptides; pharmaceutical-grade rigor, US-domestic. HONESTY: ISO/IEC 17025:2017 (No. 86258, PJLA) documented in Contract Laboratory directory + multiple sources, but NOT directly verified against PJLA scope DB; unconfirmed whether the specific RP-HPLC peptide assay is within accredited scope (17025 scope is method-specific).",
+      "sourceUrls": ["https://contractlaboratory.com/vendor/colmaric-analyticals-llc/", "https://www.pjlabs.com/accreditation-programs/isoiec-17025"] }
+  ],
+  "coaMeaning": {
+    "proves": [
+      "Identity of the specific submitted sample — which compound it actually is (mass spec; with MS/MS, sequence).",
+      "Purity of that one sample — % named compound vs impurities (HPLC-UV, within ~5% method error).",
+      "Content / quantification (mg active) ONLY when a quantification test was ordered.",
+      "That the certificate is authentic and unaltered — but only when its number resolves on the lab's public portal (defeats forged COAs).",
+      "That the tested tube was not an obvious mislabel — reputable labs catch this."
+    ],
+    "doesNotProve": [
+      "That every vial/batch the vendor SHIPS matches the tested sample — only one submitted sample was analyzed; a vendor can cherry-pick (no chain of custody from batch to buyer).",
+      "Sterility, endotoxin, heavy metals, residual solvents, pH, or biological activity — excluded from a standard purity/identity COA unless separately ordered.",
+      "Regulatory or pharmaceutical grade — a COA from a non-ISO-17025 lab (incl. Janoshik, MZ Biolabs) is not FDA/EMA-accepted or court-grade, not GMP QC.",
+      "That the product is still at certified purity after shipping, temperature exposure, or storage time (no stability guarantee).",
+      "That an accreditation logo covers the specific assay — ISO 17025 scope is method-specific."
+    ],
+    "iso17025Meaning": "ISO/IEC 17025 is the international standard for the technical competence of testing labs: an independent body (PJLA, UKAS, ANAB, A2LA) audits people, equipment calibration, method validation, impartiality and quality system — but only for the specific methods in the accredited scope. It's the rigor regulators and courts accept, which is why it matters that most gray-market peptide testers (Janoshik, MZ Biolabs) do NOT hold it and operate as harm-reduction services, not regulatory labs."
+  }
+}

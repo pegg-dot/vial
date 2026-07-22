@@ -9,6 +9,7 @@ const entry = (testId: string, key = `KEY${testId}00000`): JanoshikEntry => ({
   client: "",
   verifyUrl: `https://verify.janoshik.com/tests/${testId}-BPC157_${key}`,
   verifyKey: key,
+  note: "",
 });
 
 describe("selectNewEntries", () => {

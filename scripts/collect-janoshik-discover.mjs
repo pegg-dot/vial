@@ -13,7 +13,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
 import { parseJanoshikFeed } from "../src/server/ingest/lab-tests.ts";
-import { ingestNewJanoshikTests, applyPurities } from "../src/server/ingest/janoshik-discovery.ts";
+import { ingestNewJanoshikTests, applyPurities, annotateTestTypes } from "../src/server/ingest/janoshik-discovery.ts";
 import { fetchJanoshikPortal, annotateJanoshikListings } from "../src/server/verify/janoshik-verify.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
@@ -54,6 +54,9 @@ if (res.newTests.length) {
 
 const applied = await applyPurities(db, purities);
 if (applied) console.log(`\nBackfilled vision-read certificate values onto ${applied} stored row(s).`);
+
+const typed = await annotateTestTypes(db, entries);
+if (typed) console.log(`Annotated analysis type / blind flag on ${typed} stored COA(s).`);
 
 const sync = await annotateJanoshikListings(db, entries);
 console.log(`\nLiveness: ${sync.stillListed}/${sync.keysChecked} stored COAs still in the current public feed.`);
