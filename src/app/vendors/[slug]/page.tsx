@@ -67,7 +67,9 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             <div className="rounded-[28px] border border-black/[.07] bg-white p-6">
               <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">Profile signal</p>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <VendorStat icon={ShieldCheck} value={vendor.documentationCurrent > 0 ? `${vendor.documentationCurrent}%` : "—"} label="Tests current" />
+                {vendor.documentationCurrent > 0
+                  ? <VendorStat icon={ShieldCheck} value={`${vendor.documentationCurrent}%`} label="Tests current" />
+                  : <VendorStat icon={ShieldCheck} value={vendorLabTests.length > 0 ? String(vendorLabTests.length) : "—"} label={vendorLabTests.length > 0 ? "Independent COAs" : "Tests current"} />}
                 <VendorStat icon={PackageSearch} value={String(vendor.productCount)} label={vendor.productCount === 1 ? "Product tracked" : "Products tracked"} />
               </div>
               <p className="mt-4 text-[11px] leading-4 text-[var(--muted)]">No single star rating here — just what we actually know about this vendor, piece by piece, below.</p>

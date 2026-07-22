@@ -416,5 +416,159 @@
   "measuredContent": "10.09 mg",
   "testedAt": "11/2/2025",
   "lab": "Freedom Diagnostics"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "thymosin-alpha-1",
+  "url": "https://verify.janoshik.com/tests/124542-Thymosin_Alpha_1_10mg_Transparent_PinkBlue_CQAIBGQ5UIKJ",
+  "purityPct": 99.63,
+  "batch": "EZP-TA11003152026-03",
+  "measuredContent": "11.46 mg; 11.26 mg; 11.37 mg",
+  "testedAt": "24 MAR 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "tb-500",
+  "url": "https://verify.janoshik.com/tests/198996-TB500_Frag_1723_10mg_Grey_Blue_C979R7M8HUAY",
+  "purityPct": 99.88,
+  "batch": "EZP-TBF1006172026-06",
+  "measuredContent": "11.38 mg; 11.41 mg; 11.36 mg",
+  "testedAt": "02 JUL 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "melanotan-1",
+  "url": "https://verify.janoshik.com/tests/164162-Melanotan_1_10mg_YellowGreen_U7AZTK8IIL7V",
+  "purityPct": 99.85,
+  "batch": "EZP-MEL11005072026-04",
+  "measuredContent": "10.30 mg; 10.24 mg; 10.31 mg",
+  "testedAt": "15 MAY 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "ara-290",
+  "url": "https://verify.janoshik.com/tests/166078-ARA290_10mg_Yellow_Silver_E65RVLDG42LB",
+  "purityPct": 99.81,
+  "batch": "EZP-ARA1005192026-03",
+  "measuredContent": "12.13 mg; 12.09 mg; 12.15 mg",
+  "testedAt": "03 JUN 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "mots-c",
+  "url": "https://verify.janoshik.com/tests/136296-MOTSC_10mg_Transparent_Blue_or_BlueGreen_2TWVXJKEMQ5K",
+  "purityPct": 99.73,
+  "batch": "EZP-MOT1003302026-18",
+  "measuredContent": "11.26 mg; 11.24 mg; 11.23 mg",
+  "testedAt": "14 APR 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "melanotan-2",
+  "url": "https://verify.janoshik.com/tests/164160-Melanotan_2_10mg_WhiteBlue_RCCU8ZWLG8U1",
+  "purityPct": 99.78,
+  "batch": "EZP-MEL21005032026-06",
+  "measuredContent": "11.18 mg; 11.20 mg; 11.28 mg",
+  "testedAt": "15 MAY 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "dsip",
+  "url": "https://verify.janoshik.com/tests/123920-DSIP_10mg_Transparent_BlueSilver_1GJILCRKAICQ",
+  "purityPct": 98.39,
+  "batch": "EZP-DSIP1003062026-02",
+  "measuredContent": "11.37 mg; 11.61 mg; 11.51 mg",
+  "testedAt": "23 MAR 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "cjc-1295",
+  "url": "https://verify.janoshik.com/tests/168785-CJC1295_No_DAC_5mg_Black_Black_PJTEQKXHJ78E",
+  "purityPct": 99.42,
+  "batch": "EZP-CJC0505232026-05",
+  "measuredContent": "5.08 mg; 4.89 mg; 4.85 mg",
+  "testedAt": "08 JUN 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "sermorelin",
+  "url": "https://verify.janoshik.com/tests/164164-Sermorelin_5mg_BrownBlack_5YNLNYKGWYL7",
+  "purityPct": 99.07,
+  "batch": "EZP-SER0505052026-05",
+  "measuredContent": "5.44 mg; 5.41 mg; 5.45 mg",
+  "testedAt": "15 MAY 2026",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "tesamorelin",
+  "url": "https://verify.janoshik.com/tests/134378-Tesamorelin_Transparent_Purple_or_PurpleBlue_62CP19CDXLDU",
+  "purityPct": 99.838,
+  "batch": "EZP-TES1003212026-20",
+  "measuredContent": "11.17 mg; 11.28 mg; 11.22 mg",
+  "testedAt": "2026-04-01",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "semax",
+  "url": "https://verify.janoshik.com/tests/123921-NAcetyl_Semax_Amidate_10mg_GreenAutumn_Gold_8XWF9D5S8NU3",
+  "purityPct": 99.96,
+  "batch": "EZP-SEMX1003072026-09",
+  "measuredContent": "11.28 mg; 11.46 mg; 11.48 mg",
+  "testedAt": "2026-03-23",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "selank",
+  "url": "https://verify.janoshik.com/tests/137189-NAcetyl_Selank_Amidate_10mg_GreenBlack_BQPA74VNU13J",
+  "purityPct": 99.617,
+  "batch": "EZP-SEL1004042026-07",
+  "measuredContent": "11.50 mg; 11.16 mg; 11.05 mg",
+  "testedAt": "2026-04-17",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "pt-141",
+  "url": "https://verify.janoshik.com/tests/166069-PT141_10mg_Blue_Black_FTYTPUQKRZEI",
+  "purityPct": 99.92,
+  "batch": "EZP-PT1005172026-08",
+  "measuredContent": "11.44 mg; 11.42 mg; 11.39 mg",
+  "testedAt": "2026-05-29",
+  "lab": "Janoshik"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "vendorName": "EZ Peptides",
+  "compound": "epitalon",
+  "url": "https://verify.janoshik.com/tests/171644-Epitalon_10mg_Transparent_Yellow_Green_K837M8SQANL7",
+  "purityPct": 99.269,
+  "batch": "EZP-EPIT1006012026-10",
+  "measuredContent": "10.95 mg; 11.01 mg; 10.93 mg",
+  "testedAt": "2026-06-11",
+  "lab": "Janoshik"
  }
 ]

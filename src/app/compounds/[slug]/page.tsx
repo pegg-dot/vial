@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/format";
 import { educationFor } from "@/lib/compound-education";
 import { GoalTags } from "@/components/goal-tags";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
+import { UsLegalNotice } from "@/components/us-legal-notice";
 import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
@@ -98,6 +99,10 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <CompoundKnowledge name={compound.name} education={edu} showStacks={false} />
         </section>
       ) : null}
+
+      <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
+        <UsLegalNotice slug={slug} />
+      </section>
 
       <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
 

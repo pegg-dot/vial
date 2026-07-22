@@ -36,6 +36,12 @@ function asOfNow(): string {
   return new Date().toISOString();
 }
 
+function median(values: number[]): number {
+  const s = [...values].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
 async function documentationSeries(db: SqlConnection, vendorOrgId: string): Promise<{ observedAt: string; value: number }[]> {
   const rows = (await db.query<QueryResultRow & { value_json: unknown; observed_at: string }>(
     `SELECT value_json,observed_at FROM entity_metric_snapshots WHERE entity_type='vendor' AND entity_id=$1 AND metric_key='documentationCurrent' ORDER BY observed_at`,
@@ -72,7 +78,10 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     series: await documentationSeries(db, org.id),
   });
 
-  // Independent evidence corroboration — published batch passports linked to this vendor.
+  // Independent evidence corroboration — independent lab tests (COAs) and published batch
+  // passports linked to this vendor. COAs are the primary, most common signal: a vendor with
+  // real third-party certificates on record IS independently corroborated, so this must reflect
+  // them rather than reading "unknown" whenever no batch passport exists.
   const passports = (await db.query<QueryResultRow & { passports: string | number; conflicts: string | number }>(
     `SELECT COUNT(DISTINCT bp.id) passports,COUNT(DISTINCT ec.id) FILTER(WHERE ec.status='open') conflicts
      FROM batch_passports bp LEFT JOIN evidence_conflicts ec ON ec.passport_id=bp.id
@@ -80,9 +89,22 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
   )).rows[0];
   const passportCount = Number(passports?.passports ?? 0);
   const openConflicts = Number(passports?.conflicts ?? 0);
-  dimensions.push(passportCount > 0
-    ? { key: "evidence_corroboration", label: "Independent evidence corroboration", status: openConflicts > 0 ? "disputed" : "established", value: `${passportCount} passport${passportCount === 1 ? "" : "s"}${openConflicts > 0 ? ` · ${openConflicts} open conflict${openConflicts === 1 ? "" : "s"}` : ""}`, numericValue: passportCount, basis: "Published batch passports with independent laboratory evidence linked to this vendor.", provenance: { sourceType: "batch_passport" } }
-    : { key: "evidence_corroboration", label: "Independent evidence corroboration", status: "unknown", value: "No published passports", basis: "No published batch passport links independent evidence to this vendor yet.", provenance: { sourceType: "batch_passport" } });
+  const coa = (await db.query<QueryResultRow & { n: string | number; with_purity: string | number; purities: number[] | null; latest: string | null }>(
+    `SELECT COUNT(*) n, COUNT(*) FILTER(WHERE purity_pct IS NOT NULL) with_purity,
+            array_agg(purity_pct) FILTER(WHERE purity_pct IS NOT NULL) purities, MAX(tested_at) latest
+     FROM lab_test_records WHERE vendor_slug=$1`, [org.slug],
+  )).rows[0];
+  const coaCount = Number(coa?.n ?? 0);
+  const coaPurities = (coa?.purities ?? []).map(Number).filter((v) => Number.isFinite(v));
+  const coaMedian = coaPurities.length ? median(coaPurities) : null;
+  if (coaCount > 0 || passportCount > 0) {
+    const parts: string[] = [];
+    if (coaCount > 0) parts.push(`${coaCount} independent COA${coaCount === 1 ? "" : "s"} on record${coaMedian != null ? ` · median ${coaMedian.toFixed(1)}%` : ""}`);
+    if (passportCount > 0) parts.push(`${passportCount} batch passport${passportCount === 1 ? "" : "s"}`);
+    dimensions.push({ key: "evidence_corroboration", label: "Independent evidence corroboration", status: openConflicts > 0 ? "disputed" : "established", value: `${parts.join(" · ")}${openConflicts > 0 ? ` · ${openConflicts} open conflict${openConflicts === 1 ? "" : "s"}` : ""}`, numericValue: coaCount + passportCount, basis: "Independent third-party lab certificates and published batch passports linked to this vendor.", provenance: { sourceType: coaCount > 0 ? "lab_test_records" : "batch_passport", url: `/vendors/${org.slug}` } });
+  } else {
+    dimensions.push({ key: "evidence_corroboration", label: "Independent evidence corroboration", status: "unknown", value: "No independent tests on record", basis: "No third-party lab certificate or batch passport links independent evidence to this vendor yet.", provenance: { sourceType: "lab_test_records" } });
+  }
 
   // Operational reliability — only real when the vendor operates a participating storefront
   // with observed analytics. This REPLACES the fabricated support/shipping scores: absent

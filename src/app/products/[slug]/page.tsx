@@ -22,6 +22,7 @@ import { getDatabase } from "@/server/db/client";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { educationFor } from "@/lib/compound-education";
 import { PriceFlag } from "@/components/listing-trust-chip";
+import { UsLegalNotice } from "@/components/us-legal-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -153,6 +154,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <aside className="space-y-5">
             <CoaCrossCheckPanel check={coaCheck} />
+            <UsLegalNotice slug={product.compoundSlug} />
 
             {product.priceHistory.length >= 2 ? (
             <div className="rounded-[26px] border border-black/[.07] bg-white p-5">
