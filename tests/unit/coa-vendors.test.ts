@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanVendorString, looksLikeVendor, deriveCoaVendors } from "@/server/ingest/coa-vendors";
+import { cleanVendorString, looksLikeVendor, deriveCoaVendors, canonicalizeVendorSlug, canonicalizeVendorName } from "@/server/ingest/coa-vendors";
 
 describe("COA vendor derivation", () => {
   it("strips marketing cruft to a clean vendor name", () => {
@@ -27,6 +27,42 @@ describe("COA vendor derivation", () => {
     expect(looksLikeVendor({ name: "Cocer Peptides", slug: "cocer-peptides" })).toBe(true);
     expect(looksLikeVendor({ name: "Alpha", slug: "alpha", domain: "alpha.com" })).toBe(true);
     expect(looksLikeVendor({ name: "Mandy", slug: "mandy" })).toBe(false);
+  });
+
+  it("canonicalizes near-duplicate vendor names onto one slug (legal suffix + admin handle)", () => {
+    // The real dupes we found: a legal suffix on one cert but not another, and an "admin" handle.
+    expect(cleanVendorString("Zztai Peptide Ltd")?.slug).toBe("zztai-peptide");
+    expect(cleanVendorString("Zztai Peptide")?.slug).toBe("zztai-peptide");
+    expect(cleanVendorString("Admin Rayshine Peptide")?.slug).toBe("rayshine-peptide");
+    expect(cleanVendorString("Rayshine Peptide")?.slug).toBe("rayshine-peptide");
+    // slug-level canonicalization (used to merge already-stored dupes) agrees.
+    expect(canonicalizeVendorSlug("zztai-peptide-ltd")).toBe("zztai-peptide");
+    expect(canonicalizeVendorSlug("admin-rayshine-peptide")).toBe("rayshine-peptide");
+    expect(canonicalizeVendorName("Lilipetide Technology Co., Ltd.")).toBe("Lilipetide Technology");
+  });
+
+  it("never fuses genuinely distinct vendors", () => {
+    // "co"/"corp" only strip as a trailing legal token — not inside a real name.
+    expect(canonicalizeVendorSlug("cocer-peptides")).toBe("cocer-peptides");
+    expect(canonicalizeVendorSlug("nova-peptide")).toBe("nova-peptide");
+    expect(canonicalizeVendorSlug("aurobiopeptide")).toBe("aurobiopeptide");
+    expect(cleanVendorString("Cocer Peptides")?.slug).toBe("cocer-peptides");
+    // distinct makers stay on distinct slugs
+    const { vendors } = deriveCoaVendors([
+      { testId: "a", client: "Nova Peptide", manufacturer: "x" },
+      { testId: "b", client: "Auro Bio Peptide", manufacturer: "y" },
+    ]);
+    expect(vendors.map((v) => v.slug).sort()).toEqual(["auro-bio-peptide", "nova-peptide"]);
+  });
+
+  it("merges duplicate clients in deriveCoaVendors", () => {
+    const { vendors, vendorByTestId } = deriveCoaVendors([
+      { testId: "1", client: "Zztai Peptide Ltd", manufacturer: "m" },
+      { testId: "2", client: "Zztai Peptide", manufacturer: "m" },
+    ]);
+    expect(vendorByTestId.get("1")).toBe("zztai-peptide");
+    expect(vendorByTestId.get("2")).toBe("zztai-peptide");
+    expect(vendors).toHaveLength(1);
   });
 
   it("derives a de-duplicated vendor set and ties each COA to a vendor (client preferred)", () => {

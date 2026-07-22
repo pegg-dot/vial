@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, FlaskConical } from "lucide-react";
+import { ExternalLink, FileText, FlaskConical, BadgeCheck } from "lucide-react";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { checkContent } from "@/server/verify/content-check";
 
@@ -31,6 +31,7 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
               <div className="mt-2 rounded-2xl border border-black/[.07] bg-white p-4 text-xs leading-6 text-black/65">
                 <p>Every record below is a real certificate of analysis, gathered two ways: from the public verification feeds that independent labs (like Janoshik) publish, and from the certificates vendors post on their own product pages. We open each certificate <span className="font-semibold text-black/75">document</span> and read the measured purity, content, batch, and date directly off it — a scraper can&rsquo;t read a number printed inside an image, so this is done by machine vision, then recorded here with a link back to the original.</p>
                 <p className="mt-2">Nothing here is typed in by a vendor or invented by us. Where a certificate is missing, we say so rather than filling the gap.</p>
+                <p className="mt-2"><span className="font-semibold text-black/75">We re-check the lab feed, too.</span> A &ldquo;still listed&rdquo; tag means the certificate is <em>currently</em> public in Janoshik&rsquo;s database — we re-verify against the live feed and stamp the date. If a cert is later pulled, the tag flips. It&rsquo;s a freshness check on the same source, not a second independent opinion.</p>
               </div>
             </details>
             <details className="group max-w-2xl">
@@ -94,7 +95,12 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
                       return <span title={c.note ?? undefined} className={`inline-flex items-center rounded-full px-2 py-1 font-semibold ${style}`}>{c.measuredMg}/{c.labeledMg}mg{c.verdict === "underdosed" ? " · underdosed" : c.verdict === "overfilled" ? " ·" : " · full"}</span>;
                     })()}
                   </td>
-                  <td className="px-5 py-3 text-xs">{t.lab}</td>
+                  <td className="px-5 py-3 text-xs">
+                    {t.lab}
+                    {t.janoshik_checked_at != null && (t.janoshik_listed
+                      ? <span title={`Still publicly listed in Janoshik's database as of ${new Date(t.janoshik_checked_at).toLocaleDateString()}${t.janoshik_made_by ? ` — listed maker: ${t.janoshik_made_by}` : ""}. This confirms the certificate remains public; it is the same source as our record, not a second opinion.`} className="mt-1.5 flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700"><BadgeCheck className="size-3" /> Still listed</span>
+                      : <span title={`Not found in Janoshik's public feed when re-checked ${new Date(t.janoshik_checked_at).toLocaleDateString()} — it may have rotated out of the public list, or been pulled.`} className="mt-1.5 flex w-fit items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Not in current feed</span>)}
+                  </td>
                   <td className="px-5 py-3">
                     <a href={t.verify_url} target="_blank" rel="noopener nofollow" className="inline-flex items-center gap-1 text-xs font-semibold text-violet-700 hover:underline">
                       <FlaskConical className="size-3" /> {isImg ? "View" : "Verify"} <ExternalLink className="size-3" />

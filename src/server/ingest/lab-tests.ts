@@ -100,20 +100,21 @@ export interface LabTestRow {
   lab: string; test_id: string | null; verify_url: string; compound_slug: string | null;
   sample_name: string; manufacturer: string; vendor_slug: string | null; batch_code: string | null;
   purity_pct: string | number | null; measured_content: string | null; tested_at: string | null;
+  janoshik_listed: boolean | null; janoshik_made_by: string | null; janoshik_checked_at: string | null;
 }
+
+const LAB_TEST_COLS = `lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at,janoshik_listed,janoshik_made_by,janoshik_checked_at`;
 
 export async function getLabTestsForCompound(db: SqlConnection, compoundSlug: string, limit = 12): Promise<LabTestRow[]> {
   return (await db.query<LabTestRow>(
-    `SELECT lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at
-     FROM lab_test_records WHERE compound_slug = $1 ORDER BY purity_pct DESC NULLS LAST, updated_at DESC LIMIT $2`,
+    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE compound_slug = $1 ORDER BY purity_pct DESC NULLS LAST, updated_at DESC LIMIT $2`,
     [compoundSlug, limit],
   )).rows;
 }
 
 export async function getLabTestsForVendor(db: SqlConnection, vendorSlug: string, limit = 12): Promise<LabTestRow[]> {
   return (await db.query<LabTestRow>(
-    `SELECT lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at
-     FROM lab_test_records WHERE vendor_slug = $1 ORDER BY updated_at DESC LIMIT $2`,
+    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE vendor_slug = $1 ORDER BY updated_at DESC LIMIT $2`,
     [vendorSlug, limit],
   )).rows;
 }

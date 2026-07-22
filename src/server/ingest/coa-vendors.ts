@@ -14,6 +14,32 @@ export interface DerivedVendor { name: string; slug: string; domain?: string }
 const NOISE = /^(unknown|n\/?a|na|test|sample|none|private|customer|client|-)$/i;
 const VENDOR_HINT = /peptide|pharma|\bbio\b|biotech|chem|\blab\b|labs|research|amino|nootropic|\braw|supply|hgh|melano|sarms?/i;
 
+// The same reseller shows up in COA "client" strings under near-duplicate names: a legal suffix
+// on one cert ("Zztai Peptide Ltd") and not another ("Zztai Peptide"), or a login/handle artifact
+// ("admin-rayshine-peptide"). Collapsing those to one canonical form keeps a vendor's independent
+// COAs on ONE profile instead of splitting the evidence across ghost duplicates. Deliberately
+// conservative — only a leading "admin" handle and trailing legal-entity suffixes are stripped, so
+// genuinely distinct vendors are never fused (verified against the full vendor set: merges exactly
+// the known dupes, nothing else).
+const LEGAL_SUFFIX_NAME = /[\s-]+(ltd|limited|inc|incorporated|llc|corp|corporation|company|co)[.,\s]*$/i;
+const LEGAL_SUFFIX_SLUG = /-(ltd|limited|inc|incorporated|llc|corp|corporation|company|co)$/i;
+
+/** Canonicalize a vendor display name: drop an "admin" handle prefix and trailing legal suffixes. */
+export function canonicalizeVendorName(name: string): string {
+  let s = name.trim().replace(/^admin[\s-]+/i, "");
+  let prev = "";
+  while (s !== prev) { prev = s; s = s.replace(LEGAL_SUFFIX_NAME, "").trim(); }
+  return s || name.trim();
+}
+
+/** Canonicalize an already-slugified vendor id the same way (used to merge existing dupes). */
+export function canonicalizeVendorSlug(slug: string): string {
+  let s = slug.replace(/^admin-/i, "");
+  let prev = "";
+  while (s !== prev) { prev = s; s = s.replace(LEGAL_SUFFIX_SLUG, ""); }
+  return s || slug;
+}
+
 /** Clean one manufacturer/client string into a canonical vendor, or null if it's noise. */
 export function cleanVendorString(raw: string): DerivedVendor | null {
   let s = (raw ?? "").trim();
@@ -41,7 +67,7 @@ export function cleanVendorString(raw: string): DerivedVendor | null {
     name = core.replace(/[-_.]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).trim();
   }
 
-  name = name.replace(/\s+/g, " ").trim();
+  name = canonicalizeVendorName(name.replace(/\s+/g, " ").trim());
   if (name.length < 2 || name.length > 60 || NOISE.test(name)) return null;
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50);
