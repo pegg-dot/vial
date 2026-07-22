@@ -170,6 +170,44 @@ visual polish with Fable 5 / Cloud Design.
    page CTA is already "Buy at [Vendor] →", inert until data is real).
 6. **Deploy** — Vercel + managed Postgres (the DB layer is already built for this).
 
+### Progress log — 2026-07-22 (deepen evidence: blind tests + independent COAs + REAL passports)
+
+The reframe (Nate: "get more STUFF for the vendors we have — lab tests, independent
+records, passports, batches, reports"): VIAL had a full evidence-network architecture
+(labs → sealed samples → hash-chained custody → reports → **batch passports**) running on
+**1 demo record**, while 250+ real certificates sat in a flat side-table beside it, never
+connected. Three increments closed that gap:
+
+1. **Blind-test + analysis-type tag (95070dd).** Janoshik's feed labels each test — the BLIND
+   flag (buyer-obtained sample the vendor couldn't cherry-pick — the strongest independence
+   signal) and the category (purity vs a distinct **sterility/endotoxin/heavy-metals** safety
+   test). Migration v23 (test_type/is_blind/test_note); classifyTestNote; both ingest paths +
+   an idempotent same-source backfill. Panel shows a blind chip/count + safety badge, blind
+   sorts first. Backfill: 63 blind tests + distinct safety records across 253 COAs.
+2. **Independent-lab COAs for the storefronts buyers actually shop (54bd0a2).** The high-traffic
+   vendors (Umbrella, Swiss Chems, Peptide Pros, PureRawz, Ascension, Loti, Chemyo, Core,
+   Eternal, Vici) held ZERO independent evidence → "Independently tested? → none on record."
+   5 parallel gather-agents found real, document-verified COAs naming real third-party labs
+   (MZ Biolabs, Vanguard [A2LA], Freedom Diagnostics, Kovera, SR Bio, Nutri Analytical,
+   SteriGenix, BTLabs). 21 recorded. ⚠️ Honesty split: self-branded no-lab-named docs
+   (Behemoth/Biotech/Nootropic) deliberately EXCLUDED from the independent path. Lab facts
+   saved to scripts/data/testing-labs.json (⭐ Janoshik NOT ISO-17025; Colmaric/Vanguard ARE).
+3. **⭐ Real batch passports (0dd0a1a).** projectLiveBatchPassports groups every
+   (vendor, compound, batch) cluster of real certificates into a published LIVE batch passport:
+   **143 real batches across 44 vendors** (was 1 demo). Decomposed, explainable confidence
+   (volume · lab diversity · blind-independence · purity agreement · recency), capped <93%
+   (external COAs never prove every vial). Honest by construction: does NOT fabricate VIAL's
+   custody chain the COAs never passed through — links real lab_test_records via a new
+   passport_lab_tests join (migration v24) and says so in limitations. Reuses the passport
+   surface → appears on /passports, mints vial:batch registry IDs (144), feeds the vendor
+   "Independent evidence corroboration" dimension. Detail page forks on origin.
+
+Result vs Nate's screenshot: Vici Peptides went from "No independent tests on record" to
+"2 independent COAs · median 99.9% · 2 batch passports" (established). Gate GREEN: lint ·
+141 unit · all integration (+2 new) · build · e2e 11/11. Pushed to origin/main; NOT deployed.
+Follow-ups: full laboratory_profiles entities for the real labs (Janoshik/MZ/etc — /labs still
+demo-only); self-published-COA honest surfacing; batches w/o codes don't form passports (honest).
+
 ### Progress log — 2026-07-22 (Janoshik NEW-test discovery)
 
 - **Discovery closes the Janoshik loop:** `src/server/ingest/janoshik-discovery.ts` +
