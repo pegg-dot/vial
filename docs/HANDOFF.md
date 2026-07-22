@@ -170,6 +170,39 @@ visual polish with Fable 5 / Cloud Design.
    page CTA is already "Buy at [Vendor] →", inert until data is real).
 6. **Deploy** — Vercel + managed Postgres (the DB layer is already built for this).
 
+### Progress log — 2026-07-22 (lab registry: sourced, tiered, wired — defamation-safe)
+
+Nate's concern: as this scales, don't get sued for defamation over half-true lab claims, and make
+sure evidence is actually WIRED into VIAL, not just gathered. Both addressed.
+
+- **Provenance-first research on all 11 labs** (`docs/labs-research.md`) caught two live liabilities:
+  **Horizon Analytical** and **SteriGenix** are shown on vendor COAs as independent labs, but
+  neither is a confirmable real/independent lab (Horizon shares an address + domain-timing with a
+  vendor group; SteriGenix = 2-month-old domain, no address/phone/registry). And **Vanguard** is
+  genuinely A2LA ISO-17025 accredited — but its scope is food microbiology/heavy metals, NOT
+  peptides (verified against A2LA's scope PDF), so "ISO-17025 accredited" on a Vanguard peptide COA
+  overstates it. Also: **Janoshik** confirmed a real Czech entity but NOT ISO-17025 (vendor sites
+  falsely claim it is); MZ/Colmaric/Freedom/BTLabs/Nutri = real independent; Kovera/SR-Bio = real
+  but independence unverified.
+- **`src/server/labs/registry.ts` is the single source of truth.** Each lab tiered
+  independent / independence-unverified / unverified; every accreditation carries its verification
+  status + whether scope covers peptides; every claim sourced. `canonicalizeLabName` collapses
+  split names (Janoshik/Janoshik Analytical); `labCountsAsIndependent` gates what VIAL vouches for.
+- **Wired end-to-end + proven:** recordLabTest applies the registry on write (canonical name +
+  is_independent, migration v25); `reconcileLabsFromRegistry` fixed the 250+ existing rows;
+  reputation counts only confirmed-independent COAs; passports project only from them **and now
+  prune stale passports** (fixed a real sync bug — Vici showed 1 COA / 2 passports). Self-published
+  vendor COAs (no lab) → "Vendor self-tested"; unverified labs → "Unverified lab · <name>" — shown,
+  never counted. `/labs` rebuilt from the registry (tiers + scope-aware accreditation + sources);
+  `/labs/[slug]` full sourced profile; public `/api/public/v1/labs` (`labs:read`); batch API
+  declares `evidenceType`. Fixed a Cloudflare email-artifact leak in vendor derivation.
+- **7 cross-surface sync invariants verified** (no empty passports, passports only from independent
+  evidence, every passport registry-resolvable, no orphan ids, all lab names canonical, no
+  garbage slugs) + locked as a regression test. Gate green: lint, 156 unit, all integration, build,
+  e2e 11/11. Pushed (tip a02bb8d), NOT deployed. Open: reviews for ~50 COA-derived (mostly B2B
+  manufacturer) vendors is gathering; real `laboratory_profiles` entities still deferred (evidence
+  network stays demo — the registry is the real lab surface now).
+
 ### Progress log — 2026-07-22 (deepen evidence: blind tests + independent COAs + REAL passports)
 
 The reframe (Nate: "get more STUFF for the vendors we have — lab tests, independent

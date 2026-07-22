@@ -11,21 +11,30 @@ export function ProductActions({ slug, vendorName, origin = "demo", externalUrl 
   const compared = isCompared(slug);
 
   const destinationHost = externalUrl ? (() => { try { return new URL(externalUrl).host.replace(/^www\./, ""); } catch { return null; } })() : null;
-  const clickNotice =
-    origin === "live" && destinationHost
-      ? `This links to ${destinationHost} — VIAL never sells anything or touches your money, it just hands you off to the vendor. Outbound vendor links switch on once the affiliate step is approved.`
-      : `This is a demo listing, so the vendor link is switched off. VIAL never sells anything or touches your money — on real listings it links you to the vendor's own site.`;
+  const live = origin === "live" && Boolean(destinationHost);
+  const demoNotice = `This is a demo listing, so the vendor link is switched off. VIAL never sells anything or touches your money — on real listings it hands you to the vendor's own site.`;
 
   return (
     <div>
-      <button
-        onClick={() => setNotice(clickNotice)}
-        className="flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#111214] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black/85"
-      >
-        Buy at {vendorName} <ArrowUpRight className="size-4" />
-      </button>
-      {origin === "live" && destinationHost && (
-        <p className="mt-2 text-center text-xs text-[var(--muted)]">Real listing — would link to {destinationHost}</p>
+      {live ? (
+        <a
+          href={`/go?l=${encodeURIComponent(slug)}`}
+          target="_blank"
+          rel="noopener noreferrer nofollow sponsored"
+          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#111214] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black/85"
+        >
+          Buy at {vendorName} <ArrowUpRight className="size-4" />
+        </a>
+      ) : (
+        <button
+          onClick={() => setNotice(demoNotice)}
+          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#111214] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black/85"
+        >
+          Buy at {vendorName} <ArrowUpRight className="size-4" />
+        </button>
+      )}
+      {live && (
+        <p className="mt-2 text-center text-xs text-[var(--muted)]">Hands you to {destinationHost} — VIAL doesn&rsquo;t sell or take payment</p>
       )}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <button

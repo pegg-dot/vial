@@ -12,7 +12,8 @@ Preserve a premium, evidence-first market interface in which every public claim 
 
 ## Product boundaries
 
-- Do not add live peptide purchase links, checkout, dosage guidance, injection guidance, or human-use recommendations. (Outbound affiliate links to a vendor's own page are the intended model but stay INERT until explicitly approved — the "Buy at vendor" control shows a notice, it does not navigate.)
+- Do not add native checkout, payment handling, dosage guidance, injection guidance, or human-use recommendations. VIAL never sells or touches money.
+- Outbound vendor handoff is APPROVED and ACTIVE (owner-approved 2026-07-22): on a LIVE listing the "Buy at vendor" control links through `/go?l=<listingSlug>`, which records the click and 302-redirects to the vendor's OWN product page. Rules: the destination is always resolved server-side from the listing's stored `external_url` (never from the request) so it can't become an open redirect; demo listings stay inert (notice only); affiliate monetization attaches only in `src/server/outbound/affiliate.ts` (no per-vendor deals live yet). Keep the honest framing — "hands you to the vendor; VIAL doesn't sell or take payment" — and never present a vendor as endorsed.
 - Data provenance is explicit via the `origin` column ('demo' | 'live'), surfaced with the `DataOriginBadge`:
   - **Demo** — seeded fictional companies, labs, prices, reviews, batches, and fixtures. These stay clearly marked demo.
   - **Live** — records aggregated from real public third-party sources (vendor product pages, the Janoshik public COA feed) through the reviewed ingestion pipeline. Real data is permitted and MUST be marked Live; it is never presented as endorsed, verified-safe, or a recommendation. Every value on a Live record must have arrived through snapshot → review → publish, never seeded.

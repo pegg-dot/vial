@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import { resolveAndRecordClick } from "@/server/outbound/clicks";
+
+export const dynamic = "force-dynamic";
+
+// Outbound handoff: /go?l=<listingSlug>. Records the click (demand data) and 302-redirects to the
+// vendor's own product page. The destination is resolved server-side from the listing's stored
+// external_url — never from the request — so this is not an open redirect. VIAL never sells or
+// touches money; this simply hands the buyer to the vendor, and is the seam where affiliate
+// monetization attaches. Unknown/demo/urlless listings fall back to the market.
+export async function GET(request: Request) {
+  const listingSlug = new URL(request.url).searchParams.get("l");
+  const base = new URL(request.url).origin;
+  if (!listingSlug) return NextResponse.redirect(`${base}/market`, 302);
+  const resolved = await resolveAndRecordClick(listingSlug).catch(() => null);
+  if (!resolved) return NextResponse.redirect(`${base}/market`, 302);
+  return NextResponse.redirect(resolved.destination, 302);
+}
