@@ -60,6 +60,23 @@ export interface EvidenceDimension {
   detail: string;
 }
 
+export type ListingTrustStatus = "batch-verified" | "verified" | "low-purity" | "unbacked" | "mismatch" | "no-claim";
+
+// The compact cross-verification verdict that rides on every product wherever it appears.
+export interface ListingTrust {
+  status: ListingTrustStatus;
+  tone: "good" | "warn" | "bad" | "neutral";
+  label: string;
+  detail: string;
+  priceFlag: "too-cheap" | "price-drop" | null;
+  priceNote: string | null;
+  // Compound-level independent evidence (market-wide, NOT specific to this vendor) — lets a
+  // listing honestly show "this compound is independently characterized" when the vendor itself
+  // isn't verified. Count of COAs on record for the compound + their median measured purity.
+  compoundCoas: number;
+  compoundMedianPurity: number | null;
+}
+
 export interface Product {
   slug: string;
   name: string;
@@ -92,6 +109,7 @@ export interface Product {
   evidence: EvidenceDimension[];
   origin: DataOrigin;
   externalUrl?: string;
+  trust?: ListingTrust;
 }
 
 export interface CatalogSnapshot {

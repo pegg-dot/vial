@@ -1,4 +1,5 @@
-import { BadgeCheck, ExternalLink, ShieldAlert, ShieldQuestion } from "lucide-react";
+import Link from "next/link";
+import { BadgeCheck, ExternalLink, FlaskConical, ShieldAlert, ShieldQuestion } from "lucide-react";
 import type { CoaCrossCheck } from "@/server/verify/coa-cross-check";
 
 // Shows how a vendor's advertised testing holds up against independent evidence. This is the
@@ -35,6 +36,13 @@ export function CoaCrossCheckPanel({ check }: { check: CoaCrossCheck }) {
         <a href={check.independentUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700 hover:underline">
           Open the independent certificate <ExternalLink className="size-3.5" />
         </a>
+      ) : null}
+      {check.compoundEvidence ? (
+        <Link href={`/compounds/${check.compoundEvidence.compoundSlug}`} className="mt-4 flex items-center gap-2.5 rounded-2xl border border-blue-200 bg-blue-50/60 px-3.5 py-2.5 text-xs font-semibold text-blue-900 transition hover:bg-blue-50">
+          <FlaskConical className="size-3.5 shrink-0 text-blue-700" />
+          <span>{check.compoundEvidence.count} independent COA{check.compoundEvidence.count === 1 ? "" : "s"} on record for this compound{check.compoundEvidence.medianPurity != null ? ` · median ${check.compoundEvidence.medianPurity.toFixed(1)}%` : ""} — see them all</span>
+          <ExternalLink className="ml-auto size-3.5 shrink-0" />
+        </Link>
       ) : null}
       <p className="mt-4 text-[10px] leading-4 text-black/40">Cross-checks the vendor&rsquo;s testing claim against independent lab records. Never a statement that a product is safe, sterile, or correctly dosed.</p>
     </div>

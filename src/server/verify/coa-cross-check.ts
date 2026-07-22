@@ -17,8 +17,9 @@
 
 import type { SqlConnection } from "@/server/db/client";
 import type { Signal } from "./index";
+import type { ListingTrustStatus } from "@/lib/types";
 
-export type CrossCheckStatus = "verified" | "batch-verified" | "unbacked" | "mismatch" | "low-purity" | "no-claim";
+export type CrossCheckStatus = ListingTrustStatus;
 
 export interface CoaCrossCheck {
   status: CrossCheckStatus;
@@ -28,6 +29,15 @@ export interface CoaCrossCheck {
   independentPurity?: number | null;
   independentUrl?: string;
   claimedIssuer?: string;
+  // Compound-level independent evidence (all manufacturers, not this vendor) — surfaced when
+  // the vendor itself isn't verified, so the buyer still sees what real testing looks like.
+  compoundEvidence?: { count: number; medianPurity: number | null; compoundSlug: string };
+}
+
+function median(values: number[]): number {
+  const s = [...values].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
 export interface ListingCoaInput {
@@ -49,6 +59,42 @@ interface LabRow {
   batch_code: string | null; purity_pct: string | number | null; verify_url: string; sample_name: string;
 }
 
+/** Whether a listing's advertised issuer names a real independent lab. */
+export function claimsRealTesting(reportIssuer?: string, reportConfirmed?: boolean): boolean {
+  return Boolean(reportConfirmed) && REAL_LAB.test(reportIssuer ?? "");
+}
+
+/** True when a batch-matched independent record was made by this same vendor (not borrowed). */
+export function batchIsSameVendor(byBatch: { vendor_slug: string | null; manufacturer: string }, vendorSlug: string): boolean {
+  return byBatch.vendor_slug === vendorSlug || norm(byBatch.manufacturer).includes(norm(vendorSlug));
+}
+
+/**
+ * The single source of truth for the cross-check VERDICT, given the already-fetched evidence.
+ * Both the authoritative per-listing crossCheckCoa() and the batched listing-trust engine call
+ * this so the product-page panel and the everywhere-chip can never drift apart.
+ */
+export function coaStatusFrom(args: {
+  claimsTesting: boolean;
+  batchCode?: string;
+  byBatch?: { vendor_slug: string | null; manufacturer: string } | null;
+  vendorSlug: string;
+  hasIndependent: boolean;
+  bestPurity?: number | null;
+}): CrossCheckStatus {
+  const { claimsTesting, batchCode, byBatch, vendorSlug, hasIndependent, bestPurity } = args;
+  if (batchCode && batchCode.trim().length >= 4 && byBatch) {
+    if (!batchIsSameVendor(byBatch, vendorSlug) && (byBatch.vendor_slug || byBatch.manufacturer)) return "mismatch";
+    return "batch-verified";
+  }
+  if (claimsTesting) {
+    if (!hasIndependent) return "unbacked";
+    return bestPurity != null && bestPurity < 95 ? "low-purity" : "verified";
+  }
+  if (hasIndependent) return "verified";
+  return "no-claim";
+}
+
 /**
  * Cross-check a listing's advertised testing against independent lab records.
  * Pure read; never mutates. Returns a verdict a non-expert can act on.
@@ -58,14 +104,19 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
   const compoundLabel = input.compoundName ?? input.compoundSlug.replace(/-/g, " ");
   const claimsTesting = Boolean(input.reportConfirmed) && REAL_LAB.test(input.reportIssuer ?? "");
 
-  // Independent records for this vendor + compound (evidence the vendor can't edit).
-  const independent = (await db.query<LabRow>(
+  // All independent records for this COMPOUND (evidence the vendor can't edit). We derive both
+  // the vendor-specific matches and the compound-wide aggregate from one read.
+  const compoundRecords = (await db.query<LabRow>(
     `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name
-       FROM lab_test_records
-      WHERE compound_slug = $1 AND (vendor_slug = $2 OR LOWER(manufacturer) LIKE $3)
-      ORDER BY purity_pct DESC NULLS LAST`,
-    [input.compoundSlug, input.vendorSlug, `%${input.vendorSlug.replace(/-/g, "%")}%`],
+       FROM lab_test_records WHERE compound_slug = $1 ORDER BY purity_pct DESC NULLS LAST`,
+    [input.compoundSlug],
   )).rows;
+  const vTok = norm(input.vendorSlug);
+  const independent = compoundRecords.filter((r) => r.vendor_slug === input.vendorSlug || (r.manufacturer && norm(r.manufacturer).includes(vTok)));
+  const compoundPurities = compoundRecords.map((r) => (r.purity_pct != null ? Number(r.purity_pct) : null)).filter((p): p is number => p != null);
+  const compoundEvidence = compoundRecords.length
+    ? { count: compoundRecords.length, medianPurity: compoundPurities.length ? median(compoundPurities) : null, compoundSlug: input.compoundSlug }
+    : undefined;
 
   // 1. Borrowed-certificate check: does the cited batch resolve to a record made by SOMEONE ELSE?
   if (input.batchCode && input.batchCode.trim().length >= 4) {
@@ -118,11 +169,13 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
       return {
         status: "unbacked",
         claimedIssuer: input.reportIssuer,
+        compoundEvidence,
         headline: `${input.reportIssuer} testing advertised, but not independently confirmed`,
         detail: `This listing advertises ${input.reportIssuer} testing, yet no independent ${input.reportIssuer} record in our index references ${vendorLabel} for ${compoundLabel}. That doesn't prove the certificate is fake — but until it resolves at the lab, treat the testing claim as unbacked, not verified.`,
         signals: [
           { ok: null, label: "Vendor claim", detail: `Advertises ${input.reportIssuer} testing${input.batchCode ? ` (batch ${input.batchCode})` : ""}.` },
           { ok: false, label: "Independent confirmation", detail: `No ${input.reportIssuer} record found for ${vendorLabel}. Verify the certificate at the lab before trusting it.` },
+          ...(compoundEvidence ? [{ ok: true, label: "Compound-level evidence", detail: `We do hold ${compoundEvidence.count} independent COA${compoundEvidence.count === 1 ? "" : "s"} for ${compoundLabel}${compoundEvidence.medianPurity != null ? ` (median ${compoundEvidence.medianPurity.toFixed(1)}%)` : ""} — from other makers. Use it to judge this claim.` } as Signal] : []),
         ],
       };
     }
@@ -160,8 +213,16 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
 
   return {
     status: "no-claim",
-    headline: "No third-party testing to cross-check",
-    detail: `This listing doesn't advertise independent lab testing, and we don't hold an independent record for ${vendorLabel}'s ${compoundLabel}. Absence of a certificate isn't proof of anything — but there's nothing here to verify.`,
-    signals: [{ ok: false, label: "Independent testing", detail: "No third-party COA advertised or on record." }],
+    compoundEvidence,
+    headline: compoundEvidence ? `No test for this vendor — but ${compoundLabel} is independently characterized` : "No third-party testing to cross-check",
+    detail: compoundEvidence
+      ? `This vendor doesn't advertise independent testing, and we hold no COA tied to ${vendorLabel} specifically. We do hold ${compoundEvidence.count} independent certificate${compoundEvidence.count === 1 ? "" : "s"} for ${compoundLabel}${compoundEvidence.medianPurity != null ? ` (median ${compoundEvidence.medianPurity.toFixed(1)}% purity)` : ""} from other makers — real market context for what this compound tests at, though not proof of this vendor's product.`
+      : `This listing doesn't advertise independent lab testing, and we don't hold an independent record for ${vendorLabel}'s ${compoundLabel}. Absence of a certificate isn't proof of anything — but there's nothing here to verify.`,
+    signals: compoundEvidence
+      ? [
+          { ok: false, label: "This vendor", detail: `No third-party COA on record for ${vendorLabel}.` },
+          { ok: true, label: `${compoundLabel} (market-wide)`, detail: `${compoundEvidence.count} independent COA${compoundEvidence.count === 1 ? "" : "s"}${compoundEvidence.medianPurity != null ? `, median ${compoundEvidence.medianPurity.toFixed(1)}%` : ""}.` },
+        ]
+      : [{ ok: false, label: "Independent testing", detail: "No third-party COA advertised or on record." }],
   };
 }

@@ -21,6 +21,7 @@ import { crossCheckCoa } from "@/server/verify/coa-cross-check";
 import { getDatabase } from "@/server/db/client";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { educationFor } from "@/lib/compound-education";
+import { PriceFlag } from "@/components/listing-trust-chip";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <p className="text-4xl font-semibold tracking-[-.055em]">{formatCurrency(product.price)}</p>
                   {product.pricePerMg ? <span className="rounded-full bg-black/[.05] px-2.5 py-1 text-xs font-semibold tabular-nums text-black/70">{formatPricePerMg(product.pricePerMg)}</span> : null}
                   {product.previousPrice && product.previousPrice !== product.price ? <span className="text-sm text-[var(--muted)] line-through">{formatCurrency(product.previousPrice)}</span> : null}
+                  <PriceFlag trust={product.trust} />
                 </div>
               </div>
               {product.reviewCount > 0
