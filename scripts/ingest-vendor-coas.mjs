@@ -12,6 +12,7 @@ import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts"
 import { projectLiveBatchPassports } from "../src/server/evidence-network/live-passports.ts";
 import { projectEvidenceRegistry } from "../src/server/registry/repository.ts";
 import { recordVendorReview } from "../src/server/verify/vendor-reviews.ts";
+import { reconcileVendorKinds } from "../src/server/catalog/vendor-kind.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
@@ -79,6 +80,15 @@ if (existsSync(selfFile)) {
 
 const rec = await reconcileLabsFromRegistry(db);
 console.log(`Reconciled labs against the registry: ${rec.renamed} name(s) canonicalized, ${rec.independenceChanged} independence flag(s) corrected.`);
+
+// Classify vendors: retail storefronts (curated list + those that publish their own COAs + anything
+// with a shoppable catalog) vs upstream manufacturers surfaced only from the lab feed.
+const retailSlugs = new Set([
+  ...(existsSync(new URL("peptide-vendors.json", DATA)) ? readJson("peptide-vendors.json").map((v) => v.slug) : []),
+  ...vcoas.map((v) => v.vendorSlug),
+]);
+const vk = await reconcileVendorKinds(db, retailSlugs);
+console.log(`Vendor kinds: ${vk.storefront} storefronts · ${vk.manufacturer} manufacturers (${vk.changed} updated).`);
 
 // Gathered buyer reputation (open-web, verification-weighted; only vendors with substantive
 // sourced signal — never algorithmic scanner scores, which are not buyer complaints).

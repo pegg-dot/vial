@@ -52,6 +52,7 @@ export interface Vendor {
     type: "catalog" | "document" | "profile" | "policy";
   }>;
   origin: DataOrigin;
+  kind: "storefront" | "manufacturer";
 }
 
 export interface EvidenceDimension {

@@ -4,7 +4,7 @@ import type { AgentRun, Compound, Product, Vendor } from "./types";
 // The public Compound/Vendor/Product types require `origin` because every record
 // read back from the DB always carries it.
 type SeedCompound = Omit<Compound, "origin">;
-type SeedVendor = Omit<Vendor, "origin">;
+type SeedVendor = Omit<Vendor, "origin" | "kind">;
 type SeedProduct = Omit<Product, "origin" | "externalUrl">;
 
 export const compounds: SeedCompound[] = [

@@ -54,6 +54,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       <section className="border-b border-black/[.06]">
         <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
           <Link href="/market" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-black"><ArrowLeft className="size-4" /> Back to market</Link>
+          {vendor.kind === "manufacturer" && <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900"><span className="font-semibold">Upstream manufacturer, not a storefront.</span> We surfaced {vendor.name} from third-party lab records — it&rsquo;s the party a certificate names as having made or ordered the tested material, not a shop you buy from directly. Its independent-test history below is real market intelligence; treat it as upstream context, not a place to purchase.</div>}
           {vendorStatus && <div className="mt-6"><VendorStatusBanner status={vendorStatus} vendorName={vendor.name} /></div>}
           {vendorFlags.length > 0 && <div className="mt-6"><VendorFlagsBanner flags={vendorFlags} vendorName={vendor.name} /></div>}
           {verdict && <div className="mt-6"><VendorVerdictBanner verdict={verdict.verdict} summary={verdict.summary} /></div>}
