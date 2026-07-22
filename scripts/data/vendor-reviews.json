@@ -562,5 +562,66 @@
   ],
   "reviewVolume": "sparse",
   "confidence": "medium"
+ },
+ {
+  "vendorSlug": "modern-peptides",
+  "sentiment": "negative",
+  "summary": "Subject to a specific, multi-source certificate-fraud warning: reportedly published a doctored NAD+ Certificate of Analysis with the Janoshik key/QR removed, where the underlying test number actually belonged to bacteriostatic water. Two independent testing entities (Janoshik and Trustpointe) separately flagged the forged COAs; the owner reportedly threatened legal action and removed the certificates. Direct buyer-review volume is otherwise thin.",
+  "positives": [
+   "A minority of buyers report reliable product and available COA testing"
+  ],
+  "redFlags": [
+   "Doctored/forged Janoshik NAD+ COA (test number reportedly belonged to bacteriostatic water), independently reported by Janoshik and Trustpointe",
+   "Owner reportedly threatened legal action and removed the certificates rather than explaining",
+   "One buyer reported illness after a GLP-1 purchase with no COA and an unpaid refund",
+   "Reported to have changed website address multiple times"
+  ],
+  "sources": [
+   "https://www.seekpeptides.com/blog/articles/mod-peptides-modern-peptides-vendor-review",
+   "https://glp1forum.com/threads/vendor-warning-modern-peptides.2711/"
+  ],
+  "reviewVolume": "low",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "royal-peptides",
+  "sentiment": "mixed",
+  "summary": "Genuinely mixed, pointing to batch inconsistency. Independent Finnrick testing across 31 samples averaged ~6.8/10 with wide per-batch ranges (e.g. tirzepatide 4.2–9.5), so purity is reported inconsistent order-to-order. Aggregate satisfaction is moderate on a small number of reviews, with specific complaints of unlabeled vials, packaging variance, and refund disputes tied to personal-PayPal payment. Not enough evidence to call it an outright scam.",
+  "positives": [
+   "Moderate overall satisfaction (~4.4/5 on limited reviews); buyers rate ordering, payment options, and delivery speed",
+   "Provides third-party COAs and claims 99%+ purity"
+  ],
+  "redFlags": [
+   "Independent Finnrick testing shows wide batch-to-batch purity variance (avg ~6.8/10; some vials as low as 4.2)",
+   "Reports of unlabeled vials and inconsistent packaging",
+   "Refund disputes reported when payment was via personal PayPal",
+   "Hidden WHOIS ownership; an isolated 1-star review labels it a scam"
+  ],
+  "sources": [
+   "https://millennialhawk.com/royal-peptides-review/",
+   "https://ratingfacts.com/reviews/royal-peptides.com"
+  ],
+  "reviewVolume": "low",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "licensedpeptides",
+  "sentiment": "positive",
+  "summary": "Predominantly positive with corroborating independent data. The review platform Peptigrity shows a high trust score across 46 verified reviews and publishes 51 third-party lab tests from Vanguard Laboratory averaging ~99.6% HPLC purity; Trustpilot is also strongly positive across several hundred reviews. Buyers report fast 2–4 day shipping, intact cold-chain packaging, and responsive support. Large Trustpilot volume may include solicited reviews, but the independent lab data supports the quality claims.",
+  "positives": [
+   "Independent lab testing (Vanguard Laboratory, 51 tests) reports ~99.6% average HPLC purity",
+   "Consistently reported fast shipping (2–4 days) with proper cold-chain packaging",
+   "Knowledgeable, responsive customer support",
+   "High verified-review satisfaction (Peptigrity 4.63/5; Trustpilot ~4.8)"
+  ],
+  "redFlags": [
+   "An isolated 1-star review alleged slow shipping and suspected ineffective product; some Trustpilot volume may be solicited"
+  ],
+  "sources": [
+   "https://peptigrity.com/shops/licensedpeptides-com",
+   "https://www.trustpilot.com/review/licensedpeptides.com"
+  ],
+  "reviewVolume": "high",
+  "confidence": "medium"
  }
 ]

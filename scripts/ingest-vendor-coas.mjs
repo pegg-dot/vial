@@ -10,6 +10,7 @@ import { recordLabTest, reconcileLabsFromRegistry } from "../src/server/ingest/l
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { projectLiveBatchPassports } from "../src/server/evidence-network/live-passports.ts";
 import { projectEvidenceRegistry } from "../src/server/registry/repository.ts";
+import { recordVendorReview } from "../src/server/verify/vendor-reviews.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
@@ -77,6 +78,14 @@ if (existsSync(selfFile)) {
 
 const rec = await reconcileLabsFromRegistry(db);
 console.log(`Reconciled labs against the registry: ${rec.renamed} name(s) canonicalized, ${rec.independenceChanged} independence flag(s) corrected.`);
+
+// Gathered buyer reputation (open-web, verification-weighted; only vendors with substantive
+// sourced signal — never algorithmic scanner scores, which are not buyer complaints).
+if (existsSync(new URL("vendor-reviews.json", DATA))) {
+  const reviews = readJson("vendor-reviews.json");
+  for (const r of reviews) await recordVendorReview(db, r);
+  console.log(`Recorded/updated ${reviews.length} vendor reputation records.`);
+}
 
 await computeAndStoreLinkages(db);
 await recomputeCompoundStats(db);
