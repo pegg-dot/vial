@@ -141,14 +141,25 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     `SELECT (SELECT COUNT(*) FROM fraud_cases WHERE subject_type='seller' AND subject_id=$1 AND status='open') fraud`, [org.id],
   )).rows[0];
   const openFlags = Number(flags?.fraud ?? 0);
+  // Public regulatory & enforcement records (FDA/DOJ/FTC) are the strongest, safest red flag —
+  // official government actions, correctly attributed. They fold into this dimension so "scam &
+  // red flags" reflects real enforcement, not just an (empty) internal fraud-case table.
+  const reg = (await db.query<QueryResultRow & { n: string | number; severe: string | number; kinds: string[] | null }>(
+    `SELECT COUNT(*) n, COUNT(*) FILTER(WHERE severity='severe') severe, array_agg(DISTINCT agency||' '||action_type) kinds FROM regulatory_actions WHERE vendor_slug=$1`, [org.slug],
+  )).rows[0];
+  const regCount = Number(reg?.n ?? 0), regSevere = Number(reg?.severe ?? 0);
+  const totalFlags = openFlags + regCount;
+  const regLabel = (reg?.kinds ?? []).map((k) => k.replace("_", " ")).slice(0, 3).join(" · ");
   dimensions.push({
     key: "open_risk_flags",
     label: "Open risk flags",
-    status: openFlags === 0 ? "established" : "disputed",
-    value: openFlags === 0 ? "None on record" : `${openFlags} open case${openFlags === 1 ? "" : "s"}`,
-    numericValue: openFlags,
-    basis: "Open, traceable fraud or abuse cases affecting this vendor. Informational, not a recommendation.",
-    provenance: { sourceType: "fraud_cases" },
+    status: totalFlags === 0 ? "established" : "disputed",
+    value: totalFlags === 0 ? "None on record"
+      : regCount > 0 ? `${regCount} enforcement record${regCount === 1 ? "" : "s"}${regSevere > 0 ? " (severe)" : ""}${regLabel ? ` · ${regLabel}` : ""}`
+      : `${openFlags} open case${openFlags === 1 ? "" : "s"}`,
+    numericValue: totalFlags,
+    basis: "Public regulatory/enforcement actions (FDA, DOJ, FTC) and open fraud cases affecting this vendor. Factual government records, not a recommendation.",
+    provenance: { sourceType: regCount > 0 ? "regulatory_actions" : "fraud_cases", url: `/vendors/${org.slug}` },
   });
 
   return { vialId, subjectType: "vendor", displayName: org.display_name, slug: org.slug, asOf: asOfNow(), methodologyVersion: REPUTATION_METHODOLOGY_VERSION, dimensions };

@@ -1,0 +1,121 @@
+[
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Swisschems", "subjectDomain":"swisschems.is",
+  "title":"FDA warning letter — unapproved new drugs (semaglutide, retatrutide)",
+  "summary":"FDA reviewed swisschems.is in October 2024 and found it offered 'Semaglutide' and 'Retatrutide' for sale in the U.S. Despite 'research chemicals only' labeling, FDA determined these are unapproved new drugs under the FD&C Act.",
+  "actionDate":"2024-12-10", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/swisschems-695663-12102024", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Umbrella (Brendan Mullins)", "subjectDomain":"umbrellalabs.is",
+  "title":"FDA warning letter — SARMs and undeclared tadalafil",
+  "summary":"FDA found the firm's sites directed consumers to umbrellalabs.is selling SARMs (GW-501516, MK-2866, MK-677, RAD-140, S-4), plus tianeptine and kratom; lab analysis found 'Alpha Male Plus' contained undeclared tadalafil. Deemed unapproved/misbranded drugs.",
+  "actionDate":"2021-05-18", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/umbrella-612037-05182021", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"PureRawz (Seann Gloss)", "subjectDomain":"purerawz.co",
+  "title":"FDA warning letter — unapproved tianeptine products",
+  "summary":"FDA reviewed purerawz.co in August 2025 and found multiple Tianeptine products; despite 'for laboratory and research use only' labeling, FDA deemed them unapproved new drugs intended for human use.",
+  "actionDate":"2025-09-08", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/purerawz-715218-09082025", "isPrimarySource":true },
+
+{ "actionType":"doj_action", "agency":"DOJ", "subjectName":"Matthew Kawa and Jennifer Stechkober (Paradigm Peptides / Paradigm R.E. LLC)", "subjectDomain":"paradigmpeptides.com", "outcome":"guilty_plea",
+  "title":"Guilty plea — misbranded/unapproved drugs; SARMs that contained testosterone",
+  "summary":"On Dec 10, 2025, Matthew Kawa (owner of Paradigm Peptides / Paradigm R.E. LLC, paradigmpeptides.com) and Jennifer Stechkober pleaded guilty in the U.S. District Court, N.D. Indiana. Investigators determined many products sold as SARMs actually contained testosterone (a controlled substance), and the SARM, hCG, and peptide products were unapproved new drugs (sold Apr 2019–Mar 2024). Sentencing pending.",
+  "actionDate":"2025-12-10", "sourceUrl":"https://www.justice.gov/usao-ndin/united-states-v-matthew-kawa", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Paradigm RE LLC (support@paradigmpeptides.com)", "subjectDomain":"paradigmpeptides.com",
+  "title":"FDA/FTC warning letter — unapproved COVID-19 claim on 'Thymosin Alpha 1'",
+  "summary":"A 2020 joint FDA/FTC letter to Paradigm RE LLC found the website marketed 'Thymosin Alpha 1' to mitigate/prevent/treat COVID-19, deemed an unapproved new drug and misbranded. Note: this concerns a COVID-19/Thymosin claim, not the vendor's SARM/peptide catalog — same operating entity, different product line.",
+  "actionDate":"2020-12-07", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/paradigm-re-llc-612014-12072020", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Warrior Labz SARMS (Jeremy Brown)",
+  "title":"FDA warning letter — SARMs and injectable peptides (BPC-157, TB-500)",
+  "summary":"FDA found warriorlabzsarms.com took orders for SARMs (RAD-140, MK-677, MK-2866, LGD-4033), plus injectable/nasal 'BPC-157' and 'TB-500', all deemed unapproved new drugs.",
+  "actionDate":"2023-06-12", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/warrior-labz-sarms-655280-06122023", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Dynamic Health Group dba SARMS AMERICA",
+  "title":"FDA warning letter — products marketed as SARMs",
+  "summary":"FDA reviewed sarmsamerica.co in November 2025 and found products marketed as SARMs (Ostarine, MK-677, Cardarine, LGD-4033), deemed unapproved new drugs.",
+  "actionDate":"2025-12-12", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/dynamic-health-group-dba-sarms-america-719257-12122025", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"TITAN SARMS LLC",
+  "title":"FDA warning letter — products marketed as SARMs",
+  "summary":"FDA reviewed titansarms.com in November 2025 and found products marketed as SARMs (Ligandrol, Testolone, Andarine), deemed unapproved new drugs.",
+  "actionDate":"2025-12-12", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/titan-sarms-llc-719645-12122025", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Pinnacle Professional Research dba Pinnacle Peptides",
+  "title":"FDA warning letter — products marketed as SARMs",
+  "summary":"FDA reviewed pinnaclepeptides.com in November 2025 and found products marketed as SARMs (S4 Andarine, LGD-4033, MK-2866), deemed unapproved new drugs.",
+  "actionDate":"2025-12-12", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/pinnacle-professional-research-dba-pinnacle-peptides-719337-12122025", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Prime Vitality, Inc. dba Prime Peptides",
+  "title":"FDA warning letter — unapproved semaglutide/retatrutide",
+  "summary":"FDA reviewed primepeptides.co in October 2024 and found 'Semaglutide' and 'Retatrutide' products, deemed unapproved new drugs despite 'research' labeling.",
+  "actionDate":"2024-12-10", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/prime-vitality-inc-dba-prime-peptides-695156-12102024", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Summit Research Peptides",
+  "title":"FDA warning letter — unapproved GLP-1/weight-loss peptides",
+  "summary":"FDA reviewed summitpeptides.shop in October 2024 and found 'Semaglutide', 'Retatrutide', 'Cagrilintide', 'Tirzepatide', and 'Mazdutide' products, all deemed unapproved new drugs.",
+  "actionDate":"2024-12-10", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/summit-research-peptides-695607-12102024", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"Gram Peptides (Bernard Gramlich)",
+  "title":"FDA warning letter — unapproved retatrutide/tirzepatide",
+  "summary":"FDA reviewed grampeptides.com in early 2026 and found 'Retatrutide', 'Tirzepatide', and 'Bacteriostatic Water for Injection', deemed unapproved new drugs.",
+  "actionDate":"2026-03-31", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/gram-peptides-721806-03312026", "isPrimarySource":true },
+
+{ "actionType":"warning_letter", "agency":"FDA", "subjectName":"USApeptide.com",
+  "title":"FDA warning letter — unlawful sale of unapproved/misbranded drugs online",
+  "summary":"FDA reviewed usapeptide.com and found it introduced misbranded and unapproved new drugs into interstate commerce in violation of the FD&C Act.",
+  "actionDate":"2025-02-26", "sourceUrl":"https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/usapeptidecom-696885-02262025", "isPrimarySource":true },
+
+{ "actionType":"doj_action", "agency":"DOJ", "subjectName":"Blackstone Labs LLC; Phillip Braun; Aaron Singerman", "outcome":"guilty_plea",
+  "title":"Guilty plea — anabolic steroids/SARMs sold as supplements; conspiracy",
+  "summary":"Blackstone Labs LLC and founders Phillip Braun and Aaron Singerman pleaded guilty (S.D. Florida, 2021) to conspiracy to distribute controlled substances and sell unapproved new drugs. Products marketed as supplements were illegal anabolic steroids/SARMs/prohormones. Forfeitures totaling ~$6.9M; Singerman later sentenced to 54 months.",
+  "actionDate":"2021-11-17", "sourceUrl":"https://www.justice.gov/archives/opa/pr/florida-corporation-and-executives-plead-guilty-conspiracy-sell-anabolic-steroids-and", "isPrimarySource":true },
+
+{ "actionType":"doj_action", "agency":"DOJ", "subjectName":"Brett Becker and Accelerated Genetix, LLC", "outcome":"guilty_plea",
+  "title":"Guilty plea — unlawful distribution of SARMs",
+  "summary":"Brett Becker and Accelerated Genetix, LLC pleaded guilty (W.D. Virginia, Dec 2020) to distributing unapproved new drugs with intent to defraud the FDA. They unlawfully distributed SARMs (Ostarine, Ligandrol) 2016–2019; Becker forfeited ~$3.5M.",
+  "actionDate":"2020-12-22", "sourceUrl":"https://www.justice.gov/usao-wdva/pr/owner-texas-sport-supplement-company-pleads-guilty-unlawful-distribution-steroid-drugs", "isPrimarySource":true },
+
+{ "actionType":"doj_action", "agency":"DOJ", "subjectName":"Brian Michael Parks and MedFitRX, Inc.", "outcome":"guilty_plea",
+  "title":"Guilty plea — unlawful distribution of SARMs",
+  "summary":"Brian Parks and MedFitRX, Inc. (now MedFit Sarmacuticals) pleaded guilty (W.D. Virginia, Nov 2020) to distributing unapproved new drugs with intent to defraud the FDA. They unlawfully distributed SARMs (MK-2866, LGD-4033, RAD-140) 2017–2019; Parks forfeited $1.2M.",
+  "actionDate":"2020-11-24", "sourceUrl":"https://www.justice.gov/usao-wdva/pr/north-carolina-sport-supplement-company-and-its-owner-plead-guilty-unlawful", "isPrimarySource":true },
+
+{ "actionType":"doj_action", "agency":"DOJ", "subjectName":"Scott Edward Cavell (CEO, Enhanced Athlete)", "outcome":"convicted",
+  "title":"Convicted — misbranded DNP 'fat burner' (NOT a SARMs conviction)",
+  "summary":"Scott Cavell, CEO of Enhanced Athlete, was sentenced (E.D. California, 2019) to three years for introducing misbranded drugs — specifically 2,4-Dinitrophenol (DNP) sold as a weight-loss 'fat burner' falsely labeled fertilizer. Note: this conviction is for DNP, not SARMs; the separate SARMs matter was an FDA seizure/investigation with no confirmed filed charge.",
+  "actionDate":"2019-05-28", "sourceUrl":"https://www.justice.gov/usao-edca/pr/sacramento-man-sentenced-3-years-prison-selling-fertilizer-fat-burning-pill", "isPrimarySource":true },
+
+{ "actionType":"recall", "agency":"FDA", "subjectName":"Tuscano and Delucia Group (DBA Entropic Labs)",
+  "title":"Recall — SARM RAD-140 marketed without approval (Class II)",
+  "summary":"FDA drug-enforcement recall (D-0800-2020, Class II, terminated) of Entropic Labs 'SARM RAD-140' 20mg capsules for being marketed without an approved NDA/ANDA (contains SARMs). Distributed nationwide.",
+  "actionDate":"2020-01-29", "sourceUrl":"https://api.fda.gov/drug/enforcement.json?search=recall_number:%22D-0800-2020%22", "isPrimarySource":true },
+
+{ "actionType":"recall", "agency":"FDA", "subjectName":"GenoGenix LLC",
+  "title":"Recall — GHK-Cu (copper peptide) for injection, sterility (Class II)",
+  "summary":"FDA drug-enforcement recall (D-0051-2026, Class II, ongoing) of GenoGenix 'GHK-Cu for Injection' for lack of assurance of sterility, part of a mass compounded-injectable recall that also swept in research-style peptides (retatrutide, tirzepatide).",
+  "actionDate":"2025-10-15", "sourceUrl":"https://api.fda.gov/drug/enforcement.json?search=recall_number:%22D-0051-2026%22", "isPrimarySource":true },
+
+{ "actionType":"recall", "agency":"FDA", "subjectName":"GenoGenix LLC (Retatrutide for Injection)",
+  "title":"Recall — retatrutide for injection, sterility (Class II)",
+  "summary":"FDA drug-enforcement recall (D-0093-2026, Class II, ongoing) of GenoGenix 'Retatrutide for Injection' 60mg/10mL for lack of assurance of sterility.",
+  "actionDate":"2025-10-15", "sourceUrl":"https://api.fda.gov/drug/enforcement.json?search=recall_number:%22D-0093-2026%22", "isPrimarySource":true },
+
+{ "actionType":"advisory", "agency":"FDA", "subjectName":"FDA — GLP-1 bulk drug substances (Import Alert 66-80)",
+  "title":"Import Alert 66-80 — detention of GLP-1 API imports",
+  "summary":"A category-wide FDA import alert that detains all imported GLP-1 (semaglutide, tirzepatide, retatrutide, etc.) bulk drug substance shipments by default except green-listed CGMP-compliant manufacturers. Names no specific U.S. reseller; relevant context for the GLP-1 grey market.",
+  "actionDate":"2026-07-15", "sourceUrl":"https://www.accessdata.fda.gov/cms_ia/importalert_1186.html", "isPrimarySource":true },
+
+{ "actionType":"advisory", "agency":"FDA", "subjectName":"FDA — unapproved HGH (Import Alert 66-71)",
+  "title":"Import Alert 66-71 — detention of unapproved HGH imports",
+  "summary":"FDA import alert red-listing 6 (all Chinese) firms shipping unapproved Human Growth Hormone, some manifested as L-Alanine/Glutathione but found to contain undeclared HGH. None are VIAL-tracked vendors.",
+  "actionDate":"2026-04-07", "sourceUrl":"https://www.accessdata.fda.gov/cms_ia/importalert_204.html", "isPrimarySource":true },
+
+{ "actionType":"advisory", "agency":"FDA", "subjectName":"FDA consumer advisory — SARMs",
+  "title":"FDA advisory — SARMs among teens and young adults",
+  "summary":"FDA consumer update warning that SARMs are unapproved drugs illegally marketed (often as 'research chemicals'/'not for human consumption'), linked to life-threatening reactions including liver injury and heart-attack/stroke risk.",
+  "actionDate":"2023-04-26", "sourceUrl":"https://www.fda.gov/consumers/consumer-updates/fda-warns-use-selective-androgen-receptor-modulators-sarms-among-teens-young-adults", "isPrimarySource":true },
+
+{ "actionType":"advisory", "agency":"FDA", "subjectName":"FDA advisory — unapproved GLP-1 weight-loss drugs",
+  "title":"FDA advisory — concerns with unapproved GLP-1 drugs",
+  "summary":"FDA warns that unapproved/compounded GLP-1 drugs are not reviewed for safety, effectiveness, or quality, citing dosing errors, unapproved salt forms, hospitalizations, and counterfeit compounded semaglutide/tirzepatide.",
+  "actionDate":"2026-06-15", "sourceUrl":"https://www.fda.gov/drugs/postmarket-drug-safety-information-patients-and-providers/fdas-concerns-unapproved-glp-1-drugs-used-weight-loss", "isPrimarySource":true }
+]

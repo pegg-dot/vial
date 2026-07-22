@@ -13,6 +13,8 @@ import { projectLiveBatchPassports } from "../src/server/evidence-network/live-p
 import { projectEvidenceRegistry } from "../src/server/registry/repository.ts";
 import { recordVendorReview } from "../src/server/verify/vendor-reviews.ts";
 import { reconcileVendorKinds } from "../src/server/catalog/vendor-kind.ts";
+import { recordRegulatoryAction } from "../src/server/regulatory/repository.ts";
+import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
@@ -89,6 +91,17 @@ const retailSlugs = new Set([
 ]);
 const vk = await reconcileVendorKinds(db, retailSlugs);
 console.log(`Vendor kinds: ${vk.storefront} storefronts · ${vk.manufacturer} manufacturers (${vk.changed} updated).`);
+
+// Public regulatory & enforcement records (FDA/DOJ/FTC), resolved strictly to vendors by domain/name.
+if (existsSync(new URL("regulatory-actions.json", DATA))) {
+  const actions = readJson("regulatory-actions.json");
+  const vendorRows = (await db.query(`SELECT slug, display_name, domains FROM organizations WHERE origin='live' AND organization_type='vendor'`)).rows
+    .map((v) => ({ slug: v.slug, name: v.display_name, domains: Array.isArray(v.domains) ? v.domains : JSON.parse(v.domains || "[]") }));
+  let matched = 0;
+  for (const a of actions) { const r = await recordRegulatoryAction(db, a, vendorRows); if (r.vendorSlug) matched += 1; }
+  await recordCollectorRun(db, { collector: "regulatory", target: "fda-doj-ftc", items: actions.length, ok: true });
+  console.log(`Recorded ${actions.length} regulatory/enforcement records (${matched} matched to a tracked vendor).`);
+}
 
 // Gathered buyer reputation (open-web, verification-weighted; only vendors with substantive
 // sourced signal — never algorithmic scanner scores, which are not buyer complaints).

@@ -3,7 +3,7 @@ import { Wordmark } from "./wordmark";
 
 const groups = [
   { title: "Explore", links: [["Market","/market"],["Compounds","/compounds"],["Vendors","/vendors"],["Compare","/compare"],["What's moving","/signals"],["Saved","/watchlist"]] },
-  { title: "How we check", links: [["How we check","/how-we-check"],["Batch passports","/passports"],["Lab reports","/research"],["Independent testing","/testing"],["Laboratories","/labs"],["Change ledger","/updates"],["Provenance","/operations"],["System status","/status"]] },
+  { title: "How we check", links: [["How we check","/how-we-check"],["Batch passports","/passports"],["Lab reports","/research"],["Independent testing","/testing"],["Laboratories","/labs"],["Enforcement record","/enforcement"],["Change ledger","/updates"],["Provenance","/operations"],["System status","/status"]] },
   { title: "Company", links: [["About","/about"],["For vendors","/sell"],["Help center","/help"],["Developers","/developers"],["Account","/account"],["Staff access","/admin"]] },
   { title: "Legal", links: [["US law & regulations","/legal/us-regulations"],["Privacy","/legal/privacy"],["Terms","/legal/terms"],["Disclaimer","/legal/disclaimer"],["Limitations","/how-we-check#limitations"]] },
 ];

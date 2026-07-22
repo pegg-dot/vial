@@ -10,6 +10,9 @@ import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { VendorVerdictBanner } from "@/components/vendor-verdict-banner";
 import { verdictForVendorSlug } from "@/server/verify";
+import { getVendorRegulatoryActions } from "@/server/regulatory/repository";
+import { verdictFromSeverities } from "@/server/regulatory/actions";
+import { EnforcementBanner } from "@/components/enforcement-banner";
 import { FollowButton } from "@/components/follow-button";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
@@ -44,10 +47,15 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug))]);
+  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
-  const verdict = verdictForVendorSlug(slug);
+  // A public enforcement record outranks the static verdict: a severe action forces "avoid".
+  const regVerdict = verdictFromSeverities(enforcement.map((a) => a.severity as "severe" | "caution" | "informational"));
+  const staticVerdict = verdictForVendorSlug(slug);
+  const verdict = regVerdict === "avoid"
+    ? { verdict: "avoid" as const, summary: staticVerdict?.summary ?? `On a public regulatory/enforcement record (${enforcement.filter((a) => a.severity === "severe").length} severe). See the sourced records below.` }
+    : staticVerdict;
 
   return (
     <>
@@ -58,6 +66,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           {vendorStatus && <div className="mt-6"><VendorStatusBanner status={vendorStatus} vendorName={vendor.name} /></div>}
           {vendorFlags.length > 0 && <div className="mt-6"><VendorFlagsBanner flags={vendorFlags} vendorName={vendor.name} /></div>}
           {verdict && <div className="mt-6"><VendorVerdictBanner verdict={verdict.verdict} summary={verdict.summary} /></div>}
+          {enforcement.length > 0 && <div className="mt-6"><EnforcementBanner actions={enforcement} vendorName={vendor.name} /></div>}
           <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               <VendorMark initials={vendor.initials} accent={vendor.accent} size="lg" />
