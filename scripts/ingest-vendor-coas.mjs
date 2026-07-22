@@ -8,6 +8,8 @@ import { getDatabase } from "../src/server/db/client.ts";
 import { upsertLiveVendor, recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
 import { recordLabTest } from "../src/server/ingest/lab-tests.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
+import { projectLiveBatchPassports } from "../src/server/evidence-network/live-passports.ts";
+import { projectEvidenceRegistry } from "../src/server/registry/repository.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
@@ -49,6 +51,10 @@ console.log(`Recorded ${green}/${vcoas.length} vendor-tied COAs.`);
 
 await computeAndStoreLinkages(db);
 await recomputeCompoundStats(db);
+
+const proj = await projectLiveBatchPassports(db);
+await projectEvidenceRegistry(db);
+console.log(`Projected ${proj.passports} real batch passports (${proj.links} certificate links) across ${proj.vendors} vendors.`);
 
 const covered = (await db.query(`SELECT COUNT(DISTINCT vendor_slug) n FROM lab_test_records WHERE vendor_slug IS NOT NULL`)).rows[0].n;
 console.log(`Vendors with >=1 independent COA on record: ${covered}`);

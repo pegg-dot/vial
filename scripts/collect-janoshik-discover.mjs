@@ -17,6 +17,8 @@ import { ingestNewJanoshikTests, applyPurities, annotateTestTypes } from "../src
 import { fetchJanoshikPortal, annotateJanoshikListings } from "../src/server/verify/janoshik-verify.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
+import { projectLiveBatchPassports } from "../src/server/evidence-network/live-passports.ts";
+import { projectEvidenceRegistry } from "../src/server/registry/repository.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
@@ -62,10 +64,12 @@ const sync = await annotateJanoshikListings(db, entries);
 console.log(`\nLiveness: ${sync.stillListed}/${sync.keysChecked} stored COAs still in the current public feed.`);
 if (sync.delisted.length) console.log(`  ⚠️ ${sync.delisted.length} previously-listed cert(s) no longer in the feed (rolled off or delisted — same-source signal): ${sync.delisted.join(", ")}`);
 
-if (res.newTests.length || applied) {
+if (res.newTests.length || applied || typed) {
   const { edges } = await computeAndStoreLinkages(db);
   await recomputeCompoundStats(db);
-  console.log(`\nRecomputed downstream: vendor linkage graph (${edges} edges) + compound stats.`);
+  const proj = await projectLiveBatchPassports(db);
+  await projectEvidenceRegistry(db);
+  console.log(`\nRecomputed downstream: vendor linkage graph (${edges} edges) + compound stats + ${proj.passports} real batch passports (${proj.vendors} vendors).`);
 }
 
 const totals = (await db.query(`SELECT COUNT(*) n, COUNT(purity_pct) p FROM lab_test_records WHERE lab='Janoshik Analytical'`)).rows[0];
