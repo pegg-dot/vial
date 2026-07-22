@@ -25,6 +25,8 @@ import { getVendorLinks } from "@/server/verify/vendor-linkage";
 import { VendorReputationTiles } from "@/components/vendor-reputation-tiles";
 import { VendorReviewsPanel } from "@/components/vendor-reviews-panel";
 import { getVendorReview } from "@/server/verify/vendor-reviews";
+import { VendorStatusBanner } from "@/components/vendor-status-banner";
+import { getVendorStatus } from "@/server/verify/vendor-status";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +44,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug))]);
+  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
   const verdict = verdictForVendorSlug(slug);
@@ -52,6 +54,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       <section className="border-b border-black/[.06]">
         <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
           <Link href="/market" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-black"><ArrowLeft className="size-4" /> Back to market</Link>
+          {vendorStatus && <div className="mt-6"><VendorStatusBanner status={vendorStatus} vendorName={vendor.name} /></div>}
           {vendorFlags.length > 0 && <div className="mt-6"><VendorFlagsBanner flags={vendorFlags} vendorName={vendor.name} /></div>}
           {verdict && <div className="mt-6"><VendorVerdictBanner verdict={verdict.verdict} summary={verdict.summary} /></div>}
           <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
@@ -68,6 +71,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                   {vendor.location && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>}
                   {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> First observed {vendor.founded}</span>}
                   {vendor.lastObserved && <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>}
+                  {vendorStatus && (() => {
+                    const map: Record<string, [string, string]> = { operating: ["Operating", "bg-emerald-100 text-emerald-800"], offline: ["Site offline", "bg-rose-100 text-rose-800"], parked: ["Parked page", "bg-rose-100 text-rose-800"], redirected: ["Redirects away", "bg-amber-100 text-amber-800"], blocked: ["Status unverified", "bg-black/[.06] text-black/55"], unknown: ["Status unknown", "bg-black/[.06] text-black/55"] };
+                    const [label, cls] = map[vendorStatus.status] ?? map.unknown;
+                    return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>{label}</span>;
+                  })()}
                 </div>
                 <div className="mt-6"><FollowButton entityType="vendor" entitySlug={slug} initialFollowed={followed} authenticated={Boolean(principal)} /></div>
               </div>

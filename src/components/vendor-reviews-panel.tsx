@@ -67,7 +67,7 @@ export function VendorReviewsPanel({ review }: { review: VendorReview }) {
             </div>
           </div>
         )}
-        <p className="mt-5 text-[10px] leading-4 text-black/40">Gathered from public web sources and weighted toward specific, reproducible reports over generic praise — praise is cheap to fake, failure reports and independent lab results are not. A reputation snapshot, not a verdict; ownership and quality can change.</p>
+        <p className="mt-5 text-[10px] leading-4 text-black/40">Gathered from public web sources{review.gatheredAt ? ` on ${new Date(review.gatheredAt).toLocaleDateString()}` : ""} and weighted toward specific, reproducible reports over generic praise — praise is cheap to fake, failure reports and independent lab results are not. Reputation decays: ownership and quality change over time, so re-check against current sources before you buy.</p>
       </div>
     </section>
   );

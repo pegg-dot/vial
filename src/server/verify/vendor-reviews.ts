@@ -16,6 +16,7 @@ export interface VendorReview {
   sources: string[];
   reviewVolume: "none" | "sparse" | "moderate" | "heavy";
   confidence: "low" | "medium" | "high";
+  gatheredAt?: string | null;
 }
 
 export async function recordVendorReview(db: SqlConnection, r: VendorReview): Promise<void> {
@@ -35,10 +36,10 @@ function arr(v: unknown): string[] {
 }
 
 export async function getVendorReview(db: SqlConnection, vendorSlug: string): Promise<VendorReview | null> {
-  const r = (await db.query<{ vendor_slug: string; sentiment: ReviewSentiment; summary: string; positives: unknown; red_flags: unknown; sources: unknown; review_volume: VendorReview["reviewVolume"]; confidence: VendorReview["confidence"] }>(
-    `SELECT vendor_slug, sentiment, summary, positives, red_flags, sources, review_volume, confidence FROM vendor_reviews WHERE vendor_slug=$1`,
+  const r = (await db.query<{ vendor_slug: string; sentiment: ReviewSentiment; summary: string; positives: unknown; red_flags: unknown; sources: unknown; review_volume: VendorReview["reviewVolume"]; confidence: VendorReview["confidence"]; gathered_at: string | null }>(
+    `SELECT vendor_slug, sentiment, summary, positives, red_flags, sources, review_volume, confidence, gathered_at FROM vendor_reviews WHERE vendor_slug=$1`,
     [vendorSlug],
   )).rows[0];
   if (!r) return null;
-  return { vendorSlug: r.vendor_slug, sentiment: r.sentiment, summary: r.summary, positives: arr(r.positives), redFlags: arr(r.red_flags), sources: arr(r.sources), reviewVolume: r.review_volume, confidence: r.confidence };
+  return { vendorSlug: r.vendor_slug, sentiment: r.sentiment, summary: r.summary, positives: arr(r.positives), redFlags: arr(r.red_flags), sources: arr(r.sources), reviewVolume: r.review_volume, confidence: r.confidence, gatheredAt: r.gathered_at };
 }
