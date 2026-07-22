@@ -42,7 +42,7 @@ export function VendorLinksPanel({ links, vendorName: name }: { links: VendorLin
       ) : (
         <div className="rounded-[26px] border border-emerald-200 bg-emerald-50 p-6">
           <p className="text-sm font-semibold text-emerald-900">Distinct operator</p>
-          <p className="mt-2 text-sm leading-6 text-emerald-950/70">We found no analytics ID, pixel, tested batch, or infrastructure linking {name} to another storefront we track. That doesn&rsquo;t prove it&rsquo;s trustworthy — but it isn&rsquo;t part of a detected sock-puppet network.</p>
+          <p className="mt-2 text-sm leading-6 text-emerald-950/70">We checked {name} against every storefront we track for a shared analytics/pixel ID, a reused product photo, the same tested batch, and the same upstream source — and found none. That doesn&rsquo;t prove it&rsquo;s trustworthy, but it isn&rsquo;t part of a detected sock-puppet network.</p>
         </div>
       )}
 

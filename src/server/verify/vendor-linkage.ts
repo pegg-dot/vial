@@ -9,9 +9,21 @@
 import type { SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 
-export interface VendorLink { linkedSlug: string; basis: "web-id" | "shared-lot" | "shared-source"; strength: "strong" | "info"; detail: string }
+export interface VendorLink { linkedSlug: string; basis: "web-id" | "shared-lot" | "shared-source" | "shared-photo"; strength: "strong" | "info"; detail: string }
 
 const WEB_LABEL: Record<string, string> = { ga: "Google Analytics", gtm: "Google Tag Manager", fb: "Facebook pixel", shopify: "Shopify store handle", cert: "TLS certificate", ip: "server IP" };
+
+// Hamming distance between two 16-hex-char (64-bit) perceptual hashes — nibble by nibble, so
+// no BigInt (and robust to the build target).
+function hamming(a: string, b: string): number {
+  if (a.length !== b.length) return 64;
+  let n = 0;
+  for (let i = 0; i < a.length; i++) {
+    let x = (parseInt(a[i], 16) ^ parseInt(b[i], 16)) & 0xf;
+    while (x) { n += x & 1; x >>= 1; }
+  }
+  return n;
+}
 
 /** Store one observed web fingerprint for a vendor (idempotent). */
 export async function recordFingerprint(db: SqlConnection, vendorSlug: string, kind: string, value: string): Promise<void> {
@@ -86,6 +98,26 @@ export async function computeAndStoreLinkages(db: SqlConnection): Promise<{ edge
       await emit(m.vendors[i], m.vendors[j], "shared-source", "info",
         `Both ${m.vendors[i].replace(/-/g, " ")} and ${m.vendors[j].replace(/-/g, " ")} source from ${m.manufacturer} — the same upstream maker, so the underlying product is likely identical. Compare on price.`,
         `Both source from ${m.manufacturer} — the same upstream maker. Compare on price.`);
+    }
+  }
+
+  // 4. Reused product photos — the same image (perceptual near-match, Hamming ≤ 6 of 64) on two
+  //    vendors is a hallmark of one drop-shipper. Pairwise across vendors; one edge per pair.
+  const photos = (await db.query<{ vendor_slug: string; value: string }>(`SELECT vendor_slug, value FROM vendor_fingerprints WHERE kind='photo'`)).rows;
+  const donePairs = new Set<string>();
+  for (let i = 0; i < photos.length; i++) for (let j = i + 1; j < photos.length; j++) {
+    const a = photos[i], b = photos[j];
+    if (a.vendor_slug === b.vendor_slug) continue;
+    const pair = [a.vendor_slug, b.vendor_slug].sort().join("|");
+    if (donePairs.has(pair)) continue;
+    // Near-EXACT only (≤ 3 of 64). Looser thresholds match different-but-similar white-vial-on-
+    // white photos; the collector already dropped low-entropy blanks, so a ≤3 match here is a
+    // genuinely-distinctive image reused verbatim.
+    if (hamming(a.value, b.value) <= 3) {
+      donePairs.add(pair);
+      await emit(a.vendor_slug, b.vendor_slug, "shared-photo", "strong",
+        `Uses the same product photo as ${b.vendor_slug.replace(/-/g, " ")} — reused imagery is a hallmark of one drop-shipper running multiple storefronts.`,
+        `Uses the same product photo as ${a.vendor_slug.replace(/-/g, " ")} — likely one drop-shipper behind both.`);
     }
   }
 

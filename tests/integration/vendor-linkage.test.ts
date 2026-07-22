@@ -42,6 +42,16 @@ describe("vendor linkage engine", () => {
     expect((await getVendorLinks(db, "x1")).some((l) => l.basis === "shared-lot")).toBe(false);
   });
 
+  it("links vendors that reuse a distinctive product photo (near-exact hash), not similar ones", async () => {
+    const db = await getDatabase();
+    await recordFingerprint(db, "drop-1", "photo", "296969694b494b29");         // distinctive
+    await recordFingerprint(db, "drop-2", "photo", "296969694b494b2b");         // 1 bit off → same photo
+    await recordFingerprint(db, "brand-x", "photo", "5a3c1e0f7b2d4c68");        // unrelated distinctive photo
+    await computeAndStoreLinkages(db);
+    expect((await getVendorLinks(db, "drop-1")).some((l) => l.linkedSlug === "drop-2" && l.basis === "shared-photo")).toBe(true);
+    expect((await getVendorLinks(db, "brand-x")).some((l) => l.basis === "shared-photo")).toBe(false);
+  });
+
   it("links vendors sharing an upstream manufacturer as an informational same-source edge", async () => {
     const db = await getDatabase();
     await seedLab("reseller-1", "ghk-cu", "L-1", "Shengtai Chemical Co");
