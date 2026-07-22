@@ -87,11 +87,10 @@ export function coaStatusFrom(args: {
     if (!batchIsSameVendor(byBatch, vendorSlug) && (byBatch.vendor_slug || byBatch.manufacturer)) return "mismatch";
     return "batch-verified";
   }
-  if (claimsTesting) {
-    if (!hasIndependent) return "unbacked";
-    return bestPurity != null && bestPurity < 95 ? "low-purity" : "verified";
-  }
-  if (hasIndependent) return "verified";
+  if (claimsTesting && !hasIndependent) return "unbacked";
+  // An independent record below the ~95% these products advertise is a caution whether or not
+  // the vendor advertised testing — the measured number is what matters, not the marketing.
+  if (hasIndependent) return bestPurity != null && bestPurity < 95 ? "low-purity" : "verified";
   return "no-claim";
 }
 
@@ -199,15 +198,21 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
     };
   }
 
-  // 3. No testing claim to check. If we happen to hold an independent record anyway, surface it.
+  // 3. No testing claim to check. If we hold an independent record anyway, surface it — and
+  //    still flag a low measured purity even though the vendor didn't advertise testing.
   if (best) {
+    const low = bestPurity != null && bestPurity < 95;
     return {
-      status: "verified",
+      status: low ? "low-purity" : "verified",
       independentPurity: bestPurity,
       independentUrl: best.verify_url,
-      headline: `Independent test on record${bestPurity != null ? ` — ${bestPurity.toFixed(2)}%` : ""}`,
-      detail: `This listing doesn't advertise third-party testing, but we do hold an independent record for ${vendorLabel}'s ${compoundLabel}${bestPurity != null ? `, measured at ${bestPurity.toFixed(2)}%` : ""}. Bonus evidence, not a guarantee of this specific batch.`,
-      signals: [{ ok: true, label: "Independent record", detail: `A third-party test references ${vendorLabel} for ${compoundLabel}.` }],
+      headline: low
+        ? `Independent test on record — but only ${bestPurity!.toFixed(2)}%`
+        : `Independent test on record${bestPurity != null ? ` — ${bestPurity.toFixed(2)}%` : ""}`,
+      detail: low
+        ? `We hold an independent record for ${vendorLabel}'s ${compoundLabel} measured at ${bestPurity!.toFixed(2)}% — below the ~98–99% these products usually advertise. It was tested, but not to the purity you'd hope for.`
+        : `This listing doesn't advertise third-party testing, but we do hold an independent record for ${vendorLabel}'s ${compoundLabel}${bestPurity != null ? `, measured at ${bestPurity.toFixed(2)}%` : ""}. Bonus evidence, not a guarantee of this specific batch.`,
+      signals: [{ ok: !low, label: "Independent record", detail: `A third-party test references ${vendorLabel} for ${compoundLabel}${bestPurity != null ? ` at ${bestPurity.toFixed(2)}%` : ""}.` }],
     };
   }
 

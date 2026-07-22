@@ -109,6 +109,32 @@ if (existsSync(feedFile)) {
   console.log(`  ${matched}/${entries.length} resolved to a known compound · ${vendorLinked} tied to a vendor`);
 }
 
+// Vendor-published COAs: certificates a LISTED vendor publishes on its own site, tied to that
+// vendor's slug — so the vendor's own listings show a green "independently tested" verdict.
+const vendorCoaFile = new URL("vendor-coas.json", DATA);
+if (existsSync(vendorCoaFile)) {
+  const vcoas = readJson("vendor-coas.json");
+  const nameOf = new Map(compoundRefs.map((c) => [c.slug, c.name]));
+  console.log(`\nRecording ${vcoas.length} vendor-published COAs (tied to the vendor's own listings)…`);
+  let green = 0;
+  for (const v of vcoas) {
+    const res = await recordLabTest(db, {
+      testId: `${v.vendorSlug}-${v.compound}`,
+      verifyUrl: v.url,
+      sampleName: nameOf.get(v.compound) ?? v.compound,
+      manufacturer: v.vendorName,
+      batchCode: v.batch ?? undefined,
+      purityPct: v.purityPct ?? null,
+      measuredContent: v.measuredContent ?? null,
+      testedAt: v.testedAt ?? null,
+      lab: v.lab || "Janoshik Analytical",
+      vendorSlug: v.vendorSlug,
+    }, { compounds: compoundRefs, vendors: vendorRefs });
+    if (res.compoundSlug && res.vendorSlug) green += 1;
+  }
+  console.log(`  ${green}/${vcoas.length} tied a vendor listing to its own independent COA`);
+}
+
 console.log(`\nRecomputing compound stats…`);
 await recomputeCompoundStats(db);
 

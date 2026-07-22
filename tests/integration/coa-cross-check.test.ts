@@ -59,6 +59,13 @@ describe("COA cross-verification", () => {
     expect(r.independentPurity).toBeCloseTo(99.0, 1);
   });
 
+  it("flags low purity even when the vendor's own COA makes no testing claim", async () => {
+    await seedLabTest({ vendor_slug: "stl-test", manufacturer: "STL Test", compound_slug: "dsip", purity: 90.17 });
+    const db = await getDatabase();
+    const r = await crossCheckCoa(db, { vendorSlug: "stl-test", compoundSlug: "dsip", reportIssuer: "", reportConfirmed: false, batchCode: "" });
+    expect(r.status).toBe("low-purity");
+  });
+
   it("reports no-claim when there is neither an advertised test nor an independent record", async () => {
     const db = await getDatabase();
     const r = await crossCheckCoa(db, { vendorSlug: "quiet-vendor", vendorName: "Quiet Vendor", compoundSlug: "mk-677", compoundName: "MK-677", reportIssuer: "", reportConfirmed: false, batchCode: "" });
