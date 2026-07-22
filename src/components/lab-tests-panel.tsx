@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, FlaskConical, BadgeCheck, EyeOff, ShieldCheck } from "lucide-react";
+import { ExternalLink, FileText, FlaskConical, BadgeCheck, EyeOff, ShieldCheck, AlertTriangle } from "lucide-react";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { checkContent } from "@/server/verify/content-check";
 
@@ -22,8 +22,11 @@ const SAFETY_TYPES = new Set(["sterility", "endotoxin", "heavy-metals"]);
 // that every vial matches or an endorsement of the vendor.
 export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { tests: LabTestRow[]; heading?: string }) {
   if (tests.length === 0) return null;
-  const withPurity = tests.filter((t) => t.purity_pct != null);
-  const blindCount = tests.filter((t) => t.is_blind).length;
+  // Headline stats reflect INDEPENDENT evidence only — a vendor's self-published purity never
+  // becomes the top-line number, though its row still shows below (labeled).
+  const independentTests = tests.filter((t) => t.is_independent !== false);
+  const withPurity = independentTests.filter((t) => t.purity_pct != null);
+  const blindCount = independentTests.filter((t) => t.is_blind).length;
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -126,8 +129,12 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
                     })()}
                   </td>
                   <td className="px-5 py-3 text-xs">
-                    {t.lab}
-                    {t.janoshik_checked_at != null && (t.janoshik_listed
+                    {t.is_independent === false
+                      ? (/self-published/i.test(t.lab)
+                          ? <span title="Published by the vendor with no independent third-party lab named. A vendor testing its own product is far weaker than an independent lab — shown for transparency, but it does not count toward independent corroboration." className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-800"><AlertTriangle className="size-3" /> Vendor self-tested</span>
+                          : <span title={`Names "${t.lab}", but we could not confirm it is a real, independent third-party lab (no accreditation, registry record, or independence from the vendor established). Shown for transparency; does not count toward independent corroboration.`} className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-800"><AlertTriangle className="size-3" /> Unverified lab · {t.lab}</span>)
+                      : t.lab}
+                    {t.is_independent !== false && t.janoshik_checked_at != null && (t.janoshik_listed
                       ? <span title={`Still publicly listed in Janoshik's database as of ${new Date(t.janoshik_checked_at).toLocaleDateString()}${t.janoshik_made_by ? ` — listed maker: ${t.janoshik_made_by}` : ""}. This confirms the certificate remains public; it is the same source as our record, not a second opinion.`} className="mt-1.5 flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700"><BadgeCheck className="size-3" /> Still listed</span>
                       : <span title={`Not found in Janoshik's public feed when re-checked ${new Date(t.janoshik_checked_at).toLocaleDateString()} — it may have rotated out of the public list, or been pulled.`} className="mt-1.5 flex w-fit items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Not in current feed</span>)}
                   </td>

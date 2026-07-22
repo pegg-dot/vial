@@ -55,4 +55,17 @@ describe("live batch passport projection", () => {
     expect(evid[0].isBlind).toBe(true); // blind sorts first
     expect(new Set(evid.map((e) => e.lab))).toEqual(new Set(["Janoshik Analytical", "MZ Biolabs"]));
   });
+
+  it("prunes a live passport once its evidence stops qualifying", async () => {
+    const db = await getDatabase();
+    // LOT-B's only certificate becomes non-independent → its passport must be removed, not linger.
+    await db.query(`UPDATE lab_test_records SET is_independent=FALSE WHERE test_id='3'`);
+    const res = await projectLiveBatchPassports(db);
+    expect(res.pruned).toBe(1);
+    const remaining = (await db.query<{ declared_batch_code: string }>(`SELECT declared_batch_code FROM batch_passports WHERE origin='live'`)).rows;
+    expect(remaining.map((r) => r.declared_batch_code)).toEqual(["LOT-A"]);
+    // Its registry id and links are gone too.
+    const reg = (await db.query(`SELECT 1 FROM registry_identifiers WHERE source_entity_id='livepassport:live-acme-peptide-bpc-157-lot-b'`)).rows;
+    expect(reg).toHaveLength(0);
+  });
 });

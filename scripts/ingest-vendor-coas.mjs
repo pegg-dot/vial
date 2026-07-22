@@ -6,7 +6,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
 import { upsertLiveVendor, recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
-import { recordLabTest } from "../src/server/ingest/lab-tests.ts";
+import { recordLabTest, reconcileLabsFromRegistry } from "../src/server/ingest/lab-tests.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { projectLiveBatchPassports } from "../src/server/evidence-network/live-passports.ts";
 import { projectEvidenceRegistry } from "../src/server/registry/repository.ts";
@@ -44,10 +44,39 @@ for (const v of vcoas) {
     testedAt: v.testedAt ?? null,
     lab: v.lab || "Janoshik Analytical",
     vendorSlug: v.vendorSlug,
+    isIndependent: v.independent !== false, // a named-but-unverified lab (e.g. affiliated) sets independent:false
   }, { compounds: compoundRefs, vendors: vendorRefs });
   if (res.vendorSlug) { green += 1; byVendor[v.vendorSlug] = (byVendor[v.vendorSlug] || 0) + 1; }
 }
 console.log(`Recorded ${green}/${vcoas.length} vendor-tied COAs.`);
+
+// Self-published COAs: vendor-branded documents with NO independent lab named. Recorded with a
+// distinct "Vendor self-published" lab and is_independent=false so they show transparently but
+// never count as independent evidence or back a passport.
+const selfFile = new URL("vendor-self-coas.json", DATA);
+if (existsSync(selfFile)) {
+  const selfCoas = readJson("vendor-self-coas.json");
+  let self = 0;
+  for (const v of selfCoas) {
+    await recordLabTest(db, {
+      testId: `self-${v.vendorSlug}-${v.compound}`,
+      verifyUrl: v.url,
+      sampleName: nameOf.get(v.compound) ?? v.compound,
+      manufacturer: v.vendorName,
+      batchCode: v.batch ?? undefined,
+      purityPct: v.purityPct ?? null,
+      testedAt: v.testedAt ?? null,
+      lab: `${v.vendorName} — self-published`,
+      vendorSlug: v.vendorSlug,
+      isIndependent: false,
+    }, { compounds: compoundRefs, vendors: vendorRefs });
+    self += 1;
+  }
+  console.log(`Recorded ${self} vendor self-published COAs (marked non-independent).`);
+}
+
+const rec = await reconcileLabsFromRegistry(db);
+console.log(`Reconciled labs against the registry: ${rec.renamed} name(s) canonicalized, ${rec.independenceChanged} independence flag(s) corrected.`);
 
 await computeAndStoreLinkages(db);
 await recomputeCompoundStats(db);

@@ -25,7 +25,8 @@ describe("VIAL 10.0 batch standard", () => {
     expect(record!.declaredBatchCode).toMatch(/-BPC-/);
     // The headline number is preserved but decomposed, never presented as a black box.
     expect(record!.evidenceConfidence).toBeCloseTo(0.82 * 0.86, 3);
-    const basis = record!.confidenceBasis;
+    expect(record!.evidenceType).toBe("vial-operated");
+    const basis = record!.confidenceBasis as unknown as import("@/server/evidence-network/repository").BatchConfidenceBasis;
     expect(basis.samplingLevel).toBe("S3");
     expect(basis.conflictPenaltyApplied).toBe(true);
     expect(basis.independence.samplingModels).toContain("blind_purchase");

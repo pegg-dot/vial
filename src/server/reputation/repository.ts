@@ -89,10 +89,12 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
   )).rows[0];
   const passportCount = Number(passports?.passports ?? 0);
   const openConflicts = Number(passports?.conflicts ?? 0);
+  // Only INDEPENDENT third-party certificates count as independent corroboration — a vendor's own
+  // self-branded COA (is_independent=false) is shown elsewhere but never inflates this dimension.
   const coa = (await db.query<QueryResultRow & { n: string | number; with_purity: string | number; purities: number[] | null; latest: string | null }>(
     `SELECT COUNT(*) n, COUNT(*) FILTER(WHERE purity_pct IS NOT NULL) with_purity,
             array_agg(purity_pct) FILTER(WHERE purity_pct IS NOT NULL) purities, MAX(tested_at) latest
-     FROM lab_test_records WHERE vendor_slug=$1`, [org.slug],
+     FROM lab_test_records WHERE vendor_slug=$1 AND is_independent=TRUE`, [org.slug],
   )).rows[0];
   const coaCount = Number(coa?.n ?? 0);
   const coaPurities = (coa?.purities ?? []).map(Number).filter((v) => Number.isFinite(v));

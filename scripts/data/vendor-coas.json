@@ -261,7 +261,9 @@
   "batch": "CP-8408241-P",
   "measuredContent": "10.15 mg",
   "testedAt": "07/02/2026",
-  "lab": "Horizon Analytical"
+  "lab": "Horizon Analytical",
+  "independent": false,
+  "labNote": "independence not established (circumstantial ties to a vendor group); no public accreditation or registered lab entity found"
  },
  {
   "vendorSlug": "chameleon-peptides",
@@ -272,7 +274,9 @@
   "batch": "CP-1700427-P",
   "measuredContent": "10.21 mg",
   "testedAt": "07/02/2026",
-  "lab": "Horizon Analytical"
+  "lab": "Horizon Analytical",
+  "independent": false,
+  "labNote": "independence not established (circumstantial ties to a vendor group); no public accreditation or registered lab entity found"
  },
  {
   "vendorSlug": "chameleon-peptides",
@@ -576,7 +580,7 @@
   "vendorName": "Umbrella Labs",
   "compound": "aod-9604",
   "url": "https://umbrellalabs.is/wp-content/uploads/2025/04/2025-04-23-Umbrella-Labs-AOD-9604-Certificate-Of-Analysis-COA.pdf",
-  "purityPct": 99.0,
+  "purityPct": 99,
   "batch": "ULP-20655",
   "measuredContent": null,
   "testedAt": null,
@@ -598,7 +602,7 @@
   "vendorName": "Peptide Pros",
   "compound": "bpc-157",
   "url": "https://www.peptidepros.net/wp-content/uploads/2022/06/COA_BPC-157_5mg_lot-AF98762213-1.pdf",
-  "purityPct": 100.0,
+  "purityPct": 100,
   "batch": "AF98762213",
   "measuredContent": null,
   "testedAt": "2022-05-02",
@@ -697,7 +701,7 @@
   "vendorName": "Chemyo",
   "compound": "mk-677",
   "url": "https://www.chemyo.com/wp-content/uploads/2026/05/BA2200-MK677-COA.png",
-  "purityPct": 100.0,
+  "purityPct": 100,
   "batch": "BA2200",
   "measuredContent": null,
   "testedAt": "2026-05-12",
@@ -789,7 +793,9 @@
   "batch": "TSM20-2601-01",
   "measuredContent": null,
   "testedAt": "2026-06-12",
-  "lab": "SteriGenix"
+  "lab": "SteriGenix",
+  "independent": false,
+  "labNote": "existence as a real independent lab unconfirmed (domain ~2 months old, no address/phone/registry record, no third-party footprint)"
  },
  {
   "vendorSlug": "vici-peptides",

@@ -2,8 +2,8 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 
-export type ApiScope = "market:read" | "signals:read" | "export:read" | "feeds:read" | "identity:read" | "reputation:read";
-export const API_SCOPES: ApiScope[] = ["market:read", "signals:read", "export:read", "feeds:read", "identity:read", "reputation:read"];
+export type ApiScope = "market:read" | "signals:read" | "export:read" | "feeds:read" | "identity:read" | "reputation:read" | "labs:read";
+export const API_SCOPES: ApiScope[] = ["market:read", "signals:read", "export:read", "feeds:read", "identity:read", "reputation:read", "labs:read"];
 
 export interface ApiKeyRow {
   id: string;

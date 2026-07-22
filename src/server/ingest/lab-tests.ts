@@ -7,6 +7,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { matchCompound, type CompoundRef } from "./shopify-import";
+import { canonicalizeLabName, labCountsAsIndependent } from "@/server/labs/registry";
 
 export interface JanoshikEntry {
   testId: string;
@@ -101,6 +102,8 @@ export interface LabTestInput {
   testType?: TestType;
   isBlind?: boolean;
   testNote?: string | null;
+  /** False for a vendor's own self-branded COA where no independent lab is named. Defaults true. */
+  isIndependent?: boolean;
 }
 
 /** Record (idempotently, keyed on verify_url) a real independent lab test. */
@@ -111,11 +114,16 @@ export async function recordLabTest(
 ): Promise<{ id: string; compoundSlug: string | null; vendorSlug: string | null }> {
   const compoundSlug = matchCompound(input.sampleName, resolve.compounds);
   const vendorSlug = input.vendorSlug ?? matchVendor(input.manufacturer, resolve.vendors);
+  // The lab registry is authoritative: canonicalize the lab name (collapses "Janoshik" /
+  // "Janoshik Analytical") and let it decide independence. A caller may only ever DOWNGRADE
+  // (isIndependent:false); it can never vouch a lab independent beyond what the registry verifies.
+  const lab = canonicalizeLabName(input.lab ?? "Janoshik Analytical");
+  const isIndependent = labCountsAsIndependent(lab) && input.isIndependent !== false;
   const id = newId("labtest");
   await db.query(
     `INSERT INTO lab_test_records
-       (id, lab, test_id, verify_url, verify_key, compound_slug, sample_name, manufacturer, vendor_slug, batch_code, purity_pct, measured_content, tested_at, test_type, is_blind, test_note, origin)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'live')
+       (id, lab, test_id, verify_url, verify_key, compound_slug, sample_name, manufacturer, vendor_slug, batch_code, purity_pct, measured_content, tested_at, test_type, is_blind, test_note, is_independent, origin)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,'live')
      ON CONFLICT (verify_url) DO UPDATE
        SET purity_pct = COALESCE(EXCLUDED.purity_pct, lab_test_records.purity_pct),
            measured_content = COALESCE(EXCLUDED.measured_content, lab_test_records.measured_content),
@@ -126,8 +134,9 @@ export async function recordLabTest(
            test_type = EXCLUDED.test_type,
            is_blind = lab_test_records.is_blind OR EXCLUDED.is_blind,
            test_note = COALESCE(EXCLUDED.test_note, lab_test_records.test_note),
+           is_independent = EXCLUDED.is_independent,
            updated_at = NOW()`,
-    [id, input.lab ?? "Janoshik Analytical", input.testId, input.verifyUrl, input.verifyKey ?? null, compoundSlug, input.sampleName, input.manufacturer, vendorSlug, input.batchCode ?? null, input.purityPct ?? null, input.measuredContent ?? null, input.testedAt ?? null, input.testType ?? "purity", input.isBlind ?? false, input.testNote ?? null],
+    [id, lab, input.testId, input.verifyUrl, input.verifyKey ?? null, compoundSlug, input.sampleName, input.manufacturer, vendorSlug, input.batchCode ?? null, input.purityPct ?? null, input.measuredContent ?? null, input.testedAt ?? null, input.testType ?? "purity", input.isBlind ?? false, input.testNote ?? null, isIndependent],
   );
   return { id, compoundSlug, vendorSlug };
 }
@@ -137,10 +146,10 @@ export interface LabTestRow {
   sample_name: string; manufacturer: string; vendor_slug: string | null; batch_code: string | null;
   purity_pct: string | number | null; measured_content: string | null; tested_at: string | null;
   janoshik_listed: boolean | null; janoshik_made_by: string | null; janoshik_checked_at: string | null;
-  test_type: string; is_blind: boolean; test_note: string | null;
+  test_type: string; is_blind: boolean; test_note: string | null; is_independent: boolean;
 }
 
-const LAB_TEST_COLS = `lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at,janoshik_listed,janoshik_made_by,janoshik_checked_at,test_type,is_blind,test_note`;
+const LAB_TEST_COLS = `lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at,janoshik_listed,janoshik_made_by,janoshik_checked_at,test_type,is_blind,test_note,is_independent`;
 
 export async function getLabTestsForCompound(db: SqlConnection, compoundSlug: string, limit = 12): Promise<LabTestRow[]> {
   return (await db.query<LabTestRow>(
@@ -154,4 +163,27 @@ export async function getLabTestsForVendor(db: SqlConnection, vendorSlug: string
     `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE vendor_slug = $1 ORDER BY is_blind DESC, updated_at DESC LIMIT $2`,
     [vendorSlug, limit],
   )).rows;
+}
+
+/**
+ * Reconcile every stored certificate against the lab registry: collapse split lab names to their
+ * canonical form and recompute is_independent from the registry's tiering. Idempotent; run after
+ * the registry changes or new rows land. Returns how many rows were corrected.
+ */
+export async function reconcileLabsFromRegistry(db: SqlConnection): Promise<{ renamed: number; independenceChanged: number }> {
+  const rows = (await db.query<{ verify_url: string; lab: string; is_independent: boolean }>(
+    `SELECT verify_url, lab, is_independent FROM lab_test_records`,
+  )).rows;
+  let renamed = 0, independenceChanged = 0;
+  for (const r of rows) {
+    const canon = canonicalizeLabName(r.lab);
+    const indep = labCountsAsIndependent(canon);
+    const nameChanged = canon !== r.lab;
+    const indepChanged = indep !== r.is_independent;
+    if (!nameChanged && !indepChanged) continue;
+    await db.query(`UPDATE lab_test_records SET lab=$1, is_independent=$2, updated_at=NOW() WHERE verify_url=$3`, [canon, indep, r.verify_url]);
+    if (nameChanged) renamed += 1;
+    if (indepChanged) independenceChanged += 1;
+  }
+  return { renamed, independenceChanged };
 }

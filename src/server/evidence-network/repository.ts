@@ -247,13 +247,18 @@ export interface BatchStandardRecord {
   declaredBatchCode: string;
   slug: string;
   status: string;
+  // 'vial-operated' = evidence from VIAL's own sampling/custody chain (demo passports);
+  // 'external-certificates' = aggregated independent third-party COAs VIAL did not sample or
+  // hold in custody. The two carry differently-shaped confidenceBasis objects — consumers should
+  // branch on evidenceType. External passports never assert regulatory-grade certainty.
+  evidenceType: "vial-operated" | "external-certificates";
   vendorId: string | null;
   productId: string | null;
   evidenceConfidence: number;
-  confidenceBasis: BatchConfidenceBasis;
+  confidenceBasis: Record<string, unknown>;
   dimensions: Record<string, unknown>;
   limitations: string[];
-  versions: { version: number; evidenceConfidence: number; samplingLevel: string; confidenceBasis: BatchConfidenceBasis; createdAt: string }[];
+  versions: { version: number; evidenceConfidence: number; samplingLevel: string; confidenceBasis: Record<string, unknown>; createdAt: string }[];
   provenanceUrl: string;
 }
 
@@ -272,13 +277,14 @@ export async function getBatchStandardRecord(vialBatchId: string, connection?: S
     declaredBatchCode: String(passport.declared_batch_code),
     slug: String(passport.slug),
     status: String(passport.status),
+    evidenceType: passport.origin === "live" ? "external-certificates" : "vial-operated",
     vendorId: (passport.vendor_id as string | null) ?? null,
     productId: (passport.product_id as string | null) ?? null,
     evidenceConfidence: Number(passport.evidence_confidence),
-    confidenceBasis: json<BatchConfidenceBasis>(passport.confidence_basis, {} as BatchConfidenceBasis),
+    confidenceBasis: json<Record<string, unknown>>(passport.confidence_basis, {}),
     dimensions: json<Record<string, unknown>>(passport.dimensions, {}),
     limitations: json<string[]>(passport.limitations, []),
-    versions: versions.map(v => ({ version: Number(v.version), evidenceConfidence: Number(v.evidence_confidence), samplingLevel: v.sampling_level, confidenceBasis: json<BatchConfidenceBasis>(v.confidence_basis, {} as BatchConfidenceBasis), createdAt: String(v.created_at) })),
+    versions: versions.map(v => ({ version: Number(v.version), evidenceConfidence: Number(v.evidence_confidence), samplingLevel: v.sampling_level, confidenceBasis: json<Record<string, unknown>>(v.confidence_basis, {}), createdAt: String(v.created_at) })),
     provenanceUrl: reg.provenance_url,
   };
 }
