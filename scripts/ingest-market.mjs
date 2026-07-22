@@ -14,6 +14,7 @@ import { detectVendorCoaFlags, writeVendorFlags } from "../src/server/verify/coa
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { recordVendorReview } from "../src/server/verify/vendor-reviews.ts";
+import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
   console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true.");
@@ -58,8 +59,10 @@ for (const v of shopify) {
       compounds: compoundRefs,
     });
     totalListings += r.imported.length;
+    await recordCollectorRun(db, { collector: "shopify", target: v.domain, items: r.imported.length, ok: true });
     console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched)`);
   } catch (e) {
+    await recordCollectorRun(db, { collector: "shopify", target: v.domain, items: 0, ok: false });
     console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
   }
 }
@@ -75,8 +78,10 @@ for (const v of woo) {
       compounds: compoundRefs,
     });
     totalListings += r.imported.length;
+    await recordCollectorRun(db, { collector: "woocommerce", target: v.domain, items: r.imported.length, ok: true });
     console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched)`);
   } catch (e) {
+    await recordCollectorRun(db, { collector: "woocommerce", target: v.domain, items: 0, ok: false });
     console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
   }
 }

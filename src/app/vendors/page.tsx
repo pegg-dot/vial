@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight, Building2, FileCheck2, Network, Factory, Store } from "lucide-react";
+import { ArrowRight, FileCheck2, Factory, Store } from "lucide-react";
 import Link from "next/link";
 import { vendorStatusLabel } from "@/lib/format";
 import { VendorMark } from "@/components/vendor-mark";
