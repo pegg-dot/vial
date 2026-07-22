@@ -18,7 +18,7 @@ function LivePassport({ p, basis, evidence }: { p: Record<string, unknown>; basi
       <div>
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-violet-700">Batch passport · Independent certificates</p>
         <h1 className="mt-3 text-5xl font-semibold tracking-[-.065em] sm:text-7xl">{String(p.declared_batch_code)}</h1>
-        <p className="mt-5 text-base text-black/55">{p.vendor_slug?<Link href={`/vendors/${String(p.vendor_slug)}`} className="font-semibold text-violet-700 hover:underline">{String(p.vendor_name)}</Link>:String(p.vendor_name||"Vendor not linked")} · {String(p.product_name||"Product not linked")}</p>
+        <p className="mt-5 text-base text-black/55">{p.vendor_slug?<Link href={`/vendors/${String(p.vendor_slug)}`} className="font-semibold text-violet-700 hover:underline">{String(p.vendor_name)}</Link>:String(p.vendor_name||"Vendor not linked")} · {p.compound_slug?<Link href={`/compounds/${String(p.compound_slug)}`} className="hover:underline">{String(p.product_name||p.compound_name)}</Link>:String(p.product_name||p.compound_name||"Compound not linked")}</p>
       </div>
       <div className="rounded-[24px] bg-[#111214] p-5 text-white"><p className="text-xs text-white/45">Evidence confidence</p><p className="mt-1 text-4xl font-semibold">{Math.round(Number(p.evidence_confidence)*100)}%</p><p className="mt-2 text-xs text-white/45">Not a safety score</p></div>
     </div>

@@ -59,15 +59,38 @@ export async function getPublications(limit = 40): Promise<PublicPublication[]> 
 
 export async function getEvidenceLibraryStats() {
   const db = await getDatabase();
+  // The real "lab reports" are the independent certificates (lab_test_records), not listing-level
+  // report metadata (which live listings never populate — that's why this used to read all zeros).
   const result = await db.query<QueryResultRow & {
     reports: string | number; confirmed: string | number; linked: string | number; issuers: string | number; stale: string | number;
   }>(`SELECT
-      COUNT(*) FILTER (WHERE report_date <> '' AND report_date <> 'Not recorded') AS reports,
-      COUNT(*) FILTER (WHERE report_confirmed = TRUE) AS confirmed,
-      COUNT(*) FILTER (WHERE batch_linked = TRUE) AS linked,
-      COUNT(DISTINCT NULLIF(report_issuer, '')) AS issuers,
-      COUNT(*) FILTER (WHERE evidence_level = 'stale') AS stale
-    FROM listings`);
+      COUNT(*) AS reports,
+      COUNT(*) FILTER (WHERE is_independent = TRUE) AS confirmed,
+      COUNT(*) FILTER (WHERE batch_code IS NOT NULL AND batch_code <> '') AS linked,
+      COUNT(DISTINCT lab) AS issuers,
+      COUNT(*) FILTER (WHERE tested_at IS NULL OR tested_at = '') AS stale
+    FROM lab_test_records`);
   const row = result.rows[0];
   return { reports: Number(row?.reports ?? 0), confirmed: Number(row?.confirmed ?? 0), linked: Number(row?.linked ?? 0), issuers: Number(row?.issuers ?? 0), stale: Number(row?.stale ?? 0) };
+}
+
+/** How the certificates we hold were sampled — the blind vs vendor-submitted split that actually
+ *  matters for trust. Customer-sealed and multi-source models don't apply to aggregated COAs. */
+export async function getSamplingStats(): Promise<{ total: number; blind: number; vendorSelected: number; passports: number }> {
+  const db = await getDatabase();
+  const r = (await db.query<QueryResultRow & { total: string | number; blind: string | number; passports: string | number }>(
+    `SELECT (SELECT COUNT(*) FROM lab_test_records) total,
+            (SELECT COUNT(*) FROM lab_test_records WHERE is_blind) blind,
+            (SELECT COUNT(*) FROM batch_passports WHERE origin='live' AND status='published') passports`,
+  )).rows[0];
+  const total = Number(r?.total ?? 0), blind = Number(r?.blind ?? 0);
+  return { total, blind, vendorSelected: total - blind, passports: Number(r?.passports ?? 0) };
+}
+
+/** Distinct laboratories named on the certificates we hold, with how many each issued. */
+export async function getObservedIssuers(): Promise<{ lab: string; count: number }[]> {
+  const db = await getDatabase();
+  return (await db.query<QueryResultRow & { lab: string; n: string | number }>(
+    `SELECT lab, COUNT(*) n FROM lab_test_records WHERE lab IS NOT NULL AND lab <> '' GROUP BY lab ORDER BY n DESC`,
+  )).rows.map((r) => ({ lab: r.lab, count: Number(r.n) }));
 }
