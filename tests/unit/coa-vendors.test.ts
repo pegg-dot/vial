@@ -23,6 +23,14 @@ describe("COA vendor derivation", () => {
     expect(cleanVendorString("  ")).toBeNull();
   });
 
+  it("scrubs Cloudflare email-protection artifacts and contact tails out of the name", () => {
+    expect(cleanVendorString("ReinzielBiotech Email: [email&#160;protected]")).toMatchObject({ name: "ReinzielBiotech", slug: "reinzielbiotech" });
+    expect(cleanVendorString("HTRA Peptides [email protected]")).toMatchObject({ slug: "htra-peptides" });
+    expect(cleanVendorString("Meipeptide WhatsApp: +8613800000000")).toMatchObject({ slug: "meipeptide" });
+    // A string that is ONLY contact cruft resolves to nothing, not a junk vendor.
+    expect(cleanVendorString("Email: [email protected]")).toBeNull();
+  });
+
   it("only treats domain-or-keyword strings as vendors", () => {
     expect(looksLikeVendor({ name: "Cocer Peptides", slug: "cocer-peptides" })).toBe(true);
     expect(looksLikeVendor({ name: "Alpha", slug: "alpha", domain: "alpha.com" })).toBe(true);

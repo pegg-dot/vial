@@ -56,6 +56,18 @@ describe("live batch passport projection", () => {
     expect(new Set(evid.map((e) => e.lab))).toEqual(new Set(["Janoshik Analytical", "MZ Biolabs"]));
   });
 
+  it("holds the cross-surface invariants: no empty passports, only independent evidence, no orphan registry ids", async () => {
+    const db = await getDatabase();
+    const { projectEvidenceRegistry } = await import("@/server/registry/repository");
+    await projectLiveBatchPassports(db);
+    await projectEvidenceRegistry(db);
+    const inv = async (sql: string) => Number((await db.query<{ n: string | number }>(sql)).rows[0].n);
+    expect(await inv(`SELECT COUNT(*) n FROM batch_passports bp WHERE origin='live' AND NOT EXISTS(SELECT 1 FROM passport_lab_tests p WHERE p.passport_id=bp.id)`)).toBe(0);
+    expect(await inv(`SELECT COUNT(*) n FROM passport_lab_tests plt JOIN lab_test_records t ON t.id=plt.lab_test_id WHERE t.is_independent=FALSE`)).toBe(0);
+    expect(await inv(`SELECT COUNT(*) n FROM batch_passports bp WHERE origin='live' AND NOT EXISTS(SELECT 1 FROM registry_identifiers r WHERE r.source_entity_id=bp.id AND r.entity_type='batch')`)).toBe(0);
+    expect(await inv(`SELECT COUNT(*) n FROM registry_identifiers r WHERE r.entity_type='batch' AND NOT EXISTS(SELECT 1 FROM batch_passports bp WHERE bp.id=r.source_entity_id)`)).toBe(0);
+  });
+
   it("prunes a live passport once its evidence stops qualifying", async () => {
     const db = await getDatabase();
     // LOT-B's only certificate becomes non-independent → its passport must be removed, not linger.

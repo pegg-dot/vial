@@ -45,6 +45,16 @@ export function cleanVendorString(raw: string): DerivedVendor | null {
   let s = (raw ?? "").trim();
   if (!s) return null;
 
+  // Scrub contact cruft that rides along in COA "client" strings: Cloudflare email-obfuscation
+  // artifacts ("[email protected]", "__cf_email__", HTML entities) and any "Email:"/"Contact:"
+  // tail. Left unscrubbed these leak into vendor names/slugs (e.g. "…-email-email-160-protected").
+  s = s.replace(/\[email(?:&#160;|&nbsp;|\s)*protected\]/gi, " ")
+       .replace(/__cf_email__/gi, " ")
+       .replace(/&#\d+;|&nbsp;/gi, " ")
+       .replace(/\b(e-?mail|contact|tel|phone|whatsapp|wechat|telegram)\s*[:：].*/gi, " ")
+       .replace(/\s+/g, " ").trim();
+  if (!s) return null;
+
   // Pull a domain if one is present (full URL or a bare hostname).
   let domain: string | undefined;
   const url = s.match(/https?:\/\/([^\s/|,，)]+)/i);
