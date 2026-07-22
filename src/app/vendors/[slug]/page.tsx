@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, BadgeCheck, Building2, CheckCircle2, ChevronDown, CircleDashed, Clock3, Layers, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Building2, Clock3, Layers, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
 import { getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
-import { getVendorReputationBySlug, type ReputationDimension } from "@/server/reputation/repository";
+import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { vendorStatusLabel } from "@/lib/format";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
@@ -22,6 +22,9 @@ import { VendorFlagsBanner } from "@/components/vendor-flags-banner";
 import { getVendorFlags } from "@/server/verify/coa-integrity";
 import { VendorLinksPanel } from "@/components/vendor-links-panel";
 import { getVendorLinks } from "@/server/verify/vendor-linkage";
+import { VendorReputationTiles } from "@/components/vendor-reputation-tiles";
+import { VendorReviewsPanel } from "@/components/vendor-reviews-panel";
+import { getVendorReview } from "@/server/verify/vendor-reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +42,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug))]);
+  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
   const verdict = verdictForVendorSlug(slug);
@@ -92,12 +95,14 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/[.045] px-3 py-1 text-[11px] font-semibold text-black/55"><Layers className="size-3" /> methodology {reputation.methodologyVersion}</span>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {reputation.dimensions.map((d) => <ReputationTile key={d.key} dimension={d} />)}
+          <div className="mt-6">
+            <VendorReputationTiles dimensions={reputation.dimensions} />
           </div>
           <p className="mt-5 max-w-3xl text-xs leading-5 text-[var(--muted)]">Each answer stands on its own and cites its source. Where we don&rsquo;t have the evidence, it says unknown — we never invent a number or blend everything into one score.</p>
         </section>
       )}
+
+      {vendorReview && <VendorReviewsPanel review={vendorReview} />}
 
       <VendorLinksPanel links={vendorLinks} vendorName={vendor.name} />
 
@@ -139,59 +144,6 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   );
 }
 
-const PLAIN_DIMENSION_LABELS: Record<string, string> = {
-  identity_claim: "Who they are",
-  documentation_currency: "Lab tests current?",
-  evidence_corroboration: "Independently tested?",
-  operational_reliability: "Track record shipping",
-  community_signal: "What buyers say",
-  open_risk_flags: "Scam & red flags",
-};
-
-// What each status word actually means — the thing a first-time reader can't infer.
-const STATUS_MEANING: Record<string, string> = {
-  established: "We hold direct evidence for this, shown above with its source. It's a fact we can point to — not a rating we assigned.",
-  unknown: "We have no evidence for this yet. “Unknown” is not a mark against the vendor — it means the data is simply absent, and we refuse to invent a number to fill the gap.",
-  disputed: "The evidence here conflicts with itself. That's a genuine reason for caution, and we show it rather than smoothing it over.",
-};
-
-// Plain-English name for where a dimension's evidence comes from.
-const PROVENANCE_LABELS: Record<string, string> = {
-  lab_test_records: "Independent third-party lab certificates",
-  batch_passport: "Published batch passports",
-  organization: "The vendor's observed public profile",
-  seller_analytics_daily: "Storefront fulfilment analytics",
-  marketplace_reviews: "Verified-purchase buyer reviews",
-  fraud_cases: "Fraud & abuse case records",
-};
-
-function ReputationTile({ dimension }: { dimension: ReputationDimension }) {
-  const tone = dimension.status === "established"
-    ? { chip: "bg-emerald-50 text-emerald-800", Icon: CheckCircle2, iconClass: "text-emerald-700", card: "border-black/[.07] bg-white" }
-    : dimension.status === "disputed"
-    ? { chip: "bg-amber-50 text-amber-800", Icon: AlertTriangle, iconClass: "text-amber-700", card: "border-amber-200 bg-amber-50" }
-    : { chip: "bg-black/[.05] text-black/55", Icon: CircleDashed, iconClass: "text-black/35", card: "border-dashed border-black/15 bg-black/[.015]" };
-  const source = PROVENANCE_LABELS[dimension.provenance.sourceType] ?? dimension.provenance.sourceType;
-  return (
-    <details className={`group rounded-[26px] border p-5 ${tone.card}`}>
-      <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">{PLAIN_DIMENSION_LABELS[dimension.key] ?? dimension.label}</h3>
-          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${tone.chip}`}><tone.Icon className={`size-3 ${tone.iconClass}`} />{dimension.status}</span>
-        </div>
-        <p className="mt-3 text-lg font-semibold tracking-[-.02em]">{dimension.value}</p>
-        <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{dimension.basis}</p>
-        <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-black/45 transition group-open:text-black/70">
-          <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" /> <span className="group-open:hidden">What does &ldquo;{dimension.status}&rdquo; mean?</span><span className="hidden group-open:inline">Hide</span>
-        </span>
-      </summary>
-      <div className="mt-3 border-t border-black/[.08] pt-3">
-        <p className="text-xs leading-6 text-black/65"><span className="font-semibold uppercase tracking-wide text-black/70">{dimension.status}</span> — {STATUS_MEANING[dimension.status] ?? ""}</p>
-        <p className="mt-2 text-[11px] leading-5 text-black/45">Source: {source}.{dimension.provenance.url ? " Follow the evidence below." : ""}</p>
-      </div>
-    </details>
-  );
-}
 
 function VendorStat({ icon: Icon, value, label }: { icon: React.ComponentType<{ className?: string }>; value: string; label: string }) {
   return (

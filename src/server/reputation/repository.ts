@@ -117,16 +117,20 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     ? { key: "operational_reliability", label: "Operational reliability", status: "established", value: `${Math.round(Number(analytics.fulfillment_on_time_rate) * 100)}% on-time · ${(Number(analytics.refund_rate) * 100).toFixed(1)}% refunds`, numericValue: Number(analytics.fulfillment_on_time_rate), basis: "Fulfillment and refund rates observed from the vendor's participating storefront analytics.", provenance: { sourceType: "seller_analytics_daily", sourceId: seller.id } }
     : { key: "operational_reliability", label: "Operational reliability", status: "unknown", value: "Not a participating storefront", basis: "This vendor does not operate a participating storefront with observed fulfillment analytics, so operational reliability is not established.", provenance: { sourceType: "seller_analytics_daily" } });
 
-  // Community signal — moderated, verified-purchase reviews on this vendor's listings.
-  const reviews = (await db.query<QueryResultRow & { n: string | number; product: string | number; shipping: string | number; documentation: string | number }>(
-    `SELECT COUNT(*) n,AVG(product_rating) product,AVG(shipping_rating) shipping,AVG(documentation_rating) documentation
-     FROM marketplace_reviews mr JOIN listings l ON l.id=mr.listing_id JOIN products p ON p.id=l.product_id
-     WHERE p.vendor_id=$1 AND mr.moderation_status='approved' AND mr.verified_purchase=TRUE`, [org.id],
+  // Community signal — what real buyers report, gathered from the open web (Reddit, forums,
+  // Trustpilot complaints, scam/DOJ reports) and weighted by the community's own asymmetry:
+  // specific failure reports and independent lab results count far above cheap praise.
+  const gathered = (await db.query<QueryResultRow & { sentiment: string; summary: string; review_volume: string; confidence: string }>(
+    `SELECT sentiment, summary, review_volume, confidence FROM vendor_reviews WHERE vendor_slug=$1`, [org.slug],
   )).rows[0];
-  const reviewCount = Number(reviews?.n ?? 0);
-  dimensions.push(reviewCount > 0
-    ? { key: "community_signal", label: "Community signal", status: "established", value: `${reviewCount} verified · product ${Number(reviews!.product).toFixed(1)} · shipping ${Number(reviews!.shipping).toFixed(1)} · docs ${Number(reviews!.documentation).toFixed(1)}`, numericValue: reviewCount, basis: "Moderated, verified-purchase reviews kept as separate product, shipping, and documentation ratings.", provenance: { sourceType: "marketplace_reviews" } }
-    : { key: "community_signal", label: "Community signal", status: "unknown", value: "No verified reviews", basis: "No moderated, verified-purchase reviews are recorded for this vendor's listings.", provenance: { sourceType: "marketplace_reviews" } });
+  if (gathered && gathered.sentiment !== "unknown") {
+    const sent = gathered.sentiment;
+    const status: DimensionStatus = sent === "positive" ? "established" : "disputed";
+    const label = sent === "positive" ? "Mostly positive" : sent === "mixed" ? "Mixed reports" : sent === "negative" ? "Mostly negative" : sent === "scam" ? "Scam / fraud reports" : "Reported";
+    dimensions.push({ key: "community_signal", label: "Community signal", status, value: `${label} · ${gathered.review_volume} volume · ${gathered.confidence} confidence`, basis: gathered.summary, provenance: { sourceType: "community_mentions", url: `/vendors/${org.slug}` } });
+  } else {
+    dimensions.push({ key: "community_signal", label: "Community signal", status: "unknown", value: "No buyer reviews found", basis: "We searched the open web for buyer reviews and reputation reports for this vendor and found nothing substantive yet.", provenance: { sourceType: "community_mentions" } });
+  }
 
   // Open risk flags — ONLY genuine adverse findings (fraud/abuse cases). Curator
   // opportunity signals (e.g. "vendor evidence gap") are informational market-structure

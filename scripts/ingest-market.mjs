@@ -12,6 +12,7 @@ import { deriveCoaVendors } from "../src/server/ingest/coa-vendors.ts";
 import { detectVendorCoaFlags, writeVendorFlags } from "../src/server/verify/coa-integrity.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
+import { recordVendorReview } from "../src/server/verify/vendor-reviews.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
   console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true.");
@@ -167,6 +168,14 @@ for (const l of liveListings) await recordPriceObservation(db, { listingSlug: l.
 let rebuilt = 0;
 for (const l of liveListings) { if ((await rebuildListingPriceHistory(db, l.slug)) > 0) rebuilt += 1; }
 console.log(`\nRecorded ${liveListings.length} price observations · rebuilt ${rebuilt} listing price trails.`);
+
+// Gathered buyer reviews & reputation (open-web, verification-weighted).
+const reviewFile = new URL("vendor-reviews.json", DATA);
+if (existsSync(reviewFile)) {
+  const reviews = readJson("vendor-reviews.json");
+  for (const r of reviews) await recordVendorReview(db, r);
+  console.log(`\nRecorded buyer reviews for ${reviews.length} vendors.`);
+}
 
 // Rebuild the operator-linkage graph from COA lots + upstream manufacturers (+ any web
 // fingerprints collected separately) — which "independent" storefronts are one operator/source.

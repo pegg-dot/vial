@@ -1,0 +1,566 @@
+[
+ {
+  "vendorSlug": "bluum-peptides",
+  "sentiment": "positive",
+  "summary": "A newer, low-footprint vendor with only ~27 Trustpilot reviews (4-star) that are mostly positive on quick shipping and quality, but there is no r/Peptides, MESO-Rx, or Finnrick community-lab presence to independently verify it. Praise is generic and thin; there are no scam, non-ship, or underdosing reports.",
+  "positives": [
+   "Fast shipping reported (order Mon, arrive Wed)",
+   "Posts third-party COAs / claims HPLC purity",
+   "Responsive to product questions per some reviews"
+  ],
+  "redFlags": [
+   "No community verification at all (no r/Peptides, MESO-Rx, or Finnrick data)",
+   "Very new with pre-launch/stock-photo website flagged by a reviewer",
+   "Reviewer had to email twice to get basic reconstitution documentation",
+   "Low review volume makes generic praise hard to trust"
+  ],
+  "sources": [
+   "Trustpilot",
+   "Scamadviser",
+   "ProvenExpert"
+  ],
+  "reviewVolume": "sparse",
+  "confidence": "low"
+ },
+ {
+  "vendorSlug": "ascension-peptides",
+  "sentiment": "positive",
+  "summary": "Widely cited as the most-recommended US vendor on r/Peptides in 2026, with a 4.8 Trustpilot (88+ reviews), publicly downloadable COAs, and third-party lab testing (MZ Biolabs / SafeCert). Buyers repeatedly praise responsive support and fast domestic shipping, with no meaningful underdosing or scam reports.",
+  "positives": [
+   "Frequently the top community-recommended source in 2026",
+   "Public COA library (~75 records) with 99%+ purity",
+   "Third-party lab verification (MZ Biolabs, SafeCert)",
+   "Fast US shipping; support resolves shipping issues without pushback"
+  ],
+  "redFlags": [
+   "Minimal independent Finnrick sample count (below rating threshold) despite own-lab COAs",
+   "Short track record (founded 2024)"
+  ],
+  "sources": [
+   "r/Peptides",
+   "Trustpilot",
+   "Finnrick",
+   "SEO vendor-review blogs"
+  ],
+  "reviewVolume": "heavy",
+  "confidence": "high"
+ },
+ {
+  "vendorSlug": "eternal-peptides",
+  "sentiment": "positive",
+  "summary": "Has real independent Finnrick community-lab testing with several batches graded high, and reddit buyers cite it as a reliable US source with repeat purchases. Quality is dispersed rather than uniform, with repeated sub-99.5% purity noted on BPC-157 and Semaglutide, plus a few minor customer-service complaints.",
+  "positives": [
+   "Independent Finnrick testing with several 'A/Great' batch grades",
+   "Repeat buyers report consistent results",
+   "Publishes third-party lab reports (purity, endotoxin, sterility)"
+  ],
+  "redFlags": [
+   "Repeated sub-99.5% purity on BPC-157 and Semaglutide batches",
+   "Isolated complaints of customer-service delays and loyalty-point glitches"
+  ],
+  "sources": [
+   "Finnrick",
+   "r/Peptides",
+   "SEO vendor-review blogs",
+   "Scamadviser"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "core-peptides",
+  "sentiment": "positive",
+  "summary": "A long-established, high-volume vendor with a 4.7 Trustpilot (many pages of reviews) and multi-year repeat buyers who report consistent quality and proactive support (reshipments/credits). Most negative reviews are carrier-delay issues rather than product quality; a reported ~9.4 Finnrick score comes from SEO blogs and is only medium-trust.",
+  "positives": [
+   "4.7 Trustpilot with high volume and 2+ year repeat customers",
+   "Fast, accurate shipping and responsive support with reshipments/credits",
+   "Focused peptide-only catalog; consistent quality reported"
+  ],
+  "redFlags": [
+   "Most low-star complaints are shipping-carrier delays, not product",
+   "Lookalike scam domains (.ca/.in) cause buyer confusion",
+   "Direct r/Peptides / MESO-Rx footprint thinner than its Trustpilot volume"
+  ],
+  "sources": [
+   "Trustpilot",
+   "Finnrick (via SEO blogs)",
+   "SEO vendor-review blogs"
+  ],
+  "reviewVolume": "heavy",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "biotech-peptides",
+  "sentiment": "mixed",
+  "summary": "An established vendor with mostly-positive Trustpilot logistics reviews, but carrying real buyer-side red flags: it publishes no third-party lab testing/COAs, and specific complaints report ineffective/underdosed Semaglutide and suspected ingredient-switching on reorders (worked the first time, did nothing after). A fraudulent biotechpeptides.ca clone (Interac exit-scam) adds confusion.",
+  "positives": [
+   "Fast shipping and many accepted payment methods",
+   "Wide catalog; synthesizes/lyophilizes in-house per company claims",
+   "Numerous positive Trustpilot reviews on service/logistics"
+  ],
+  "redFlags": [
+   "No third-party testing data or COAs published (transparency gap)",
+   "Specific report: Semaglutide produced no side effects and no results (suspected underdosed)",
+   "Suspected ingredient-switching after first order (later batches 'did nothing' at higher doses)",
+   "Complaint of money taken with no refund and poor support",
+   "Fraudulent lookalike domain biotechpeptides.ca running an exit-scam"
+  ],
+  "sources": [
+   "Trustpilot",
+   "MuscleChemistry forum",
+   "Scamadviser",
+   "SEO vendor-review blogs"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "swiss-chems",
+  "sentiment": "mixed",
+  "summary": "Established vendor with a decent Trustpilot aggregate (~4.2) and many satisfied buyers, but a persistent thread of specific, credible fulfillment complaints: orders never shipped (e.g. a $341 HMG order never sent, an 8-month refund wait, ghosted emails, 'should be called swisscams' no-tracking/no-item), rude CS that lied about shipping, plus scattered purity/COA-rigor questions. Not a scam, but real non-delivery and refund-battle reports drag it down.",
+  "positives": [
+   "Long-standing vendor with a large review base and a solid ~4.2 Trustpilot aggregate",
+   "Ships real product with COAs; longtime users report adequate results on core compounds",
+   "CS often answers within 24h on business days"
+  ],
+  "redFlags": [
+   "Multiple specific Trustpilot reports of orders never arriving and refunds not honored (e.g. $341 HMG never sent; 8-month refund wait; ghosted after refund promised)",
+   "CS accused of lying about items already being shipped when they weren't",
+   "Questions about COA specificity / third-party testing rigor; one SEO-blog claim of a batch testing <27% pure (unverified, low-trust source)"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/swisschems.is",
+   "https://www.trustpilot.com/review/swisschems.io",
+   "https://peptidepick.com/swisschems-review/",
+   "https://www.peptidedeck.com/blog/swisschems-peptide-review"
+  ],
+  "reviewVolume": "heavy",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "sports-technology-labs",
+  "sentiment": "positive",
+  "summary": "Broadly positive reputation as a legit SARMs/peptides source: ~decade in business, batch-specific COAs posted publicly (referenced to Janoshik / American Laboratories / Colmaric depending on source) showing 98%+ purity, and no surfaced reports of bunk or underdosed product. Note that most write-ups are affiliate/SEO blogs, so weight the clean absence of specific failure reports more than the praise.",
+  "positives": [
+   "Publicly posted, recent, batch-specific COAs indicating 98%+ purity",
+   "~10+ years operating with no major controversy; incorporation and physical office confirmed",
+   "Community feedback praises potency, transparency and fast shipping; no bunk-product reports found"
+  ],
+  "redFlags": [
+   "Most favorable coverage comes from affiliate/discount-code SEO blogs (praise should be discounted)",
+   "Sources disagree on which lab does the testing (Janoshik vs American Laboratories vs Colmaric) — minor transparency inconsistency"
+  ],
+  "sources": [
+   "https://sportstechnologylabs.com/coas/",
+   "https://insidebodybuilding.com/sports-technology-labs-review/",
+   "https://www.musclechemistry.com/forums/threads/sports-technology-labs-review.116195/",
+   "https://sarms.io/sports-technology-labs-review/"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "simple-peptide",
+  "sentiment": "mixed",
+  "summary": "Thin but generally favorable signal: high Trustpilot aggregate (~4.7) and praise for fast shipping and order reliability, with occasional complaints about consistency and CS responsiveness. Caveat: it's a newer, heavily-marketed brand and the trustworthy/independent evidence (community COA posts, forum verification) is sparse, so the high rating should be discounted rather than taken at face value.",
+  "positives": [
+   "High Trustpilot aggregate (~4.7)",
+   "Repeated praise for fast shipping and order reliability",
+   "Broad product lineup; no specific scam or bunk-batch reports surfaced"
+  ],
+  "redFlags": [
+   "Newer vendor with aggressive marketing / heavy social presence — high star average may be inflated",
+   "Little independent community or COA-linked verification found; most sources are the vendor's Trustpilot page and SEO blogs",
+   "Scattered complaints about product consistency and customer-service responsiveness"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/categories/research_and_product_development",
+   "https://www1.magellanrx.com/vendors/simple-peptide/"
+  ],
+  "reviewVolume": "sparse",
+  "confidence": "low"
+ },
+ {
+  "vendorSlug": "loti-labs",
+  "sentiment": "mixed",
+  "summary": "A real, years-old vendor with genuinely good shipping speed and responsive customer service, but weighed down by specific, high-credibility quality failures: bloodwork-verified bunk/underdosed T3 (users' T3 levels didn't rise), a wrong-product shipment (Oxytocin sent instead of TB-500) that CS never corrected, and empty/no-vacuum vials. The label-vs-vial mismatches and self-funded bloodwork reports carry real weight.",
+  "positives": [
+   "Fast shipping with USPS tracking; generally responsive customer service",
+   "Established US (Florida) vendor operating for years with many positive reviews",
+   "Offers a satisfaction/money-back guarantee (on unopened product)"
+  ],
+  "redFlags": [
+   "Multiple reports of bunk/underdosed T3 confirmed by users' own bloodwork (T3 levels stayed in normal range)",
+   "Wrong product shipped (Oxytocin instead of TB-500) with no CS correction after photos sent; BPC-157 vial with no vacuum",
+   "Refunds only on unopened product; label-does-not-match-vial concerns; testing/transparency gaps vs top-tier vendors"
+  ],
+  "sources": [
+   "https://www.eroids.com/reviews/lab/loti-labs",
+   "https://www.peptides.org/loti-labs-review/",
+   "https://www.reviews.io/company-reviews/store/lotilabs-com",
+   "https://www.thepeptidereport.com/loti-labs-review-are-they-trustworthy/"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "limitless-life-nootropics",
+  "sentiment": "mixed",
+  "summary": "Heavily reviewed and sometimes community-recommended for selection, but carries serious specific red flags: a SEMAX vial weighed on a certified scale at 0.01mg vs a labeled 30mg, empty bottles, unanswered support over a month, product-by-product potency inconsistency (BPC-157 fine, CJC-1295/Ipamorelin low), no named lab partner, and allegations the owner solicited positive reviews via promo codes to bury negatives. Trustpilot sits ~3.0-3.7 with BBB complaints. Legit storefront, but underdosing and review-manipulation signals pull it toward negative.",
+  "positives": [
+   "Large review base; frequently recommended on Reddit for curated selection",
+   "Some buyers report potent product with quickly-noticed effects (e.g. BPC-157 scored well in coverage)",
+   "Claims third-party testing with COAs available"
+  ],
+  "redFlags": [
+   "Certified-scale-verified underdose: SEMAX vial ~0.01mg vs labeled 30mg; reports of empty bottles",
+   "Support non-response (unanswered for 30+ days), BBB complaints on payment/shipping/efficacy",
+   "Allegations of buying positive reviews via promo codes to suppress negatives; no named lab partner; potency varies by compound (CJC-1295/Ipamorelin scored low)"
+  ],
+  "sources": [
+   "https://www.bbb.org/us/fl/gulf-breeze/profile/biochemicals/limitless-life-nootropics-0683-90076670/complaints",
+   "https://www.trustpilot.com/review/limitlesslifenootropics.com",
+   "https://peptideexaminer.com/vendors/limitless-life-nootropics/",
+   "https://www.smartcustomer.com/reviews/limitlesslifenootropics.com"
+  ],
+  "reviewVolume": "heavy",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "purerawz",
+  "sentiment": "mixed",
+  "summary": "Carries a moderately positive community reputation for testing transparency and a deep catalog, but is dragged down by a steady stream of specific non-delivery and support complaints. Not a clear scam, but real quality-control and fulfillment risk.",
+  "positives": [
+   "Reddit threads (2024-2025) place it among more-trusted US domestic vendors for testing transparency/COAs",
+   "Deep catalog (peptides, SARMs, nootropics, GLP-1); many report fast, properly-labeled shipments"
+  ],
+  "redFlags": [
+   "PissedConsumer + Trustpilot reports of orders never arriving and fake/never-picked-up tracking numbers",
+   "Specific dosing complaint: LGD-4033 (4033) overdosed and MK-677 (677) underdosed",
+   "Unresponsive customer service on quality inquiries (multi-day delays)",
+   "Scamadviser flags caution; scam-detector medium trust (~58.5). A dedicated hit-piece domain (purerawzreview.com) exists but reads like a competitor SEO attack, discounted"
+  ],
+  "sources": [
+   "https://purerawz.pissedconsumer.com/review.html",
+   "https://www.trustpilot.com/review/purerawz.com?page=3",
+   "https://www.scamadviser.com/check-website/purerawz.co",
+   "https://dailyvial.com/article/best-peptide-sources-reddit",
+   "https://learnmuscles.com/blog/2026/05/26/purerawz-review-is-it-legit-heres-what-real-customers-say/"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "paradigm-peptides",
+  "sentiment": "scam",
+  "summary": "Owner Matthew Kawa and employee Jennifer Stechkober pled guilty to federal charges (Dec 10, 2025, N.D. Indiana) after investigators found products sold as SARMs actually contained testosterone, a controlled substance. High Trustpilot star ratings are misleading given a confirmed criminal fraud.",
+  "positives": [
+   "Prior to the bust, years of largely positive Trustpilot reviews (4.7 stars) and repeat-customer praise for service (now discredited context)"
+  ],
+  "redFlags": [
+   "DOJ-confirmed guilty plea (Dec 10, 2025); products advertised as SARMs contained testosterone (a controlled substance); products were unapproved new drugs under the FDCA",
+   "Buyers Apr 2019-Mar 2024 treated as victims by the government; sentencing set for Jun 3, 2026 (South Bend, Judge Brisco)",
+   "Bitcoin 'financial release' fee complaints; denying receipt of crypto payments even with receipts",
+   "Third-party lab results were advertised but not fully public"
+  ],
+  "sources": [
+   "https://www.justice.gov/usao-ndin/united-states-v-matthew-kawa",
+   "https://www.justice.gov/usao-ndin/case/us-v-matthew-kawa-et-al",
+   "https://www.theironden.com/forum/threads/paradigm-peptides-busted.46455/",
+   "https://titratelab.com/research/peptide-vendor-graveyard",
+   "https://www.trustpilot.com/review/paradigmpeptides.com"
+  ],
+  "reviewVolume": "heavy",
+  "confidence": "high"
+ },
+ {
+  "vendorSlug": "modern-aminos",
+  "sentiment": "positive",
+  "summary": "Largely positive reception driven by QR-code/batch-level COA verification, fast shipping, and a heavy volume of favorable Trustpilot reviews; Scamadviser rates it legit. Caveat: praise is concentrated on Trustpilot (a lower-trust source than community forums) with thin independent r/Peptides corroboration, so confidence is only moderate.",
+  "positives": [
+   "Per-vial QR code linking to batch-level COA; HPLC purity, identity, and microbial/endotoxin testing claimed",
+   "68+ pages of mostly positive Trustpilot reviews citing fast shipping and consistency; Scamadviser reports legit/safe"
+  ],
+  "redFlags": [
+   "Positive signal is Trustpilot-heavy (community-trust logic ranks this below forum/COA-linked reports); little independent r/Peptides bloodwork verification surfaced",
+   "At least one isolated customer report of underdosed/ineffective product (weight loss stalled after switching source)",
+   "An Instagram post warns of a fake/impersonator '@modern.aminos' account, an authenticity/scam-clone risk for buyers"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/modernaminos.com?page=4",
+   "https://modernaminos.com/quality-assurance-program/",
+   "https://www.scamadviser.com/check-website/modernaminos.com",
+   "https://biohackinguni.com/is-modern-aminos-legit-2024/",
+   "https://www.instagram.com/reel/DLIzgItRpp4/"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "behemoth-labz",
+  "sentiment": "mixed",
+  "summary": "Publishes third-party COAs from a real named lab (Colmaric Analyticals) often showing >99% purity, and many customers report good products; but there is a recurring cluster of specific failure reports (bad/particulate vials, non-delivery, refused refunds). Net: legitimate testing story undercut by fulfillment and QC complaints.",
+  "positives": [
+   "Third-party COAs via Colmaric Analyticals (Goodlettsville, TN), frequently >99% purity, published on-site",
+   "Many positive Trustpilot reports (e.g., SS-31, BPC-157) noting fast arrival and good packaging; email support usually <24h"
+  ],
+  "redFlags": [
+   "Specific product-failure report: AOD-9604 vial arrived murky/full of particles that would not reconstitute",
+   "Non-delivery complaints with tracking stuck 'awaiting pickup' for weeks; some report being scammed and refused refunds (blame shifted to shipper)",
+   "A chunk of the glowing 'reviews' are affiliate SEO blogs pushing discount codes (e.g., INSIDE10), discounted as shill praise"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/www.behemothlabz.com",
+   "https://www.trustpilot.com/review/www.behemothlabz.com?page=3",
+   "https://muscleandbrawn.com/sarms/behemoth-labz-review/",
+   "https://insidebodybuilding.com/behemoth-labz-review/"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "umbrella-labs",
+  "sentiment": "mixed",
+  "summary": "Historically one of the more community-trusted US domestic SARMs/peptide sources (cited on r/sarmssourcetalk) with published COAs, but 2025-2026 reports describe an operational collapse: chronic out-of-stock, unshipped orders, and unresponsive support. Reputable in the past; currently unreliable and possibly winding down.",
+  "positives": [
+   "Long-standing domestic reputation; frequently cited on r/PeptideResearch / r/sarmssourcetalk as a legit option in earlier years",
+   "Published third-party quality-assurance documentation (COAs) and a broad catalog"
+  ],
+  "redFlags": [
+   "2025-2026 community reports: products out of stock for extended periods, orders unshipped 1-2 weeks, unresolved disputes",
+   "Reduced customer-support responsiveness; researchers actively migrating to alternatives",
+   "No formal closure announced but operations clearly disrupted. Note the 'gone?' framing originates from a competitor (Iron Peak) selling an alternative, motive discounted, but the decline is corroborated across sources"
+  ],
+  "sources": [
+   "https://ironpeakpeptides.com/umbrella-labs-review-alternative-2026/",
+   "https://www.barchart.com/story/news/29385297/explore-a-new-era-in-research-with-sarms-and-peptides-from-umbrella-labs",
+   "https://markets.financialcontent.com/stocks/article/pressadvantage-2025-2-28-umbrella-labs-introduces-a-comprehensive-peptide-and-sarms-collection-for-researchers"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "blue-sky-peptide",
+  "sentiment": "mixed",
+  "summary": "Established, fast-shipping US vendor that publishes COAs, but multiple Reddit and Trustpilot reports describe heavily underdosed or ineffective product, and buyers who complain report being red-flagged/blocked from ordering. Community treats its self-published COAs with suspicion and no independent (Janoshik/MESO) test data confirms potency.",
+  "positives": [
+   "Long operating history / established name",
+   "Fast, discreet shipping frequently praised",
+   "Publishes MS/UV certificates of analysis"
+  ],
+  "redFlags": [
+   "Repeated Reddit and Trustpilot reports of heavily underdosed / ineffective product",
+   "Buyers who reported quality issues say they were red-flagged and blocked from further orders; one reported ~$600 lost across three orders",
+   "Reports that quality declined after ownership/management changes",
+   "Self-published COA accuracy questioned; no independent community lab data available"
+  ],
+  "sources": [
+   "https://www.eroids.com/reviews/blueskypeptide.com",
+   "https://www.trustpilot.com/review/blueskypeptide.com",
+   "https://www.peptides.org/blue-sky-peptide-review/",
+   "https://thepeptidelist.com/reviews/blue-sky-peptide"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "chemyo",
+  "sentiment": "positive",
+  "summary": "Widely regarded as one of the more reputable and long-running SARMs/research-chemical vendors (operating since ~2016, early adopter of HPLC/FTIR purity and concentration testing), Trustpilot ~4.4 and rated low-risk by scam checkers. Note: Chemyo primarily sells SARMs/nootropics, not peptides, so it is somewhat out of category; some scattered forum complaints exist (e.g., a 'Beware of Chemyo' thread, reports of side effects on Ostarine).",
+  "positives": [
+   "Long track record (since ~2016) and strong overall community standing in the SARMs space",
+   "Early/consistent third-party purity (HPLC), identity (FTIR) and concentration testing",
+   "Trustpilot ~4.4/5; rated legitimate/low-risk by scam-check sites"
+  ],
+  "redFlags": [
+   "Sells SARMs/nootropics rather than true research peptides — category mismatch",
+   "Scattered forum complaints including a 'Beware of Chemyo' thread and reports of elevated heart rate / side effects on Ostarine",
+   "COAs alone can be faked; potency disputes surface occasionally"
+  ],
+  "sources": [
+   "https://www.scamadviser.com/check-website/chemyo.com",
+   "https://sarmguide.com/chemyo-review/",
+   "https://www.ironoverload.io/threads/beware-of-chemyo.1412/",
+   "https://outliyr.com/best-online-peptide-companies-websites-sources"
+  ],
+  "reviewVolume": "heavy",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "nootropic-source",
+  "sentiment": "mixed",
+  "summary": "Established nootropics/research-chemical retailer with genuinely conflicting feedback: many customers report top-quality product and fast, professional service, while a meaningful number report non-delivery, orders stuck on 'processing,' and ignored support emails. A counterfeit look-alike domain (extra 's') adds confusion.",
+  "positives": [
+   "Long-standing vendor with repeat customers praising quality and quick delivery",
+   "Reports of friendly, professional customer service from satisfied buyers"
+  ],
+  "redFlags": [
+   "Multiple Trustpilot reports of non-delivery and money taken without shipment",
+   "Orders reported stuck on 'processing' for weeks with support emails ignored",
+   "Counterfeit look-alike domain warning (extra 's') indicates impersonation risk"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/nootropicsource.com",
+   "https://www.trustpilot.com/review/nootropicsource.com?page=2"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "peptide-pros",
+  "sentiment": "mixed",
+  "summary": "A known older name with a following, but reputation is genuinely split: independent reviewers note QA testing that does not meet the highest bar, COAs missing on many products, and a trend of low-quality-product complaints, plus reports of non-delivery and refused refunds and a scam-detector high-risk flag. Some aggregate ratings are positive. Caution: the positively-rated 'peptidepro.io' is a DIFFERENT domain and should not be conflated with the target peptidepros.net.",
+  "positives": [
+   "Established, recognized vendor with a repeat-customer base",
+   "Some reviewers report good product effectiveness and responsive service"
+  ],
+  "redFlags": [
+   "Independent review notes QA testing below top standard and COAs not available on all products",
+   "Trend of client reviews citing low-quality product",
+   "Reports of not receiving orders and refused refunds",
+   "A scam-detection site flagged high-risk (phishing/spam) activity",
+   "Limited/crypto-only payment methods",
+   "Domain-confusion risk: peptidepro.io (positive reviews) is a separate entity from peptidepros.net"
+  ],
+  "sources": [
+   "https://www.peptides.org/peptide-pros-review/",
+   "https://www.scam-detector.com/validator/peptidepros-net-review/",
+   "https://www.reviews.io/company-reviews/store/peptidepros-net"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "chameleon-peptides",
+  "sentiment": "positive",
+  "summary": "New vendor (founded 2025) built around transparency — every batch posted with public Janoshik Analytical COAs, ~99%+ purity targets, US shipping from Sacramento. Early Trustpilot feedback (~108 reviews) is strongly positive on price, shipping speed, and proactive handling of batch issues, and no scam allegations surfaced. However, the track record is very short and no independent Reddit/MESO-Rx verification was found, so praise leans on Trustpilot/on-site sources the community weights lightly.",
+  "positives": [
+   "Public per-batch Janoshik Analytical COAs (lab the community trusts)",
+   "Strongly positive early Trustpilot feedback (~108 reviews): fast shipping, good prices, strong customer service",
+   "Reports of proactively flagging and resolving batch issues; no scam allegations found"
+  ],
+  "redFlags": [
+   "Very new (founded 2025) — short track record, limited history to judge consistency",
+   "No independent Reddit / MESO-Rx / forum verification found; reputation rests largely on Trustpilot and on-site reviews, which are shill-prone",
+   "Small review volume relative to established vendors"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/www.chameleonpeptides.com",
+   "https://chameleonpeptides.com/about-us/"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "low"
+ },
+ {
+  "vendorSlug": "felix-chemical-supply",
+  "sentiment": "positive",
+  "summary": "Felix Chemical Supply (operates as Chem-LLC at felixchem.is) has the strongest verification story of this batch: Janoshik-verified COAs on 20+ peptides, endotoxin/sterility panels, and batch numbers, with buyers repeatedly citing testing confidence and fast (~3-day) domestic shipping. Most praise is on SEO/TikTok sources and occasional fulfillment-delay chatter exists, so treat the depth of testing as the real trust signal rather than the review volume.",
+  "positives": [
+   "Janoshik-verified COAs for 23+ peptides; runs endotoxin and sterility testing (deeper than typical HPLC-only vendors)",
+   "Best-in-batch third-party testing reputation (Finnrick A-B rating), batch numbers for traceability",
+   "Buyers report fast ~3-day domestic shipping and consistent product quality; multi-year repeat customers"
+  ],
+  "redFlags": [
+   "Genuine Reddit/MESO-Rx thread capture is thin; much praise sits on SEO blogs and TikTok (lower trust)",
+   "Some chatter about occasional fulfillment/operational delays ('they try their hardest to get things moving')"
+  ],
+  "sources": [
+   "https://outliyr.com/best-online-peptide-companies-websites-sources",
+   "https://www.peptideprotocolwiki.com/vendors/felix-chemical-supply",
+   "https://peptidecritic.com/vendor/felix-chem",
+   "https://felixchem.is/",
+   "https://www.tiktok.com/discover/felix-chemical-supply-review"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "ion-peptide",
+  "sentiment": "mixed",
+  "summary": "Ion Peptide sits at ~3.7/5 on Trustpilot (~27 reviews) with a genuinely bimodal split: many praise fast shipping, premium foam-insert packaging, good COAs, and responsive support, while a real minority report checkout glitches, lost/stuck packages, and even suspicious card charges. A significant impersonation problem (fake TikTok/Telegram accounts using Ion's name) muddies negative chatter, but at least one specific report of an ineffective Retatrutide batch is a real quality flag.",
+  "positives": [
+   "Fast shipping and unusually high-quality packaging (individual foam inserts)",
+   "Good COAs reported and responsive support/live chat",
+   "Majority of Trustpilot volume is positive"
+  ],
+  "redFlags": [
+   "Specific report of a recent Retatrutide/GLP batch being ineffective (weighted heavily under asymmetry)",
+   "Reports of lost/stuck packages, checkout glitches, and suspicious/fraudulent card charges after ordering",
+   "Widespread impersonation scam accounts using Ion's brand create real buyer confusion/risk"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/ionpeptide.com",
+   "https://www.peppal.app/suppliers/ion-peptide",
+   "https://community.peptidecritic.com/topic/2085/ion-peptides-user-review-super-fast-shipping/1"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "ez-peptides",
+  "sentiment": "positive",
+  "summary": "EZ Peptides (ezpeptides.com) carries a predominantly positive Trustpilot footprint (~176 reviews) plus a 4.7/5 across 77 on Peptide Critic, with praise for low prices, fast shipping, responsive support, and available COAs; the main genuine complaint is occasional slow shipping (paid 2-day, arrived in 5). No credible underdosing/scam reports surfaced in forums, but note a domain-confusion risk (a separate ezpeps.com Trustpilot page exists) and an automated Scam-Detector low score that is generic rather than buyer-sourced.",
+  "positives": [
+   "~176 predominantly positive Trustpilot reviews; 4.7/5 from 77 on Peptide Critic",
+   "Low prices, fast fulfillment, responsive customer service, COAs/batch info provided",
+   "No credible scam or underdosing reports found in community/forum sources"
+  ],
+  "redFlags": [
+   "Occasional slow-shipping complaints (paid for 2-day, received in 5)",
+   "Domain-confusion risk: a separate ezpeps.com brand/Trustpilot page exists — some praise may belong to a different entity",
+   "Automated Scam-Detector trust score is low (15.4) though generic/non-buyer-sourced; no genuine Reddit/MESO COA-verified thread found"
+  ],
+  "sources": [
+   "https://ca.trustpilot.com/review/ezpeptides.com",
+   "https://peptidecritic.com/vendor/ez-peptides",
+   "https://www.scamadviser.com/check-website/ezpeptides.com",
+   "https://www.scam-detector.com/validator/ezpeptides-com-review/"
+  ],
+  "reviewVolume": "moderate",
+  "confidence": "medium"
+ },
+ {
+  "vendorSlug": "vici-peptides",
+  "sentiment": "mixed",
+  "summary": "Vici Peptides is thin and new: only a handful of (positive) Trustpilot reviews, a recently registered domain, and low ScamAdviser/gridinsoft trust scores, with all quality claims (ISO 17025 5-panel testing, >99% purity, full COAs) coming from the vendor's own site. No genuine Reddit/MESO-Rx discussion surfaced, so the positive praise is too sparse and unverified to credit strongly.",
+  "positives": [
+   "The few Trustpilot reviews present are positive (fast shipping, discreet packaging, clear labeling/documentation)",
+   "Vendor claims independent ISO 17025 testing across identity/purity/potency/endotoxin/heavy metals with full COAs"
+  ],
+  "redFlags": [
+   "Very low review volume (~4 Trustpilot) — vague praise from thin sources, hard to verify",
+   "Recently registered domain and low third-party trust scores (ScamAdviser low; ~54/100 elsewhere)",
+   "No genuine Reddit/MESO-Rx/COA-linked community discussion found; testing claims are self-reported only"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/vicipeptides.com",
+   "https://www.scamadviser.com/check-website/vicipeptides.com",
+   "https://gridinsoft.com/online-virus-scanner/url/vicopeptide-com",
+   "https://vicipeptides.com/"
+  ],
+  "reviewVolume": "sparse",
+  "confidence": "low"
+ },
+ {
+  "vendorSlug": "cernum-biosciences",
+  "sentiment": "negative",
+  "summary": "Cernum Biosciences shows a classic warning pattern: an aggressive self-published SEO/press-release footprint (multiple syndicated 'independent review' press releases and on-site blog testimonials) paired with genuine Trustpilot complaints of non-delivery a month after ordering, undelivered 'overnight' shipping, and unresponsive support, plus accusations of an undisclosed international/Chinese dropship model. By the company's own materials it operates as a white-label dropship partner for 55+ brands, not a first-party lab, which undercuts its purity/testing claims.",
+  "positives": [
+   "Vendor advertises >99% purity, third-party testing, and COAs (self-reported claims only)"
+  ],
+  "redFlags": [
+   "Trustpilot complaints of non-delivery (no product a month later), undelivered overnight shipping, and support going silent",
+   "Accusations of an undisclosed international/Chinese dropship business model",
+   "Reputation is dominated by self-published press releases and own-blog testimonials (astroturf pattern), with no genuine Reddit/MESO-Rx presence",
+   "Operates by its own admission as a white-label dropship partner for 55+ brands rather than a first-party lab"
+  ],
+  "sources": [
+   "https://www.trustpilot.com/review/cernumbiosciences.com",
+   "https://cernumbiosciences.com/blogs/wholesale-peptides/start-your-own-peptide-brand-with-white-label-dropshipping/",
+   "https://www.wyomingnews.com/online_features/press_releases/cernum-biosciences-peptide-store-recognized-in-independent-review-for-transparency-and-quality/article_b3bc9822-ce48-5387-81fd-58d6dc31594e.html",
+   "https://markets.financialcontent.com/stocks/article/abnewswire-2026-5-28-cernum-biosciences-review-no-clumping-perfect-vacuum-high-purity"
+  ],
+  "reviewVolume": "sparse",
+  "confidence": "medium"
+ }
+]
