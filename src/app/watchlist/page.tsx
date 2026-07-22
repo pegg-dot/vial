@@ -4,7 +4,7 @@ import { WatchlistClient } from "@/components/watchlist-client";
 
 export const metadata: Metadata = {
   title: "Saved listings",
-  description: "Save fictional peptide listings and monitor price, lab test, and availability changes.",
+  description: "Save peptide listings and monitor price, lab test, and availability changes.",
 };
 
 export default function WatchlistPage() {

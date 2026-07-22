@@ -130,7 +130,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
               {product.origin === "live"
                 ? "This is a real listing aggregated from the vendor's public page. Buying happens on their site, never on VIAL — and outbound links stay off until the affiliate step is approved."
-                : "Buying happens on the vendor's own site, never on VIAL. In this prototype the data is fictional, so vendor links stay switched off."}
+                : "This is a demo listing shown to illustrate the interface — not a real vendor — so its link stays switched off. On real (Live) listings, buying happens on the vendor's own site, never on VIAL."}
             </p>
           </div>
         </div>

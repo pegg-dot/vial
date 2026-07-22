@@ -1,7 +1,7 @@
 import type { DataOrigin } from "@/lib/types";
 
 // Honest provenance marker. 'live' = aggregated from a real public third-party source;
-// 'demo' = seeded fictional sample. Never implies endorsement or human-use safety.
+// 'demo' = seeded demo sample. Never implies endorsement or human-use safety.
 export function DataOriginBadge({ origin, className = "" }: { origin: DataOrigin; className?: string }) {
   if (origin === "live") {
     return (
@@ -19,7 +19,7 @@ export function DataOriginBadge({ origin, className = "" }: { origin: DataOrigin
   }
   return (
     <span
-      title="Seeded sample data for demonstration. Fictional vendor, price, and evidence."
+      title="Demo sample data — not a real vendor, price, or test. Used to illustrate the interface."
       className={`inline-flex items-center gap-1.5 rounded-full bg-black/[.05] px-2.5 py-1 text-[11px] font-semibold text-black/55 ${className}`}
     >
       Demo data

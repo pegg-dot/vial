@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "VIAL Market Intelligence",
     short_name: "VIAL",
-    description: "An evidence-first peptide market intelligence prototype.",
+    description: "Evidence-first peptide market intelligence.",
     start_url: "/",
     display: "standalone",
     background_color: "#f7f7f4",

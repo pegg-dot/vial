@@ -24,14 +24,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     title: "VIAL — Don't get scammed buying peptides",
-    description: "Every vendor's price, lab test, and reputation on one screen. Fictional demo data.",
+    description: "Every vendor's price, lab test, and reputation on one screen.",
     siteName: "VIAL",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VIAL marketplace interface" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "VIAL — Don't get scammed buying peptides",
-    description: "Every vendor's price, lab test, and reputation on one screen. Fictional demo data.",
+    description: "Every vendor's price, lab test, and reputation on one screen.",
     images: ["/og-image.png"],
   },
   icons: {

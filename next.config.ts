@@ -12,7 +12,9 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob:",
+  // Certificate-of-analysis documents are hosted on many vendor and lab domains; allow any
+  // https image so the real COAs render inline. Images can't execute, so this is safe.
+  "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   `script-src 'self' 'unsafe-inline' https://js.stripe.com${isProduction ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",

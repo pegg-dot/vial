@@ -5,7 +5,7 @@ import { getPublicSignals } from "@/server/intelligence/repository";
 
 export const metadata: Metadata = {
   title: "Market signals",
-  description: "Derived market-structure signals from VIAL's fictional peptide catalog and provenance graph.",
+  description: "Derived market-structure signals from VIAL's peptide catalog and provenance graph.",
 };
 export const dynamic = "force-dynamic";
 

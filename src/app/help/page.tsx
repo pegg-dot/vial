@@ -3,7 +3,7 @@ import { BookOpen, CircleHelp, Search, ShieldQuestion } from "lucide-react";
 import Link from "next/link";
 export const metadata:Metadata={title:"Help center",description:"Learn how to search, compare, interpret evidence, and use VIAL responsibly."};
 const faqs=[
-["Does VIAL sell products?","No. VIAL is where you research the purchase — when you're ready to buy, we link you to the vendor's own site. VIAL never handles payment or product. (In this prototype, outbound vendor links are switched off until the affiliate step is live.)"],
+["Does VIAL sell products?","No. VIAL is where you research the purchase — when you're ready to buy, we link you to the vendor's own site. VIAL never handles payment or product. (Outbound vendor links switch on once the affiliate step is approved.)"],
 ["What does issuer confirmed mean?","The lab named on a report confirmed it really issued it — the paper is genuine. It doesn't prove the vial you'd receive matches the tested sample."],
 ["Why is there no safety score?","Because identity, dose, sterility, and batch matching are different questions. One blended score would hide whichever answer is missing — so we show each answer separately, including unknown."],
 ["Are the vendors and labs real?","Records are demo data unless marked Live. Live records are aggregated from real public sources (vendor pages, the Janoshik COA feed) — the labs and most vendors are still demo. A listing is never an endorsement either way."],

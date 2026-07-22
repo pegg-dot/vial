@@ -134,7 +134,7 @@ export const vendors: SeedVendor[] = [
     name: "Helix Science",
     initials: "HS",
     description:
-      "A fictional catalog with a strong public-document trail and mixed batch linkage, created for the VIAL prototype.",
+      "A demo catalog with a strong public-document trail and mixed batch linkage, shown to illustrate the interface.",
     location: "Raleigh, NC",
     founded: "2022",
     profileStatus: "claimed",
