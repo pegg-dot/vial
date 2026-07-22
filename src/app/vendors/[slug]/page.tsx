@@ -20,6 +20,8 @@ import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { getLabTestsForVendor } from "@/server/ingest/lab-tests";
 import { VendorFlagsBanner } from "@/components/vendor-flags-banner";
 import { getVendorFlags } from "@/server/verify/coa-integrity";
+import { VendorLinksPanel } from "@/components/vendor-links-panel";
+import { getVendorLinks } from "@/server/verify/vendor-linkage";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +39,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug))]);
+  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
   const verdict = verdictForVendorSlug(slug);
@@ -96,6 +98,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <p className="mt-5 max-w-3xl text-xs leading-5 text-[var(--muted)]">Each answer stands on its own and cites its source. Where we don&rsquo;t have the evidence, it says unknown — we never invent a number or blend everything into one score.</p>
         </section>
       )}
+
+      <VendorLinksPanel links={vendorLinks} vendorName={vendor.name} />
 
       {vendorLabTests.length > 0 && <LabTestsPanel tests={vendorLabTests} heading={`${vendor.name} — independent lab tests on record`} />}
 

@@ -11,6 +11,7 @@ import { parseJanoshikFeed, recordLabTest } from "../src/server/ingest/lab-tests
 import { deriveCoaVendors } from "../src/server/ingest/coa-vendors.ts";
 import { detectVendorCoaFlags, writeVendorFlags } from "../src/server/verify/coa-integrity.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
+import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
   console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true.");
@@ -166,6 +167,11 @@ for (const l of liveListings) await recordPriceObservation(db, { listingSlug: l.
 let rebuilt = 0;
 for (const l of liveListings) { if ((await rebuildListingPriceHistory(db, l.slug)) > 0) rebuilt += 1; }
 console.log(`\nRecorded ${liveListings.length} price observations · rebuilt ${rebuilt} listing price trails.`);
+
+// Rebuild the operator-linkage graph from COA lots + upstream manufacturers (+ any web
+// fingerprints collected separately) — which "independent" storefronts are one operator/source.
+const { edges } = await computeAndStoreLinkages(db);
+console.log(`\nVendor linkage graph: ${edges} link edges.`);
 
 console.log(`\nRecomputing compound stats…`);
 await recomputeCompoundStats(db);
