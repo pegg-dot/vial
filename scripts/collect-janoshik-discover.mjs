@@ -1,3 +1,4 @@
+process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Discover NEW Janoshik public tests and ingest them (plus re-confirm the ones we hold).
 //
 //   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-janoshik-discover.mjs

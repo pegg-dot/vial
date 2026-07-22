@@ -1,3 +1,4 @@
+process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Broad market ingest: real compounds + real vendor catalogs (Shopify /products.json) +
 // Janoshik COA references. Live network + writes to the dev DB. Gated.
 //   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-market.mjs

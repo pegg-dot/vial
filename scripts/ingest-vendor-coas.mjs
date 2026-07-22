@@ -1,3 +1,4 @@
+process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Ingest vendor-published, independent-lab COAs (the green "independently tested" path) WITHOUT
 // re-fetching live catalogs. Records each certificate tied to its vendor's slug so the vendor's
 // "Independently tested?" reputation dimension reflects real third-party evidence. Idempotent

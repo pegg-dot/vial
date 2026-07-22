@@ -1,3 +1,4 @@
+process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Re-verify every stored COA against Janoshik's LIVE public test database.
 //
 //   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-janoshik-verify.mjs
