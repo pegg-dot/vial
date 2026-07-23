@@ -203,8 +203,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <ExternalLink className="size-4 text-black/30 transition group-hover:text-black" />
               </div>
               <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                <MiniStat value={`${vendor.documentationCurrent}%`} label="Tests current" />
-                <MiniStat value={String(vendor.history.length)} label="Observed events" />
+                <MiniStat value={String(vendor.coaCount)} label="Lab tests" />
+                <MiniStat value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median purity" />
                 <MiniStat value={String(vendor.productCount)} label="Listings" />
               </div>
             </Link>

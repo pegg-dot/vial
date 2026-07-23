@@ -59,7 +59,7 @@ export default async function HomePage() {
             <Metric label="Listings tracked" value={String(products.length)} detail="Demo + live listings" icon={Database} />
             <Metric label="Vendors tracked" value={String(vendors.length)} detail="Demo and live vendors" icon={Eye} />
             <Metric label="Average price" value={formatCurrency(products.reduce((sum, product) => sum + product.price, 0) / products.length)} detail="Across active listings" icon={ChartNoAxesCombined} />
-            <Metric label="Current lab tests" value={`${Math.round((products.filter((product) => !["stale", "public-only"].includes(product.evidenceLevel)).length / products.length) * 100)}%`} detail="Listings with an up-to-date report" icon={ShieldCheck} />
+            <Metric label="Independent lab tests" value={String(compounds.reduce((sum, compound) => sum + compound.coaCount, 0))} detail="Real COAs read on record" icon={ShieldCheck} />
           </div>
         </div>
       </section>
@@ -137,9 +137,9 @@ export default async function HomePage() {
                       <ArrowRight className="size-4 text-black/25 transition group-hover:translate-x-0.5 group-hover:text-black" />
                     </div>
                     <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                      <MiniMetric value={`${vendor.documentationCurrent}%`} label="Tests current" />
-                      <MiniMetric value={String(vendor.productCount)} label="Products" />
-                      <MiniMetric value={String(vendor.history.length)} label="Observed events" />
+                      <MiniMetric value={String(vendor.coaCount)} label="Lab tests" />
+                      <MiniMetric value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median purity" />
+                      <MiniMetric value={vendor.kind === "storefront" ? String(vendor.productCount) : String(vendor.passportCount)} label={vendor.kind === "storefront" ? "Listings" : "Passports"} />
                     </div>
                   </div>
                 </div>
