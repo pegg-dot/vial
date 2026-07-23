@@ -19,7 +19,7 @@ test("home page and command search expose the market", async ({ page }) => {
   });
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /buying peptides/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /in the vial/i })).toBeVisible();
   await page.getByRole("button", { name: /Search the market/i }).click();
   await expect(page.getByRole("dialog", { name: "Search VIAL" })).toBeVisible();
   await page.getByLabel("Search query").fill("MOTS-c");
