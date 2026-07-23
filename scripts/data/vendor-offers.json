@@ -1,0 +1,16 @@
+[
+{"vendorSlug":"umbrella-labs","code":null,"description":"Automatic volume discount: 10% off $100+, 20% off $200+; free shipping advertised","discountPct":20,"freeShippingThreshold":"free shipping","sourceUrl":"https://umbrellalabs.is","seenOnVendorSite":true},
+{"vendorSlug":"chemyo","code":null,"description":"Newsletter signup = instant 10% discount (code emailed)","discountPct":10,"freeShippingThreshold":null,"sourceUrl":"https://chemyo.com","seenOnVendorSite":true},
+{"vendorSlug":"purerawz","code":"TOUPS10","description":"25% off + free shipping (aggregator-confirmed, dated today)","discountPct":25,"freeShippingThreshold":null,"sourceUrl":"https://www.dealdrop.com/pure-rawz","seenOnVendorSite":false},
+{"vendorSlug":"sports-technology-labs","code":null,"description":"Newsletter = 10% off next order; ACH payment = extra 3% off","discountPct":10,"freeShippingThreshold":"$149","sourceUrl":"https://sportstechnologylabs.com","seenOnVendorSite":true},
+{"vendorSlug":"peptide-pros","code":null,"description":"First-order 20% off on newsletter signup; loyalty program; tiered vial-quantity discounts","discountPct":20,"freeShippingThreshold":"$150","sourceUrl":"https://peptidepros.net","seenOnVendorSite":true},
+{"vendorSlug":"ascension-peptides","code":null,"description":"Product-level stack/blend sales (e.g. KLOW ~37% off, Wolverine Stack 40% off)","discountPct":null,"freeShippingThreshold":null,"sourceUrl":"https://ascensionpeptides.com","seenOnVendorSite":true},
+{"vendorSlug":"eternal-peptides","code":null,"description":"Newsletter = 10% off; stackable 5-10% automatic discount for select payment methods","discountPct":10,"freeShippingThreshold":"$200","sourceUrl":"https://eternalpeptides.com","seenOnVendorSite":true},
+{"vendorSlug":"core-peptides","code":null,"description":"Free shipping on US orders $200+; numerous items on sale","discountPct":null,"freeShippingThreshold":"$200","sourceUrl":"https://corepeptides.com","seenOnVendorSite":true},
+{"vendorSlug":"loti-labs","code":"July35","description":"Banner: Save 35% through Sunday with code July35 (time-limited)","discountPct":35,"freeShippingThreshold":"$99","sourceUrl":"https://lotilabs.com","seenOnVendorSite":true},
+{"vendorSlug":"simple-peptide","code":null,"description":"Volume discounts (5+ / 10+ same product); newsletter for offers","discountPct":null,"freeShippingThreshold":null,"sourceUrl":"https://simplepeptide.com","seenOnVendorSite":true},
+{"vendorSlug":"vici-peptides","code":null,"description":"Free shipping on orders $200+; same-day shipping","discountPct":null,"freeShippingThreshold":"$200","sourceUrl":"https://vicipeptides.com","seenOnVendorSite":true},
+{"vendorSlug":"bluum-peptides","code":null,"description":"Free 2-day shipping on orders $200+","discountPct":null,"freeShippingThreshold":"$200","sourceUrl":"https://bluumpeptides.com","seenOnVendorSite":true},
+{"vendorSlug":"behemoth-labz","code":null,"description":"Newsletter = 15% off first order + free hand strengthener","discountPct":15,"freeShippingThreshold":"$100","sourceUrl":"https://behemothlabz.com","seenOnVendorSite":true},
+{"vendorSlug":"nootropic-source","code":null,"description":"Newsletter = 10% off first order; crypto = instant 10% off; price-match +5%","discountPct":10,"freeShippingThreshold":"$150","sourceUrl":"https://nootropicsource.com","seenOnVendorSite":true}
+]

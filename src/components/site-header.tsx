@@ -12,6 +12,7 @@ const nav = [
   { href: "/market", label: "Market" },
   { href: "/compounds", label: "Compounds" },
   { href: "/vendors", label: "Vendors" },
+  { href: "/news", label: "News" },
   { href: "/how-we-check", label: "How we check" },
 ];
 

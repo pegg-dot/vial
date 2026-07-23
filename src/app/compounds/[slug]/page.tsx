@@ -18,6 +18,9 @@ import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 import { getDatabase } from "@/server/db/client";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
+import { getCompoundResearch, getCompoundRegulatory } from "@/server/external/repository";
+import { CompoundResearchPanel } from "@/components/compound-research-panel";
+import { InnovatorNote } from "@/components/innovator-note";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +38,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
-  const [listings, principal, labTests] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug))]);
+  const [listings, principal, labTests, research, regulatory] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db))]);
   const edu = educationFor(slug);
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
   // (so we only ever link to compounds we actually track) and carry its cheapest listing price.
@@ -103,6 +106,12 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
         <UsLegalNotice slug={slug} />
       </section>
+
+      <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
+        <InnovatorNote slug={slug} compoundName={compound.name} />
+      </section>
+
+      <CompoundResearchPanel findings={research} regulatoryStatus={regulatory?.regulatory_status ?? null} evidenceSummary={regulatory?.evidence_summary ?? null} compoundName={compound.name} />
 
       <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
 

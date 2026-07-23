@@ -30,6 +30,10 @@ import { VendorReviewsPanel } from "@/components/vendor-reviews-panel";
 import { getVendorReview } from "@/server/verify/vendor-reviews";
 import { VendorStatusBanner } from "@/components/vendor-status-banner";
 import { getVendorStatus } from "@/server/verify/vendor-status";
+import { getVendorAggregatorRatings, getVendorSignals, getVendorOffers } from "@/server/external/repository";
+import { AggregatorRatingsPanel } from "@/components/aggregator-ratings-panel";
+import { VendorSignalsPanel } from "@/components/vendor-signals-panel";
+import { VendorOffersPanel } from "@/components/vendor-offers-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +51,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db))]);
+  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db)), getDatabase().then((db) => getVendorAggregatorRatings(slug, db)), getDatabase().then((db) => getVendorSignals(slug, db)), getDatabase().then((db) => getVendorOffers(slug, db))]);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
   // A public enforcement record outranks the static verdict: a severe action forces "avoid".
@@ -120,7 +124,13 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         </section>
       )}
 
+      {aggregatorRatings.length > 0 && <AggregatorRatingsPanel ratings={aggregatorRatings} vendorName={vendor.name} />}
+
+      {vendorSignals && <VendorSignalsPanel signals={vendorSignals} vendorName={vendor.name} />}
+
       {vendorReview && <VendorReviewsPanel review={vendorReview} />}
+
+      {vendorOffers.length > 0 && <VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} />}
 
       <VendorLinksPanel links={vendorLinks} vendorName={vendor.name} />
 

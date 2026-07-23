@@ -1,0 +1,160 @@
+[
+  {
+    "compoundSlug": "bpc-157",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only; prohibited in sport by WADA",
+    "evidenceSummary": "Evidence is almost entirely from animal studies; the single human report is a small uncontrolled case series, so efficacy and safety in people remain unproven.",
+    "findings": [
+      { "claim": "A 2025 systematic review screening 544 papers found only 36 qualifying studies of which 35 were preclinical and just one was human (a retrospective 12-patient case series where 7 of 12 reported knee-pain relief over 6 months), and it found no clinical safety data.", "studyType": "review", "safetyNote": "No randomized controlled human trials exist and no human safety data have been published; injectable products are unregulated.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/40756949/", "sourceTitle": "Emerging Use of BPC-157 in Orthopaedic Sports Medicine: A Systematic Review (HSS Journal, 2025)" },
+      { "claim": "In rodent models, the stable gastric pentadecapeptide BPC 157 has been reported to accelerate healing of skin, muscle, tendon, ligament and gut tissue and to influence angiogenic and growth-factor pathways.", "studyType": "animal", "safetyNote": "Findings are from animal experiments only and have not been reproduced in controlled human studies.", "sourceUrl": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8275860/", "sourceTitle": "Stable Gastric Pentadecapeptide BPC 157 and Wound Healing (Frontiers in Pharmacology, 2021)" }
+    ]
+  },
+  {
+    "compoundSlug": "tb-500",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only; WADA-prohibited (the full thymosin beta-4 protein is investigational as ophthalmic drug RGN-259)",
+    "evidenceSummary": "The full thymosin beta-4 peptide has legitimate human ophthalmic trial data (dry eye, corneal healing), but the injectable 'TB-500' fragment sold for muscle/tendon/injury recovery is a different product with only animal-level evidence.",
+    "findings": [
+      { "claim": "In a Phase 2 randomized, double-masked, placebo-controlled trial (9 patients), thymosin beta-4 eye drops (RGN-259) produced statistically significant improvements in signs and symptoms of severe dry eye versus vehicle.", "studyType": "human-rct", "safetyNote": "Very small sample; this tests the full thymosin beta-4 protein as an eye drop, not the injectable 'TB-500' fragment marketed to consumers.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/25826322/", "sourceTitle": "Thymosin beta-4 significantly improves signs and symptoms of severe dry eye in a phase 2 randomized trial (Cornea, 2015)" },
+      { "claim": "In a randomized, placebo-controlled, double-masked Phase III trial, 0.1% RGN-259 (thymosin beta-4) ophthalmic solution promoted corneal healing in neurotrophic keratopathy, with complete healing in 6 of 10 treated versus 1 of 8 placebo subjects.", "studyType": "human-rct", "safetyNote": "Applies only to the eye-drop formulation of full-length thymosin beta-4; systemic or injectable use for muscle/tendon healing has no human trials.", "sourceUrl": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9820614/", "sourceTitle": "0.1% RGN-259 (Thymosin beta-4) Ophthalmic Solution in Neurotrophic Keratopathy: A Phase III Clinical Trial (2022)" }
+    ]
+  },
+  {
+    "compoundSlug": "semaglutide",
+    "regulatoryStatus": "FDA-approved (Ozempic/Rybelsus for type 2 diabetes; Wegovy for chronic weight management)",
+    "evidenceSummary": "Strong, large-scale human RCT evidence supports substantial weight loss and a documented cardiovascular benefit; the main established harms are GI side effects and gallbladder disease, and weight tends to return after stopping.",
+    "findings": [
+      { "claim": "In the 68-week STEP 1 RCT of 1,961 adults with overweight/obesity, once-weekly semaglutide 2.4 mg produced a mean body-weight change of -14.9% versus -2.4% with placebo, with 86% of treated participants losing at least 5%.", "studyType": "human-rct", "safetyNote": "Nausea and diarrhea were the most common adverse events (usually transient); gallbladder disorders were more frequent with semaglutide.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/33567185/", "sourceTitle": "Once-Weekly Semaglutide in Adults with Overweight or Obesity (STEP 1). N Engl J Med. 2021." },
+      { "claim": "In the SELECT trial of 17,604 adults with established cardiovascular disease and overweight/obesity but without diabetes, semaglutide 2.4 mg reduced major adverse cardiovascular events by 20% (6.5% vs 8.0%; HR 0.80) over a mean 39.8 months.", "studyType": "human-rct", "safetyNote": "More participants discontinued for adverse events (chiefly GI) than placebo; population was mostly older men with prior CVD, so results may not generalize.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/37952131/", "sourceTitle": "Semaglutide and Cardiovascular Outcomes in Obesity without Diabetes (SELECT). N Engl J Med. 2023." }
+    ]
+  },
+  {
+    "compoundSlug": "tirzepatide",
+    "regulatoryStatus": "FDA-approved (Mounjaro for type 2 diabetes; Zepbound for chronic weight management)",
+    "evidenceSummary": "High-quality human RCT evidence shows tirzepatide (a dual GIP/GLP-1 agonist) yields among the largest weight losses of any approved agent; GI side effects are common but usually manageable, and long-term cardiovascular-outcome data are still maturing.",
+    "findings": [
+      { "claim": "In the 72-week SURMOUNT-1 RCT of 2,539 adults with obesity (without diabetes), once-weekly tirzepatide produced least-squares mean weight reductions of -15.0%, -19.5%, and -20.9% at the 5, 10, and 15 mg doses versus -3.1% with placebo.", "studyType": "human-rct", "safetyNote": "GI adverse events (nausea, diarrhea, constipation) were most common, mostly mild-to-moderate and concentrated during dose escalation.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/35658024/", "sourceTitle": "Tirzepatide Once Weekly for the Treatment of Obesity (SURMOUNT-1). N Engl J Med. 2022." }
+    ]
+  },
+  {
+    "compoundSlug": "retatrutide",
+    "regulatoryStatus": "Investigational; NOT FDA-approved (a triple GLP-1/GIP/glucagon receptor agonist in Phase 3 development)",
+    "evidenceSummary": "Early human data (a single Phase 2 RCT) show very large weight loss, but retatrutide is experimental, unapproved, and lacks long-term safety and cardiovascular-outcome evidence; any product sold as 'retatrutide' outside a trial is not FDA-sanctioned.",
+    "findings": [
+      { "claim": "In a 48-week Phase 2 RCT of 338 adults with obesity, retatrutide produced a mean body-weight reduction of about -24.2% at the highest (12 mg) dose versus -2.1% with placebo.", "studyType": "human-rct", "safetyNote": "Adverse events were dose-dependent and predominantly GI; dose-dependent heart-rate increases were seen, and as a Phase 2 study it does not establish long-term safety.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/37366315/", "sourceTitle": "Triple-Hormone-Receptor Agonist Retatrutide for Obesity - A Phase 2 Trial. N Engl J Med. 2023." }
+    ]
+  },
+  {
+    "compoundSlug": "ghk-cu",
+    "regulatoryStatus": "Not an FDA-approved drug; used as a topical cosmetic ingredient; injectable/systemic use not approved",
+    "evidenceSummary": "GHK-Cu has a long biochemical and animal research record plus small topical cosmetic studies and is generally considered safe applied to skin, but robust human wound-healing RCTs are only now underway and injectable use is unproven.",
+    "findings": [
+      { "claim": "A peer-reviewed review documents that the copper-binding tripeptide GHK, whose plasma levels decline with age, stimulates collagen and glycosaminoglycan synthesis, modulates metalloproteinases, and supports wound healing and skin remodeling in laboratory and animal models.", "studyType": "review", "safetyNote": "Most mechanistic data are in-vitro/animal; long-term systemic safety in humans is not established.", "sourceUrl": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4508379/", "sourceTitle": "GHK Peptide as a Natural Modulator of Multiple Cellular Pathways in Skin Regeneration (BioMed Research International, 2015)" },
+      { "claim": "A registered Phase 2 randomized, vehicle-controlled split-wound trial (recruiting as of 2026) is testing whether a topical 0.1% GHK-Cu gel speeds re-epithelialization of standardized acute skin wounds versus vehicle in healthy adults.", "studyType": "human-trial", "safetyNote": "Ongoing trial with no published results yet; rigorous human wound-healing efficacy is still being evaluated.", "sourceUrl": "https://clinicaltrials.gov/study/NCT07437586", "sourceTitle": "Topical GHK-Cu Gel for Acute Skin Wound Healing (ClinicalTrials.gov NCT07437586)" }
+    ]
+  },
+  {
+    "compoundSlug": "mots-c",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only (no approved human indication)",
+    "evidenceSummary": "MOTS-c is a mitochondrial-derived peptide with promising metabolic and exercise-performance effects, but essentially all administration evidence is preclinical (mouse/rat); human data are limited to observational measurements, with no human therapy trial.",
+    "findings": [
+      { "claim": "A single injection of MOTS-c (15 mg/kg) improved acute treadmill running time (+12%) and distance (+15%) in untrained mice, and muscle MOTS-c rose after long-term physical activity in rodents.", "studyType": "animal", "safetyNote": "All administration data are from rodents; effects of giving MOTS-c to humans have not been tested.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/35808870/", "sourceTitle": "MOTS-c increases in skeletal muscle following long-term physical activity and improves acute exercise performance after a single dose (Physiological Reports, 2022)" },
+      { "claim": "In humans, circulating MOTS-c is present and modulated by metabolic factors in women with PCOS and healthy controls, but this measured endogenous levels rather than administering the peptide.", "studyType": "human-trial", "safetyNote": "Observational measurement of the body's own MOTS-c only; no clinical trial has dosed people with MOTS-c.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/31066084/", "sourceTitle": "Lipids and insulin regulate mitochondrial-derived peptide (MOTS-c) in PCOS and healthy subjects (Clinical Endocrinology, 2019)" }
+    ]
+  },
+  {
+    "compoundSlug": "ipamorelin",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only (clinical development was discontinued)",
+    "evidenceSummary": "Ipamorelin is a selective GH-secretagogue peptide that provably stimulates a short GH burst in early human studies, but robust human data stop there: no controlled trials support anti-aging, muscle-building, or fat-loss claims, and formal development was discontinued.",
+    "findings": [
+      { "claim": "In healthy male volunteers, intravenous ipamorelin showed dose-proportional pharmacokinetics (~2 h half-life) and triggered a single, dose-related pulse of growth-hormone release peaking at roughly 40 minutes.", "studyType": "human-trial", "safetyNote": "Short pharmacokinetic/pharmacodynamic study only; no controlled trials of efficacy or long-term safety exist, and stimulating the GH axis carries theoretical risks.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/10496658/", "sourceTitle": "Pharmacokinetic-pharmacodynamic modeling of ipamorelin, a growth hormone releasing peptide, in human volunteers (Pharm Res, 1999)" }
+    ]
+  },
+  {
+    "compoundSlug": "cjc-1295",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only",
+    "evidenceSummary": "Small, biomarker-focused, roughly two-decade-old human trials show CJC-1295 durably raises GH and IGF-1 and was well tolerated short-term, but there is no robust long-term human evidence for efficacy or safety, and it is not approved.",
+    "findings": [
+      { "claim": "In healthy adults, a single subcutaneous dose of CJC-1295 raised GH 2-10 fold for 6+ days and IGF-1 1.5-3 fold for 9-11 days (half-life ~6-8 days), with weekly/biweekly dosing keeping IGF-1 above baseline up to 28 days.", "studyType": "human-rct", "safetyNote": "No serious adverse reactions in this small early trial, but it was not designed to assess long-term safety of sustained GH/IGF-1 elevation.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/16352683/", "sourceTitle": "Prolonged stimulation of GH and IGF-I secretion by CJC-1295 in healthy adults (J Clin Endocrinol Metab, 2006)" },
+      { "claim": "In 11 healthy young men, a single CJC-1295 injection altered the serum protein profile one week later (e.g., decreased apolipoprotein A1 and transthyretin), changes that correlated with GH/IGF-1 activation.", "studyType": "human-trial", "safetyNote": "Very small biomarker study; the clinical meaning of these protein changes and any long-term risks are unknown.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/19386527/", "sourceTitle": "Activation of the GH/IGF-1 axis by CJC-1295 results in serum protein profile changes in normal adult subjects (Growth Horm IGF Res, 2009)" }
+    ]
+  },
+  {
+    "compoundSlug": "nad-plus",
+    "regulatoryStatus": "NAD+ precursors NR and NMN are sold as dietary supplements (NR/Niagen has US NDI/GRAS status); NAD+ itself and injectable/IV NAD+ are not FDA-approved drugs",
+    "evidenceSummary": "The precursors NR and NMN reliably and safely raise blood NAD+ in humans in short RCTs, but downstream clinical benefits are modest, mixed, and often confounded with exercise; there is no human evidence that NAD+ precursors extend lifespan, and IV/injectable NAD+ has little rigorous trial support.",
+    "findings": [
+      { "claim": "In 140 healthy overweight adults, oral nicotinamide riboside (100/300/1000 mg/day for 8 weeks) raised blood NAD+ dose-dependently (up to ~142% at 1000 mg) with no serious adverse events and no LDL/homocysteine elevation.", "studyType": "human-rct", "safetyNote": "Confirms NAD+ can be raised safely short-term, but the trial measured biomarkers, not disease, aging, or longevity outcomes.", "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6611812/", "sourceTitle": "Safety and Metabolism of Long-term Administration of NIAGEN (Nicotinamide Riboside Chloride) (Scientific Reports, 2019)" },
+      { "claim": "In 48 amateur runners, 6 weeks of NMN (300/600/1200 mg/day) alongside exercise training raised oxygen uptake and ventilatory thresholds more than placebo.", "studyType": "human-rct", "safetyNote": "Benefit appeared only combined with an exercise program and was not attributable to NMN alone; sample small and short.", "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8265078/", "sourceTitle": "Nicotinamide mononucleotide supplementation enhances aerobic capacity in amateur runners (J Int Soc Sports Nutr, 2021)" }
+    ]
+  },
+  {
+    "compoundSlug": "epitalon",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only (a related pineal extract, Epithalamin, has been used in Russia; not approved in the US/EU)",
+    "evidenceSummary": "Human evidence for epitalon/epithalamin comes almost entirely from older Russian studies of variable, generally low methodological quality, supported by in-vitro telomerase findings; no modern rigorous RCT confirms anti-aging or longevity benefits.",
+    "findings": [
+      { "claim": "A long-term Russian observation of 266 elderly people reported that the pineal peptide Epithalamin was associated with roughly 1.6-1.8-fold lower mortality versus controls.", "studyType": "human-trial", "safetyNote": "Older study with little reported detail on randomization, blinding, or controls; methodological quality is low, so the mortality claim should be treated with caution.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/14523363/", "sourceTitle": "Peptides of pineal gland and thymus prolong human life (Neuro Endocrinol Lett, 2003)" },
+      { "claim": "In cultured human fetal fibroblasts, Epithalon (epitalon) induced telomerase catalytic-subunit expression, telomerase activity, and telomere elongation.", "studyType": "in-vitro", "safetyNote": "Cell-culture result only; it demonstrates a mechanism, not a proven anti-aging benefit or safety profile in living people.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/12937682/", "sourceTitle": "Epithalon peptide induces telomerase activity and telomere elongation in human somatic cells (Bull Exp Biol Med, 2003)" }
+    ]
+  },
+  {
+    "compoundSlug": "melanotan-2",
+    "regulatoryStatus": "Not approved by FDA or EMA; an unlicensed drug sold illegally online as an injectable/nasal tanning and libido agent",
+    "evidenceSummary": "There are no controlled human efficacy or safety trials of melanotan-2; the human literature consists almost entirely of case reports of harm (melanoma/atypical moles, rhabdomyolysis, renal injury, priapism, nausea), and health agencies have warned against its use.",
+    "findings": [
+      { "claim": "A published case report documented a 20-year-old woman who developed melanoma after using melanotan-II injections combined with tanning-bed exposure.", "studyType": "human-trial", "safetyNote": "Single-patient case report linking melanotan-II to melanoma; the drug stimulates melanocytes and multiple cases describe melanoma or changing moles during/after use.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/24355990/", "sourceTitle": "Melanoma associated with the use of melanotan-II (Dermatology, 2014)" },
+      { "claim": "In a published case report, a 39-year-old man who self-injected 6 mg of melanotan II developed sympathomimetic toxicity with CPK rising to 17,773 IU/L, rhabdomyolysis, and acute kidney injury requiring ICU admission.", "studyType": "human-trial", "safetyNote": "Documented severe systemic toxicity from an unregulated product with no standardized dose or purity.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/23121206/", "sourceTitle": "Melanotan II injection resulting in systemic toxicity and rhabdomyolysis (Clinical Toxicology, 2012)" },
+      { "claim": "A published case report describes melanotan-II overdose associated with prolonged, painful erection (priapism).", "studyType": "human-trial", "safetyNote": "Priapism is a recurring reported adverse effect, reflecting non-selective melanocortin-receptor activity.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/23537392/", "sourceTitle": "Melanotan II overdose associated with priapism (Clinical Toxicology, 2013)" }
+    ]
+  },
+  {
+    "compoundSlug": "pt-141",
+    "regulatoryStatus": "FDA-approved as Vyleesi (bremelanotide, 2019) for acquired, generalized hypoactive sexual desire disorder (HSDD) in premenopausal women",
+    "evidenceSummary": "PT-141/bremelanotide has the strongest evidence base of the non-metabolic peptides here: two positive placebo-controlled Phase 3 RCTs supporting a real but modest effect on sexual desire in premenopausal women with HSDD, leading to FDA approval; it is not an approved general or male 'libido' drug.",
+    "findings": [
+      { "claim": "In two identical randomized, double-blind, placebo-controlled Phase 3 trials (RECONNECT), bremelanotide significantly improved sexual desire (integrated FSFI-desire change 0.35, P<.001) and reduced desire-related distress versus placebo in premenopausal women with HSDD.", "studyType": "human-rct", "safetyNote": "Common adverse events were nausea, flushing, and headache; most mild-to-moderate, but nausea led some participants to discontinue.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/31599840/", "sourceTitle": "Bremelanotide for the Treatment of Hypoactive Sexual Desire Disorder: Two Randomized Phase 3 Trials (Obstetrics & Gynecology, 2019)" },
+      { "claim": "A 52-week open-label extension of the RECONNECT trials reported sustained improvement in HSDD symptoms with no new safety signals over long-term use.", "studyType": "human-trial", "safetyNote": "Open-label extension (no placebo comparator in this phase); transient blood-pressure increases and focal hyperpigmentation are recognized class effects.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/31599847/", "sourceTitle": "Long-Term Safety and Efficacy of Bremelanotide for Hypoactive Sexual Desire Disorder (Obstetrics & Gynecology, 2019)" }
+    ]
+  },
+  {
+    "compoundSlug": "tesamorelin",
+    "regulatoryStatus": "FDA-approved as Egrifta specifically to reduce excess abdominal fat in HIV-associated lipodystrophy; NOT approved for general weight loss or bodybuilding",
+    "evidenceSummary": "Human RCT evidence supports tesamorelin for reducing visceral fat specifically in HIV-associated lipodystrophy, with effects that reverse after discontinuation; it has no approval or robust evidence for general weight loss, and its IGF-1-raising mechanism carries cancer and glucose cautions.",
+    "findings": [
+      { "claim": "In a 26-week RCT of 412 HIV-infected patients with central fat accumulation, tesamorelin 2 mg daily reduced visceral adipose tissue by about 15% versus an increase with placebo, alongside improved triglycerides and a rise in IGF-1.", "studyType": "human-rct", "safetyNote": "Raises IGF-1 (theoretical concern with active malignancy) and can affect glucose tolerance; contraindicated in pregnancy and active cancer.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/18057338/", "sourceTitle": "Metabolic Effects of a Growth Hormone-Releasing Factor in Patients with HIV. N Engl J Med. 2007." },
+      { "claim": "A 52-week study found the visceral-fat reduction was sustained during continued treatment and generally well tolerated, but the benefit was not maintained after stopping the drug.", "studyType": "human-trial", "safetyNote": "Effects are reversible: visceral fat re-accumulates toward baseline after discontinuation, so benefit requires ongoing use; IGF-1 should be monitored.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/18690162/", "sourceTitle": "Long-term safety and effects of tesamorelin in HIV patients with abdominal fat accumulation. AIDS. 2008." }
+    ]
+  },
+  {
+    "compoundSlug": "ll-37",
+    "regulatoryStatus": "Endogenous human cathelicidin peptide; synthetic LL-37 not FDA-approved; investigational only",
+    "evidenceSummary": "LL-37 is a natural human innate-immunity peptide whose early human data are limited to a small Phase 1 melanoma trial; it showed dermatologic toxicity and has paradoxical cancer-promoting effects in some tissues, so it is far from a validated therapeutic.",
+    "findings": [
+      { "claim": "A Phase 1 trial delivered weekly intratumoral LL-37 injections to melanoma patients; a case report from that trial documented a severe but reversible skin reaction (keratoacanthoma-like squamous proliferation and lichenoid dermatitis) that resolved within two months of stopping therapy.", "studyType": "human-trial", "safetyNote": "Documented dermatologic toxicity in a trial participant; overall efficacy results remain largely unpublished.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/29665030/", "sourceTitle": "Dermatologic toxicity from novel therapy using antimicrobial peptide LL-37 in melanoma (Journal of Cutaneous Pathology, 2018)" },
+      { "claim": "A review summarizes evidence that LL-37 has context-dependent, sometimes opposite roles in cancer, promoting tumor growth and invasion in some cancers while being suppressive in others.", "studyType": "review", "safetyNote": "LL-37 can be pro-tumorigenic depending on tissue, a genuine concern that undercuts blanket 'immune-boosting' or 'anti-cancer' marketing claims.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/29843147/", "sourceTitle": "Roles and Mechanisms of Human Cathelicidin LL-37 in Cancer (Cellular Physiology and Biochemistry, 2018)" }
+    ]
+  },
+  {
+    "compoundSlug": "kpv",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only",
+    "evidenceSummary": "KPV shows consistent anti-inflammatory effects in animal and cell studies, but the entire evidence base is preclinical, with no published human clinical trials.",
+    "findings": [
+      { "claim": "In two mouse models of inflammatory bowel disease (DSS and CD45RB-high transfer colitis), the alpha-MSH-derived tripeptide KPV reduced inflammation, sped recovery and body-weight regain, and rescued a susceptible strain from colitis-related death.", "studyType": "animal", "safetyNote": "Demonstrated only in mice; no human trials establish efficacy or safety.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/18092346/", "sourceTitle": "Melanocortin-derived tripeptide KPV has anti-inflammatory potential in murine models of inflammatory bowel disease (Inflammatory Bowel Diseases, 2008)" },
+      { "claim": "Mechanistic work in mouse and macrophage models found KPV's anti-inflammatory action appears to work independently of melanocortin receptors, likely by inhibiting IL-1beta signaling.", "studyType": "animal", "safetyNote": "Mechanism characterized in animal/in-vitro systems only; not validated in humans.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/12750433/", "sourceTitle": "Dissection of the anti-inflammatory effect of the core and C-terminal (KPV) alpha-melanocyte-stimulating hormone peptides (J Pharmacol Exp Ther, 2003)" }
+    ]
+  },
+  {
+    "compoundSlug": "selank",
+    "regulatoryStatus": "Not FDA/EMA-approved; registered and used clinically in Russia as an anxiolytic (a synthetic analog of the peptide tuftsin)",
+    "evidenceSummary": "Selank has favorable early human data from small Russian trials suggesting benzodiazepine-comparable anxiolytic effects without sedation or dependence, but the evidence is limited to a few small, mostly non-placebo-controlled Russian-language studies; promising but unproven, and not approved outside Russia.",
+    "findings": [
+      { "claim": "In a Russian trial of 62 patients with generalized anxiety disorder and neurasthenia, selank produced anxiolytic effects similar to the benzodiazepine medazepam, with additional antiasthenic and mild psychostimulant effects.", "studyType": "human-trial", "safetyNote": "Small, short active-comparator study without a placebo arm, published only in Russian; long-term safety and independent replication are lacking.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/18454096/", "sourceTitle": "Efficacy and possible mechanisms of action of a new peptide anxiolytic selank in generalized anxiety disorders and neurasthenia (Zh Nevrol Psikhiatr, 2008)" }
+    ]
+  },
+  {
+    "compoundSlug": "semax",
+    "regulatoryStatus": "Not FDA/EMA-approved; registered and used clinically in Russia as a nootropic/neuroprotective agent (a synthetic ACTH(4-10) analog)",
+    "evidenceSummary": "Semax has decades of clinical use in Russia with supportive but low-quality human evidence (mostly small, open-label, Russian-language trials) plus animal/mechanistic BDNF/NGF data; there are no rigorous double-blind placebo-controlled Western trials, so its benefits remain unproven by contemporary standards.",
+    "findings": [
+      { "claim": "An open-label study of 110 post-stroke patients found that adding semax to early rehabilitation raised plasma BDNF levels, sped functional recovery, and improved motor performance versus controls.", "studyType": "human-trial", "safetyNote": "Open-label, unblinded, single-country (Russian) data; risk of bias is high and results have not been independently replicated in the West.", "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/29798983/", "sourceTitle": "The efficacy of semax in the treatment of patients at different stages of ischemic stroke (Zh Nevrol Psikhiatr, 2018)" }
+    ]
+  }
+]
