@@ -170,6 +170,26 @@ summary:focus-visible {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Gumdrop personality: soft blobs that drift gently (scientific-but-friendly). */
+.gum-float { animation: gum-float 9s ease-in-out infinite; }
+.gum-float-slow { animation: gum-float 14s ease-in-out infinite; }
+.gum-float-rev { animation: gum-float-rev 11s ease-in-out infinite; }
+@keyframes gum-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(3deg); }
+}
+@keyframes gum-float-rev {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(14px) rotate(-3deg); }
+}
+/* A gumdrop = a soft, glossy, rounded blob. */
+.gum-blob { border-radius: 46% 54% 58% 42% / 52% 44% 56% 48%; }
+.gum-blob-2 { border-radius: 58% 42% 44% 56% / 44% 58% 42% 56%; }
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+}
+
 .glass-dark {
   background:
     linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),

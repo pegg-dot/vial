@@ -1,9 +1,11 @@
 import { getCatalogSnapshot } from "@/server/catalog/repository";
-import { formatCurrency, vendorStatusLabel } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { ProductCard } from "@/components/product-card";
 import { SearchTrigger } from "@/components/search-trigger";
 import { SectionHeading } from "@/components/section-heading";
-import { VendorMark } from "@/components/vendor-mark";
+import { HomeGoalRail } from "@/components/home-goal-rail";
+import { HomeVendorCarousel } from "@/components/home-vendor-carousel";
+import { GumdropScene } from "@/components/gumdrop-scene";
 import { ArrowRight, ChartNoAxesCombined, Check, CircleDashed, Database, Eye, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 
@@ -12,6 +14,11 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const { compounds, products, vendors } = await getCatalogSnapshot();
   const featured = products.filter((product) => product.featured).slice(0, 4);
+  // Curated carousel: the most independently-tested vendors first, then the biggest catalogs — a
+  // meaningful shortlist instead of the full 83-wide wall.
+  const topVendors = [...vendors]
+    .sort((a, b) => b.coaCount - a.coaCount || b.productCount - a.productCount || b.passportCount - a.passportCount)
+    .slice(0, 14);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -30,8 +37,8 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
 
       <section className="relative isolate overflow-hidden border-b border-black/[.06]">
-        <div className="hero-grid pointer-events-none absolute inset-0 -z-10 opacity-70" />
-        <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(109,93,252,.16),rgba(183,119,255,.06)_42%,transparent_72%)] blur-2xl" />
+        <div className="hero-grid pointer-events-none absolute inset-0 -z-10 opacity-60" />
+        <GumdropScene variant="hero" />
 
         <div className="mx-auto max-w-[1320px] px-5 pb-16 pt-20 sm:px-8 sm:pb-24 sm:pt-28 lg:pb-28 lg:pt-32">
           <div className="mx-auto max-w-5xl text-center">
@@ -114,37 +121,36 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-black/[.06] bg-white/60">
+      {/* Browse-by-goal + curated vendor carousel — gumdrop-scientific, no more 83-wide wall. */}
+      <section className="relative isolate overflow-hidden border-y border-black/[.06] bg-white/60">
+        {/* soft floating gumdrops in the background */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="gum-blob gum-float absolute -left-16 top-16 size-56 bg-[radial-gradient(circle,rgba(143,255,214,.5),transparent_70%)] blur-2xl" />
+          <div className="gum-blob-2 gum-float-rev absolute right-[-4rem] top-40 size-64 bg-[radial-gradient(circle,rgba(109,93,252,.28),transparent_70%)] blur-2xl" />
+          <div className="gum-blob gum-float-slow absolute bottom-8 left-1/3 size-52 bg-[radial-gradient(circle,rgba(96,165,250,.30),transparent_70%)] blur-2xl" />
+        </div>
         <div className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24">
-          <SectionHeading
-            eyebrow="Vendor track records"
-            title="A shady seller can't just change domains"
-            description="We keep every vendor's history &mdash; prices, test coverage, complaints &mdash; so a fresh coat of paint can't hide the record."
-            href="/market"
-            linkLabel="Browse listings"
-          />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {vendors.map((vendor) => (
-              <Link key={vendor.slug} href={`/vendors/${vendor.slug}`} className="group rounded-[26px] border border-black/[.07] bg-white p-5 transition hover:-translate-y-0.5 hover:border-black/[.14] hover:shadow-[0_18px_50px_rgba(20,22,27,.08)]">
-                <div className="flex items-start gap-4">
-                  <VendorMark initials={vendor.initials} accent={vendor.accent} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold tracking-[-0.02em]">{vendor.name}</h3>
-                        <p className="mt-1 text-xs text-[var(--muted)]">{vendorStatusLabel(vendor.profileStatus)}</p>
-                      </div>
-                      <ArrowRight className="size-4 text-black/25 transition group-hover:translate-x-0.5 group-hover:text-black" />
-                    </div>
-                    <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                      <MiniMetric value={String(vendor.coaCount)} label="Lab tests" />
-                      <MiniMetric value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median purity" />
-                      <MiniMetric value={vendor.kind === "storefront" ? String(vendor.productCount) : String(vendor.passportCount)} label={vendor.kind === "storefront" ? "Listings" : "Passports"} />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-blue-700">Start with a goal</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-[-.05em] sm:text-5xl">What are you researching?</h2>
+            <p className="mt-4 text-base leading-7 text-[var(--muted)]">Pick a research area and we&rsquo;ll show the compounds &mdash; every vendor, price, and lab test lined up. No idea where to start? That&rsquo;s the point.</p>
+          </div>
+          <div className="mt-8">
+            <HomeGoalRail />
+          </div>
+
+          <div className="mt-16 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-blue-700">Vendor track records</p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-[-.05em] sm:text-5xl">Most-tested vendors</h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">A shady seller can spin up a new site overnight &mdash; but they can&rsquo;t fake an independent lab record. Here are the ones with the most tests on file.</p>
+            </div>
+            <Link href="/vendors" className="inline-flex items-center gap-1.5 rounded-full border border-black/[.1] bg-white px-4 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:border-black/25 hover:shadow-[0_10px_26px_rgba(20,22,27,.1)]">
+              Browse all {vendors.length} <ArrowRight className="size-4" />
+            </Link>
+          </div>
+          <div className="mt-8">
+            <HomeVendorCarousel vendors={topVendors} />
           </div>
         </div>
       </section>
@@ -193,15 +199,6 @@ function DarkEvidence({ icon: Icon, title, detail }: { icon: React.ComponentType
           <p className="mt-1.5 text-sm leading-6 text-white/50">{detail}</p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function MiniMetric({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="rounded-xl bg-black/[.035] px-2 py-3">
-      <p className="text-sm font-semibold">{value}</p>
-      <p className="mt-0.5 text-[10px] text-[var(--muted)]">{label}</p>
     </div>
   );
 }
