@@ -2,9 +2,9 @@ import { WifiOff, ExternalLink, ServerCrash } from "lucide-react";
 import type { VendorStatus } from "@/server/verify/vendor-status";
 
 const ALERT: Record<string, { ring: string; bg: string; chip: string; icon: typeof WifiOff; label: string }> = {
-  offline: { ring: "border-rose-300", bg: "bg-rose-50", chip: "bg-rose-100 text-rose-800", icon: WifiOff, label: "Site offline" },
-  parked: { ring: "border-rose-300", bg: "bg-rose-50", chip: "bg-rose-100 text-rose-800", icon: ServerCrash, label: "Parked / empty page" },
-  redirected: { ring: "border-amber-300", bg: "bg-amber-50", chip: "bg-amber-100 text-amber-800", icon: ExternalLink, label: "Redirects elsewhere" },
+  offline: { ring: "border-[#111214]", bg: "bg-[#ffecea]", chip: "bg-white text-[#d3372c]", icon: WifiOff, label: "Site offline" },
+  parked: { ring: "border-[#111214]", bg: "bg-[#ffecea]", chip: "bg-white text-[#d3372c]", icon: ServerCrash, label: "Parked / empty page" },
+  redirected: { ring: "border-[#111214]", bg: "bg-[#fff6e6]", chip: "bg-white text-[#b26a00]", icon: ExternalLink, label: "Redirects elsewhere" },
 };
 
 // Loud only for the going-dark states — a storefront that's offline, parked, or now redirecting
@@ -14,11 +14,11 @@ export function VendorStatusBanner({ status, vendorName }: { status: VendorStatu
   if (!a) return null;
   const Icon = a.icon;
   return (
-    <div className={`rounded-[26px] border p-6 ${a.ring} ${a.bg}`}>
+    <div className={`hard rounded-[18px] border-2 p-6 ${a.ring} ${a.bg}`}>
       <div className="flex items-center gap-2.5">
         <span className={`grid size-9 place-items-center rounded-xl ${a.chip}`}><Icon className="size-4" /></span>
         <div>
-          <p className={`text-[11px] font-semibold uppercase tracking-[.16em] ${status.status === "redirected" ? "text-amber-700" : "text-rose-700"}`}>Vendor status · possible exit scam</p>
+          <p className={`text-[11px] font-semibold uppercase tracking-[.16em] ${status.status === "redirected" ? "text-[#b26a00]" : "text-[#d3372c]"}`}>Vendor status · possible exit scam</p>
           <h2 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s storefront isn&rsquo;t operating normally</h2>
         </div>
       </div>

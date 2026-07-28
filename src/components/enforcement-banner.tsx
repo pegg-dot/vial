@@ -10,12 +10,12 @@ const TYPE_LABEL: Record<string, string> = { warning_letter: "Warning letter", i
 export function EnforcementBanner({ actions, vendorName }: { actions: RegulatoryActionRow[]; vendorName: string }) {
   if (actions.length === 0) return null;
   const severe = actions.some((a) => a.severity === "severe");
-  const wrap = severe ? "border-rose-300 bg-rose-50" : "border-amber-300 bg-amber-50";
+  const wrap = severe ? "border-[#111214] bg-[#ffecea]" : "border-[#111214] bg-[#fff6e6]";
   const tone = severe ? "text-rose-900" : "text-amber-950";
   return (
-    <div className={`rounded-[24px] border p-5 sm:p-6 ${wrap} ${tone}`}>
+    <div className={`hard rounded-[18px] border-2 p-5 sm:p-6 ${wrap} ${tone}`}>
       <div className="flex items-center gap-3">
-        <span className={`grid size-10 shrink-0 place-items-center rounded-2xl text-white ${severe ? "bg-rose-600" : "bg-amber-500"}`}>{severe ? <ShieldAlert className="size-5" /> : <Gavel className="size-5" />}</span>
+        <span className={`grid size-10 shrink-0 place-items-center rounded-2xl text-white ${severe ? "bg-[#d3372c]" : "bg-[#b26a00]"}`}>{severe ? <ShieldAlert className="size-5" /> : <Gavel className="size-5" />}</span>
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.12em] opacity-80">Regulatory &amp; enforcement record</p>
           <h2 className="mt-0.5 text-xl font-semibold tracking-[-.02em]">{severe ? "On a government enforcement record" : `${actions.length} public regulatory record${actions.length === 1 ? "" : "s"}`}</h2>
@@ -32,7 +32,7 @@ export function EnforcementBanner({ actions, vendorName }: { actions: Regulatory
                 <p className="mt-1 text-sm leading-6 opacity-80">{a.summary}</p>
                 {a.match_confidence !== "high" && <p className="mt-1 flex items-center gap-1 text-xs opacity-60"><AlertTriangle className="size-3" /> Named subject: &ldquo;{a.subject_name}&rdquo; — attribution to this vendor is our best match, not confirmed by the agency.</p>}
               </div>
-              {a.severity === "severe" ? <span className="shrink-0 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-bold uppercase text-white">Severe</span> : <span className="shrink-0 rounded-full bg-amber-500 px-2.5 py-1 text-[10px] font-bold uppercase text-white">Caution</span>}
+              {a.severity === "severe" ? <span className="shrink-0 rounded-full bg-[#d3372c] px-2.5 py-1 text-[10px] font-bold uppercase text-white">Severe</span> : <span className="shrink-0 rounded-full bg-[#b26a00] px-2.5 py-1 text-[10px] font-bold uppercase text-white">Caution</span>}
             </div>
             <a href={a.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-2">Read the official record <ExternalLink className="size-3" /></a>
           </div>
