@@ -43,16 +43,12 @@ export default async function HomePage() {
       <HomeFeatures />
 
       {/* Browse by goal */}
-      <section className="relative isolate overflow-hidden border-y border-black/[.06] bg-white">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="gum-blob gum-float absolute -left-16 top-8 size-56 bg-[radial-gradient(circle,rgba(143,255,214,.4),transparent_70%)] blur-2xl" />
-          <div className="gum-blob-2 gum-float-rev absolute right-[-4rem] bottom-4 size-64 bg-[radial-gradient(circle,rgba(109,93,252,.24),transparent_70%)] blur-2xl" />
-        </div>
+      <section className="border-b-2 border-[#111214] bg-white">
         <div className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24">
           <div className="max-w-2xl">
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Start with a goal</p>
-            <h2 className="mt-4 text-balance text-[clamp(2.2rem,5vw,3.6rem)] font-semibold leading-[.96] tracking-[-.05em]">What are you researching?</h2>
-            <p className="mt-4 max-w-xl text-lg leading-8 text-[var(--muted)]">Pick a research area &mdash; we&rsquo;ll line up the compounds with every vendor, price, and lab test. No idea where to start? That&rsquo;s exactly the point.</p>
+            <h2 className="mt-4 text-balance text-[clamp(2.4rem,5.5vw,4rem)] font-extrabold leading-[.92] tracking-[-.045em]">What are you researching?</h2>
+            <p className="mt-4 max-w-xl text-lg font-medium leading-8 text-[var(--muted)]">Pick a research area &mdash; we&rsquo;ll line up the compounds with every vendor, price, and lab test. No idea where to start? That&rsquo;s exactly the point.</p>
           </div>
           <div className="mt-9"><HomeGoalRail /></div>
         </div>
@@ -65,10 +61,10 @@ export default async function HomePage() {
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="max-w-2xl">
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Vendor track records</p>
-            <h2 className="mt-4 text-balance text-[clamp(2.2rem,5vw,3.6rem)] font-semibold leading-[.96] tracking-[-.05em]">A new site can&rsquo;t fake an old lab record.</h2>
-            <p className="mt-4 max-w-xl text-lg leading-8 text-[var(--muted)]">Scammers rebrand overnight. They can&rsquo;t rewrite a year of independent tests. Here are the vendors with the most on file.</p>
+            <h2 className="mt-4 text-balance text-[clamp(2.4rem,5.5vw,4rem)] font-extrabold leading-[.92] tracking-[-.045em]">A new site can&rsquo;t fake an old lab record.</h2>
+            <p className="mt-4 max-w-xl text-lg font-medium leading-8 text-[var(--muted)]">Scammers rebrand overnight. They can&rsquo;t rewrite a year of independent tests. Here are the vendors with the most on file.</p>
           </div>
-          <Link href="/vendors" className="inline-flex items-center gap-1.5 rounded-full border border-black/[.12] bg-white px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 hover:border-black/25 hover:shadow-[0_10px_26px_rgba(20,22,27,.1)]">
+          <Link href="/vendors" className="ink hard-sm press inline-flex items-center gap-1.5 rounded-full bg-white px-5 py-3 text-sm font-bold text-[#111214]">
             Browse all {vendors.length} <ArrowRight className="size-4" />
           </Link>
         </div>

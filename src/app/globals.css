@@ -190,6 +190,19 @@ summary:focus-visible {
   mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
 }
 
+/* Gumroad-hardened: thick ink borders + hard offset shadows (the signature "something"). */
+.ink { border: 2px solid #111214; }
+.ink-1 { border: 1.5px solid #111214; }
+.hard { box-shadow: 5px 5px 0 0 #111214; }
+.hard-sm { box-shadow: 3px 3px 0 0 #111214; }
+.hard-lg { box-shadow: 8px 8px 0 0 #111214; }
+.hard-blue { box-shadow: 5px 5px 0 0 #2b31d8; }
+.hard-mint { box-shadow: 5px 5px 0 0 #12b3a6; }
+/* press-down interaction: the card/button sinks into its own shadow on hover */
+.press { transition: transform .14s ease, box-shadow .14s ease; }
+.press:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0 0 #111214; }
+.press-blue:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0 0 #2b31d8; }
+
 .glass-dark {
   background:
     linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
