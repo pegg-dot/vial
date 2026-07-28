@@ -235,14 +235,15 @@ summary:focus-visible {
 .field {
   min-height: 3.25rem;
   width: 100%;
-  border: 1px solid rgba(17, 18, 20, 0.1);
-  border-radius: 1rem;
-  background: var(--background);
+  border: 1.5px solid #111214;
+  border-radius: 0.85rem;
+  background: #fff;
   padding: 0.8rem 1rem;
   font-size: 0.875rem;
+  font-weight: 500;
   line-height: 1.4;
   outline: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  transition: box-shadow 140ms ease, transform 140ms ease;
 }
-.field:hover { border-color: rgba(17, 18, 20, 0.18); }
-.field:focus { border-color: rgba(109, 93, 252, 0.55); box-shadow: 0 0 0 4px rgba(109, 93, 252, 0.08); background: #fff; }
+.field:hover { transform: translateY(-1px); }
+.field:focus { box-shadow: 3px 3px 0 0 #2b31d8; }
