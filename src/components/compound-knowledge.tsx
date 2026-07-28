@@ -17,13 +17,13 @@ export function CompoundKnowledge({
 }) {
   const goals = education.goals ?? [];
   return (
-    <div className="rounded-[28px] border border-black/[.07] bg-white p-6 sm:p-8">
+    <div className="ink hard rounded-[20px] bg-white p-6 sm:p-8">
       <div className="flex items-center gap-2.5">
-        <span className="grid size-9 place-items-center rounded-xl bg-violet-50"><BookOpen className="size-4 text-violet-700" /></span>
-        <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Understand this compound</p>
+        <span className="ink-1 grid size-9 place-items-center rounded-xl bg-[#f0edff]"><BookOpen className="size-4 text-[#5a4be0]" /></span>
+        <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Understand this compound</p>
       </div>
-      <h2 className="mt-4 text-2xl font-semibold tracking-[-.035em] sm:text-3xl">What is {name}?</h2>
-      {education.summary ? <p className="mt-3 max-w-3xl text-[15px] leading-7 text-black/70">{education.summary}</p> : null}
+      <h2 className="mt-4 text-2xl font-extrabold tracking-[-.035em] sm:text-3xl">What is {name}?</h2>
+      {education.summary ? <p className="mt-3 max-w-3xl text-[15px] font-medium leading-7 text-black/70">{education.summary}</p> : null}
       {goals.length > 0 ? <div className="mt-5"><GoalTags goals={goals} size="md" /></div> : null}
 
       <div className="mt-6 border-t border-black/[.08]">

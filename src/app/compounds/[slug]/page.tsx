@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3 } from "lucide-react";
+import { ArtMolecule, ArtDroplet } from "@/components/vial-art";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
 import { formatCurrency } from "@/lib/format";
 import { educationFor } from "@/lib/compound-education";
@@ -54,33 +55,36 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
   return (
     <>
-      <section className="border-b border-black/[.06]">
-        <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
-          <Link href="/market" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-black"><ArrowLeft className="size-4" /> Back to market</Link>
-          <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
+      <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#f0edff]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <ArtMolecule className="gum-float absolute right-[40%] top-[8%] hidden w-16 drop-shadow-[4px_4px_0_#111214] xl:block" a="#6d5dfc" b="#8fffd6" c="#fff" />
+          <ArtDroplet className="gum-float-rev absolute right-[3%] bottom-[10%] hidden w-11 drop-shadow-[3px_3px_0_#111214] lg:block" fill="#6d5dfc" />
+        </div>
+        <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-14">
+          <Link href="/compounds" className="inline-flex items-center gap-2 text-sm font-bold text-[#111214]/60 transition hover:text-[#111214]"><ArrowLeft className="size-4" /> All compounds</Link>
+          <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full border border-black/[.07] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[.14em] text-black/55">
+                <div className="ink-1 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.1em] text-[#111214]">
                   <span className="size-2 rounded-full" style={{ background: compound.accent[0] }} /> {compound.category}
                 </div>
                 {compound.origin === "live" && <DataOriginBadge origin="live" />}
               </div>
-              <h1 className="mt-5 text-6xl font-semibold leading-[.9] tracking-[-.075em] sm:text-8xl">{compound.name}</h1>
+              <h1 className="mt-5 text-balance text-[clamp(3.2rem,8vw,7rem)] font-extrabold leading-[.86] tracking-[-.06em]">{compound.name}</h1>
               {edu?.goals?.length ? <div className="mt-5"><GoalTags goals={edu.goals} size="md" /></div> : null}
-              <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">{compound.description}</p>
-              {/* hero chips give the glance; the full knowledge panel sits below the stats */}
+              <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">{compound.description}</p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {compound.aliases.map((alias) => <span key={alias} className="rounded-full bg-black/[.045] px-3 py-1.5 text-xs text-black/55">{alias}</span>)}
+                {compound.aliases.map((alias) => <span key={alias} className="ink-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#111214]/70">{alias}</span>)}
               </div>
               <div className="mt-6"><FollowButton entityType="compound" entitySlug={slug} initialFollowed={followed} authenticated={Boolean(principal)} /></div>
             </div>
-            <div className="rounded-[28px] border border-black/[.07] bg-white p-6">
+            <div className="ink hard-lg rounded-[22px] bg-white p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs text-[var(--muted)]">Observed median price</p>
-                  <p className="mt-1 text-4xl font-semibold tracking-[-.055em]">{formatCurrency(compound.medianPrice)}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Observed median price</p>
+                  <p className="mt-1.5 text-5xl font-extrabold tracking-[-.055em]">{formatCurrency(compound.medianPrice)}</p>
                 </div>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${compound.priceChange < 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{compound.priceChange > 0 ? "+" : ""}{compound.priceChange}%</span>
+                <span className={`ink-1 rounded-full px-2.5 py-1 text-xs font-extrabold ${compound.priceChange < 0 ? "bg-[#e6fbf6] text-[#0e8f80]" : "bg-[#ffecea] text-[#d3372c]"}`}>{compound.priceChange > 0 ? "+" : ""}{compound.priceChange}%</span>
               </div>
               <div className="mt-5 h-28"><PriceSparkline values={averageHistory} accent={compound.accent[0]} height={94} /></div>
             </div>
@@ -88,7 +92,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
+      <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={Layers3} label="Active listings" value={String(compound.listings)} />
           <Stat icon={FileSearch} label="Independent lab tests" value={compound.medianPurity != null ? `${compound.coaCount} · ${compound.medianPurity.toFixed(1)}%` : String(compound.coaCount)} />
@@ -117,8 +121,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
       <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
         <div className="mb-7">
-          <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Current market</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">All {compound.name} listings</h2>
+          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Current market</p>
+          <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">All {compound.name} listings</h2>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
       </section>
@@ -126,24 +130,24 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       {stacked.length ? (
         <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
           <div className="mb-7">
-            <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Commonly researched together</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">Often stacked with {compound.name}</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">Compounds the research community frequently discusses alongside {compound.name}. Not a protocol or a recommendation — a starting point for what to read about next.</p>
+            <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Commonly researched together</p>
+            <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Often stacked with {compound.name}</h2>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Compounds the research community frequently discusses alongside {compound.name}. Not a protocol or a recommendation — a starting point for what to read about next.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {stacked.map((c) => {
               const cEdu = educationFor(c.slug);
               return (
-                <Link key={c.slug} href={`/compounds/${c.slug}`} className="group flex flex-col gap-3 rounded-[24px] border border-black/[.07] bg-white p-5 transition hover:-translate-y-0.5 hover:border-black/[.14] hover:shadow-[0_16px_50px_rgba(23,25,30,.08)]">
+                <Link key={c.slug} href={`/compounds/${c.slug}`} className="ink-1 hard press group flex flex-col gap-3 rounded-[18px] bg-white p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-lg font-semibold tracking-[-.03em]">{c.name}</p>
-                      <p className="mt-0.5 text-xs text-[var(--muted)]">{c.category}</p>
+                      <p className="truncate text-lg font-extrabold tracking-[-.03em]">{c.name}</p>
+                      <p className="mt-0.5 text-xs font-semibold text-[var(--muted)]">{c.category}</p>
                     </div>
-                    <span className="shrink-0 text-right text-sm font-semibold tabular-nums">{c.listings > 0 ? formatCurrency(c.medianPrice) : "—"}<span className="mt-0.5 block text-[10px] font-medium text-[var(--muted)]">{c.listings > 0 ? "median" : "no listings"}</span></span>
+                    <span className="shrink-0 text-right text-sm font-extrabold tabular-nums">{c.listings > 0 ? formatCurrency(c.medianPrice) : "—"}<span className="mt-0.5 block text-[10px] font-semibold text-[var(--muted)]">{c.listings > 0 ? "median" : "no listings"}</span></span>
                   </div>
                   {cEdu?.goals?.length ? <GoalTags goals={cEdu.goals} limit={2} /> : null}
-                  {cEdu?.summary ? <p className="line-clamp-2 text-xs leading-5 text-black/60">{cEdu.summary}</p> : null}
+                  {cEdu?.summary ? <p className="line-clamp-2 text-xs font-medium leading-5 text-black/60">{cEdu.summary}</p> : null}
                 </Link>
               );
             })}
@@ -153,13 +157,13 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
       <LabTestsPanel tests={labTests} heading={`${compound.name} — independent lab tests`} />
 
-      <section className="mx-auto max-w-[1320px] px-5 pb-14 sm:px-8 sm:pb-20">
-        <div className="mt-4 rounded-[28px] border border-amber-200 bg-amber-50 p-6 sm:p-8">
+      <section className="mx-auto max-w-[1320px] px-5 pb-14 pt-4 sm:px-8 sm:pb-20">
+        <div className="ink hard rounded-[20px] bg-[#fff6e6] p-6 sm:p-8">
           <div className="flex items-start gap-4">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-amber-100"><CircleAlert className="size-4 text-amber-800" /></span>
+            <span className="ink-1 grid size-11 shrink-0 place-items-center rounded-2xl bg-white"><CircleAlert className="size-4 text-[#b26a00]" /></span>
             <div>
-              <h2 className="text-lg font-semibold tracking-[-.025em]">Research notes aren&rsquo;t product proof</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-amber-950/70">{compound.researchNote}</p>
+              <h2 className="text-lg font-extrabold tracking-[-.025em]">Research notes aren&rsquo;t product proof</h2>
+              <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[#111214]/70">{compound.researchNote}</p>
             </div>
           </div>
         </div>
@@ -170,10 +174,10 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
 function Stat({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
-    <div className="rounded-[24px] border border-black/[.07] bg-white p-5">
-      <Icon className="size-4 text-black/35" />
-      <p className="mt-6 text-2xl font-semibold tracking-[-.045em]">{value}</p>
-      <p className="mt-1 text-xs text-[var(--muted)]">{label}</p>
+    <div className="ink hard rounded-[18px] bg-white p-5">
+      <Icon className="size-4 text-[#6d5dfc]" />
+      <p className="mt-5 text-2xl font-extrabold tracking-[-.045em]">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-[var(--muted)]">{label}</p>
     </div>
   );
 }
