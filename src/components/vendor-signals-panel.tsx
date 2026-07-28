@@ -14,10 +14,10 @@ export function VendorSignalsPanel({ signals, vendorName }: { signals: VendorSig
   const disclaimer = signals.research_disclaimer;
   return (
     <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-16">
-      <div className="mb-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Operational signals</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">What their own storefront tells us</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">Neutral operational facts we read directly from {vendorName}&rsquo;s public site and domain records. Context for judgment, not a verdict — none of it proves what&rsquo;s in the vial.</p>
+      <div className="mb-7">
+        <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Operational signals</p>
+        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">What their own storefront tells us</h2>
+        <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Neutral operational facts we read directly from {vendorName}&rsquo;s public site and domain records. Context for judgment, not a verdict — none of it proves what&rsquo;s in the vial.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {signals.domain_age_note && (
@@ -58,12 +58,12 @@ export function VendorSignalsPanel({ signals, vendorName }: { signals: VendorSig
 
 function SignalTile({ icon: Icon, label, tone = "plain", children }: { icon: React.ComponentType<{ className?: string }>; label: string; tone?: "plain" | "warn"; children: React.ReactNode }) {
   return (
-    <div className={`rounded-[24px] border p-5 ${tone === "warn" ? "border-amber-200 bg-amber-50/60" : "border-black/[.07] bg-white"}`}>
+    <div className={`ink-1 hard rounded-[18px] p-5 ${tone === "warn" ? "bg-[#fff6e6]" : "bg-white"}`}>
       <div className="flex items-center gap-2">
-        <Icon className={`size-4 ${tone === "warn" ? "text-amber-700" : "text-black/35"}`} />
-        <p className="text-[11px] font-semibold uppercase tracking-[.12em] text-[var(--muted)]">{label}</p>
+        <Icon className={`size-4 ${tone === "warn" ? "text-[#b26a00]" : "text-black/35"}`} />
+        <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">{label}</p>
       </div>
-      <div className="mt-3 text-sm leading-6 text-black/75">{children}</div>
+      <div className="mt-3 text-sm font-medium leading-6 text-black/75">{children}</div>
     </div>
   );
 }

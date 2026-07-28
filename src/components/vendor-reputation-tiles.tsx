@@ -30,10 +30,10 @@ const PROVENANCE_LABELS: Record<string, string> = {
 
 function toneOf(status: string) {
   return status === "established"
-    ? { chip: "bg-emerald-50 text-emerald-800", Icon: CheckCircle2, iconClass: "text-emerald-700", card: "border-black/[.07] bg-white" }
+    ? { chip: "bg-[#e6fbf6] text-[#0e8f80]", Icon: CheckCircle2, iconClass: "text-[#0e8f80]", card: "ink-1 hard bg-white" }
     : status === "disputed"
-    ? { chip: "bg-amber-50 text-amber-800", Icon: AlertTriangle, iconClass: "text-amber-700", card: "border-amber-200 bg-amber-50" }
-    : { chip: "bg-black/[.05] text-black/55", Icon: CircleDashed, iconClass: "text-black/35", card: "border-dashed border-black/15 bg-black/[.015]" };
+    ? { chip: "bg-[#fff6e6] text-[#b26a00]", Icon: AlertTriangle, iconClass: "text-[#b26a00]", card: "ink-1 hard bg-[#fff6e6]" }
+    : { chip: "bg-[#111214]/[.06] text-black/55", Icon: CircleDashed, iconClass: "text-black/35", card: "border-2 border-dashed border-[#111214]/20 bg-white/40" };
 }
 
 export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDimension[] }) {
@@ -51,14 +51,14 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
         {dimensions.map((d) => {
           const t = toneOf(d.status);
           return (
-            <div key={d.key} className={`rounded-[26px] border p-5 ${t.card}`}>
+            <div key={d.key} className={`rounded-[18px] p-5 ${t.card}`}>
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold">{PLAIN_DIMENSION_LABELS[d.key] ?? d.label}</h3>
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{d.status}</span>
+                <h3 className="text-sm font-extrabold">{PLAIN_DIMENSION_LABELS[d.key] ?? d.label}</h3>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{d.status}</span>
               </div>
-              <p className="mt-3 text-lg font-semibold tracking-[-.02em]">{d.value}</p>
-              <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{d.basis}</p>
-              <button type="button" onClick={() => setOpen(d)} className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-black/45 transition hover:text-black/70">
+              <p className="mt-3 text-lg font-extrabold tracking-[-.02em]">{d.value}</p>
+              <p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">{d.basis}</p>
+              <button type="button" onClick={() => setOpen(d)} className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-[#2b31d8] transition hover:opacity-70">
                 What does &ldquo;{d.status}&rdquo; mean? →
               </button>
             </div>

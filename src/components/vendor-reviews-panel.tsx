@@ -1,12 +1,12 @@
-import { MessageSquareText, ThumbsUp, TriangleAlert, ExternalLink } from "lucide-react";
+import { ThumbsUp, TriangleAlert, ExternalLink } from "lucide-react";
 import type { VendorReview } from "@/server/verify/vendor-reviews";
 
-const SENTIMENT: Record<string, { chip: string; label: string; ring: string; bg: string }> = {
-  positive: { chip: "bg-emerald-100 text-emerald-800", label: "Mostly positive", ring: "border-emerald-200", bg: "bg-emerald-50/50" },
-  mixed: { chip: "bg-amber-100 text-amber-800", label: "Mixed reports", ring: "border-amber-200", bg: "bg-amber-50/50" },
-  negative: { chip: "bg-rose-100 text-rose-800", label: "Mostly negative", ring: "border-rose-300", bg: "bg-rose-50/60" },
-  scam: { chip: "bg-rose-100 text-rose-800", label: "Scam / fraud reports", ring: "border-rose-300", bg: "bg-rose-50/60" },
-  unknown: { chip: "bg-black/[.06] text-black/60", label: "No reviews found", ring: "border-black/[.09]", bg: "bg-black/[.02]" },
+const SENTIMENT: Record<string, { chip: string; label: string; bg: string }> = {
+  positive: { chip: "bg-[#e6fbf6] text-[#0e8f80]", label: "Mostly positive", bg: "bg-[#f2fdfa]" },
+  mixed: { chip: "bg-[#fff6e6] text-[#b26a00]", label: "Mixed reports", bg: "bg-[#fffaf0]" },
+  negative: { chip: "bg-[#ffecea] text-[#d3372c]", label: "Mostly negative", bg: "bg-[#fff5f4]" },
+  scam: { chip: "bg-[#ffecea] text-[#d3372c]", label: "Scam / fraud reports", bg: "bg-[#fff5f4]" },
+  unknown: { chip: "bg-black/[.06] text-black/60", label: "No reviews found", bg: "bg-white" },
 };
 
 // A source name that isn't a full URL is shown as-is; a URL is shown by its host with a link.
@@ -21,20 +21,17 @@ export function VendorReviewsPanel({ review }: { review: VendorReview }) {
   const s = SENTIMENT[review.sentiment] ?? SENTIMENT.unknown;
   return (
     <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-20">
-      <div className="mb-6 flex items-center gap-2.5">
-        <MessageSquareText className="size-5 text-black/40" />
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">What buyers say</p>
-          <h2 className="mt-1 text-3xl font-semibold tracking-[-.045em]">Reputation, gathered from the open web</h2>
-        </div>
+      <div className="mb-7">
+        <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">What buyers say</p>
+        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Reputation, gathered from the open web</h2>
       </div>
-      <div className={`rounded-[26px] border ${s.ring} ${s.bg} p-6 sm:p-7`}>
+      <div className={`ink hard rounded-[20px] ${s.bg} p-6 sm:p-7`}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.chip}`}>{s.label}</span>
-          <span className="rounded-full border border-black/[.1] bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-black/55">{review.reviewVolume} review volume</span>
-          <span className="rounded-full border border-black/[.1] bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-black/55">{review.confidence} confidence</span>
+          <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${s.chip}`}>{s.label}</span>
+          <span className="ink-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-black/55">{review.reviewVolume} review volume</span>
+          <span className="ink-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-black/55">{review.confidence} confidence</span>
         </div>
-        <p className="mt-4 text-[15px] leading-7 text-black/75">{review.summary}</p>
+        <p className="mt-4 text-[15px] font-medium leading-7 text-black/75">{review.summary}</p>
 
         {(review.positives.length > 0 || review.redFlags.length > 0) && (
           <div className="mt-5 grid gap-5 sm:grid-cols-2">

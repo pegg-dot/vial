@@ -31,8 +31,8 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
     <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Independent testing</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-.045em]">{heading}</h2>
+          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Independent testing</p>
+          <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">{heading}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
             Real, publicly verifiable third-party tests. Purity is read from the certificate itself. A test reflects one lab&rsquo;s result for one submitted batch — not a guarantee that every vial matches.
           </p>
@@ -60,20 +60,20 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
         </div>
         <div className="flex gap-3">
           {blindCount > 0 && (
-            <div className="rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-center" title="Blind tests: the sample was obtained independently, so the vendor could not hand-pick which vial was tested. This is the strongest independence signal a certificate can carry.">
-              <p className="flex items-center justify-center gap-1 text-2xl font-semibold tabular-nums text-violet-800"><EyeOff className="size-4" />{blindCount}</p>
-              <p className="text-[11px] font-semibold text-violet-700">blind {blindCount === 1 ? "test" : "tests"}</p>
+            <div className="ink-1 hard-sm rounded-2xl bg-[#eef0ff] px-4 py-3 text-center" title="Blind tests: the sample was obtained independently, so the vendor could not hand-pick which vial was tested. This is the strongest independence signal a certificate can carry.">
+              <p className="flex items-center justify-center gap-1 text-2xl font-extrabold tabular-nums text-[#2b31d8]"><EyeOff className="size-4" />{blindCount}</p>
+              <p className="text-[11px] font-bold text-[#2b31d8]">blind {blindCount === 1 ? "test" : "tests"}</p>
             </div>
           )}
           {withPurity.length > 0 && (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
-              <p className="text-2xl font-semibold tabular-nums text-emerald-800">{Math.max(...withPurity.map((t) => Number(t.purity_pct))).toFixed(1)}%</p>
-              <p className="text-[11px] font-semibold text-emerald-700">highest tested purity</p>
+            <div className="ink-1 hard-sm rounded-2xl bg-[#e6fbf6] px-4 py-3 text-center">
+              <p className="text-2xl font-extrabold tabular-nums text-[#0e8f80]">{Math.max(...withPurity.map((t) => Number(t.purity_pct))).toFixed(1)}%</p>
+              <p className="text-[11px] font-bold text-[#0e8f80]">highest tested purity</p>
             </div>
           )}
         </div>
       </div>
-      <div className="overflow-x-auto rounded-[24px] border border-black/[.07] bg-white">
+      <div className="ink hard overflow-x-auto rounded-[20px] bg-white">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-black/[.025] text-[10px] uppercase tracking-[.12em] text-[var(--muted)]">
             <tr>
