@@ -77,6 +77,15 @@ export function ArtCoa({ className = "" }: { className?: string }) {
   );
 }
 
+export function ArtTag({ className = "", fill = "#12b3a6" }: { className?: string; fill?: string }) {
+  return (
+    <svg viewBox="0 0 118 100" className={className} aria-hidden fill="none">
+      <path d="M8 20 a12 12 0 0 1 12 -12 h44 a12 12 0 0 1 8.5 3.5 l38 38 a10 10 0 0 1 0 14 l-30 30 a10 10 0 0 1 -14 0 l-38 -38 A12 12 0 0 1 8 55 z" fill={fill} stroke={INK} strokeWidth="5" strokeLinejoin="round" />
+      <circle cx="34" cy="34" r="9" fill="#fff" stroke={INK} strokeWidth="5" />
+    </svg>
+  );
+}
+
 export function ArtMagnifierVial({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 132 132" className={className} aria-hidden fill="none">
