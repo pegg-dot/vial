@@ -7,6 +7,7 @@
 import knownVendors from "./known-vendors.json";
 import { getDatabase } from "@/server/db/client";
 import { searchPeptides, classifyPost } from "@/server/ingest/reddit";
+import { composeVerdictForVendorSlug } from "./trust-graph";
 
 export type Verdict = "trusted" | "caution" | "avoid" | "high-risk" | "unproven" | "info";
 export interface Signal { ok: boolean | null; label: string; detail: string }
@@ -122,6 +123,34 @@ export function vendorVerdict(v: KnownVendor): VerifyResult {
   };
 }
 
+// The rich path: turn a cross-seam ComposedVerdict into a verify result. This is what makes the
+// verify tool as deep as the vendor page — its signals ARE the trust-graph factors, each traceable.
+// We always link to VIAL's own evidence page (even for "avoid"): it's where the "why" lives, and it
+// never sells — the vendor's storefront is only reachable from a live listing's explicit handoff.
+function verifyResultFromComposed(vendorName: string, slug: string, composed: Awaited<ReturnType<typeof composeVerdictForVendorSlug>>): VerifyResult {
+  const c = composed!.composed;
+  return {
+    query: vendorName, kind: "vendor", verdict: c.verdict,
+    headline: c.headline, summary: c.summary, signals: c.factors,
+    link: { href: `/vendors/${slug}`, label: `See ${vendorName} on VIAL` },
+  };
+}
+
+// Resolve a free-text query to a tracked DB vendor slug (organizations table), covering the many
+// vendors we track that aren't in the curated known-vendors.json. Name/slug match only — domain
+// resolution stays with the curated list, which is the app's domain→vendor map.
+async function resolveTrackedVendorSlug(query: string): Promise<string | null> {
+  const nq = norm(query);
+  if (!nq) return null;
+  const db = await getDatabase();
+  const r = await db.query<{ slug: string }>(
+    `SELECT slug FROM organizations WHERE organization_type='vendor'
+       AND (REGEXP_REPLACE(LOWER(display_name),'[^a-z0-9]','','g')=$1 OR REGEXP_REPLACE(LOWER(slug),'[^a-z0-9]','','g')=$1)
+     LIMIT 1`, [nq],
+  );
+  return r.rows[0]?.slug ?? null;
+}
+
 function coaIsStale(testedAt: string | null): boolean {
   if (!testedAt) return false;
   const m = testedAt.match(/(20\d{2})/);
@@ -218,9 +247,23 @@ export async function runVerification(rawQuery: string): Promise<VerifyResult> {
   const domain = extractDomain(query);
 
   // 1. Known vendor (by name or domain) — includes the flagged/defunct ones, so a scam
-  //    search returns a loud "avoid", never silence.
+  //    search returns a loud "avoid", never silence. If we also track this vendor in the DB,
+  //    compose the full cross-seam verdict (as rich as the vendor page); else fall back to the
+  //    curated static verdict.
   const known = findKnownVendor(query, domain);
-  if (known) return vendorVerdict(known);
+  if (known) {
+    const rich = await composeVerdictForVendorSlug(known.slug);
+    return rich ? verifyResultFromComposed(rich.vendorName, rich.slug, rich) : vendorVerdict(known);
+  }
+
+  // 1b. A tracked DB vendor that isn't in the curated list — resolve by name/slug and compose.
+  if (!looksLikeCoaCode(query)) {
+    const trackedSlug = await resolveTrackedVendorSlug(query);
+    if (trackedSlug) {
+      const rich = await composeVerdictForVendorSlug(trackedSlug);
+      if (rich) return verifyResultFromComposed(rich.vendorName, rich.slug, rich);
+    }
+  }
 
   // 2. A Janoshik COA code.
   if (looksLikeCoaCode(query)) return coaVerdict(query);

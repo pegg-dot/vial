@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building2, CircleAlert, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, X } from "lucide-react";
+import { ArrowLeft, Building2, Check, CircleAlert, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, X } from "lucide-react";
 import { getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { vendorStatusLabel } from "@/lib/format";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
-import { verdictForVendorSlug } from "@/server/verify";
 import type { Verdict } from "@/server/verify";
+import { composeVerdict } from "@/server/verify/trust-graph";
 import { getVendorRegulatoryActions } from "@/server/regulatory/repository";
-import { verdictFromSeverities } from "@/server/regulatory/actions";
 import { EnforcementBanner } from "@/components/enforcement-banner";
 import { FollowButton } from "@/components/follow-button";
 import { getCurrentPrincipal } from "@/server/auth/principal";
@@ -63,13 +62,25 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
 
-  // A public enforcement record outranks the static verdict: a severe action forces "avoid".
-  const regVerdict = verdictFromSeverities(enforcement.map((a) => a.severity as "severe" | "caution" | "informational"));
-  const staticVerdict = verdictForVendorSlug(slug);
-  const verdict = regVerdict === "avoid"
-    ? { verdict: "avoid" as const, summary: staticVerdict?.summary ?? `On a public regulatory/enforcement record (${enforcement.filter((a) => a.severity === "severe").length} severe). See the sourced records below.` }
-    : staticVerdict;
-  const v = verdict ? VERDICT_UI[verdict.verdict] : null;
+  // The trust graph: every seam we hold folds into one composed verdict (transparent rules, never a
+  // black-box score). The factors below show exactly which seams it rests on.
+  const composed = composeVerdict({
+    vendorName: vendor.name,
+    coaCount: vendor.coaCount,
+    medianPurity: vendor.medianPurity,
+    blindCount: vendorLabTests.filter((t) => t.is_blind).length,
+    enforcement: enforcement.map((a) => ({ severity: a.severity })),
+    reputationDimensions: reputation?.dimensions ?? [],
+    aggregators: aggregatorRatings.map((a) => ({ source: a.source, score: a.score, max_score: a.max_score })),
+    signals: vendorSignals,
+    review: vendorReview ? { sentiment: vendorReview.sentiment } : null,
+    community: communitySignal ? { sentiment: communitySignal.sentiment } : null,
+    links: vendorLinks.map((l) => ({ strength: l.strength, linkedSlug: l.linkedSlug })),
+    status: vendorStatus ? { status: vendorStatus.status } : null,
+    flagCount: vendorFlags.length,
+  });
+  const verdict = { verdict: composed.verdict, summary: composed.summary };
+  const v = VERDICT_UI[composed.verdict];
 
   const hasAlerts = (vendorStatus && vendorStatus.status !== "operating") || vendorFlags.length > 0 || enforcement.length > 0;
   const secondaryLabel = vendor.kind === "storefront" ? "Listings" : "Batch passports";
@@ -115,19 +126,13 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               </div>
             </div>
 
-            {/* the bottom line — the verdict */}
-            {v && verdict ? (
-              <div className={`ink hard-lg flex flex-col rounded-[22px] p-6 text-[#111214] ${v.bg}`}>
-                <div className="ink inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: v.accent }}><v.icon className="size-4" /> VIAL verdict</div>
-                <h2 className="mt-4 text-3xl font-extrabold tracking-[-.03em]">{v.label}</h2>
-                <p className="mt-2 text-[15px] font-medium leading-7 text-[#111214]/75">{verdict.summary}</p>
-              </div>
-            ) : (
-              <div className="ink hard-lg flex flex-col justify-center rounded-[22px] bg-white p-6 text-[#111214]">
-                <div className="ink inline-flex w-fit items-center gap-2 rounded-full bg-[#e6fbf6] px-3 py-1 text-[11px] font-bold uppercase tracking-[.12em] text-[#0e8f80]"><ShieldCheck className="size-4" /> No red flags on record</div>
-                <p className="mt-4 text-[15px] font-medium leading-7 text-[#111214]/75">We don&rsquo;t hold any scam reports, enforcement actions, or integrity flags for {vendor.name}. That isn&rsquo;t an endorsement &mdash; below is exactly what we do and don&rsquo;t know, piece by piece.</p>
-              </div>
-            )}
+            {/* the bottom line — the composed verdict */}
+            <div className={`ink hard-lg flex flex-col rounded-[22px] p-6 text-[#111214] ${v.bg}`}>
+              <div className="ink inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: v.accent }}><v.icon className="size-4" /> VIAL verdict</div>
+              <h2 className="mt-4 text-3xl font-extrabold tracking-[-.03em]">{v.label}</h2>
+              <p className="mt-2 text-[15px] font-medium leading-7 text-[#111214]/75">{verdict.summary}</p>
+              <p className="mt-auto pt-4 text-[11px] font-bold uppercase tracking-[.1em] text-[#111214]/45">Weighed across {composed.weighed} independent signal{composed.weighed === 1 ? "" : "s"}</p>
+            </div>
           </div>
 
           {/* at-a-glance stats */}
@@ -137,6 +142,25 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             <HeroStat icon={PackageSearch} value={String(secondaryValue)} label={secondaryLabel} />
             <HeroStat icon={Star} value={vendor.reviewCount > 0 ? String(vendor.reviewCount) : "—"} label="Buyer reviews on file" />
           </div>
+        </div>
+      </section>
+
+      {/* ── The trust graph: what the verdict is built on, seam by seam ─────────────── */}
+      <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8">
+        <SectionHead eyebrow="The trust graph" title="What this verdict is built on" note={`${composed.weighed} signals`} />
+        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Every angle we hold on {vendor.name}, folded into one verdict &mdash; each traceable to its source below. We never blend these into a single score; a green here and a red there stay visible.</p>
+        <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {composed.factors.map((f) => (
+            <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[16px] p-4 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>
+              <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-md ${f.ok === true ? "bg-[#12b3a6] text-white" : f.ok === false ? "bg-[#f5463d] text-white" : "bg-[#111214]/[.06] text-black/45"}`}>
+                {f.ok === true ? <Check className="size-3.5" /> : f.ok === false ? <X className="size-3.5" /> : <CircleDashed className="size-3.5" />}
+              </span>
+              <div>
+                <p className="text-[13px] font-extrabold tracking-[-.01em]">{f.label}</p>
+                <p className="mt-0.5 text-[13px] font-medium leading-5 text-[var(--muted)]">{f.detail}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
