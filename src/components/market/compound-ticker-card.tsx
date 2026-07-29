@@ -46,7 +46,7 @@ export function CompoundTickerCard({
             {range.from != null ? <>from {formatCurrency(range.from)}</> : "—"}
           </p>
           <p className="text-[11px] font-semibold text-[var(--muted)]">
-            {range.count} vendor{range.count === 1 ? "" : "s"}
+            {compound.medianPrice > 0 ? <>median {formatCurrency(compound.medianPrice)} · </> : null}{range.count} vendor{range.count === 1 ? "" : "s"}
           </p>
         </div>
         <span

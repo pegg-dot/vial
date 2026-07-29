@@ -96,18 +96,22 @@ export function QuickViewModal({
           </button>
         </div>
 
-        <div className="ink-1 mt-5 grid grid-cols-2 gap-3 rounded-2xl bg-[var(--background)] p-4">
+        <div className="ink-1 mt-5 grid grid-cols-3 gap-3 rounded-2xl bg-[var(--background)] p-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Market low</p>
-            <p className="mt-1 text-xl font-extrabold tabular-nums tracking-[-.03em]">{range.from != null ? formatCurrency(range.from) : "—"}</p>
+            <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em]">{range.from != null ? formatCurrency(range.from) : "—"}</p>
             <p className="text-[11px] font-semibold text-[var(--muted)]">{range.count} vendor{range.count === 1 ? "" : "s"}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Best value / active mg</p>
-            <p className="mt-1 text-xl font-extrabold tabular-nums tracking-[-.03em] text-[#0e8f80]">
+            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Median</p>
+            <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em]">{current.medianPrice > 0 ? formatCurrency(current.medianPrice) : "—"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Best / active mg</p>
+            <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em] text-[#0e8f80]">
               {bv?.pricePerMg ? formatPricePerMg(bv.pricePerMg) : "—"}
             </p>
-            {current.medianPurity != null && <p className="text-[11px] font-semibold text-[var(--muted)]">{current.medianPurity.toFixed(1)}% median purity</p>}
+            {current.medianPurity != null && <p className="text-[11px] font-semibold text-[var(--muted)]">{current.medianPurity.toFixed(1)}% pure</p>}
           </div>
         </div>
 

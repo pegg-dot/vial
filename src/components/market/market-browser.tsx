@@ -9,6 +9,8 @@ import { MarketFilterBar, type MarketFilters } from "./market-filter-bar";
 
 const EVIDENCE_RANK: Record<EvidenceLevel, number> = { independent: 5, "issuer-confirmed": 4, "vendor-published": 3, stale: 2, "public-only": 1 };
 
+const PAGE = 24;
+
 type LocalFilters = Omit<MarketFilters, "shelf">;
 const DEFAULT_LOCAL: LocalFilters = { query: "", tier: "all", testedOnly: false, priceMax: null, availability: "all", sort: "evidence" };
 const withoutShelf = (f: MarketFilters): LocalFilters => ({ query: f.query, tier: f.tier, testedOnly: f.testedOnly, priceMax: f.priceMax, availability: f.availability, sort: f.sort });
@@ -62,11 +64,13 @@ export function MarketBrowser({ shelf, onShelfChange }: { shelf: string; onShelf
   }, [products, filters, compoundBySlug, vendorBySlug]);
 
   const hasFilters = filters.query !== "" || filters.shelf !== "all" || filters.tier !== "all" || filters.availability !== "all" || filters.testedOnly || filters.priceMax != null;
-  const reset = () => { setLocal(DEFAULT_LOCAL); onShelfChange("all"); };
+  const [visible, setVisible] = useState(PAGE);
+  const shown = filtered.slice(0, visible);
+  const reset = () => { setLocal(DEFAULT_LOCAL); onShelfChange("all"); setVisible(PAGE); };
 
   return (
     <div>
-      <MarketFilterBar filters={filters} onChange={handleChange} />
+      <MarketFilterBar filters={filters} onChange={(next) => { handleChange(next); setVisible(PAGE); }} />
       <div className="mb-6 flex items-center justify-between gap-4">
         <p data-testid="market-count" className="text-sm font-medium text-[var(--muted)]">
           <span className="font-extrabold text-black">{filtered.length}</span> listings
@@ -74,9 +78,18 @@ export function MarketBrowser({ shelf, onShelfChange }: { shelf: string; onShelf
         {hasFilters && <button onClick={reset} className="text-sm font-bold text-black/60 hover:text-black">Reset filters</button>}
       </div>
       {filtered.length > 0 ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((product) => <ProductCard key={product.slug} product={product} />)}
-        </div>
+        <>
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {shown.map((product) => <ProductCard key={product.slug} product={product} />)}
+          </div>
+          {filtered.length > visible && (
+            <div className="mt-8 flex justify-center">
+              <button onClick={() => setVisible((v) => v + PAGE)} className="ink hard press rounded-full bg-white px-6 py-3 text-sm font-bold">
+                Show {Math.min(PAGE, filtered.length - visible)} more
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="ink rounded-[20px] bg-white px-6 py-20 text-center">
           <p className="text-xl font-extrabold tracking-[-0.03em]">No listings match these filters</p>

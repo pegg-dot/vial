@@ -63,13 +63,14 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
 
   return (
     <div className="ink hard overflow-x-auto rounded-[18px] bg-white">
-      <table className="w-full min-w-[860px] text-left text-sm">
+      <table className="w-full min-w-[940px] text-left text-sm">
         <thead className="border-b-2 border-[#111214] bg-[#f7f7f4] text-[10px]">
           <tr>
             <HeaderCell label="#" active={false} onSort={setSort} />
             <HeaderCell label="Compound" sortKey="trending" active={sort === "trending"} onSort={setSort} />
             <HeaderCell label="Vendors" active={false} onSort={setSort} />
             <HeaderCell label="From" sortKey="price" active={sort === "price"} onSort={setSort} />
+            <HeaderCell label="Median" active={false} onSort={setSort} />
             <HeaderCell label="Δ" sortKey="change" active={sort === "change"} onSort={setSort} />
             <HeaderCell label="Purity" sortKey="purity" active={sort === "purity"} onSort={setSort} />
             <HeaderCell label="Tests" sortKey="tests" active={sort === "tests"} onSort={setSort} />
@@ -104,6 +105,7 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
                 </td>
                 <td className="px-4 py-3 font-bold tabular-nums">{range.count}</td>
                 <td className="px-4 py-3 font-extrabold tabular-nums">{range.from != null ? formatCurrency(range.from) : "—"}</td>
+                <td className="px-4 py-3 font-bold tabular-nums text-[var(--muted)]">{c.medianPrice > 0 ? formatCurrency(c.medianPrice) : "—"}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center gap-0.5 font-bold tabular-nums ${delta > 0 ? "text-[#0e8f80]" : delta < 0 ? "text-[#d3372c]" : "text-[var(--muted)]"}`}>
                     {delta > 0 ? <TrendingUp className="size-3" /> : delta < 0 ? <TrendingDown className="size-3" /> : null}
