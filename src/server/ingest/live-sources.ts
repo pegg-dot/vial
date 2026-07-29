@@ -264,26 +264,39 @@ export async function upsertLiveCompound(db: SqlConnection, input: LiveCompoundI
  */
 export async function recordCatalogListing(
   db: SqlConnection,
-  input: LiveListingInput & { price: number; availability: "In stock" | "Low stock" | "Unavailable"; sourceUrl: string; sourceLabel: string },
+  input: LiveListingInput & { price: number; availability: "In stock" | "Low stock" | "Unavailable"; sourceUrl: string; sourceLabel: string; imageUrl?: string },
 ): Promise<{ productId: string; listingId: string }> {
   const { productId, listingId } = await upsertLiveListing(db, input);
+  // The source has two unique keys — its deterministic id (src:catalog:<listingSlug>) and its
+  // canonical_location (the product URL). On re-ingest a vendor's product URL can change
+  // (e.g. a platform move), so those two keys can point at different existing rows. Reuse
+  // whichever already exists (by id OR url) and update it; only insert when neither is present.
   const sourceId = `src:catalog:${input.slug}`;
-  const src = await db.query<{ id: string }>(
-    `INSERT INTO sources (id, source_type, canonical_location, owner_organization_id, label, status, origin)
-     VALUES ($1,'vendor-page',$2,$3,$4,'active','live')
-     ON CONFLICT (canonical_location) DO UPDATE SET label = EXCLUDED.label, origin = 'live', updated_at = NOW()
-     RETURNING id`,
-    [sourceId, input.sourceUrl, `org:${input.vendorSlug}`, input.sourceLabel],
+  const existing = await db.query<{ id: string }>(
+    `SELECT id FROM sources WHERE id = $1 OR canonical_location = $2 ORDER BY (id = $1) DESC LIMIT 1`,
+    [sourceId, input.sourceUrl],
   );
-  const realSourceId = src.rows[0]?.id ?? sourceId;
+  let realSourceId: string;
+  if (existing.rows[0]) {
+    realSourceId = existing.rows[0].id;
+    await db.query(`UPDATE sources SET label = $2, origin = 'live', updated_at = NOW() WHERE id = $1`, [realSourceId, input.sourceLabel]);
+  } else {
+    await db.query(
+      `INSERT INTO sources (id, source_type, canonical_location, owner_organization_id, label, status, origin)
+       VALUES ($1,'vendor-page',$2,$3,$4,'active','live')`,
+      [sourceId, input.sourceUrl, `org:${input.vendorSlug}`, input.sourceLabel],
+    );
+    realSourceId = sourceId;
+  }
   await db.query(`UPDATE listings SET source_id = $2 WHERE id = $1`, [listingId, realSourceId]);
   await db.query(
     `UPDATE listings
      SET price = $2, availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
          last_checked = 'just now', price_history = CASE WHEN price_history = '[]'::jsonb THEN $4::jsonb ELSE price_history END,
+         image_url = COALESCE($5, image_url),
          observed_at = NOW(), updated_at = NOW()
      WHERE id = $1`,
-    [listingId, input.price, input.availability, JSON.stringify([input.price])],
+    [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null],
   );
   return { productId, listingId };
 }

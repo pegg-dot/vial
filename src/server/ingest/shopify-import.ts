@@ -45,7 +45,12 @@ export function matchCompound(title: string, compounds: CompoundRef[]): string |
 }
 
 interface ShopifyVariant { title: string; price: string; available: boolean; grams?: number }
-interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
+interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[]; images?: { src?: string }[] }
+
+function shopifyImage(p: ShopifyProduct): string | undefined {
+  const src = p.images?.find((i) => i.src && /^https?:\/\//i.test(i.src))?.src;
+  return src ? src.replace(/^http:\/\//i, "https://") : undefined;
+}
 
 const UA = "VIAL-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
 
@@ -104,6 +109,7 @@ export async function importShopifyCatalog(
         compoundSlug, price,
         quantity: (variant?.title && variant.title !== "Default Title") ? variant.title : "1 vial",
         title: product.title, handle: product.handle, available: Boolean(variant?.available),
+        image: shopifyImage(product),
       });
     }
   }
@@ -122,6 +128,7 @@ export async function importShopifyCatalog(
       availability: c.available ? "In stock" : "Unavailable",
       sourceUrl: productUrl,
       sourceLabel: `${input.vendorName} — ${c.title.slice(0, 80)}`,
+      imageUrl: c.image,
     });
     result.imported.push({ slug: listingSlug, compound: c.compoundSlug, price: c.price });
   }

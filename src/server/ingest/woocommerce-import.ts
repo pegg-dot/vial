@@ -19,6 +19,13 @@ export interface WooProduct {
   type: string;
   is_in_stock: boolean;
   prices: { price: string | null; price_range: { min_amount: string } | null; currency_minor_unit: number } | null;
+  images?: { src?: string }[];
+}
+
+// First usable image URL from a WooCommerce product (the Store API returns full-size srcs).
+export function wooImage(p: WooProduct): string | undefined {
+  const src = p.images?.find((i) => i.src && /^https?:\/\//i.test(i.src))?.src;
+  return src ? src.replace(/^http:\/\//i, "https://") : undefined;
 }
 
 /** Fetch a WooCommerce vendor's catalog via the public Store API, paginating up to `maxPages`. */
@@ -70,7 +77,7 @@ export async function importWooCommerceCatalog(
   await upsertLiveVendor(db, { slug: input.vendorSlug, name: input.vendorName, domains: [input.domain], location: input.location, description: input.description });
 
   // Cheapest sane candidate per compound (a vendor lists several sizes for one compound).
-  const best = new Map<string, { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean }>();
+  const best = new Map<string, { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string }>();
   for (const product of products) {
     if (!product?.name) { result.skipped += 1; continue; }
     const compoundSlug = matchCompound(product.name, input.compounds);
@@ -80,7 +87,7 @@ export async function importWooCommerceCatalog(
     if (price == null || price < PRICE_MIN || price > PRICE_MAX) { result.skipped += 1; continue; }
     const prev = best.get(compoundSlug);
     if (!prev || price < prev.price) {
-      best.set(compoundSlug, { compoundSlug, price, quantity: wooQuantity(product.name), name: product.name, url: product.permalink, available: Boolean(product.is_in_stock) });
+      best.set(compoundSlug, { compoundSlug, price, quantity: wooQuantity(product.name), name: product.name, url: product.permalink, available: Boolean(product.is_in_stock), image: wooImage(product) });
     }
   }
 
@@ -97,6 +104,7 @@ export async function importWooCommerceCatalog(
       availability: c.available ? "In stock" : "Unavailable",
       sourceUrl: c.url || `https://${input.domain}`,
       sourceLabel: `${input.vendorName} — ${c.name.slice(0, 80)}`,
+      imageUrl: c.image,
     });
     result.imported.push({ slug: listingSlug, compound: c.compoundSlug, price: c.price });
   }
