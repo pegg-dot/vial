@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compoundTrustTier, trending, mostVerified, bestValue, compoundPriceRange, listingMarketStats, median } from "@/lib/curation";
+import { compoundTrustTier, trending, mostVerified, bestValue, compoundPriceRange, listingMarketStats, median, vendorPriceIndex } from "@/lib/curation";
 
 const C = (o: Partial<{ slug: string; coaCount: number; medianPurity: number | null; listings: number; priceChange: number }>) =>
   ({ slug: "x", coaCount: 0, medianPurity: null, listings: 0, priceChange: 0, ...o } as never);
@@ -48,5 +48,17 @@ describe("curation", () => {
   it("listingMarketStats handles a lone listing (no range)", () => {
     const s = listingMarketStats(65, [65]);
     expect(s).toMatchObject({ count: 1, low: 65, high: 65, med: 65, rank: 1, positionPct: 0, vsMedianPct: 0 });
+  });
+  it("vendorPriceIndex reports how a vendor's $/mg compares to the market median", () => {
+    const all = [
+      { compoundSlug: "bpc-157", pricePerMg: 4 }, { compoundSlug: "bpc-157", pricePerMg: 6 }, // market median 5
+      { compoundSlug: "tb-500", pricePerMg: 10 }, { compoundSlug: "tb-500", pricePerMg: 20 }, // market median 15
+    ] as never;
+    // vendor sells bpc at 4 (−20% vs 5) and tb-500 at 12 (−20% vs 15) → median −20%
+    const idx = vendorPriceIndex([{ compoundSlug: "bpc-157", pricePerMg: 4 }, { compoundSlug: "tb-500", pricePerMg: 12 }] as never, all);
+    expect(idx).toEqual({ medianPctVsMarket: -20, comparedCount: 2 });
+  });
+  it("vendorPriceIndex returns null when nothing is comparable", () => {
+    expect(vendorPriceIndex([{ compoundSlug: "x", pricePerMg: undefined }] as never, [] as never)).toEqual({ medianPctVsMarket: null, comparedCount: 0 });
   });
 });

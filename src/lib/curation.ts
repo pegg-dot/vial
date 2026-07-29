@@ -70,6 +70,36 @@ export interface MarketStats {
 
 // The "is this price good?" answer: where a single listing sits in the whole market for its
 // compound. `allPrices` should be every priced listing for the compound, including this one.
+// How a vendor's per-mg pricing compares to the market: for each of their listings that has a
+// $/mg, diff against that compound's market-median $/mg; return the median % delta across them.
+// Negative = typically cheaper than the market. null when nothing is comparable.
+export function vendorPriceIndex(
+  vendorListings: Array<Pick<Product, "compoundSlug" | "pricePerMg">>,
+  allProducts: Array<Pick<Product, "compoundSlug" | "pricePerMg">>,
+): { medianPctVsMarket: number | null; comparedCount: number } {
+  const byCompound = new Map<string, number[]>();
+  for (const p of allProducts) {
+    if (!p.pricePerMg || p.pricePerMg <= 0) continue;
+    const arr = byCompound.get(p.compoundSlug);
+    if (arr) arr.push(p.pricePerMg);
+    else byCompound.set(p.compoundSlug, [p.pricePerMg]);
+  }
+  const marketMed = new Map<string, number>();
+  for (const [slug, arr] of byCompound) { const m = median(arr); if (m) marketMed.set(slug, m); }
+  const deltas: number[] = [];
+  for (const l of vendorListings) {
+    if (!l.pricePerMg || l.pricePerMg <= 0) continue;
+    const mm = marketMed.get(l.compoundSlug);
+    if (!mm) continue;
+    deltas.push(((l.pricePerMg - mm) / mm) * 100);
+  }
+  if (!deltas.length) return { medianPctVsMarket: null, comparedCount: 0 };
+  const sorted = [...deltas].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const medDelta = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  return { medianPctVsMarket: Math.round(medDelta), comparedCount: deltas.length };
+}
+
 export function listingMarketStats(price: number, allPrices: number[]): MarketStats {
   const priced = allPrices.filter((p) => p > 0).sort((a, b) => a - b);
   const count = priced.length;

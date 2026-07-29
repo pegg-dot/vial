@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building2, Check, CircleAlert, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, X } from "lucide-react";
-import { getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
+import { ArrowLeft, Building2, Check, CircleAlert, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
+import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
+import { vendorPriceIndex } from "@/lib/curation";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { vendorStatusLabel } from "@/lib/format";
 import { ProductCard } from "@/components/product-card";
@@ -58,7 +59,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers] = await Promise.all([getProductsByVendorSlug(slug), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db)), getDatabase().then((db) => getVendorAggregatorRatings(slug, db)), getDatabase().then((db) => getVendorSignals(slug, db)), getDatabase().then((db) => getVendorOffers(slug, db))]);
+  const [listings, catalog, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers] = await Promise.all([getProductsByVendorSlug(slug), getCatalogSnapshot(), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db)), getDatabase().then((db) => getVendorAggregatorRatings(slug, db)), getDatabase().then((db) => getVendorSignals(slug, db)), getDatabase().then((db) => getVendorOffers(slug, db))]);
+  // How this vendor's per-mg pricing sits against the market (the "are they a good deal?" stat).
+  const priceIndex = vendorPriceIndex(listings, catalog.products);
+  // Best value first — same market-consistent ordering as the rest of the app.
+  const catalogSorted = [...listings].sort((a, b) => (a.pricePerMg ?? Infinity) - (b.pricePerMg ?? Infinity) || a.price - b.price);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
 
@@ -115,7 +120,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-bold text-white">{vendorStatusLabel(vendor.profileStatus)}</span>
                   <DataOriginBadge origin={vendor.origin} />
                 </div>
-                <h1 className="mt-4 text-balance text-[clamp(2.6rem,6vw,4.5rem)] font-extrabold leading-[.9] tracking-[-.045em]">{vendor.name}</h1>
+                <h1 className="mt-4 text-balance text-[clamp(2rem,4.2vw,3.25rem)] font-extrabold leading-[.95] tracking-[-.04em]">{vendor.name}</h1>
                 <p className="mt-4 max-w-xl text-[15px] font-medium leading-7 text-white/75">{vendor.description}</p>
                 <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-semibold text-white/65">
                   {vendor.location && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>}
@@ -136,10 +141,16 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </div>
 
           {/* at-a-glance stats */}
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
             <HeroStat icon={FlaskConical} value={String(vendor.coaCount)} label="Independent lab tests" />
             <HeroStat icon={ShieldCheck} value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median tested purity" />
             <HeroStat icon={PackageSearch} value={String(secondaryValue)} label={secondaryLabel} />
+            <HeroStat
+              icon={priceIndex.medianPctVsMarket ? (priceIndex.medianPctVsMarket > 0 ? TrendingUp : TrendingDown) : Tag}
+              value={priceIndex.medianPctVsMarket != null ? `${priceIndex.medianPctVsMarket > 0 ? "+" : ""}${priceIndex.medianPctVsMarket}%` : "—"}
+              label="Typical price vs market"
+              accent={!priceIndex.medianPctVsMarket ? undefined : priceIndex.medianPctVsMarket < 0 ? "#0e8f80" : "#d3372c"}
+            />
             <HeroStat icon={Star} value={vendor.reviewCount > 0 ? String(vendor.reviewCount) : "—"} label="Buyer reviews on file" />
           </div>
         </div>
@@ -201,8 +212,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <div>
             {listings.length > 0 ? (
               <>
-                <SectionHead eyebrow="Catalog" title="What they sell" />
-                <div className="mt-7 grid gap-5 sm:grid-cols-2">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
+                <SectionHead eyebrow="Catalog" title="What they sell" note={priceIndex.medianPctVsMarket == null ? undefined : priceIndex.medianPctVsMarket < 0 ? "typically below market" : priceIndex.medianPctVsMarket > 0 ? "typically above market" : "around market rate"} />
+                <div className="mt-7 grid gap-5 sm:grid-cols-2">{catalogSorted.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
               </>
             ) : (
               <div className="ink rounded-[22px] bg-white p-8">
@@ -236,6 +247,6 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   );
 }
 
-function HeroStat({ icon: Icon, value, label }: { icon: React.ComponentType<{ className?: string }>; value: string; label: string }) {
-  return <div className="ink hard rounded-[16px] bg-white p-4 text-[#111214]"><Icon className="size-4 text-[#39414e]" /><p className="mt-3 text-2xl font-extrabold tracking-[-.04em]">{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
+function HeroStat({ icon: Icon, value, label, accent }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; value: string; label: string; accent?: string }) {
+  return <div className="ink hard rounded-[16px] bg-white p-4 text-[#111214]"><Icon className="size-4" style={{ color: accent ?? "#39414e" }} /><p className="mt-3 text-2xl font-extrabold tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
 }
