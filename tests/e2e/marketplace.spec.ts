@@ -34,7 +34,9 @@ test("home page and command search expose the market", async ({ page }) => {
 test("market filters update the listing grid", async ({ page }) => {
   await page.goto("/market");
   await expect(page.getByTestId("market-count")).toHaveText("12 listings");
-  await page.getByLabel("Compound").selectOption("mots-c");
+  // The redesign replaced the 60-item compound dropdown with search + category shelves;
+  // narrowing to a single compound is now done via the browse search box.
+  await page.getByPlaceholder("Compound, vendor, or quantity").fill("MOTS-c");
   await expect(page.getByTestId("market-count")).toHaveText("2 listings");
   await expect(page.getByRole("link", { name: /MOTS-c 10 mg/i }).first()).toBeVisible();
 });
