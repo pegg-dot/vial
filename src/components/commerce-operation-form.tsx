@@ -12,9 +12,9 @@ export function CommerceOperationForm({ endpoint, fields, actionLabel, defaults 
     setStatus(response.ok?`Completed: ${json.status||json.id||"ok"}`:`Error: ${json.error||"failed"}`);
     if(response.ok) setTimeout(()=>location.reload(),350);
   }
-  return <form action={submit} className="grid gap-3 rounded-[22px] border border-black/[.07] bg-white p-5">
-    {fields.map(field=><label key={field.name} className="grid gap-1 text-xs font-semibold text-[var(--muted)]">{field.label}<input name={field.name} type={field.type||"text"} defaultValue={String(defaults[field.name]??"")} className="rounded-xl border border-black/10 px-3 py-2 text-sm font-normal text-black" required /></label>)}
-    <button className="rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white">{actionLabel}</button>
-    {status&&<p className="text-xs text-[var(--muted)]">{status}</p>}
+  return <form action={submit} className="ink hard grid gap-3 rounded-[18px] bg-white p-5">
+    {fields.map(field=><label key={field.name} className="grid gap-1 text-xs font-extrabold uppercase tracking-[.06em] text-[var(--muted)]">{field.label}<input name={field.name} type={field.type||"text"} defaultValue={String(defaults[field.name]??"")} className="ink-1 rounded-[10px] bg-white px-3 py-2 text-sm font-medium text-[#111214] outline-none focus:shadow-[2px_2px_0_0_#2b31d8]" required /></label>)}
+    <button className="ink hard-sm press inline-flex min-h-11 items-center justify-center rounded-full bg-[#111214] px-4 text-sm font-bold text-white">{actionLabel}</button>
+    {status&&<p className="text-xs font-semibold text-[var(--muted)]">{status}</p>}
   </form>;
 }

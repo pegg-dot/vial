@@ -29,24 +29,24 @@ export default async function TerminalPage() {
     <main className="mx-auto max-w-6xl px-5 py-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[.2em] text-[var(--muted)]">Research terminal</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-[-.05em] sm:text-5xl">The market, on one screen.</h1>
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Research terminal</p>
+          <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em] text-[#111214] sm:text-5xl">The market, on one screen.</h1>
         </div>
-        <div className="flex items-center gap-3 font-mono text-[11px] text-[var(--muted)]">
+        <div className="flex items-center gap-3 font-mono text-[11px] font-medium text-[var(--muted)]">
           <span>{catalog.products.length} listings</span><span>·</span><span>{catalog.compounds.length} compounds</span><span>·</span><span>{watchlist.length} watched</span>
         </div>
       </div>
 
-      <form action="/search" className="mt-6 flex items-center gap-2 rounded-2xl border border-black/[.1] bg-white px-4 py-3">
-        <span className="font-mono text-sm text-[var(--muted)]">&gt;</span>
-        <input name="q" placeholder="query the market — compound, vendor, batch, listing…" className="flex-1 bg-transparent font-mono text-sm outline-none" />
-        <button className="rounded-full bg-[#111214] px-4 py-2 text-xs font-semibold text-white">Run</button>
+      <form action="/search" className="ink hard mt-6 flex items-center gap-2 rounded-[16px] bg-white px-4 py-3">
+        <span className="font-mono text-sm font-bold text-[#2b31d8]">&gt;</span>
+        <input name="q" placeholder="query the market — compound, vendor, batch, listing…" className="flex-1 bg-transparent font-mono text-sm font-medium outline-none" />
+        <button className="ink hard-sm press rounded-full bg-[#111214] px-4 py-2 text-xs font-bold text-white">Run</button>
       </form>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <Panel icon={TrendingUp} title="Price movement" href="/market" cta="Open market">
           {movers.map((m) => (
-            <Row key={m.slug} href={`/products/${m.slug}`} left={<span className="font-mono text-xs">{m.name}</span>} right={<span className={`font-mono text-xs ${m.change < 0 ? "text-emerald-600" : "text-rose-600"}`}>{m.change > 0 ? "+" : ""}{m.change.toFixed(1)}%</span>} />
+            <Row key={m.slug} href={`/products/${m.slug}`} left={<span className="font-mono text-xs">{m.name}</span>} right={<span className={`font-mono text-xs font-bold ${m.change < 0 ? "text-[#0e8f80]" : "text-[#d3372c]"}`}>{m.change > 0 ? "+" : ""}{m.change.toFixed(1)}%</span>} />
           ))}
           {movers.length === 0 && <Empty>No recent price movement.</Empty>}
         </Panel>
@@ -71,12 +71,12 @@ export default async function TerminalPage() {
 
 function Panel({ icon: Icon, title, href, cta, children }: { icon: React.ComponentType<{ className?: string }>; title: string; href: string; cta: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-[24px] border border-black/[.07] bg-white p-5">
+    <section className="ink hard rounded-[18px] bg-white p-5">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2"><Icon className="size-4 text-black/30" /><h2 className="text-sm font-semibold">{title}</h2></div>
-        <Link href={href} className="flex items-center gap-1 text-[11px] font-semibold text-[var(--muted)] hover:text-black">{cta}<ArrowUpRight className="size-3" /></Link>
+        <div className="flex items-center gap-2"><Icon className="size-4 text-[#2b31d8]" /><h2 className="text-sm font-extrabold text-[#111214]">{title}</h2></div>
+        <Link href={href} className="flex items-center gap-1 text-[11px] font-bold text-[var(--muted)] hover:text-[#111214]">{cta}<ArrowUpRight className="size-3" /></Link>
       </div>
-      <div className="mt-4 divide-y divide-black/[.05]">{children}</div>
+      <div className="mt-4 divide-y divide-[#111214]/10">{children}</div>
     </section>
   );
 }

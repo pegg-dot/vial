@@ -24,11 +24,11 @@ export default async function SellerDeveloperPage() {
       <Panel title="Scoped API tokens" description="Create least-privilege tokens for an approved seller operator."><DeveloperTokenClient initialTokens={tokens} /></Panel>
       <div className="space-y-6">
         <Panel title="MCP quick start" description="Use the official MCP SDK over stdio for local agents. Streamable HTTP can be added when remote authentication infrastructure is approved.">
-          <div className="flex gap-3 rounded-2xl bg-violet-50 p-4"><Braces className="mt-0.5 size-4 text-violet-700" /><p className="text-sm leading-6 text-violet-950/70">Tools can inspect onboarding, list catalog records, propose compound matches, identify evidence gaps, and create reviewable imports.</p></div>
-          <pre className="mt-4 overflow-x-auto rounded-2xl bg-[#111214] p-4 text-xs leading-6 text-white/75"><code>{configuration}</code></pre>
+          <div className="ink-1 flex gap-3 rounded-[14px] bg-[#f0edff] p-4"><Braces className="mt-0.5 size-4 text-[#6d5dfc]" /><p className="text-sm leading-6 text-[#6d5dfc]/80">Tools can inspect onboarding, list catalog records, propose compound matches, identify evidence gaps, and create reviewable imports.</p></div>
+          <pre className="ink mt-4 overflow-x-auto rounded-[14px] bg-[#111214] p-4 text-xs leading-6 text-white/75"><code>{configuration}</code></pre>
         </Panel>
         <Panel title="Safety boundary">
-          <div className="space-y-3">{[{ Icon: ShieldCheck, title: "No autonomous publishing", detail: "MCP proposals remain drafts until an authorized user confirms them." }, { Icon: Cable, title: "Tenant-scoped data", detail: "Every token is linked to exactly one seller and a narrow scope list." }].map(({ Icon, title, detail }) => <div key={String(title)} className="flex gap-3 rounded-2xl border border-black/[.06] p-4"><Icon className="mt-0.5 size-4" /><div><p className="text-sm font-semibold">{String(title)}</p><p className="mt-1 text-xs leading-5 text-black/45">{String(detail)}</p></div></div>)}</div>
+          <div className="space-y-3">{[{ Icon: ShieldCheck, title: "No autonomous publishing", detail: "MCP proposals remain drafts until an authorized user confirms them." }, { Icon: Cable, title: "Tenant-scoped data", detail: "Every token is linked to exactly one seller and a narrow scope list." }].map(({ Icon, title, detail }) => <div key={String(title)} className="ink-1 flex gap-3 rounded-[14px] p-4"><Icon className="mt-0.5 size-4" /><div><p className="text-sm font-extrabold">{String(title)}</p><p className="mt-1 text-xs font-medium leading-5 text-[var(--muted)]">{String(detail)}</p></div></div>)}</div>
         </Panel>
       </div>
     </div>

@@ -86,18 +86,18 @@ export function PushSubscription({ vapidPublicKey }: { vapidPublicKey: string | 
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-black/[.07] bg-white p-5">
+    <div className="ink hard-sm flex flex-wrap items-center justify-between gap-4 rounded-[18px] bg-white p-5">
       <div className="flex items-start gap-3">
-        <span className={`grid size-10 place-items-center rounded-2xl ${state === "on" ? "bg-emerald-50 text-emerald-700" : "bg-black/[.04] text-black/40"}`}>
+        <span className={`ink-1 grid size-10 place-items-center rounded-[12px] ${state === "on" ? "bg-[#e6fbf4] text-[#0e8f80]" : "bg-[var(--background)] text-[var(--muted)]"}`}>
           {state === "on" ? <BellRing className="size-5" /> : <BellOff className="size-5" />}
         </span>
         <div>
-          <p className="text-sm font-semibold">Push delivery</p>
+          <p className="text-sm font-extrabold">Push delivery</p>
           <p className="mt-1 max-w-md text-xs leading-5 text-[var(--muted)]">{message[state]}</p>
         </div>
       </div>
-      {state === "off" && <button onClick={enable} className="rounded-full bg-[#111214] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black/85">Enable delivery</button>}
-      {state === "on" && <button onClick={disable} className="rounded-full border border-black/[.1] px-5 py-2.5 text-sm font-semibold transition hover:bg-black/[.03]">Turn off</button>}
+      {state === "off" && <button onClick={enable} className="ink hard-sm press inline-flex rounded-full bg-[#111214] px-5 py-2.5 text-sm font-bold text-white">Enable delivery</button>}
+      {state === "on" && <button onClick={disable} className="ink-1 hard-sm press inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-bold">Turn off</button>}
       {state === "working" && <span className="text-xs text-[var(--muted)]">Working…</span>}
     </div>
   );

@@ -91,14 +91,14 @@ export function AdminShell({ role, principal, children }: { role: StaffRole; pri
   const visibleLinks=links.filter(link=>!link.permission||principalHasPermission(principal,link.permission));
   return (
     <section className="mx-auto max-w-[1540px] px-4 py-6 sm:px-7 sm:py-10">
-      <div className="overflow-hidden rounded-[32px] border border-black/[.08] bg-white shadow-[0_28px_90px_rgba(17,18,20,.08)] lg:grid lg:min-h-[800px] lg:grid-cols-[260px_1fr]">
-        <aside className="border-b border-black/[.07] bg-[#111214] p-5 text-white lg:border-b-0 lg:border-r lg:border-white/10 lg:p-6">
+      <div className="ink hard-lg overflow-hidden rounded-[24px] bg-white lg:grid lg:min-h-[800px] lg:grid-cols-[260px_1fr]">
+        <aside className="border-b-2 border-[#111214] bg-[#111214] p-5 text-white lg:border-b-0 lg:border-r-2 lg:p-6">
           <div className="flex items-start justify-between gap-4 lg:block">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-white/40">VIAL control plane</p>
-              <p className="mt-2 text-xl font-semibold">Market operations</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#8fa2ff]">VIAL control plane</p>
+              <p className="mt-2 text-xl font-extrabold tracking-[-.02em]">Market operations</p>
             </div>
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase text-white/70">{role}</span>
+            <span className="rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-extrabold uppercase text-white/80">{role}</span>
           </div>
           <nav className="mt-7 space-y-5">
             {["Market & evidence","Platform & trust","Legacy · simulation"].map((group)=>{
@@ -106,10 +106,10 @@ export function AdminShell({ role, principal, children }: { role: StaffRole; pri
               if(!groupLinks.length)return null;
               return (
                 <div key={group}>
-                  <p className={`px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[.16em] ${group.startsWith("Legacy")?"text-amber-300/70":"text-white/30"}`}>{group}{group.startsWith("Legacy")?" — not in the buyer product":""}</p>
+                  <p className={`px-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-[.16em] ${group.startsWith("Legacy")?"text-amber-300/80":"text-white/35"}`}>{group}{group.startsWith("Legacy")?" — not in the buyer product":""}</p>
                   <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-1">
                     {groupLinks.map(({ href, label, icon: Icon }) => (
-                      <Link key={href} href={href} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-white/65 hover:bg-white/10 hover:text-white">
+                      <Link key={href} href={href} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-white/65 hover:bg-white/10 hover:text-white">
                         <Icon className="size-4" />{label}
                       </Link>
                     ))}
@@ -118,8 +118,8 @@ export function AdminShell({ role, principal, children }: { role: StaffRole; pri
               );
             })}
           </nav>
-          <form action={logoutAction} className="mt-5 border-t border-white/10 pt-5">
-            <button className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-white/55 hover:bg-white/10 hover:text-white"><LogOut className="size-4" />Sign out</button>
+          <form action={logoutAction} className="mt-5 border-t border-white/15 pt-5">
+            <button className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-bold text-white/60 hover:bg-white/10 hover:text-white"><LogOut className="size-4" />Sign out</button>
           </form>
         </aside>
         <div className="min-w-0 bg-[var(--background)] p-5 sm:p-8 lg:p-10">{children}</div>

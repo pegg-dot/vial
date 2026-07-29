@@ -12,7 +12,7 @@ export default async function LabAnalyticsPage() {
   const principal = await requirePrincipal({ accountTypes: ["laboratory"] });
   const context = await getLaboratoryContext(principal.email);
   if (!context) {
-    return <main className="mx-auto max-w-5xl px-5 py-14"><h1 className="text-3xl font-semibold">Laboratory analytics</h1><p className="mt-4 text-[var(--muted)]">No laboratory is associated with this account.</p></main>;
+    return <main className="mx-auto max-w-5xl px-5 py-14"><h1 className="text-3xl font-extrabold">Laboratory analytics</h1><p className="mt-4 text-[var(--muted)] font-medium">No laboratory is associated with this account.</p></main>;
   }
   const lab = context.lab as Record<string, unknown>;
   const { totals, orderStatus } = await getLaboratoryAnalytics(String(lab.id));
@@ -21,8 +21,8 @@ export default async function LabAnalyticsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-12">
-      <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Laboratory operations</p>
-      <h1 className="mt-2 text-4xl font-semibold tracking-[-.05em] sm:text-5xl">{String(lab.display_name ?? "Laboratory")} analytics</h1>
+      <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#0e8f80]">Laboratory operations</p>
+      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em] sm:text-5xl">{String(lab.display_name ?? "Laboratory")} analytics</h1>
       <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--muted)]">Throughput, report integrity, method coverage, and chain-of-custody activity across your accessioned work.</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
@@ -32,10 +32,10 @@ export default async function LabAnalyticsPage() {
         <Metric icon={ShieldCheck} value={String(n(totals.custody_events))} label="Custody events" sub="Hash-chained handoffs" />
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-[28px] border border-black/[.07] bg-white">
-        <div className="border-b border-black/[.06] p-6">
-          <h2 className="text-xl font-semibold tracking-[-.03em]">Test order status mix</h2>
-          <p className="mt-2 text-xs text-[var(--muted)]">Where your accessioned work currently sits in the pipeline.</p>
+      <section className="mt-6 overflow-hidden ink hard rounded-[20px] bg-white">
+        <div className="border-b-2 border-[#111214]/10 p-6">
+          <h2 className="text-xl font-extrabold tracking-[-.03em]">Test order status mix</h2>
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Where your accessioned work currently sits in the pipeline.</p>
         </div>
         <div className="divide-y divide-black/[.06]">
           {orderStatus.map((row) => {
@@ -43,7 +43,7 @@ export default async function LabAnalyticsPage() {
             return (
               <div key={row.status} className="flex items-center gap-4 px-6 py-4">
                 <span className="w-40 font-mono text-xs capitalize">{String(row.status).replaceAll("_", " ")}</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/[.05]"><div className="h-full rounded-full bg-cyan-600" style={{ width: `${Math.max(pct, 3)}%` }} /></div>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#e6fbf4]"><div className="h-full rounded-full bg-[#12b3a6]" style={{ width: `${Math.max(pct, 3)}%` }} /></div>
                 <span className="w-12 text-right font-mono text-xs tabular-nums">{n(row.n)}</span>
               </div>
             );
@@ -56,5 +56,5 @@ export default async function LabAnalyticsPage() {
 }
 
 function Metric({ icon: Icon, value, label, sub }: { icon: React.ComponentType<{ className?: string }>; value: string; label: string; sub: string }) {
-  return <div className="rounded-[22px] border border-black/[.07] bg-white p-5"><Icon className="size-4 text-black/30" /><p className="mt-5 text-3xl font-semibold tracking-[-.055em] tabular-nums">{value}</p><p className="mt-1 text-xs font-semibold">{label}</p><p className="mt-0.5 text-[11px] text-[var(--muted)]">{sub}</p></div>;
+  return <div className="ink-1 hard rounded-[18px] bg-white p-5"><Icon className="size-4 text-[#0e8f80]" /><p className="mt-5 text-3xl font-extrabold tracking-[-.055em] tabular-nums">{value}</p><p className="mt-1 text-xs font-bold">{label}</p><p className="mt-0.5 text-[11px] font-medium text-[var(--muted)]">{sub}</p></div>;
 }

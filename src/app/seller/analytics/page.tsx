@@ -23,7 +23,7 @@ export default async function SellerAnalyticsPage() {
     <div className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
       <Panel title="Discovery trend" description="Daily listing views with deterministic, seller-scoped data.">
         <div className="flex h-64 items-end gap-2" role="img" aria-label="Fourteen day listing views chart">
-          {rows.map((row) => { const value = Number(row.listing_views ?? 0); return <div key={String(row.metric_date)} className="flex min-w-0 flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-lg bg-black" style={{ height: `${Math.max(8, value / maxViews * 205)}px` }} title={`${value} views`} /><span className="hidden text-[9px] text-black/35 sm:block">{String(row.metric_date).slice(5)}</span></div>; })}
+          {rows.map((row) => { const value = Number(row.listing_views ?? 0); return <div key={String(row.metric_date)} className="flex min-w-0 flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-lg bg-black" style={{ height: `${Math.max(8, value / maxViews * 205)}px` }} title={`${value} views`} /><span className="hidden text-[9px] font-medium text-[var(--muted)] sm:block">{String(row.metric_date).slice(5)}</span></div>; })}
         </div>
       </Panel>
       <Panel title="Funnel" description="Each conversion step is shown independently.">
@@ -34,7 +34,7 @@ export default async function SellerAnalyticsPage() {
             { label: "Comparison adds", value: total("comparison_adds"), Icon: Sparkles },
             { label: "Carts", value: total("carts"), Icon: ShoppingCart },
             { label: "Orders", value: total("orders"), Icon: BarChart3 },
-          ].map(({ label, value, Icon }) => <div key={String(label)} className="flex items-center gap-3 rounded-2xl bg-[#fafaf7] p-4"><div className="grid size-9 place-items-center rounded-xl bg-white"><Icon className="size-4" /></div><p className="flex-1 text-sm font-medium">{String(label)}</p><b>{Number(value).toLocaleString()}</b></div>)}
+          ].map(({ label, value, Icon }) => <div key={String(label)} className="ink-1 flex items-center gap-3 rounded-[14px] bg-[#fafaf7] p-4"><div className="ink-1 grid size-9 place-items-center rounded-[10px] bg-white"><Icon className="size-4" /></div><p className="flex-1 text-sm font-medium">{String(label)}</p><b>{Number(value).toLocaleString()}</b></div>)}
         </div>
       </Panel>
     </div>

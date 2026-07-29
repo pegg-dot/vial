@@ -7,11 +7,11 @@ export function DataOriginBadge({ origin, className = "" }: { origin: DataOrigin
     return (
       <span
         title="Aggregated from a real public source (vendor page, lab feed). Not an endorsement or a safety claim."
-        className={`inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 ${className}`}
+        className={`ink-1 inline-flex items-center gap-1.5 rounded-full bg-[#e6fbf4] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#0e8f80] ${className}`}
       >
         <span className="relative flex size-1.5">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-70 motion-reduce:hidden" />
-          <span className="relative inline-flex size-1.5 rounded-full bg-emerald-600" />
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#12b3a6] opacity-70 motion-reduce:hidden" />
+          <span className="relative inline-flex size-1.5 rounded-full bg-[#0e8f80]" />
         </span>
         Live data
       </span>
@@ -20,7 +20,7 @@ export function DataOriginBadge({ origin, className = "" }: { origin: DataOrigin
   return (
     <span
       title="Demo sample data — not a real vendor, price, or test. Used to illustrate the interface."
-      className={`inline-flex items-center gap-1.5 rounded-full bg-black/[.05] px-2.5 py-1 text-[11px] font-semibold text-black/55 ${className}`}
+      className={`ink-1 inline-flex items-center gap-1.5 rounded-full bg-[#f2f2ef] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[var(--muted)] ${className}`}
     >
       Demo data
     </span>

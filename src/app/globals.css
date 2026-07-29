@@ -198,10 +198,16 @@ summary:focus-visible {
 .hard-lg { box-shadow: 8px 8px 0 0 #111214; }
 .hard-blue { box-shadow: 5px 5px 0 0 #2b31d8; }
 .hard-mint { box-shadow: 5px 5px 0 0 #12b3a6; }
+.hard-violet { box-shadow: 5px 5px 0 0 #6d5dfc; }
+.hard-sm-violet { box-shadow: 3px 3px 0 0 #6d5dfc; }
 /* press-down interaction: the card/button sinks into its own shadow on hover */
 .press { transition: transform .14s ease, box-shadow .14s ease; }
 .press:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0 0 #111214; }
 .press-blue:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0 0 #2b31d8; }
+.press-violet { transition: transform .14s ease, box-shadow .14s ease; }
+.press-violet:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0 0 #6d5dfc; }
+.press-mint { transition: transform .14s ease, box-shadow .14s ease; }
+.press-mint:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0 0 #0e8f80; }
 
 .glass-dark {
   background:

@@ -43,19 +43,19 @@ export default function RegisterPage() {
   }
 
   return (
-    <section className="mx-auto max-w-[560px] px-5 py-20 sm:px-8">
-      <div className="rounded-[32px] border border-black/[.08] bg-white p-8">
-        <UserPlus />
-        <h1 className="mt-6 text-4xl font-semibold tracking-[-.04em]">Create your VIAL account.</h1>
-        <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Free. Save vendors and compounds, and get alerted when a price or lab test changes. VIAL never sells anything.</p>
-        {error && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
+    <section className="mx-auto max-w-[520px] px-5 py-20 sm:px-8">
+      <div className="ink hard-lg rounded-[24px] bg-white p-8">
+        <span className="ink inline-grid size-12 place-items-center rounded-[14px] bg-[#2b31d8] text-white"><UserPlus className="size-6" /></span>
+        <h1 className="mt-6 text-4xl font-extrabold tracking-[-.04em] text-[#111214]">Create your VIAL account.</h1>
+        <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">Free. Save vendors and compounds, and get alerted when a price or lab test changes. VIAL never sells anything.</p>
+        {error && <p className="ink-1 mt-4 rounded-[10px] bg-[#fff1f0] px-4 py-3 text-sm font-semibold text-[#d3372c]">{error}</p>}
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
-          <label className="block text-sm font-medium">Name<input name="displayName" type="text" required autoComplete="name" className="field mt-2" /></label>
-          <label className="block text-sm font-medium">Email<input name="email" type="email" required autoComplete="email" className="field mt-2" /></label>
-          <label className="block text-sm font-medium">Password<input name="password" type="password" required minLength={12} autoComplete="new-password" className="field mt-2" /><span className="mt-1 block text-xs text-[var(--muted)]">At least 12 characters.</span></label>
-          <button disabled={pending} className="h-12 w-full rounded-full bg-black text-sm font-semibold text-white transition hover:bg-black/85 disabled:opacity-60">{pending ? "Creating account…" : "Create account"}</button>
+          <label className="block text-sm font-bold text-[#111214]">Name<input name="displayName" type="text" required autoComplete="name" className="field mt-2" /></label>
+          <label className="block text-sm font-bold text-[#111214]">Email<input name="email" type="email" required autoComplete="email" className="field mt-2" /></label>
+          <label className="block text-sm font-bold text-[#111214]">Password<input name="password" type="password" required minLength={12} autoComplete="new-password" className="field mt-2" /><span className="mt-1 block text-xs font-medium text-[var(--muted)]">At least 12 characters.</span></label>
+          <button disabled={pending} className="ink hard-sm press-blue h-12 w-full rounded-full bg-[#2b31d8] text-sm font-bold text-white disabled:opacity-60">{pending ? "Creating account…" : "Create account"}</button>
         </form>
-        <p className="mt-6 text-sm text-[var(--muted)]">Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-semibold text-black underline underline-offset-4">Sign in</Link></p>
+        <p className="mt-6 text-sm font-medium text-[var(--muted)]">Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-bold text-[#2b31d8] underline underline-offset-4">Sign in</Link></p>
       </div>
     </section>
   );

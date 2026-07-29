@@ -1,10 +1,10 @@
 import { GOAL_TAGS } from "@/lib/compound-education";
 
 const TONE: Record<string, string> = {
-  emerald: "bg-emerald-50 text-emerald-800",
-  blue: "bg-blue-50 text-blue-800",
-  violet: "bg-violet-50 text-violet-800",
-  amber: "bg-amber-50 text-amber-800",
+  emerald: "ink-1 bg-[#e6fbf4] text-[#0e8f80]",
+  blue: "ink-1 bg-[#eef0ff] text-[#2b31d8]",
+  violet: "ink-1 bg-[#f0edff] text-[#6d5dfc]",
+  amber: "ink-1 bg-[#fff4e0] text-[#b26a00]",
 };
 
 // The "what is this for?" tags. On a listing they tell a first-timer, at a glance, what a
@@ -18,7 +18,7 @@ export function GoalTags({ goals, limit, size = "sm" }: { goals?: string[]; limi
       {shown.map((g) => {
         const tag = GOAL_TAGS[g];
         if (!tag) return null;
-        return <span key={g} className={`inline-flex items-center rounded-full font-semibold ${pad} ${TONE[tag.tone] ?? "bg-black/[.05] text-black/60"}`}>{tag.label}</span>;
+        return <span key={g} className={`inline-flex items-center rounded-full font-extrabold uppercase tracking-wide ${pad} ${TONE[tag.tone] ?? "ink-1 bg-[#f2f2ef] text-[var(--muted)]"}`}>{tag.label}</span>;
       })}
     </span>
   );
