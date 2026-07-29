@@ -12,7 +12,7 @@ import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductActions } from "@/components/product-actions";
 import { DecisionRecorder } from "@/components/decision-recorder";
 import { getCurrentPrincipal } from "@/server/auth/principal";
-import { ProductVisual } from "@/components/product-visual";
+import { ProductPhoto } from "@/components/product-photo";
 import { VendorMark } from "@/components/vendor-mark";
 import { getPublicPassportForBatchCode } from "@/server/evidence-network/repository";
 import { CoaCrossCheckPanel } from "@/components/coa-cross-check-panel";
@@ -97,7 +97,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr] lg:gap-10">
           <div className="ink hard self-start overflow-hidden rounded-[20px] bg-white lg:sticky lg:top-24">
-            <ProductVisual name={product.name} quantity={product.quantity} accent={product.accent} />
+            <ProductPhoto name={product.name} quantity={product.quantity} accent={product.accent} imageUrl={product.imageUrl} />
           </div>
 
           <div className="flex flex-col">
