@@ -35,20 +35,29 @@ export function QuickViewModal({
   const openerRef = useRef<Element | null>(null);
   const open = index !== null && items.length > 0;
 
+  // Focus management runs ONLY on open/close — capture the opener when the modal opens,
+  // focus the panel, and restore focus to the opener when it closes. Keyed on `open` so
+  // paging (index change) never re-runs it and never yanks focus back to the page.
   useEffect(() => {
     if (!open) return;
     openerRef.current = document.activeElement;
     panelRef.current?.focus();
+    return () => {
+      if (openerRef.current instanceof HTMLElement) openerRef.current.focus();
+    };
+  }, [open]);
+
+  // The keydown listener re-binds freely as index/handlers change; its cleanup only
+  // removes the listener — no focus side effects.
+  useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       else if (e.key === "ArrowLeft") onNavigate((index! - 1 + items.length) % items.length);
       else if (e.key === "ArrowRight") onNavigate((index! + 1) % items.length);
     };
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      if (openerRef.current instanceof HTMLElement) openerRef.current.focus();
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open, index, items.length, onClose, onNavigate]);
 
   if (!open) return null;
@@ -59,7 +68,8 @@ export function QuickViewModal({
   const tier = compoundTrustTier(current);
   const bv = bestValue(productsFor, 1)[0];
   const vendors = [...new Set(productsFor.map((p) => p.vendorSlug))].slice(0, 3);
-  const history = productsFor[0]?.priceHistory?.length ? productsFor[0].priceHistory : [current.medianPrice];
+  const cheapest = productsFor.filter((p) => p.priceHistory?.length).sort((a, b) => a.price - b.price)[0];
+  const history = cheapest?.priceHistory?.length ? cheapest.priceHistory : [current.medianPrice];
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>

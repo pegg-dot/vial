@@ -34,14 +34,7 @@ export function CompoundTickerCard({
           <p className="text-[11px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{shelf.label}</p>
           {compound.origin === "live" && <DataOriginBadge origin="live" />}
         </div>
-        <Link
-          href={`/compounds/${compound.slug}`}
-          onClick={(e) => e.stopPropagation()}
-          aria-label={`Open ${compound.name}`}
-          className="shrink-0 rounded-full p-1 text-[#111214] transition hover:bg-black/[.05]"
-        >
-          <ArrowUpRight className="size-4" />
-        </Link>
+        <ArrowUpRight className="size-4 shrink-0 text-[#111214] transition group-hover:translate-x-0.5" aria-hidden />
       </div>
 
       <h3 className="mt-2 text-xl font-extrabold tracking-[-.03em]">{compound.name}</h3>

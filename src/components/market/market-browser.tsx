@@ -5,17 +5,30 @@ import { ProductCard } from "@/components/product-card";
 import { useMarketplace } from "@/components/marketplace-state";
 import { shelfForCompound } from "@/lib/market-taxonomy";
 import { compoundTrustTier } from "@/lib/curation";
-import { MarketFilterBar, DEFAULT_FILTERS, type MarketFilters } from "./market-filter-bar";
+import { MarketFilterBar, type MarketFilters } from "./market-filter-bar";
 
 const EVIDENCE_RANK: Record<EvidenceLevel, number> = { independent: 5, "issuer-confirmed": 4, "vendor-published": 3, stale: 2, "public-only": 1 };
+
+type LocalFilters = Omit<MarketFilters, "shelf">;
+const DEFAULT_LOCAL: LocalFilters = { query: "", tier: "all", testedOnly: false, priceMax: null, availability: "all", sort: "evidence" };
+const withoutShelf = (f: MarketFilters): LocalFilters => ({ query: f.query, tier: f.tier, testedOnly: f.testedOnly, priceMax: f.priceMax, availability: f.availability, sort: f.sort });
 
 // The exhaustive, faceted "browse everything" grid — the bottom of the market page.
 // Filters listings by shelf, verification tier, price, availability, and search; sorts by
 // evidence, real value ($/mg), price, rating, or freshness.
-export function MarketBrowser({ initialShelf = null }: { initialShelf?: string | null }) {
+export function MarketBrowser({ shelf, onShelfChange }: { shelf: string; onShelfChange: (shelf: string) => void }) {
   const { catalog } = useMarketplace();
   const { compounds, products, vendors } = catalog;
-  const [filters, setFilters] = useState<MarketFilters>({ ...DEFAULT_FILTERS, shelf: initialShelf ?? "all" });
+
+  // Shelf is controlled by the parent (shared with the category rail) so the rail highlight
+  // and the grid stay in sync; the other facets stay local and survive a rail click. Shelf
+  // is composed from the prop, never mirrored into state.
+  const [local, setLocal] = useState<LocalFilters>(DEFAULT_LOCAL);
+  const filters = useMemo<MarketFilters>(() => ({ ...local, shelf }), [local, shelf]);
+  const handleChange = (next: MarketFilters) => {
+    if (next.shelf !== shelf) onShelfChange(next.shelf);
+    setLocal(withoutShelf(next));
+  };
 
   const compoundBySlug = useMemo(() => new Map(compounds.map((c) => [c.slug, c])), [compounds]);
   const vendorBySlug = useMemo(() => new Map(vendors.map((v) => [v.slug, v])), [vendors]);
@@ -49,11 +62,11 @@ export function MarketBrowser({ initialShelf = null }: { initialShelf?: string |
   }, [products, filters, compoundBySlug, vendorBySlug]);
 
   const hasFilters = filters.query !== "" || filters.shelf !== "all" || filters.tier !== "all" || filters.availability !== "all" || filters.testedOnly || filters.priceMax != null;
-  const reset = () => setFilters(DEFAULT_FILTERS);
+  const reset = () => { setLocal(DEFAULT_LOCAL); onShelfChange("all"); };
 
   return (
     <div>
-      <MarketFilterBar filters={filters} onChange={setFilters} />
+      <MarketFilterBar filters={filters} onChange={handleChange} />
       <div className="mb-6 flex items-center justify-between gap-4">
         <p data-testid="market-count" className="text-sm font-medium text-[var(--muted)]">
           <span className="font-extrabold text-black">{filtered.length}</span> listings

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LayoutGrid, Table2 } from "lucide-react";
 import type { Compound } from "@/lib/types";
 import { useMarketplace } from "@/components/marketplace-state";
@@ -27,6 +27,15 @@ export function CompoundsExperience({ initialShelf = null }: { initialShelf?: st
     [compounds],
   );
   const openRow = (items: Compound[], index: number) => setQv({ items, index });
+
+  // A ?shelf= deep-link opens the shelves view scrolled to that category section.
+  useEffect(() => {
+    if (!initialShelf || view !== "shelves") return;
+    const el = document.getElementById(`shelf-${initialShelf}`);
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, [initialShelf, view]);
 
   return (
     <div>

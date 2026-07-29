@@ -30,11 +30,16 @@ function HeaderCell({ label, sortKey, active, onSort, className = "" }: { label:
 export function CompoundMarketTable({ compounds, products, onOpen }: { compounds: Compound[]; products: Product[]; onOpen: (items: Compound[], index: number) => void }) {
   const [sort, setSort] = useState<SortKey>("trending");
 
+  // Sparkline uses the cheapest listing's history per compound (the one a buyer would pick).
   const historyBySlug = useMemo(() => {
-    const map = new Map<string, number[]>();
+    const cheapest = new Map<string, Product>();
     for (const p of products) {
-      if (p.priceHistory?.length && !map.has(p.compoundSlug)) map.set(p.compoundSlug, p.priceHistory);
+      if (!p.priceHistory?.length) continue;
+      const held = cheapest.get(p.compoundSlug);
+      if (!held || p.price < held.price) cheapest.set(p.compoundSlug, p);
     }
+    const map = new Map<string, number[]>();
+    for (const [slug, p] of cheapest) map.set(slug, p.priceHistory);
     return map;
   }, [products]);
 
@@ -78,7 +83,17 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
             const delta = c.priceChange ?? 0;
             const history = historyBySlug.get(c.slug) ?? [c.medianPrice];
             return (
-              <tr key={c.slug} onClick={() => onOpen(rows, i)} className="cursor-pointer transition hover:bg-[#f7f7f4]">
+              <tr
+                key={c.slug}
+                onClick={() => onOpen(rows, i)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(rows, i); }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Quick view ${c.name}`}
+                className="cursor-pointer transition hover:bg-[#f7f7f4] focus:bg-[#f7f7f4] focus:outline-2 focus:outline-offset-[-2px] focus:outline-[#2b31d8]"
+              >
                 <td className="px-4 py-3 font-extrabold tabular-nums text-[var(--muted)]">{i + 1}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">

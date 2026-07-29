@@ -16,7 +16,7 @@ export function StackCard({ resolved }: { resolved: ResolvedStack }) {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          {components.slice(0, 3).map((c, i) => (
+          {components.slice(0, 3).map((c) => (
             <VialPlain key={c.slug} className="-ml-3 h-12 w-12 first:ml-0" liquid={c.accent?.[0] ?? stack.accent} />
           ))}
         </div>

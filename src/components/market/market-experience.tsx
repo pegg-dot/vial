@@ -18,7 +18,7 @@ export function MarketExperience() {
   const { catalog } = useMarketplace();
   const { compounds, products } = catalog;
   const [qv, setQv] = useState<{ items: Compound[]; index: number | null }>({ items: [], index: null });
-  const [browseShelf, setBrowseShelf] = useState<string | null>(null);
+  const [browseShelf, setBrowseShelf] = useState<string>("all");
   const browseRef = useRef<HTMLDivElement>(null);
 
   const trend = useMemo(() => trending(compounds, 10), [compounds]);
@@ -33,13 +33,14 @@ export function MarketExperience() {
   const openRow = (items: Compound[], index: number) => setQv({ items, index });
 
   const selectShelf = (key: string | null) => {
-    setBrowseShelf(key);
-    browseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setBrowseShelf(key ?? "all");
+    const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    browseRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   };
 
   return (
     <div>
-      <CategoryRail activeKey={browseShelf} onSelect={selectShelf} />
+      <CategoryRail activeKey={browseShelf === "all" ? null : browseShelf} onSelect={selectShelf} />
 
       {trend.length > 0 && (
         <CollectionRow eyebrow="Most looked-up" title="Trending now" blurb="What buyers are researching most across the market right now.">
@@ -62,7 +63,7 @@ export function MarketExperience() {
       )}
 
       {value.length > 0 && (
-        <CollectionRow eyebrow="Cheapest real cost" title="Best value right now" blurb="Ranked by what a milligram actually costs. Suspiciously-cheap listings are flagged, not hidden.">
+        <CollectionRow eyebrow="Cheapest real cost" title="Lowest cost per mg" blurb="Ranked by what a milligram actually costs. Suspiciously-cheap listings are flagged, not hidden.">
           {value.map((p) => (
             <div key={p.slug} className="w-[300px] shrink-0 snap-start">
               <ProductCard product={p} />
@@ -93,7 +94,7 @@ export function MarketExperience() {
           <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">Browse everything</h2>
           <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Filter the whole market by category, verification, price, and availability.</p>
         </div>
-        <MarketBrowser key={browseShelf ?? "all"} initialShelf={browseShelf} />
+        <MarketBrowser shelf={browseShelf} onShelfChange={setBrowseShelf} />
       </div>
 
       <QuickViewModal
