@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compoundTrustTier, trending, mostVerified, bestValue, compoundPriceRange } from "@/lib/curation";
+import { compoundTrustTier, trending, mostVerified, bestValue, compoundPriceRange, listingMarketStats, median } from "@/lib/curation";
 
 const C = (o: Partial<{ slug: string; coaCount: number; medianPurity: number | null; listings: number; priceChange: number }>) =>
   ({ slug: "x", coaCount: 0, medianPurity: null, listings: 0, priceChange: 0, ...o } as never);
@@ -32,5 +32,21 @@ describe("curation", () => {
   it("compoundPriceRange returns the min listing price for the compound", () => {
     const p = (compoundSlug: string, price: number) => ({ compoundSlug, price } as never);
     expect(compoundPriceRange("bpc-157", [p("bpc-157", 40), p("bpc-157", 55), p("tb-500", 10)])).toEqual({ from: 40, count: 2 });
+  });
+  it("median handles odd and even sets and ignores non-positive", () => {
+    expect(median([40, 50, 60])).toBe(50);
+    expect(median([40, 60])).toBe(50);
+    expect(median([0, 50])).toBe(50);
+    expect(median([])).toBeNull();
+  });
+  it("listingMarketStats places a listing in its compound market", () => {
+    const s = listingMarketStats(65, [34, 42, 49, 65, 80]);
+    expect(s).toMatchObject({ count: 5, low: 34, high: 80, med: 49, rank: 4 });
+    expect(s.positionPct).toBe(67); // (65-34)/(80-34)
+    expect(s.vsMedianPct).toBe(33); // (65-49)/49
+  });
+  it("listingMarketStats handles a lone listing (no range)", () => {
+    const s = listingMarketStats(65, [65]);
+    expect(s).toMatchObject({ count: 1, low: 65, high: 65, med: 65, rank: 1, positionPct: 0, vsMedianPct: 0 });
   });
 });

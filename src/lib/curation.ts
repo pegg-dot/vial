@@ -49,3 +49,35 @@ export function bestValue(products: Product[], limit = 8): Product[] {
     .sort((a, b) => a.pricePerMg! - b.pricePerMg!)
     .slice(0, limit);
 }
+
+export function median(values: number[]): number | null {
+  const s = values.filter((v) => v > 0).sort((a, b) => a - b);
+  if (!s.length) return null;
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+export interface MarketStats {
+  price: number;
+  count: number;          // number of priced listings for the compound (incl. this one)
+  low: number;
+  high: number;
+  med: number | null;
+  rank: number | null;    // 1 = cheapest; null if not priced
+  positionPct: number | null; // 0 = at the market low, 100 = at the high — where this price sits
+  vsMedianPct: number | null; // signed % this price is above(+)/below(−) the market median
+}
+
+// The "is this price good?" answer: where a single listing sits in the whole market for its
+// compound. `allPrices` should be every priced listing for the compound, including this one.
+export function listingMarketStats(price: number, allPrices: number[]): MarketStats {
+  const priced = allPrices.filter((p) => p > 0).sort((a, b) => a - b);
+  const count = priced.length;
+  const low = count ? priced[0] : price;
+  const high = count ? priced[count - 1] : price;
+  const med = median(priced);
+  const rank = price > 0 ? priced.filter((p) => p < price).length + 1 : null;
+  const positionPct = high > low ? Math.round(((price - low) / (high - low)) * 100) : count ? 0 : null;
+  const vsMedianPct = med && med > 0 ? Math.round(((price - med) / med) * 100) : null;
+  return { price, count, low, high, med, rank, positionPct, vsMedianPct };
+}

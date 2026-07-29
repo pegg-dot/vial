@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock3, ExternalLink, PackageCheck, Star, Truck } from "lucide-react";
 import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVendorBySlug } from "@/server/catalog/repository";
-import { formatCurrency, formatPricePerMg, vendorStatusLabel } from "@/lib/format";
+import { formatCurrency, vendorStatusLabel } from "@/lib/format";
 import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
 import { DataOriginBadge } from "@/components/data-origin-badge";
@@ -12,7 +12,6 @@ import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductActions } from "@/components/product-actions";
 import { DecisionRecorder } from "@/components/decision-recorder";
 import { getCurrentPrincipal } from "@/server/auth/principal";
-import { ProductCard } from "@/components/product-card";
 import { ProductVisual } from "@/components/product-visual";
 import { VendorMark } from "@/components/vendor-mark";
 import { getPublicPassportForBatchCode } from "@/server/evidence-network/repository";
@@ -24,6 +23,10 @@ import { educationFor } from "@/lib/compound-education";
 import { PriceFlag } from "@/components/listing-trust-chip";
 import { UsLegalNotice } from "@/components/us-legal-notice";
 import { getListingPriceMeta } from "@/server/ingest/price-history";
+import { ProductMarketStats } from "@/components/market/product-market-stats";
+import { listingMarketStats } from "@/lib/curation";
+import { PriceLeaderboard } from "@/components/price-leaderboard";
+import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +49,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const compound = await getCompoundBySlug(product.compoundSlug);
   if (!vendor || !compound) notFound();
 
-  const related = (await getProductsByCompoundSlug(product.compoundSlug)).filter((item) => item.slug !== product.slug).slice(0, 3);
+  const allForCompound = await getProductsByCompoundSlug(product.compoundSlug);
+  const marketStats = listingMarketStats(product.price, allForCompound.map((p) => p.price));
   const db = await getDatabase();
   const coaCheck = await crossCheckCoa(db, {
     vendorSlug: product.vendorSlug, vendorName: vendor.name,
@@ -54,6 +58,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     reportIssuer: product.reportIssuer, reportConfirmed: product.reportConfirmed, batchCode: product.batchCode,
   });
   const priceMeta = await getListingPriceMeta(db, product.slug);
+  const compoundLabTests = await getLabTestsForCompound(db, product.compoundSlug);
   const education = educationFor(product.compoundSlug);
   const stackedBriefs = education?.stackedWith?.length
     ? (await db.query<{ slug: string; canonical_name: string }>(`SELECT slug, canonical_name FROM compounds WHERE slug = ANY($1)`, [education.stackedWith])).rows.map((r) => ({ slug: r.slug, name: r.canonical_name }))
@@ -85,13 +90,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       {principal && <DecisionRecorder eventType="listing_viewed" subjectType="listing" subjectId={product.slug} metadata={{ compoundSlug: product.compoundSlug, vendorSlug: product.vendorSlug }} />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
-      <section className="mx-auto max-w-[1320px] px-5 py-8 sm:px-8 sm:py-12">
-        <Link href="/market" className="mb-7 inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black">
+      <section className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8 sm:py-8">
+        <Link href="/market" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black">
           <ArrowLeft className="size-4" /> Back to market
         </Link>
 
-        <div className="grid gap-7 lg:grid-cols-[1.05fr_.95fr] xl:gap-12">
-          <div className="ink hard self-start overflow-hidden rounded-[24px] bg-white">
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr] lg:gap-10">
+          <div className="ink hard self-start overflow-hidden rounded-[20px] bg-white lg:sticky lg:top-24">
             <ProductVisual name={product.name} quantity={product.quantity} accent={product.accent} />
           </div>
 
@@ -101,139 +106,147 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <DataOriginBadge origin={product.origin} />
               <span className="ink-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-black/60">{compound.category}</span>
             </div>
-            <p className="mt-6 text-sm font-bold text-[var(--muted)]">{vendor.name}</p>
-            <h1 className="mt-2 text-[clamp(2.6rem,6vw,4.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">{product.name} <span className="text-black/28">{product.quantity}</span></h1>
-            <p className="mt-5 text-base font-medium leading-7 text-[var(--muted)]">{compound.description}</p>
+            <Link href={`/vendors/${vendor.slug}`} className="mt-4 inline-flex w-fit items-center gap-1 text-sm font-bold text-[var(--muted)] hover:text-black">{vendor.name}</Link>
+            <h1 className="mt-1 text-[clamp(1.55rem,3.2vw,2.4rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{product.name} <span className="text-black/35">{product.quantity}</span></h1>
+            <p className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-[var(--muted)]">{compound.description}</p>
 
-            <div className="mt-8 flex items-end justify-between gap-4 border-y-2 border-[#111214]/[.08] py-6">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Observed price</p>
-                <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
-                  <p className="text-5xl font-extrabold tracking-[-.055em]">{formatCurrency(product.price)}</p>
-                  {product.pricePerMg ? <span className="ink-1 rounded-full bg-white px-2.5 py-1 text-xs font-bold tabular-nums text-black/70">{formatPricePerMg(product.pricePerMg)}</span> : null}
-                  {product.previousPrice && product.previousPrice !== product.price ? <span className="text-sm text-[var(--muted)] line-through">{formatCurrency(product.previousPrice)}</span> : null}
-                  <PriceFlag trust={product.trust} />
-                  {product.trust?.adjustedPricePerMg ? <span title={`Real cost per active milligram — price per mg adjusted for ${product.trust.purityBasis === "vendor" ? "this vendor's measured purity" : "the compound's typical measured purity"}.`} className="ink-1 rounded-full bg-[#e6fbf6] px-2.5 py-1 text-xs font-extrabold text-[#0e8f80] tabular-nums">{formatPricePerMg(product.trust.adjustedPricePerMg)} / active mg</span> : null}
-                </div>
+            {/* Buy box — price + market context + facts + action + vendor track record, grouped */}
+            <div className="ink hard mt-5 rounded-[18px] bg-white p-5">
+              <ProductMarketStats
+                price={product.price}
+                pricePerMg={product.pricePerMg}
+                adjustedPricePerMg={product.trust?.adjustedPricePerMg ?? undefined}
+                previousPrice={product.previousPrice}
+                stats={marketStats}
+              />
+              <div className="mt-4 flex items-center gap-2">
+                <PriceFlag trust={product.trust} />
+                {product.reviewCount > 0
+                  ? <span className="ml-auto inline-flex items-center gap-1.5 text-sm font-bold"><Star className="size-4 fill-current" /> {product.rating} <span className="font-medium text-[var(--muted)]">({product.reviewCount})</span></span>
+                  : <span className="ml-auto text-xs font-semibold text-[var(--muted)]">No buyer reviews yet</span>}
               </div>
-              {product.reviewCount > 0
-                ? <div className="flex items-center gap-1.5 text-sm font-bold"><Star className="size-4 fill-current" /> {product.rating} <span className="font-medium text-[var(--muted)]">({product.reviewCount})</span></div>
-                : <span className="text-xs font-semibold text-[var(--muted)]">No buyer reviews yet</span>}
+
+              <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t-2 border-[#111214]/[.08] pt-4 text-xs">
+                <FactInline icon={PackageCheck} label="Availability" value={product.availability} />
+                <FactInline icon={Clock3} label="Checked" value={product.lastChecked} />
+                {product.shipping ? <FactInline icon={Truck} label="Shipping" value={product.shipping} /> : null}
+                {product.reportDate ? <FactInline icon={CalendarDays} label="Report" value={product.reportDate} /> : null}
+              </dl>
+
+              <div className="mt-5">
+                <ProductActions slug={product.slug} vendorName={vendor.name} origin={product.origin} externalUrl={product.externalUrl} />
+              </div>
+
+              <Link href={`/vendors/${vendor.slug}`} className="ink-1 press mt-4 flex items-center gap-3 rounded-[14px] bg-[var(--background)] p-3">
+                <VendorMark initials={vendor.initials} accent={vendor.accent} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-extrabold">{vendor.name}</p>
+                  <p className="text-[11px] font-semibold text-[var(--muted)]">{vendorStatusLabel(vendor.profileStatus)}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-3 text-center">
+                  <VendorTiny value={String(vendor.coaCount)} label="Lab tests" />
+                  <VendorTiny value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Purity" />
+                  <VendorTiny value={String(vendor.productCount)} label="Listings" />
+                </div>
+                <ExternalLink className="size-4 shrink-0 text-black/30" />
+              </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-4">
-              <Fact icon={PackageCheck} label="Availability" value={product.availability} />
-              <Fact icon={Truck} label="Shipping" value={product.shipping} />
-              <Fact icon={Clock3} label="Checked" value={product.lastChecked} />
-              <Fact icon={CalendarDays} label="Report" value={product.reportDate || "None yet"} />
-            </div>
-
-            <ProductActions slug={product.slug} vendorName={vendor.name} origin={product.origin} externalUrl={product.externalUrl} />
-            <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
+            <p className="mt-3 text-[11px] leading-4 text-[var(--muted)]">
               {product.origin === "live"
-                ? "This is a real listing aggregated from the vendor's public page. Buying happens on their site, never on VIAL — and outbound links stay off until the affiliate step is approved."
-                : "This is a demo listing shown to illustrate the interface — not a real vendor — so its link stays switched off. On real (Live) listings, buying happens on the vendor's own site, never on VIAL."}
+                ? "Real listing aggregated from the vendor's public page. Buying happens on their site, never on VIAL — outbound links stay off until the affiliate step is approved."
+                : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VIAL."}
             </p>
           </div>
         </div>
       </section>
 
+      {/* Who else sells this compound, and for how much — the buyer's real question, answered in-page */}
+      <PriceLeaderboard compoundName={compound.name} listings={allForCompound} labTests={compoundLabTests} />
+
       {education ? (
-        <section className="mx-auto max-w-[1320px] px-5 pb-2 sm:px-8">
+        <section className="mx-auto max-w-[1320px] px-5 pb-2 pt-2 sm:px-8">
           <CompoundKnowledge name={compound.name} education={education} stacked={stackedBriefs} />
         </section>
       ) : null}
 
-      <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
-        <div className="grid gap-7 lg:grid-cols-[1.25fr_.75fr]">
-          <div>
-            <div className="mb-6">
-              <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]">The lab evidence</p>
-              <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">What we could verify</h2>
-              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Each row answers a different question. Passing the identity test doesn&rsquo;t mean it&rsquo;s sterile or correctly dosed — we show each answer separately.</p>
+      <section className="mx-auto max-w-[1320px] px-5 py-8 sm:px-8 sm:py-10">
+        <div className="mb-6">
+          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]">The lab evidence</p>
+          <h2 className="mt-3 text-[clamp(1.6rem,3vw,2.2rem)] font-extrabold leading-[1] tracking-[-.04em]">What we could verify</h2>
+          <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Each row answers a different question. Passing the identity test doesn&rsquo;t mean it&rsquo;s sterile or correctly dosed — we show each answer separately.</p>
+        </div>
+        <EvidenceMatrix evidence={product.evidence} />
+
+        <div className="mt-5 grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <CoaCrossCheckPanel check={coaCheck} />
+
+          {product.priceHistory.length >= 2 ? (
+          <div className="ink hard rounded-[18px] bg-white p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Price trend</p>
+                <p className={`mt-1 text-lg font-extrabold ${priceChange <= 0 ? "text-[#0e8f80]" : "text-[#d3372c]"}`}>{priceChange > 0 ? "+" : ""}{priceChange.toFixed(1)}%</p>
+              </div>
+              <p className="text-xs font-semibold text-[var(--muted)]">{formatCurrency(priceStart)} → {formatCurrency(priceEnd)}</p>
             </div>
-            <EvidenceMatrix evidence={product.evidence} />
+            <div className="mt-5 h-28"><PriceSparkline values={product.priceHistory} accent={product.accent[0]} height={94} /></div>
+            {priceMeta.days >= 2 && priceMeta.since ? <p className="mt-3 text-[11px] leading-4 text-black/45">{priceMeta.days} price checks since {new Date(priceMeta.since).toLocaleDateString()} — from live catalog fetches and archived catalog snapshots. Real observed prices, not a projection.</p> : null}
           </div>
+          ) : null}
 
-          <aside className="space-y-5">
-            <CoaCrossCheckPanel check={coaCheck} />
-            <UsLegalNotice slug={product.compoundSlug} />
+          {product.reportIssuer ? (
+          <div className="ink hard rounded-[18px] bg-white p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">Report record</p>
+            <dl className="mt-5 space-y-4 text-sm">
+              <Detail label="Issuer" value={product.reportIssuer} />
+              <Detail label="Report date" value={product.reportDate} />
+              <Detail label="Batch" value={product.batchCode} />
+              <Detail label="Sample origin" value={product.sampleOrigin} />
+              <Detail label="Issuer confirmed" value={product.reportConfirmed ? "Yes" : "No"} />
+            </dl>
+          </div>
+          ) : null}
 
-            {product.priceHistory.length >= 2 ? (
-            <div className="ink hard rounded-[18px] bg-white p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Price trend</p>
-                  <p className={`mt-1 text-lg font-extrabold ${priceChange <= 0 ? "text-[#0e8f80]" : "text-[#d3372c]"}`}>{priceChange > 0 ? "+" : ""}{priceChange.toFixed(1)}%</p>
-                </div>
-                <p className="text-xs font-semibold text-[var(--muted)]">{formatCurrency(priceStart)} → {formatCurrency(priceEnd)}</p>
-              </div>
-              <div className="mt-5 h-28"><PriceSparkline values={product.priceHistory} accent={product.accent[0]} height={94} /></div>
-              {priceMeta.days >= 2 && priceMeta.since ? <p className="mt-3 text-[11px] leading-4 text-black/45">{priceMeta.days} price checks since {new Date(priceMeta.since).toLocaleDateString()} — from live catalog fetches and archived catalog snapshots. Real observed prices, not a projection.</p> : null}
-            </div>
-            ) : null}
+          {passport && <Link href={`/passports/${String(passport.slug)}`} className="ink hard press group block rounded-[18px] bg-[#f0edff] p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#5a4be0]">This batch has been tested</p>
+            <p className="mt-3 text-lg font-extrabold">See the full lab record for this batch</p>
+            <p className="mt-2 text-xs font-medium leading-5 text-[#111214]/60">Sampling level {String(passport.sampling_level)} · {Math.round(Number(passport.evidence_confidence) * 100)}% evidence confidence. This describes the tested samples — not every vial in the batch.</p>
+            <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#5a4be0]">Open passport <ExternalLink className="size-4 transition group-hover:translate-x-1"/></span>
+          </Link>}
 
-            {product.reportIssuer ? (
-            <div className="ink hard rounded-[18px] bg-white p-5">
-              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">Report record</p>
-              <dl className="mt-5 space-y-4 text-sm">
-                <Detail label="Issuer" value={product.reportIssuer} />
-                <Detail label="Report date" value={product.reportDate} />
-                <Detail label="Batch" value={product.batchCode} />
-                <Detail label="Sample origin" value={product.sampleOrigin} />
-                <Detail label="Issuer confirmed" value={product.reportConfirmed ? "Yes" : "No"} />
-              </dl>
-            </div>
-            ) : null}
-
-            {passport && <Link href={`/passports/${String(passport.slug)}`} className="ink hard press group block rounded-[18px] bg-[#f0edff] p-5">
-              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#5a4be0]">This batch has been tested</p>
-              <p className="mt-3 text-lg font-extrabold">See the full lab record for this batch</p>
-              <p className="mt-2 text-xs font-medium leading-5 text-[#111214]/60">Sampling level {String(passport.sampling_level)} · {Math.round(Number(passport.evidence_confidence) * 100)}% evidence confidence. This describes the tested samples — not every vial in the batch.</p>
-              <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#5a4be0]">Open passport <ExternalLink className="size-4 transition group-hover:translate-x-1"/></span>
-            </Link>}
-
-            <Link href={`/vendors/${vendor.slug}`} className="ink hard press group block rounded-[18px] bg-white p-5">
-              <div className="flex items-center gap-4">
-                <VendorMark initials={vendor.initials} accent={vendor.accent} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-extrabold">{vendor.name}</p>
-                  <p className="mt-1 text-xs font-semibold text-[var(--muted)]">{vendorStatusLabel(vendor.profileStatus)}</p>
-                </div>
-                <ExternalLink className="size-4 text-black/30 transition group-hover:text-black" />
-              </div>
-              <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                <MiniStat value={String(vendor.coaCount)} label="Lab tests" />
-                <MiniStat value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median purity" />
-                <MiniStat value={String(vendor.productCount)} label="Listings" />
-              </div>
-            </Link>
-          </aside>
+          <UsLegalNotice slug={product.compoundSlug} />
         </div>
       </section>
 
-      {related.length > 0 && (
-        <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-16">
-          <div className="mb-7 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]">Same compound</p>
-              <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Other {product.name} listings</h2>
-            </div>
-            <Link href={`/compounds/${compound.slug}`} className="ink-1 hard-sm press shrink-0 rounded-full bg-white px-4 py-2 text-sm font-bold">View compound page</Link>
+      <section className="mx-auto max-w-[1320px] px-5 pb-14 sm:px-8">
+        <Link href={`/compounds/${compound.slug}`} className="ink hard press group flex items-center justify-between gap-4 rounded-[18px] bg-white px-6 py-5">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#0e8f80]">Same compound</p>
+            <p className="mt-1 text-lg font-extrabold tracking-[-.02em]">See the full {compound.name} market{marketStats.count > 1 ? ` — all ${marketStats.count} vendors` : ""}, price history & lab tests</p>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{related.map((item) => <ProductCard key={item.slug} product={item} />)}</div>
-        </section>
-      )}
+          <span className="ink-1 hard-sm grid size-11 shrink-0 place-items-center rounded-full bg-[#eafff7] transition group-hover:translate-x-0.5"><ExternalLink className="size-5 text-[#0e8f80]" /></span>
+        </Link>
+      </section>
     </>
   );
 }
 
-function Fact({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
+function FactInline({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
-    <div className="ink-1 rounded-xl bg-white p-3.5">
-      <Icon className="size-4 text-[#12b3a6]" />
-      <p className="mt-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{label}</p>
-      <p className="mt-1 text-xs font-bold leading-5">{value}</p>
+    <div className="flex items-center gap-2">
+      <Icon className="size-3.5 text-[#12b3a6]" />
+      <dt className="font-semibold text-[var(--muted)]">{label}</dt>
+      <dd className="font-extrabold">{value}</dd>
+    </div>
+  );
+}
+
+function VendorTiny({ value, label }: { value: string; label: string }) {
+  return (
+    <div>
+      <p className="text-sm font-extrabold tabular-nums leading-none">{value}</p>
+      <p className="mt-1 text-[9px] font-bold uppercase tracking-[.06em] text-[var(--muted)]">{label}</p>
     </div>
   );
 }
@@ -247,11 +260,3 @@ function Detail({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MiniStat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="ink-1 rounded-xl bg-[var(--background)] px-2 py-3">
-      <p className="text-base font-extrabold tabular-nums">{value}</p>
-      <p className="mt-0.5 text-[10px] font-semibold text-[var(--muted)]">{label}</p>
-    </div>
-  );
-}
