@@ -6,7 +6,7 @@ export function HomeBigNumber({ labTests, vendors, listings }: { labTests: numbe
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-white/65">Read by a human, not a scraper</p>
         <p className="mt-4 text-[clamp(5.5rem,20vw,15rem)] font-extrabold leading-[.78] tracking-[-.055em]">{labTests}</p>
         <p className="mx-auto mt-6 max-w-xl text-xl font-medium leading-8 text-white/80">
-          lab certificates opened, read, and matched to real batches by hand &mdash; so a purity number on VIAL actually means something.
+          independent lab certificates opened and read by hand &mdash; so a purity number on VIAL actually means something.
         </p>
         <div className="mx-auto mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-white/20 pt-8">
           {[[vendors, "vendors tracked"], [listings, "live listings"], ["$0", "what we take"]].map(([v, l]) => (
