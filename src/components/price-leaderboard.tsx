@@ -4,12 +4,6 @@ import type { Product } from "@/lib/types";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { formatCurrency, formatPricePerMg } from "@/lib/format";
 
-function median(values: number[]): number {
-  const s = [...values].sort((a, b) => a - b);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-}
-
 // The single most useful surface for a non-expert buyer: every vendor selling this
 // compound, ranked by real cost-per-milligram, with the independently-tested purity
 // beside it where we have one. Cheapest-and-tested rises to the top on its own.
@@ -17,13 +11,12 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
   const ranked = listings.filter((p) => p.pricePerMg && p.pricePerMg > 0).sort((a, b) => a.pricePerMg! - b.pricePerMg!);
   if (ranked.length < 2) return null;
 
-  // Too-good-to-be-true detector: real peptide has a floor cost, so a price far below the
-  // market rate is a signal (underdosed, fake, or bait), not a deal. Flag listings well
-  // under the median $/mg — but only when we have enough listings for a meaningful median.
-  const med = median(ranked.map((p) => p.pricePerMg!));
-  const isSuspicious = (p: Product) => ranked.length >= 4 && p.pricePerMg! < med * 0.45;
+  // Suspiciously-cheap and real-cost-per-active-mg come straight from the canonical listing
+  // trust (the exact values the product buy box and the compare table show), so this table
+  // can never disagree with them for the same listing.
+  const isSuspicious = (p: Product) => p.trust?.priceFlag === "too-cheap";
 
-  // Best independently-tested purity per vendor for this compound.
+  // Best independently-tested purity per vendor for this compound — display column only.
   const purityByVendor = new Map<string, number>();
   for (const t of labTests) {
     if (!t.vendor_slug || t.purity_pct == null) continue;
@@ -33,11 +26,9 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
   // Crown the cheapest listing that ISN'T suspiciously cheap — the best legit deal.
   const cheapest = ranked.find((p) => !isSuspicious(p)) ?? ranked[0];
 
-  // Best TRUE value: lowest cost per active mg once adjusted for measured purity — among the
-  // listings we actually have a purity for. The cheapest sticker isn't always the best mg.
-  const activeCost = (p: Product) => p.pricePerMg! / (purityByVendor.get(p.vendorSlug)! / 100);
-  const withPurity = ranked.filter((p) => purityByVendor.has(p.vendorSlug));
-  const bestValue = withPurity.length ? withPurity.reduce((a, b) => (activeCost(a) <= activeCost(b) ? a : b)) : null;
+  // Best TRUE value: lowest canonical real cost per active mg among the listings that carry one.
+  const withReal = ranked.filter((p) => p.trust?.adjustedPricePerMg != null);
+  const bestValue = withReal.length ? withReal.reduce((a, b) => (a.trust!.adjustedPricePerMg! <= b.trust!.adjustedPricePerMg! ? a : b)) : null;
 
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
@@ -82,8 +73,8 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
                       : <span className="text-xs font-medium text-[var(--muted)]">—</span>}
                   </td>
                   <td className="px-5 py-3">
-                    {purity != null
-                      ? <span className={`font-extrabold tabular-nums ${p.slug === bestValue?.slug ? "text-[#0e8f80]" : ""}`}>{formatPricePerMg(p.pricePerMg! / (purity / 100))}{p.slug === bestValue?.slug && <span className="ink-1 ml-1 rounded-full bg-[#e6fbf4] px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#0e8f80]">best value</span>}</span>
+                    {p.trust?.adjustedPricePerMg != null
+                      ? <span className={`font-extrabold tabular-nums ${p.slug === bestValue?.slug ? "text-[#0e8f80]" : ""}`}>{formatPricePerMg(p.trust.adjustedPricePerMg)}{p.slug === bestValue?.slug && <span className="ink-1 ml-1 rounded-full bg-[#e6fbf4] px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#0e8f80]">best value</span>}</span>
                       : <span className="text-xs font-medium text-[var(--muted)]">—</span>}
                   </td>
                   <td className="px-5 py-3"><Link href={`/products/${p.slug}`} className="inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">View <ExternalLink className="size-3" /></Link></td>

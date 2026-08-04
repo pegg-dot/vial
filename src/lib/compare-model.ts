@@ -40,7 +40,7 @@ export const COMPARE_DIMS: CompareDim[] = [
   { key: "perMg", label: "Cost per mg", group: "price", betterIsLower: true, hint: "Price divided by milligrams — the only honest way to compare across vial sizes." },
   { key: "vsMedian", label: "Price vs market", group: "price", betterIsLower: true, hint: "How this price compares to the median across every vendor of this compound." },
 
-  { key: "tests", label: "Independent lab tests", group: "quality", hint: "How many third-party certificates are on record for this compound." },
+  { key: "tests", label: "Vendor lab tests", group: "quality", hint: "How many third-party certificates are on record for this vendor, across everything they sell." },
   { key: "purity", label: "Tested purity", group: "quality", hint: "Median independently-measured purity." },
   { key: "evidence", label: "Evidence tier", group: "quality", hint: "How strong the evidence tied to this listing is." },
 

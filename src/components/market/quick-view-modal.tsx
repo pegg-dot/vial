@@ -107,7 +107,7 @@ export function QuickViewModal({
             <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em]">{current.medianPrice > 0 ? formatCurrency(current.medianPrice) : "—"}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Best / active mg</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Best / mg</p>
             <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em] text-[#0e8f80]">
               {bv?.pricePerMg ? formatPricePerMg(bv.pricePerMg) : "—"}
             </p>

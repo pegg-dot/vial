@@ -42,7 +42,7 @@ export async function buildComparison(slugs: string[]): Promise<{ entries: Compa
       composeVerdictForVendorSlug(vslug).catch(() => null),
       getVendorAggregatorRatings(vslug, db).catch(() => []),
       getVendorRegulatoryActions(vslug, db).catch(() => []),
-      getLabTestsForVendor(db, vslug, 200).catch(() => []),
+      getLabTestsForVendor(db, vslug, 24).catch(() => []),
     ]);
     const tp = aggregators.find((a) => a.source === "Trustpilot");
     const vendorListings = products.filter((p) => p.vendorSlug === vslug);
@@ -111,5 +111,7 @@ function coaRank(status: string): number {
   return status === "batch-verified" ? 3 : status === "verified" ? 2 : status === "no-claim" ? 1 : 0;
 }
 function coaTone(status: string): CompareCell["tone"] {
-  return status === "batch-verified" || status === "verified" ? "good" : status === "mismatch" || status === "low-purity" ? "bad" : "neutral";
+  // low-purity is amber everywhere else (tile chip + product panel); only a borrowed/mismatched
+  // certificate is red. Keep compare's severity in step with the rest of the app.
+  return status === "batch-verified" || status === "verified" ? "good" : status === "mismatch" ? "bad" : status === "low-purity" ? "warn" : "neutral";
 }
