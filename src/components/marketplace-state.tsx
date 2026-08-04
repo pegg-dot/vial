@@ -33,7 +33,15 @@ function readStoredList(key: string) {
   }
 }
 
-export function MarketplaceProvider({ children, catalog, initialWatchlist = [], initialCompare = [], authenticated = false }: { children: React.ReactNode; catalog: CatalogSnapshot; initialWatchlist?: string[]; initialCompare?: string[]; authenticated?: boolean }) {
+export function MarketplaceProvider({ children, catalog: catalogProp, initialWatchlist = [], initialCompare = [], authenticated = false }: { children: React.ReactNode; catalog: CatalogSnapshot; initialWatchlist?: string[]; initialCompare?: string[]; authenticated?: boolean }) {
+  // The provider (and its catalog prop) is captured once at hard load and frozen across soft
+  // navigations, so every client surface — market grid, search, cards, compare dock — would
+  // drift from the freshly server-rendered detail pages and the compare table whenever the
+  // catalog changes mid-session. Re-pull the live snapshot on focus + a slow interval, and use
+  // whichever of the fetched snapshot or the server prop is newer (by generatedAt) — so a fresh
+  // server prop from router.refresh wins immediately, with no setState-in-effect re-seed.
+  const [fetchedCatalog, setFetchedCatalog] = useState<CatalogSnapshot | null>(null);
+  const catalog = fetchedCatalog && fetchedCatalog.generatedAt > catalogProp.generatedAt ? fetchedCatalog : catalogProp;
   const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
   const [compare, setCompare] = useState<string[]>(initialCompare);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -85,6 +93,23 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+  // Track the live DB so client surfaces stay in step with server-rendered pages.
+  useEffect(() => {
+    let alive = true;
+    const refresh = async () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      try {
+        const r = await fetch("/api/v1/catalog", { cache: "no-store" });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (alive && j?.data?.products) setFetchedCatalog(j.data as CatalogSnapshot);
+      } catch { /* keep the last-good catalog */ }
+    };
+    const onVis = () => { if (document.visibilityState === "visible") void refresh(); };
+    document.addEventListener("visibilitychange", onVis);
+    const id = window.setInterval(() => void refresh(), 120_000);
+    return () => { alive = false; document.removeEventListener("visibilitychange", onVis); window.clearInterval(id); };
   }, []);
 
   const validSlugs = useMemo(() => new Set(catalog.products.map((product) => product.slug)), [catalog.products]);
