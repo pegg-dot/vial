@@ -68,7 +68,7 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
           <tr>
             <HeaderCell label="#" active={false} onSort={setSort} />
             <HeaderCell label="Compound" sortKey="trending" active={sort === "trending"} onSort={setSort} />
-            <HeaderCell label="Vendors" active={false} onSort={setSort} />
+            <HeaderCell label="Listings" active={false} onSort={setSort} />
             <HeaderCell label="From" sortKey="price" active={sort === "price"} onSort={setSort} />
             <HeaderCell label="Median" active={false} onSort={setSort} />
             <HeaderCell label="Δ" sortKey="change" active={sort === "change"} onSort={setSort} />
@@ -103,7 +103,7 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
                   </div>
                   <span className="text-[11px] font-semibold text-[var(--muted)]">{shelfForCompound(c).label}</span>
                 </td>
-                <td className="px-4 py-3 font-bold tabular-nums">{range.count}</td>
+                <td className="px-4 py-3 font-bold tabular-nums">{c.listings}</td>
                 <td className="px-4 py-3 font-extrabold tabular-nums">{range.from != null ? formatCurrency(range.from) : "—"}</td>
                 <td className="px-4 py-3 font-bold tabular-nums text-[var(--muted)]">{c.medianPrice > 0 ? formatCurrency(c.medianPrice) : "—"}</td>
                 <td className="px-4 py-3">

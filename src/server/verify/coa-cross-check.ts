@@ -134,6 +134,7 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
       `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name,tested_at
          FROM lab_test_records
         WHERE batch_code IS NOT NULL AND REGEXP_REPLACE(LOWER(batch_code),'[^a-z0-9]','','g') = $1
+        ORDER BY tested_at DESC NULLS LAST, id
         LIMIT 1`,
       [bc],
     )).rows[0];

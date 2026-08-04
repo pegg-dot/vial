@@ -60,9 +60,19 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
     [compoundSlugs],
   )).rows;
 
-  // Index by normalized batch code (borrowed-cert detection across the whole set).
+  // Borrowed-certificate detection must see the WHOLE lab corpus, not just the compounds in
+  // this set: a cited batch can resolve to a record for a compound that isn't actively listed
+  // (the lab feed is broader than the catalog). Scope this exactly like the full crossCheckCoa()
+  // batch query, or the grid chip would miss a counterfeit the product page flags red. Ordered
+  // so a batch shared by multiple records resolves deterministically.
+  const batchRecords = (await db.query<LabRow>(
+    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct
+       FROM lab_test_records
+      WHERE batch_code IS NOT NULL
+      ORDER BY tested_at DESC NULLS LAST, id`,
+  )).rows;
   const byBatch = new Map<string, LabRow>();
-  for (const r of records) {
+  for (const r of batchRecords) {
     if (r.batch_code) { const k = norm(r.batch_code); if (k.length >= 4 && !byBatch.has(k)) byBatch.set(k, r); }
   }
 

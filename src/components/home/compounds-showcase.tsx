@@ -33,7 +33,7 @@ export function HomeCompoundsShowcase({ compounds }: { compounds: Compound[] }) 
                 <p className="text-[11px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{c.category}</p>
                 <h3 className="mt-1 truncate text-xl font-extrabold tracking-[-.03em]">{c.name}</h3>
                 <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-semibold text-[#111214]/70">
-                  <span>{c.listings} vendor{c.listings === 1 ? "" : "s"}</span>
+                  <span>{c.listings} listing{c.listings === 1 ? "" : "s"}</span>
                   {c.medianPrice > 0 && <span>median {formatCurrency(c.medianPrice)}</span>}
                   {c.coaCount > 0 && <span className="text-[#2b31d8]">{c.coaCount} lab test{c.coaCount === 1 ? "" : "s"}</span>}
                 </div>

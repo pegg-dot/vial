@@ -40,6 +40,20 @@ describe("listing trust (the everywhere chip)", () => {
     expect(map.get("copycat")?.tone).toBe("bad");
   });
 
+  it("catches a borrowed certificate even when the cited batch belongs to an unlisted compound (agrees with the full check)", async () => {
+    // The real record is for a compound NONE of the computed listings sell, so it is outside the
+    // compound-scoped read — the grid chip used to miss this while the product page flagged it red.
+    await seedLabTest({ vendor_slug: "orbit-labs", manufacturer: "Orbit Labs", compound_slug: "cjc-1295", batch_code: "ORBIT-XYZ-88", purity: 99 });
+    const db = await getDatabase();
+    const listing = { slug: "knockoff", vendorSlug: "knockoff-peptides", compoundSlug: "ipamorelin", reportIssuer: "Janoshik", reportConfirmed: true, batchCode: "ORBIT-XYZ-88" };
+    const map = await computeListingTrustMap(db, [listing]);
+    const full = await crossCheckCoa(db, { vendorSlug: "knockoff-peptides", compoundSlug: "ipamorelin", reportIssuer: "Janoshik", reportConfirmed: true, batchCode: "ORBIT-XYZ-88" });
+    expect(full.status).toBe("mismatch");                     // the product page catches it
+    expect(map.get("knockoff")?.status).toBe("mismatch");     // and now the grid chip does too
+    expect(map.get("knockoff")?.status).toBe(full.status);
+    expect(map.get("knockoff")?.tone).toBe("bad");
+  });
+
   it("marks a suspiciously-cheap listing (far below the market median $/mg)", async () => {
     const db = await getDatabase();
     const inputs = [

@@ -46,7 +46,7 @@ export function MarketExperience() {
         <CollectionRow eyebrow="Most looked-up" title="Trending now" blurb="What buyers are researching most across the market right now.">
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[280px] shrink-0 snap-start">
-              <CompoundTickerCard compound={c} products={products} metric={{ label: "vendors", value: String(c.listings) }} onQuickView={() => openRow(trend, i)} />
+              <CompoundTickerCard compound={c} products={products} metric={{ label: "listings", value: String(c.listings) }} onQuickView={() => openRow(trend, i)} />
             </div>
           ))}
         </CollectionRow>
