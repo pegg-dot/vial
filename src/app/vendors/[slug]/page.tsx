@@ -124,7 +124,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                 <p className="mt-4 max-w-xl text-[15px] font-medium leading-7 text-white/75">{vendor.description}</p>
                 <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-semibold text-white/65">
                   {vendor.location && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>}
-                  {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> First seen {vendor.founded}</span>}
+                  {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> Founded {vendor.founded}</span>}
                   {vendor.lastObserved && <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>}
                 </div>
                 <div className="mt-6"><FollowButton entityType="vendor" entitySlug={slug} initialFollowed={followed} authenticated={Boolean(principal)} /></div>
