@@ -124,6 +124,7 @@ export interface Product {
   evidence: EvidenceDimension[];
   origin: DataOrigin;
   externalUrl?: string;
+  imageUrl?: string;        // real vendor product photo (Live listings only); else undefined → generated visual
   trust?: ListingTrust;
 }
 

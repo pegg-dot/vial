@@ -6,6 +6,7 @@ import { ArtMolecule, ArtDroplet } from "@/components/vial-art";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
 import { formatCurrency } from "@/lib/format";
 import { educationFor } from "@/lib/compound-education";
+import { depthFor } from "@/lib/compound-depth";
 import { GoalTags } from "@/components/goal-tags";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { UsLegalNotice } from "@/components/us-legal-notice";
@@ -14,6 +15,8 @@ import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
+import { PassportCarousel, type PassportRow } from "@/components/passport-carousel";
+import { listPublicPassports } from "@/server/evidence-network/repository";
 import { PriceLeaderboard } from "@/components/price-leaderboard";
 import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 import { getDatabase } from "@/server/db/client";
@@ -39,7 +42,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
-  const [listings, principal, labTests, research, regulatory] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db))]);
+  const [listings, principal, labTests, research, regulatory, allPassports] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassports()]);
+  const passports = (allPassports as Array<Record<string, unknown>>).filter((p) => p.compound_slug === slug || p.compound_slug_join === slug).slice(0, 12) as unknown as PassportRow[];
   const edu = educationFor(slug);
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
   // (so we only ever link to compounds we actually track) and carry its cheapest listing price.
@@ -103,7 +107,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
       {edu ? (
         <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
-          <CompoundKnowledge name={compound.name} education={edu} showStacks={false} />
+          <CompoundKnowledge name={compound.name} education={edu} depth={depthFor(slug)} showStacks={false} />
         </section>
       ) : null}
 
@@ -156,6 +160,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       ) : null}
 
       <LabTestsPanel tests={labTests} heading={`${compound.name} — independent lab tests`} />
+
+      <PassportCarousel passports={passports} compoundName={compound.name} />
 
       <section className="mx-auto max-w-[1320px] px-5 pb-14 pt-4 sm:px-8 sm:pb-20">
         <div className="ink hard rounded-[20px] bg-[#fff6e6] p-6 sm:p-8">

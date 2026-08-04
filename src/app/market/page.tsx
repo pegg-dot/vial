@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { MarketClient } from "@/components/market-client";
+import { MarketExperience } from "@/components/market/market-experience";
+import { VialValueBand } from "@/components/market/vial-value-band";
 import { ArtTag, VialBuddy, ArtDroplet } from "@/components/vial-art";
 
 export const metadata: Metadata = {
@@ -26,8 +27,12 @@ export default function MarketPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16">
-        <MarketClient />
+      <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8">
+        <VialValueBand />
+      </section>
+
+      <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12">
+        <MarketExperience />
       </section>
     </>
   );

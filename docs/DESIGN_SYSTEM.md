@@ -80,8 +80,14 @@ Restyle these and whole trees reskin at once:
 
 ## Core components
 - **Product card** — product, quantity, vendor, price, evidence state, freshness, save/compare.
-- **Product visual** — original CSS-generated vial imagery (the one place gradients are allowed:
-  they are the illustration, not chrome). No external product photography.
+- **Product photo / visual** — on a **Live** listing, show the vendor's **real product photo**
+  (aggregated from their own product page's `og:image`, hotlinked with a graceful fallback);
+  `ProductPhoto` renders it and falls back to the CSS-generated vial illustration
+  (`ProductVisual`) when there's no image, the image fails to load, or the listing is Demo.
+  The generated vial imagery is the one place gradients are allowed (it's the illustration, not
+  chrome). *(Owner-approved 2026-07-29 — reverses the earlier "no external product photography"
+  rule: real photos read as a real marketplace; the aggregator links out, so showing the
+  vendor's own product image is consistent with the model.)*
 - **Evidence badge / matrix** — concrete labels (`Issuer confirmed`, `Vendor-published`); one
   row per question, states established / partial / unknown, each with its interpretation limit.
 - **Data-origin badge** — Demo vs Live (records are demo unless marked Live).
