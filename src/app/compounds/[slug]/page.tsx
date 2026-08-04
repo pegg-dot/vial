@@ -6,6 +6,7 @@ import { ArtMolecule, ArtDroplet } from "@/components/vial-art";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
 import { formatCurrency } from "@/lib/format";
 import { educationFor } from "@/lib/compound-education";
+import { depthFor } from "@/lib/compound-depth";
 import { GoalTags } from "@/components/goal-tags";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { UsLegalNotice } from "@/components/us-legal-notice";
@@ -103,7 +104,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
       {edu ? (
         <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
-          <CompoundKnowledge name={compound.name} education={edu} showStacks={false} />
+          <CompoundKnowledge name={compound.name} education={edu} depth={depthFor(slug)} showStacks={false} />
         </section>
       ) : null}
 

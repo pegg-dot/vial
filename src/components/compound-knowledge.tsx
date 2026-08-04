@@ -2,41 +2,73 @@ import Link from "next/link";
 import { BookOpen, ChevronDown } from "lucide-react";
 import type { CompoundEducation } from "@/lib/compound-education";
 import { goalLabel, goalBlurb } from "@/lib/compound-education";
+import { researchStage, type CompoundDepth } from "@/lib/compound-depth";
 import { GoalTags } from "./goal-tags";
 
 // The "I just want to understand what this is" panel. A visible plain-English answer, the
 // research-goal chips, and expandable dropdowns that answer the real questions a first-time
-// buyer has — without any dosing, medical, or human-use guidance (research context only).
+// buyer has — how it works, what it's studied for, how far the research has gone — without any
+// dosing, medical, or human-use guidance (research context only).
 export function CompoundKnowledge({
-  name, education, stacked = [], showStacks = true,
+  name, education, depth, stacked = [], showStacks = true,
 }: {
   name: string;
   education: CompoundEducation;
+  depth?: CompoundDepth;
   stacked?: { slug: string; name: string }[];
   showStacks?: boolean;
 }) {
   const goals = education.goals ?? [];
+  const stage = depth ? researchStage(depth.researchStatus) : null;
   return (
     <div className="ink hard rounded-[20px] bg-white p-6 sm:p-8">
       <div className="flex items-center gap-2.5">
         <span className="ink-1 grid size-9 place-items-center rounded-xl bg-[#f0edff]"><BookOpen className="size-4 text-[#5a4be0]" /></span>
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Understand this compound</p>
       </div>
-      <h2 className="mt-4 text-2xl font-extrabold tracking-[-.035em] sm:text-3xl">What is {name}?</h2>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <h2 className="text-2xl font-extrabold tracking-[-.035em] sm:text-3xl">What is {name}?</h2>
+        {stage && <span className={`ink-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${stage.tint}`}>{stage.label}</span>}
+        {depth?.knownAs ? <span className="ink-1 rounded-full bg-[var(--background)] px-2.5 py-1 text-[11px] font-bold text-[var(--muted)]">a.k.a. {depth.knownAs}</span> : null}
+      </div>
       {education.summary ? <p className="mt-3 max-w-3xl text-[15px] font-medium leading-7 text-black/70">{education.summary}</p> : null}
       {goals.length > 0 ? <div className="mt-5"><GoalTags goals={goals} size="md" /></div> : null}
 
+      {depth?.caveat ? (
+        <div className="ink-1 mt-5 flex items-start gap-2.5 rounded-[14px] bg-[#fff4e0] p-4">
+          <span className="mt-0.5 text-[#b26a00]">⚠</span>
+          <p className="text-[13px] font-medium leading-6 text-[#111214]"><span className="font-extrabold">Good to know:</span> {depth.caveat}</p>
+        </div>
+      ) : null}
+
       <div className="mt-6 border-t border-black/[.08]">
-        {goals.length > 0 ? (
-          <QA q={`What is ${name} researched for?`} open>
-            <ul className="space-y-3.5">
-              {goals.map((g) => (
-                <li key={g} className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
-                  <span className="shrink-0 font-semibold text-black/80 sm:w-52">{goalLabel(g)}</span>
-                  <span className="text-black/60">{goalBlurb(g)}</span>
-                </li>
-              ))}
-            </ul>
+        {depth?.mechanism ? (
+          <QA q={`How does ${name} work?`} open>
+            <p>{depth.mechanism}</p>
+            <p className="mt-2 text-xs text-black/45">Mechanism of action from published research — how the molecule behaves, not a claim about any product or any human-use effect.</p>
+          </QA>
+        ) : null}
+
+        {(depth?.researchedFor || goals.length > 0) ? (
+          <QA q={`What is ${name} researched for?`} open={!depth?.mechanism}>
+            {depth?.researchedFor ? <p className="mb-3">{depth.researchedFor}</p> : null}
+            {goals.length > 0 && (
+              <ul className="space-y-3.5">
+                {goals.map((g) => (
+                  <li key={g} className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
+                    <span className="shrink-0 font-semibold text-black/80 sm:w-52">{goalLabel(g)}</span>
+                    <span className="text-black/60">{goalBlurb(g)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </QA>
+        ) : null}
+
+        {depth?.researchStatus ? (
+          <QA q="How far has the research gone?">
+            <p>{depth.researchStatus}</p>
+            <p className="mt-2 text-xs text-black/45">Where the science stands — an approved <em>drug</em> is not the same as the research-grade material a vendor sells, which is unregulated regardless.</p>
           </QA>
         ) : null}
 

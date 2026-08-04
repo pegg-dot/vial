@@ -6,8 +6,8 @@
 // compound and record the vendor's declared price as an honest observation (origin='live').
 
 import type { SqlConnection } from "@/server/db/client";
-import { recordCatalogListing, upsertLiveVendor } from "./live-sources";
-import { matchCompound, type CompoundRef, type ImportResult } from "./shopify-import";
+import { upsertLiveVendor } from "./live-sources";
+import { matchCompound, recordAllSizes, type Candidate, type CompoundRef, type ImportResult } from "./shopify-import";
 
 const UA = "VIAL-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
 const PRICE_MIN = 5;
@@ -77,7 +77,9 @@ export async function importWooCommerceCatalog(
   await upsertLiveVendor(db, { slug: input.vendorSlug, name: input.vendorName, domains: [input.domain], location: input.location, description: input.description });
 
   // Cheapest sane candidate per compound (a vendor lists several sizes for one compound).
-  const best = new Map<string, { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string }>();
+  // Keep the cheapest candidate per (compound, size) — a vendor sells the same compound in
+  // several vial sizes, and each real size is worth recording ($/mg differs by size).
+  const bySize = new Map<string, Candidate>();
   for (const product of products) {
     if (!product?.name) { result.skipped += 1; continue; }
     const compoundSlug = matchCompound(product.name, input.compounds);
@@ -85,28 +87,11 @@ export async function importWooCommerceCatalog(
     result.matched += 1;
     const price = wooPrice(product);
     if (price == null || price < PRICE_MIN || price > PRICE_MAX) { result.skipped += 1; continue; }
-    const prev = best.get(compoundSlug);
-    if (!prev || price < prev.price) {
-      best.set(compoundSlug, { compoundSlug, price, quantity: wooQuantity(product.name), name: product.name, url: product.permalink, available: Boolean(product.is_in_stock), image: wooImage(product) });
-    }
+    const quantity = wooQuantity(product.name);
+    const key = `${compoundSlug}::${quantity.toLowerCase()}`;
+    const prev = bySize.get(key);
+    if (!prev || price < prev.price) bySize.set(key, { compoundSlug, price, quantity, name: product.name, url: product.permalink || `https://${input.domain}`, available: Boolean(product.is_in_stock), image: wooImage(product) });
   }
-
-  for (const c of best.values()) {
-    const listingSlug = `${input.vendorSlug}-${c.compoundSlug}`;
-    await recordCatalogListing(db, {
-      compoundSlug: c.compoundSlug,
-      vendorSlug: input.vendorSlug,
-      slug: listingSlug,
-      name: c.name.slice(0, 120),
-      quantity: c.quantity.slice(0, 60),
-      externalUrl: c.url || `https://${input.domain}`,
-      price: c.price,
-      availability: c.available ? "In stock" : "Unavailable",
-      sourceUrl: c.url || `https://${input.domain}`,
-      sourceLabel: `${input.vendorName} — ${c.name.slice(0, 80)}`,
-      imageUrl: c.image,
-    });
-    result.imported.push({ slug: listingSlug, compound: c.compoundSlug, price: c.price });
-  }
+  for (const rec of await recordAllSizes(db, input, [...bySize.values()])) result.imported.push(rec);
   return result;
 }

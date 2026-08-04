@@ -8,6 +8,7 @@ import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { EvidenceMatrix } from "@/components/evidence-matrix";
+import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductActions } from "@/components/product-actions";
 import { DecisionRecorder } from "@/components/decision-recorder";
@@ -20,6 +21,7 @@ import { crossCheckCoa } from "@/server/verify/coa-cross-check";
 import { getDatabase } from "@/server/db/client";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { educationFor } from "@/lib/compound-education";
+import { depthFor } from "@/lib/compound-depth";
 import { PriceFlag } from "@/components/listing-trust-chip";
 import { UsLegalNotice } from "@/components/us-legal-notice";
 import { getListingPriceMeta } from "@/server/ingest/price-history";
@@ -166,7 +168,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       {education ? (
         <section className="mx-auto max-w-[1320px] px-5 pb-2 pt-2 sm:px-8">
-          <CompoundKnowledge name={compound.name} education={education} stacked={stackedBriefs} />
+          <CompoundKnowledge name={compound.name} education={education} depth={depthFor(product.compoundSlug)} stacked={stackedBriefs} />
         </section>
       ) : null}
 
@@ -177,6 +179,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Each row answers a different question. Passing the identity test doesn&rsquo;t mean it&rsquo;s sterile or correctly dosed — we show each answer separately.</p>
         </div>
         <EvidenceMatrix evidence={product.evidence} />
+
+        {compoundLabTests.length > 0 && (
+          <div className="mt-6">
+            <LabTestsPanel tests={compoundLabTests} heading={`Independent lab tests on record for ${compound.name}`} />
+          </div>
+        )}
 
         <div className="mt-5 grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
           <CoaCrossCheckPanel check={coaCheck} />

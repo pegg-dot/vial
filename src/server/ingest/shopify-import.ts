@@ -77,6 +77,61 @@ export interface ImportResult {
   skipped: number;
 }
 
+// One matched (vendor, compound, size) offer, ready to record as a listing.
+export interface Candidate { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string }
+
+const sizeSlug = (q: string) => q.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 12) || "std";
+const MAX_SIZES_PER_COMPOUND = 5;
+
+// Pull a size token from a product name (e.g. "BPC-157 10mg vial" → "10mg"), else "1 vial".
+export function sizeFromName(name: string): string {
+  const m = name.match(/\b(\d+(?:\.\d+)?)\s*(mg|mcg|iu|ml|g)\b/i);
+  return m ? `${m[1]}${m[2].toLowerCase()}` : "1 vial";
+}
+
+// Record every distinct size a vendor sells per compound (not just the cheapest). The cheapest
+// size keeps the canonical `<vendor>-<compound>` listing slug for backward compatibility; other
+// sizes get a `-<size>` suffix. Capped per compound so a stray variant list can't explode.
+export async function recordAllSizes(
+  db: SqlConnection,
+  input: { vendorSlug: string; vendorName: string; domain: string },
+  candidates: Candidate[],
+): Promise<{ slug: string; compound: string; price: number }[]> {
+  const byCompound = new Map<string, Candidate[]>();
+  for (const c of candidates) {
+    const arr = byCompound.get(c.compoundSlug);
+    if (arr) arr.push(c); else byCompound.set(c.compoundSlug, [c]);
+  }
+  const imported: { slug: string; compound: string; price: number }[] = [];
+  for (const [compoundSlug, list] of byCompound) {
+    // Cheapest candidate per distinct size, then order sizes by price and cap.
+    const perSize = new Map<string, Candidate>();
+    for (const c of list) {
+      const k = c.quantity.toLowerCase();
+      const prev = perSize.get(k);
+      if (!prev || c.price < prev.price) perSize.set(k, c);
+    }
+    const sizes = [...perSize.values()].sort((a, b) => a.price - b.price).slice(0, MAX_SIZES_PER_COMPOUND);
+    const usedSlugs = new Set<string>();
+    for (let i = 0; i < sizes.length; i++) {
+      const c = sizes[i];
+      const listingSlug = i === 0 ? `${input.vendorSlug}-${compoundSlug}` : `${input.vendorSlug}-${compoundSlug}-${sizeSlug(c.quantity)}`;
+      if (usedSlugs.has(listingSlug)) continue;   // distinct sizes that normalize to one slug → keep cheapest
+      usedSlugs.add(listingSlug);
+      await recordCatalogListing(db, {
+        compoundSlug, vendorSlug: input.vendorSlug, slug: listingSlug,
+        name: c.name.slice(0, 120), quantity: c.quantity.slice(0, 60),
+        externalUrl: c.url, price: c.price,
+        availability: c.available ? "In stock" : "Unavailable",
+        sourceUrl: c.url, sourceLabel: `${input.vendorName} — ${c.name.slice(0, 80)}`,
+        imageUrl: c.image,
+      });
+      imported.push({ slug: listingSlug, compound: compoundSlug, price: c.price });
+    }
+  }
+  return imported;
+}
+
 /**
  * Import a Shopify vendor's whole catalog: fetch /products.json, match each product to a
  * compound, and record a live listing with the vendor's declared price. Only products that
@@ -92,9 +147,9 @@ export async function importShopifyCatalog(
 
   await upsertLiveVendor(db, { slug: input.vendorSlug, name: input.vendorName, domains: [input.domain], location: input.location, description: input.description });
 
-  // Collect the cheapest sane candidate PER compound (a vendor may list several sizes /
-  // products for one compound — we record one representative listing per vendor+compound).
-  const best = new Map();
+  // One candidate per matched product (using its cheapest available variant); recordAllSizes
+  // dedupes by size and records every distinct vial size the vendor sells for a compound.
+  const candidates: Candidate[] = [];
   for (const product of products) {
     const compoundSlug = matchCompound(product.title, input.compounds);
     if (!compoundSlug) { result.skipped += 1; continue; }
@@ -103,34 +158,14 @@ export async function importShopifyCatalog(
     const variant = variants.find((v) => v.available) ?? variants[0];
     const price = Number(variant?.price);
     if (!Number.isFinite(price) || price < PRICE_MIN || price > PRICE_MAX) { result.skipped += 1; continue; }
-    const prev = best.get(compoundSlug);
-    if (!prev || price < prev.price) {
-      best.set(compoundSlug, {
-        compoundSlug, price,
-        quantity: (variant?.title && variant.title !== "Default Title") ? variant.title : "1 vial",
-        title: product.title, handle: product.handle, available: Boolean(variant?.available),
-        image: shopifyImage(product),
-      });
-    }
-  }
-
-  for (const c of best.values()) {
-    const listingSlug = `${input.vendorSlug}-${c.compoundSlug}`;
-    const productUrl = `https://${input.domain}/products/${c.handle}`;
-    await recordCatalogListing(db, {
-      compoundSlug: c.compoundSlug,
-      vendorSlug: input.vendorSlug,
-      slug: listingSlug,
-      name: c.title.slice(0, 120),
-      quantity: String(c.quantity).slice(0, 60),
-      externalUrl: productUrl,
-      price: c.price,
-      availability: c.available ? "In stock" : "Unavailable",
-      sourceUrl: productUrl,
-      sourceLabel: `${input.vendorName} — ${c.title.slice(0, 80)}`,
-      imageUrl: c.image,
+    const variantSize = variant?.title && variant.title !== "Default Title" ? variant.title : null;
+    candidates.push({
+      compoundSlug, price,
+      quantity: variantSize ?? sizeFromName(product.title),
+      name: product.title, url: `https://${input.domain}/products/${product.handle}`,
+      available: Boolean(variant?.available), image: shopifyImage(product),
     });
-    result.imported.push({ slug: listingSlug, compound: c.compoundSlug, price: c.price });
   }
+  for (const rec of await recordAllSizes(db, input, candidates)) result.imported.push(rec);
   return result;
 }
