@@ -3,6 +3,7 @@
 import type { CatalogSnapshot, Product } from "@/lib/types";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 interface MarketplaceContextValue {
@@ -37,6 +38,7 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
   const [compare, setCompare] = useState<string[]>(initialCompare);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const pathname = usePathname();
   // The provider survives client-side transitions (e.g. the login redirect), so its
   // state can be stale [] while `authenticated` flips true. Only sync the comparison
   // to the server after the user actually changed it in this session — otherwise the
@@ -124,7 +126,7 @@ export function MarketplaceProvider({ children, catalog, initialWatchlist = [], 
   return <MarketplaceContext.Provider value={value}>
     {children}
     {searchOpen && <SearchOverlay catalog={catalog} onClose={() => setSearchOpen(false)} />}
-    <CompareDock products={catalog.products} selected={compare} onClear={() => { compareDirty.current = true; setCompare([]); }} />
+    {pathname !== "/compare" && <CompareDock products={catalog.products} selected={compare} onClear={() => { compareDirty.current = true; setCompare([]); }} />}
   </MarketplaceContext.Provider>;
 }
 
