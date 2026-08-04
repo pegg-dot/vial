@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { FileCheck2, Factory, Store } from "lucide-react";
 import { VialBuddy, ArtShieldCheck, ArtCoa } from "@/components/vial-art";
 import { getVendorDirectory } from "@/server/vendors/directory";
+import { getCertificatesOnRecord } from "@/server/public-repository";
 import { VendorsDirectory } from "@/components/vendors-directory";
 
 export const metadata: Metadata = { title: "Vendor directory", description: "Rank peptide vendors by what matters to you — reliability, price, purity, testing, or reputation — from real evidence." };
@@ -14,7 +15,7 @@ export default async function VendorsPage() {
   const entries = await getVendorDirectory();
   const storefronts = entries.filter((e) => e.vendor.kind !== "manufacturer").length;
   const manufacturers = entries.filter((e) => e.vendor.kind === "manufacturer").length;
-  const totalCoa = entries.reduce((s, e) => s + e.vendor.coaCount, 0);
+  const totalCoa = await getCertificatesOnRecord();   // site-wide corpus, not the vendor-matched subset
 
   return <>
     <section className="relative isolate overflow-hidden border-b-2 border-[#111214] text-white" style={{ background: STEEL }}>

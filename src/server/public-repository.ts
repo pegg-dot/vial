@@ -76,14 +76,28 @@ export async function getEvidenceLibraryStats() {
 
 /** How the certificates we hold were sampled — the blind vs vendor-submitted split that actually
  *  matters for trust. Customer-sealed and multi-source models don't apply to aggregated COAs. */
+/**
+ * THE canonical count of independent certificates VIAL holds: one row per verify_url — a distinct
+ * COA (UNIQUE(verify_url) + the ingest ON CONFLICT guarantee one row per certificate). This is the
+ * single site-wide "certificates on record" figure. Per-compound (compound.coaCount) and per-vendor
+ * (vendor.coaCount) counts are SCOPED SUBSETS: a certificate whose manufacturer or compound didn't
+ * resolve to a tracked entity is real evidence we hold but is absent from those subsets, so summing
+ * them undercounts the corpus. Never sum a subset into a headline total — use this.
+ */
+export async function getCertificatesOnRecord(): Promise<number> {
+  const db = await getDatabase();
+  const r = (await db.query<QueryResultRow & { n: string | number }>(`SELECT COUNT(*) n FROM lab_test_records`)).rows[0];
+  return Number(r?.n ?? 0);
+}
+
 export async function getSamplingStats(): Promise<{ total: number; blind: number; vendorSelected: number; passports: number }> {
   const db = await getDatabase();
-  const r = (await db.query<QueryResultRow & { total: string | number; blind: string | number; passports: string | number }>(
-    `SELECT (SELECT COUNT(*) FROM lab_test_records) total,
-            (SELECT COUNT(*) FROM lab_test_records WHERE is_blind) blind,
+  const total = await getCertificatesOnRecord();   // same source as every other "certificates on record" figure
+  const r = (await db.query<QueryResultRow & { blind: string | number; passports: string | number }>(
+    `SELECT (SELECT COUNT(*) FROM lab_test_records WHERE is_blind) blind,
             (SELECT COUNT(*) FROM batch_passports WHERE origin='live' AND status='published') passports`,
   )).rows[0];
-  const total = Number(r?.total ?? 0), blind = Number(r?.blind ?? 0);
+  const blind = Number(r?.blind ?? 0);
   return { total, blind, vendorSelected: total - blind, passports: Number(r?.passports ?? 0) };
 }
 

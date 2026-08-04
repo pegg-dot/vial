@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { getCertificatesOnRecord } from "@/server/public-repository";
 import { HomeTicker } from "@/components/home/ticker";
 import { HomeHero } from "@/components/home/hero";
 import { HomeManifesto } from "@/components/home/manifesto";
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const { compounds, products, vendors } = await getCatalogSnapshot();
-  const labTests = compounds.reduce((sum, c) => sum + c.coaCount, 0);
+  const labTests = await getCertificatesOnRecord();   // the corpus, not the compound-matched subset
   // Curated shortlists — no more 83-wide walls.
   const topVendors = [...vendors]
     .sort((a, b) => b.coaCount - a.coaCount || b.productCount - a.productCount || b.passportCount - a.passportCount)

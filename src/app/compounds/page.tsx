@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BarChart3, BookOpenText, Layers3 } from "lucide-react";
 import { ArtMolecule, VialBuddy, ArtDroplet } from "@/components/vial-art";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { getCertificatesOnRecord } from "@/server/public-repository";
 import { SHELVES } from "@/lib/market-taxonomy";
 import { CompoundsExperience } from "@/components/market/compounds-experience";
 
@@ -19,7 +20,7 @@ function shelfKeyFor(goal: string | undefined, shelf: string | undefined): strin
 export default async function CompoundsPage({ searchParams }: { searchParams: Promise<{ goal?: string; shelf?: string }> }) {
   const { goal, shelf } = await searchParams;
   const { compounds, products } = await getCatalogSnapshot();
-  const totalCoa = compounds.reduce((s, c) => s + c.coaCount, 0);
+  const totalCoa = await getCertificatesOnRecord();   // site-wide corpus, one figure across pages
   const initialShelf = shelfKeyFor(goal, shelf);
 
   return <>
