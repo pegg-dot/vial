@@ -100,7 +100,7 @@ export function QuickViewModal({
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Market low</p>
             <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em]">{range.from != null ? formatCurrency(range.from) : "—"}</p>
-            <p className="text-[11px] font-semibold text-[var(--muted)]">{range.count} vendor{range.count === 1 ? "" : "s"}</p>
+            <p className="text-[11px] font-semibold text-[var(--muted)]">{current.listings} listing{current.listings === 1 ? "" : "s"}</p>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Median</p>
