@@ -115,7 +115,7 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
                 <td className="px-4 py-3 tabular-nums">{c.medianPurity != null ? `${c.medianPurity.toFixed(1)}%` : <span className="text-[var(--muted)]">—</span>}</td>
                 <td className="px-4 py-3 font-bold tabular-nums">{c.coaCount || <span className="font-normal text-[var(--muted)]">—</span>}</td>
                 <td className="px-4 py-3"><TrustTierChip tier={compoundTrustTier(c)} /></td>
-                <td className="px-4 py-3"><div className="h-8 w-20"><PriceSparkline values={history} accent="#12b3a6" height={32} /></div></td>
+                <td className="px-4 py-3"><div className="h-8 w-20"><PriceSparkline values={history} accent="#12b3a6" height={32} uid={c.slug} /></div></td>
               </tr>
             );
           })}
