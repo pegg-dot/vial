@@ -57,8 +57,9 @@ test("compare dock routes to a dimensional comparison", async ({ page }) => {
   await compareButtons.nth(1).click();
   await page.getByRole("link", { name: "Compare", exact: true }).last().click();
   await expect(page.getByRole("heading", { name: /Compare the claims/i })).toBeVisible();
-  await expect(page.getByText("Evidence level", { exact: true })).toBeVisible();
-  await expect(page.getByText("Sample origin", { exact: true })).toBeVisible();
+  // The deep comparison surfaces graded + hidden dimensions, not just marketing booleans.
+  await expect(page.getByText("Trust verdict", { exact: true })).toBeVisible();
+  await expect(page.getByText("Batch-matched COA", { exact: true })).toBeVisible();
 });
 
 test("mobile navigation remains usable", async ({ page }) => {
