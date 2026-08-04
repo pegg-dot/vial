@@ -1,34 +1,47 @@
 // Backfill real historical prices from the Internet Archive (Wayback Machine).
 //
-// For a bounded set of live listings, read up to a few archived snapshots of the vendor's
-// product page and extract the price shown on that date, recording each as a real price
-// observation. The result is a genuine historical price trail — never a projection.
+// For a bounded set of live listings, read archived snapshots of the vendor's product page and
+// extract the price shown on that date, recording each as a real price observation — a genuine
+// historical trail, never a projection. Uses the wayback "available" API (which, unlike the CDX
+// endpoint, is not aggressively rate-limited), asking for the closest snapshot to a spread of
+// target dates so we get several points across time for well-archived vendors. Newer vendors
+// simply have no archive yet — that's honest, they're skipped.
 //
-// Wayback's CDX endpoint rate-limits hard, so this throttles and backs off on 429. Live network
-// + writes to the dev DB. Gated; run with the dev server STOPPED (single-writer PGlite).
+// Live network + writes to the dev DB. Gated; run with the dev server STOPPED.
 //   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-wayback-prices.mjs [maxListings]
 process.env.VIAL_SEED_FIXTURES ||= "false";
 import { getDatabase } from "../src/server/db/client.ts";
-import { extractArchivedPrice, parseCdx, snapshotDate } from "../src/server/ingest/wayback-prices.ts";
+import { extractArchivedPrice, snapshotDate } from "../src/server/ingest/wayback-prices.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
 
 if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
-const MAX = Number(process.argv[2] ?? 50);
+const MAX = Number(process.argv[2] ?? 60);
+const TARGET_DATES = ["20240101", "20240601", "20241101", "20250401", "20250901", "20260201"];
 const UA = "Mozilla/5.0 (compatible; VIAL-Wayback/1.0)";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// One throttled Wayback fetch with exponential backoff on 429/5xx.
-async function wb(url, tries = 4) {
+async function fetchText(url, throttle, tries = 3) {
   for (let i = 0; i < tries; i++) {
-    await sleep(5000 + i * 4000);
+    await sleep(throttle + i * 3000);
     try {
       const res = await fetch(url, { headers: { "user-agent": UA }, redirect: "follow", signal: AbortSignal.timeout(25000) });
-      if (res.status === 429 || res.status >= 500) { await sleep(20000 * (i + 1)); continue; }
+      if (res.status === 429 || res.status >= 500) { await sleep(15000 * (i + 1)); continue; }
       if (!res.ok) return null;
       return await res.text();
-    } catch { await sleep(8000); }
+    } catch { await sleep(4000); }
   }
+  return null;
+}
+
+// Closest archived snapshot to a target date, or null.
+async function closestSnapshot(url, ts) {
+  const raw = await fetchText(`http://archive.org/wayback/available?url=${encodeURIComponent(url)}&timestamp=${ts}`, 1500);
+  if (!raw) return null;
+  try {
+    const s = JSON.parse(raw)?.archived_snapshots?.closest;
+    if (s?.available && String(s.status) === "200" && /^\d{14}$/.test(s.timestamp)) return { timestamp: s.timestamp, url: s.url };
+  } catch { /* not json */ }
   return null;
 }
 
@@ -41,19 +54,19 @@ const listings = (await db.query(
 )).rows;
 
 console.log(`Backfilling Wayback price history for ${listings.length} listings…`);
-let withHistory = 0, points = 0, touched = new Set();
+let points = 0; const touched = new Set();
 
 for (const l of listings) {
-  const cdxUrl = `http://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(l.external_url)}&output=json&filter=statuscode:200&collapse=timestamp:6&limit=6`;
-  const cdxRaw = await wb(cdxUrl);
-  if (!cdxRaw || cdxRaw.trim().startsWith("<")) { console.log(`  · ${l.compound}@${l.vendor}: no archive`); continue; }
-  let snaps = [];
-  try { snaps = parseCdx(JSON.parse(cdxRaw)); } catch { snaps = []; }
-  if (!snaps.length) { console.log(`  · ${l.compound}@${l.vendor}: 0 snapshots`); continue; }
-
+  // Distinct snapshots closest to each target date.
+  const snaps = new Map();
+  for (const ts of TARGET_DATES) {
+    const s = await closestSnapshot(l.external_url, ts);
+    if (s) snaps.set(s.timestamp, s);
+  }
+  if (snaps.size === 0) { console.log(`  · ${l.compound}@${l.vendor}: no archive`); continue; }
   let got = 0;
-  for (const s of snaps) {
-    const html = await wb(`http://web.archive.org/web/${s.timestamp}id_/${l.external_url}`);
+  for (const s of snaps.values()) {
+    const html = await fetchText(`http://web.archive.org/web/${s.timestamp}id_/${l.external_url}`, 2500);
     if (!html) continue;
     const price = extractArchivedPrice(html);
     if (price == null) continue;
@@ -61,9 +74,10 @@ for (const l of listings) {
     got += 1; points += 1;
   }
   if (got > 0) { touched.add(l.slug); console.log(`  ✓ ${l.compound}@${l.vendor}: ${got} historical prices`); }
-  else console.log(`  · ${l.compound}@${l.vendor}: snapshots had no readable price`);
+  else console.log(`  · ${l.compound}@${l.vendor}: ${snaps.size} snapshots, no readable price`);
 }
 
-for (const slug of touched) { if ((await rebuildListingPriceHistory(db, slug)) > 0) withHistory += 1; }
-console.log(`\nDone. ${points} historical price points across ${touched.size} listings; ${withHistory} price trails rebuilt.`);
+let rebuilt = 0;
+for (const slug of touched) { if ((await rebuildListingPriceHistory(db, slug)) > 0) rebuilt += 1; }
+console.log(`\nDone. ${points} historical price points across ${touched.size} listings; ${rebuilt} price trails rebuilt.`);
 process.exit(0);
