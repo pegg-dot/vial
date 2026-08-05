@@ -8,6 +8,7 @@ import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { EvidenceMatrix } from "@/components/evidence-matrix";
+import { deriveEvidenceDimensions } from "@/server/verify/evidence-dimensions";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { PriceSparkline } from "@/components/price-sparkline";
 import { ProductActions } from "@/components/product-actions";
@@ -182,7 +183,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <h2 className="mt-3 text-[clamp(1.6rem,3vw,2.2rem)] font-extrabold leading-[1] tracking-[-.04em]">What we could verify</h2>
           <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Each row answers a different question. Passing the identity test doesn&rsquo;t mean it&rsquo;s sterile or correctly dosed — we show each answer separately.</p>
         </div>
-        <EvidenceMatrix evidence={product.evidence} />
+        <EvidenceMatrix evidence={product.evidence.length ? product.evidence : deriveEvidenceDimensions(coaCheck)} />
 
         {compoundLabTests.length > 0 && (
           <div className="mt-6">
