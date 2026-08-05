@@ -20,7 +20,7 @@ export function BuyerReadCard({ read }: { read: BuyerRead }) {
   const h = HEAD[read.verdict];
   const HeadIcon = h.icon;
   return (
-    <div className={`ink hard mt-5 rounded-[18px] ${h.bg} p-5`}>
+    <div className={`ink hard rounded-[18px] ${h.bg} p-5`}>
       <div className="flex items-center gap-2">
         <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${h.chip}`}><HeadIcon className="size-3.5" /> {h.tag}</span>
       </div>

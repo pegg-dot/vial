@@ -106,7 +106,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </Link>
 
         <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr] lg:gap-10">
-          <div className="ink hard self-start overflow-hidden rounded-[20px] bg-white lg:sticky lg:top-24">
+          <div className="ink hard self-start overflow-hidden rounded-[20px] bg-white">
             <ProductPhoto name={product.name} quantity={product.quantity} accent={product.accent} imageUrl={product.imageUrl} />
           </div>
 
@@ -168,7 +168,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VIAL."}
             </p>
           </div>
+        </div>
+      </section>
 
+      <section className="mx-auto max-w-[1320px] px-5 pb-2 sm:px-8">
+        <div className="max-w-3xl">
           <BuyerReadCard read={buildBuyerRead({
             status: coaCheck.status,
             independentPurity: coaCheck.independentPurity ?? null,
