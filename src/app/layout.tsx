@@ -52,14 +52,17 @@ export const dynamic = "force-dynamic";
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const [catalog, principal] = await Promise.all([getCatalogSnapshot(), getCurrentPrincipal()]);
   const [watchlist, comparison] = principal ? await Promise.all([getWatchlistSlugs(principal.id), getDefaultComparison(principal.id)]) : [[], null];
+  // Whether this deployment actually holds any seeded demo records — drives the provenance copy so
+  // an all-Live deployment never implies its data might be demo.
+  const hasDemo = catalog.products.some((p) => p.origin === "demo") || catalog.vendors.some((v) => v.origin === "demo") || catalog.compounds.some((c) => c.origin === "demo");
   return (
     <html lang="en">
       <body className="min-h-screen bg-[var(--background)] pb-20 text-[var(--foreground)] antialiased md:pb-0">
         <MarketplaceProvider catalog={catalog} initialWatchlist={watchlist} initialCompare={comparison?.listingSlugs ?? []} authenticated={Boolean(principal)}>
-          <DisclosureBanner />
+          <DisclosureBanner hasDemo={hasDemo} />
           <SiteHeader authenticated={Boolean(principal)} />
           <main>{children}</main>
-          <SiteFooter />
+          <SiteFooter hasDemo={hasDemo} />
           <MobileRetentionNav authenticated={Boolean(principal)} />
         </MarketplaceProvider>
         <ServiceWorkerRegistrar />

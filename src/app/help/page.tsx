@@ -6,7 +6,7 @@ const faqs=[
 ["Does VIAL sell products?","No. VIAL is where you research the purchase — when you're ready to buy, we link you to the vendor's own site. VIAL never handles payment or product. (Outbound vendor links switch on once the affiliate step is approved.)"],
 ["What does issuer confirmed mean?","The lab named on a report confirmed it really issued it — the paper is genuine. It doesn't prove the vial you'd receive matches the tested sample."],
 ["Why is there no safety score?","Because identity, dose, sterility, and batch matching are different questions. One blended score would hide whichever answer is missing — so we show each answer separately, including unknown."],
-["Are the vendors and labs real?","Records are demo data unless marked Live. Live records are aggregated from real public sources (vendor pages, the Janoshik COA feed) — the labs and most vendors are still demo. A listing is never an endorsement either way."],
+["Are the vendors and labs real?","Records are aggregated from real public sources (vendor pages, the Janoshik COA feed) and marked Live; any seeded demo records are clearly labeled. A listing is never an endorsement either way."],
 ["Can VIAL recommend a compound?","No. VIAL organizes market and evidence information. It does not provide medical advice, dosing guidance, treatment selection, or product-use recommendations."],
 ["How do updates reach the public record?","Software captures a timestamped snapshot of the source and extracts the claims. A human reviewer approves each specific change before it appears publicly."],
 ];
