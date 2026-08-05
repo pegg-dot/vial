@@ -4,7 +4,7 @@ import { assessVendorRisk } from "@/server/vendors/directory";
 // The directory's redFlag is now exactly "the composed verdict is avoid" — the SAME verdict the
 // vendor page and /verify show. These cases are the concrete divergences the old ad-hoc gate had.
 const V = { name: "Test Vendor", coaCount: 0, medianPurity: null };
-const CLEAN = { enforcement: [] as Array<{ severity: string }>, reviewSentiment: null as string | null, reviewVolume: null as string | null, reviewConfidence: null as string | null, communitySentiment: null as string | null, communityMentionCount: null as number | null, communityNegativeCount: null as number | null, links: [] as Array<{ strength: string; linkedSlug: string }>, status: "operating", integrityFlagged: false };
+const CLEAN = { enforcement: [] as Array<{ severity: string }>, reviewSentiment: null as string | null, reviewVolume: null as string | null, reviewConfidence: null as string | null, communitySentiment: null as string | null, communityMentionCount: null as number | null, communityNegativeCount: null as number | null, communityPositiveCount: null as number | null, links: [] as Array<{ strength: string; linkedSlug: string }>, status: "operating", integrityFlagged: false };
 const risk = (over: Partial<typeof CLEAN>) => assessVendorRisk(V, { ...CLEAN, ...over });
 
 describe("assessVendorRisk (directory redFlag == vendor-page verdict avoid)", () => {

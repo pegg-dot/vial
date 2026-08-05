@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { VerifyResult, Verdict } from "@/server/verify";
 import { VialBuddy, ArtMagnifierVial, ArtMolecule } from "@/components/vial-art";
+import { TierChip } from "@/components/signal-tier-chip";
 
 // Verdict styling — hardened, semantic. Each result card is ink-bordered with a hard shadow.
 const VERDICT: Record<Verdict, { label: string; bg: string; accent: string; shadow: string; icon: typeof Check }> = {
@@ -105,7 +106,10 @@ export default function VerifyPage() {
                         {s.ok === true ? <Check className="size-3.5" /> : s.ok === false ? <X className="size-3.5" /> : <CircleDashed className="size-3.5" />}
                       </span>
                       <div>
-                        <p className="text-sm font-bold">{s.label}</p>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <p className="text-sm font-bold">{s.label}</p>
+                          {s.confidence && <TierChip tier={s.confidence} />}
+                        </div>
                         <p className="mt-0.5 text-sm font-medium leading-5 text-[var(--muted)]">{s.detail}</p>
                       </div>
                     </div>

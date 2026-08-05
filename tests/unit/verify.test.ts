@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { extractDomain, looksLikeCoaCode, findKnownVendor, vendorVerdict } from "@/server/verify";
 import { composeVerdict, type VerdictInput } from "@/server/verify/trust-graph";
 import { normalizeReviewVolume, normalizeReviewConfidence } from "@/server/verify/vendor-reviews";
+import { sentimentOf } from "@/server/ingest/reddit";
 
 // A vendor with nothing on record — every seam empty. The base against which each seam is toggled.
 const EMPTY: VerdictInput = {
@@ -138,15 +139,28 @@ describe("trust graph — composeVerdict folds every seam into ONE verdict (no b
     expect(r.verifiedCount).toBeLessThanOrEqual(r.weighed);
   });
 
-  it("community: one thin mention is caution, not avoid — the confidently-wrong pattern, cured on this seam too", () => {
-    // A single stranger's post can't nuke a vendor.
-    const thin = composeVerdict({ ...EMPTY, community: { sentiment: "negative", mentionCount: 1, negativeCount: 1 } });
-    expect(thin.verdict).toBe("caution");
-    // Corroborated across multiple mentions → avoid.
-    const corroborated = composeVerdict({ ...EMPTY, community: { sentiment: "scam", mentionCount: 5, negativeCount: 3 } });
+  it("community: a lone mention can't force avoid — pinned to what the real writer (sentimentOf) actually emits", () => {
+    // The protection is a REAL coupling, not a fabricated fixture: the gather resolves a single
+    // negative mention to "mixed", which composeVerdict's community seam ignores entirely.
+    expect(sentimentOf(1, 1, 0)).toBe("mixed");             // one negative post → mixed, not negative
+    const lone = composeVerdict({ ...EMPTY, community: { sentiment: sentimentOf(1, 1, 0), mentionCount: 1, negativeCount: 1 } });
+    expect(lone.factors.find((f) => f.label === "Community")).toBeUndefined(); // no community factor at all
+    expect(lone.verdict).not.toBe("avoid");
+
+    // The writer only emits "negative" at neg>=2, which the gate treats as well-supported → avoid.
+    expect(sentimentOf(5, 3, 0)).toBe("negative");
+    const corroborated = composeVerdict({ ...EMPTY, community: { sentiment: sentimentOf(5, 3, 0), mentionCount: 5, negativeCount: 3 } });
     expect(corroborated.verdict).toBe("avoid");
     // The community factor is a third-party account → "reported" tier, never "verified".
-    expect(thin.factors.find((f) => f.label === "Community")?.confidence).toBe("reported");
+    expect(corroborated.factors.find((f) => f.label === "Community")?.confidence).toBe("reported");
+  });
+
+  it("an ABSENCE of a record is not counted as verified — no green 'Verified' chip on a gap", () => {
+    const r = composeVerdict(EMPTY);
+    // The two absence factors (no enforcement, no lab tests) must not claim a document backs them.
+    expect(r.factors.find((f) => f.label === "Independent testing")?.confidence).toBeUndefined();
+    expect(r.factors.find((f) => f.label === "Government enforcement")?.confidence).toBeUndefined();
+    expect(r.verifiedCount).toBe(0);
   });
 
   it("real independent testing + corroboration earns TRUSTED, and counts the weighed signals", () => {

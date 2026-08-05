@@ -7,6 +7,7 @@ import { vendorPriceIndex } from "@/lib/curation";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { vendorStatusLabel } from "@/lib/format";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
+import { TierChip } from "@/components/signal-tier-chip";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
@@ -254,15 +255,4 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
 function HeroStat({ icon: Icon, value, label, accent }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; value: string; label: string; accent?: string }) {
   return <div className="ink hard rounded-[16px] bg-white p-4 text-[#111214]"><Icon className="size-4" style={{ color: accent ?? "#39414e" }} /><p className="mt-3 text-2xl font-extrabold tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
-}
-
-// How much a signal can be trusted, shown next to it so a guess never wears a fact's clothes.
-const TIER_CHIP: Record<"verified" | "reported" | "inferred", { label: string; cls: string; hint: string }> = {
-  verified: { label: "Verified", cls: "bg-[#0e8f80]/12 text-[#0a6b60]", hint: "Backed by a document, government record, or hard shared identifier." },
-  reported: { label: "Reported", cls: "bg-[#2b31d8]/10 text-[#2b31d8]", hint: "A third-party human account — buyer reviews, community, tracker scores." },
-  inferred: { label: "Inferred", cls: "bg-[#111214]/[.06] text-black/45", hint: "A heuristic read or single probe — treat it as a lead, not a proven fact." },
-};
-function TierChip({ tier }: { tier: "verified" | "reported" | "inferred" }) {
-  const t = TIER_CHIP[tier];
-  return <span title={t.hint} className={`ink-1 rounded-full px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-[.08em] ${t.cls}`}>{t.label}</span>;
 }

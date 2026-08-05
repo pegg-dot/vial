@@ -53,7 +53,9 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
   const cautionActions = v.enforcement.filter((a) => a.severity === "caution").length;
   if (severe > 0) { factors.push({ ok: false, label: "Government enforcement", detail: `On a public enforcement record — ${severe} proven-severe action${severe === 1 ? "" : "s"} (FDA/DOJ/FTC).`, confidence: "verified" }); reasons.avoid.push("a proven enforcement action"); }
   else if (cautionActions > 0) { factors.push({ ok: false, label: "Government enforcement", detail: `Named in ${cautionActions} public regulatory record${cautionActions === 1 ? "" : "s"} (e.g. an FDA warning letter).`, confidence: "verified" }); reasons.caution.push("a public regulatory record"); }
-  else factors.push({ ok: true, label: "Government enforcement", detail: "No FDA/DOJ/FTC enforcement or recall record on file.", confidence: "verified" });
+  // An ABSENCE of a record is not itself verified evidence — leave it untagged so it earns no
+  // "Verified" chip and isn't counted as an independently-verified signal (that would oversell a gap).
+  else factors.push({ ok: true, label: "Government enforcement", detail: "No FDA/DOJ/FTC enforcement or recall record on file." });
 
   // 2. Independent lab testing — the core physical-evidence seam.
   if (v.coaCount > 0) {
@@ -62,7 +64,7 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
     if (v.blindCount > 0) bits.push(`${v.blindCount} blind`);
     factors.push({ ok: true, label: "Independent testing", detail: `${bits.join(" · ")}.`, confidence: "verified" });
     reasons.trust.push(`${v.coaCount} independent lab test${v.coaCount === 1 ? "" : "s"}${v.blindCount > 0 ? " (incl. blind purchases)" : ""}`);
-  } else factors.push({ ok: false, label: "Independent testing", detail: "No third-party lab tests on record for this vendor.", confidence: "verified" });
+  } else factors.push({ ok: false, label: "Independent testing", detail: "No third-party lab tests on record for this vendor." }); // absence, not a verified record — untagged
 
   // 3. Reputation dimensions — the composed-but-not-scored reputation record.
   // NOTE on semantics (easy to get backwards): a dimension's status "established" means the

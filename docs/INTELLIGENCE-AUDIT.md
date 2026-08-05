@@ -136,6 +136,15 @@ right and are the templates for the rest:
   conservative — an `inferred` site-status/storefront signal still names the problem and can contribute to avoid;
   T6 makes its low reliability VISIBLE rather than silently downgrading a safety signal. Whether to bar `inferred`
   signals from solo-forcing avoid is a product call left to the owner.*
+  *Verifier hardening: (D1) the two ABSENCE branches ("no enforcement record", "no lab tests") were wrongly tagged
+  `verified` — so a blank vendor showed a green "Verified" chip on a gap and "2 signals · 2 verified" (the exact
+  overselling T6 targets). Absences are now untagged; `verifiedCount` counts only real records (a clean-slate
+  vendor now reads 0 verified). (D2) the `/verify` tool rendered the same factors WITHOUT the tier — lifted
+  `TierChip` to a shared component and rendered it there too, so a guess can't wear a fact's clothes on either
+  surface. (tests) the community tests were rebuilt to use only inputs the real writer (`sentimentOf`, now exported)
+  can produce, and pin the coupling — a lone mention resolves to "mixed" and yields no community factor, so no
+  single mention can force avoid. Threaded `positiveCount` to the directory too, removing a page-vs-directory
+  divergence.*
 
 Every fix must FAIL TOWARD UNKNOWN and be adversarially verified for over-correction (a stricter matcher must still
 accept the legitimate cases). Progress tracked in `.superpowers/sdd/progress.md`.

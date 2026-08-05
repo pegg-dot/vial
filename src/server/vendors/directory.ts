@@ -17,6 +17,7 @@ export interface VendorRiskSignals {
   communitySentiment: string | null;
   communityMentionCount: number | null;   // gate the community avoid the same way — one mention isn't enough
   communityNegativeCount: number | null;
+  communityPositiveCount: number | null;   // threaded so the directory verdict can't diverge from the vendor page
   links: Array<{ strength: string; linkedSlug: string }>;
   status: string;                 // vendor_status kind, or "operating"
   integrityFlagged: boolean;
@@ -47,7 +48,7 @@ export function assessVendorRisk(
     aggregators: [],
     signals: null,
     review: s.reviewSentiment ? { sentiment: s.reviewSentiment, reviewVolume: s.reviewVolume ?? undefined, confidence: s.reviewConfidence ?? undefined } : null,
-    community: s.communitySentiment ? { sentiment: s.communitySentiment, mentionCount: s.communityMentionCount ?? undefined, negativeCount: s.communityNegativeCount ?? undefined } : null,
+    community: s.communitySentiment ? { sentiment: s.communitySentiment, mentionCount: s.communityMentionCount ?? undefined, negativeCount: s.communityNegativeCount ?? undefined, positiveCount: s.communityPositiveCount ?? undefined } : null,
     links: s.links,
     status: { status: s.status },
     flagCount: s.integrityFlagged ? 1 : 0,
@@ -62,7 +63,7 @@ export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
     getFlaggedVendorSlugs(db),
     db.query<{ vendor_slug: string; status: string }>(`SELECT vendor_slug, status FROM vendor_status WHERE status <> 'operating'`),
     db.query<{ vendor_slug: string; sentiment: ReviewSentiment; review_volume: string; confidence: string }>(`SELECT vendor_slug, sentiment, review_volume, confidence FROM vendor_reviews`),
-    db.query<{ vendor_slug: string; sentiment: string; mention_count: number; negative_count: number }>(`SELECT DISTINCT ON (vendor_slug) vendor_slug, sentiment, mention_count, negative_count FROM community_mentions ORDER BY vendor_slug, fetched_at DESC`),
+    db.query<{ vendor_slug: string; sentiment: string; mention_count: number; negative_count: number; positive_count: number }>(`SELECT DISTINCT ON (vendor_slug) vendor_slug, sentiment, mention_count, negative_count, positive_count FROM community_mentions ORDER BY vendor_slug, fetched_at DESC`),
     db.query<{ vendor_slug: string; linked_slug: string; strength: string }>(`SELECT vendor_slug, linked_slug, strength FROM vendor_links`),
   ]);
 
@@ -110,6 +111,7 @@ export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
       communitySentiment: community?.sentiment ?? null,
       communityMentionCount: community?.mention_count ?? null,
       communityNegativeCount: community?.negative_count ?? null,
+      communityPositiveCount: community?.positive_count ?? null,
       links: linksByVendor.get(vendor.slug) ?? [],
       status: statusKind,
       integrityFlagged,

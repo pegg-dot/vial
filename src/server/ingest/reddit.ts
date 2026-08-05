@@ -124,7 +124,10 @@ export interface CommunitySignal {
   authed: boolean;
 }
 
-function sentimentOf(mention: number, neg: number, pos: number): CommunitySignal["sentiment"] {
+// Exported so the verdict layer's community gate can be tested against the SAME thresholds the writer
+// uses — a lone negative mention resolves to "mixed" here, which composeVerdict ignores, so no single
+// mention can force "avoid" regardless of the downstream gate.
+export function sentimentOf(mention: number, neg: number, pos: number): CommunitySignal["sentiment"] {
   if (mention === 0) return "unknown";
   if (neg >= 2 && neg >= pos) return "negative";
   if (pos > 0 && neg === 0) return "positive";
