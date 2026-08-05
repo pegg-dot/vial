@@ -1,4 +1,5 @@
 import type { Vendor } from "./types";
+import type { Verdict } from "@/server/verify";
 
 export type ReviewSentiment = "positive" | "mixed" | "negative" | "scam" | "unknown";
 
@@ -14,7 +15,8 @@ export interface VendorDirectoryEntry {
   defunct: boolean;
   integrityFlagged: boolean;
   reviewSentiment: ReviewSentiment | null;
-  redFlag: boolean;            // strong avoid signal — demoted under every rank, never hidden
+  verdict: Verdict;            // the SAME composed verdict the vendor page + /verify show
+  redFlag: boolean;            // === (verdict === "avoid") — demoted under every rank, never hidden
 }
 
 export interface Priority { key: string; label: string; question: string; blurb: string }

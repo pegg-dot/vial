@@ -14,10 +14,20 @@ const KINDS = [
   { key: "manufacturer", label: "Upstream makers" },
 ] as const;
 
+// One badge, tone from the composed verdict (red = avoid, amber = caution) so the directory and the
+// vendor page always agree on how serious a vendor is. Label picks the most specific known reason.
 function RedFlag({ entry }: { entry: VendorDirectoryEntry }) {
-  const label = entry.enforcement === "severe" ? "Enforcement action" : entry.defunct ? "Appears defunct" : entry.reviewSentiment === "scam" ? "Scam reports" : entry.integrityFlagged ? "COA integrity flag" : null;
-  if (!label) return null;
-  const amber = entry.integrityFlagged && entry.enforcement !== "severe" && !entry.defunct && entry.reviewSentiment !== "scam";
+  if (entry.verdict !== "avoid" && entry.verdict !== "caution") return null;
+  const label =
+    entry.enforcement === "severe" ? "Enforcement action"
+    : entry.defunct ? "Appears defunct"
+    : entry.reviewSentiment === "scam" ? "Scam reports"
+    : entry.reviewSentiment === "negative" ? "Negative reviews"
+    : entry.integrityFlagged ? "COA integrity flag"
+    : entry.enforcement === "caution" ? "Regulatory record"
+    : entry.reviewSentiment === "mixed" ? "Mixed reviews"
+    : entry.verdict === "avoid" ? "Flagged — see verify" : "Proceed with caution";
+  const amber = entry.verdict === "caution";
   return <span className={`ink-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${amber ? "bg-[#fff4e0] text-[#b26a00]" : "bg-[#fff1f0] text-[#d3372c]"}`}><ShieldAlert className="size-3" /> {label}</span>;
 }
 
@@ -44,7 +54,7 @@ function Headline({ entry, priority }: { entry: VendorDirectoryEntry; priority: 
       <Chip ok={v.coaCount > 0}>{v.coaCount > 0 ? `${v.coaCount} independent test${v.coaCount === 1 ? "" : "s"}` : "No independent tests"}</Chip>
       {v.medianPurity != null && <Chip ok>{v.medianPurity.toFixed(1)}% pure</Chip>}
       {entry.reviewSentiment && entry.reviewSentiment !== "unknown" && <Chip ok={entry.reviewSentiment === "positive"}>{entry.reviewSentiment} reviews</Chip>}
-      <Chip ok={!entry.redFlag}>{entry.redFlag ? "flagged" : "no flags on record"}</Chip>
+      <Chip tone={entry.verdict === "avoid" ? "bad" : entry.verdict === "caution" ? "caution" : "good"}>{entry.verdict === "avoid" ? "flagged" : entry.verdict === "caution" ? "caution" : "no flags on record"}</Chip>
     </div>
   );
 }
@@ -61,8 +71,10 @@ function Big({ value, label, accent, icon: Icon }: { value: string; label: strin
   );
 }
 function Muted({ children }: { children: React.ReactNode }) { return <p className="ink-1 rounded-[14px] bg-[var(--background)] p-3 text-xs font-semibold text-[var(--muted)]">{children}</p>; }
-function Chip({ ok, children }: { ok?: boolean; children: React.ReactNode }) {
-  return <span className={`ink-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${ok ? "bg-[#e6fbf4] text-[#0e8f80]" : "bg-[#fff4e0] text-[#b26a00]"}`}>{children}</span>;
+function Chip({ ok, tone, children }: { ok?: boolean; tone?: "good" | "caution" | "bad"; children: React.ReactNode }) {
+  const t = tone ?? (ok ? "good" : "caution");
+  const cls = t === "good" ? "bg-[#e6fbf4] text-[#0e8f80]" : t === "bad" ? "bg-[#fff1f0] text-[#d3372c]" : "bg-[#fff4e0] text-[#b26a00]";
+  return <span className={`ink-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{children}</span>;
 }
 
 function VendorRankCard({ entry, priority, rank }: { entry: VendorDirectoryEntry; priority: string; rank: number }) {
