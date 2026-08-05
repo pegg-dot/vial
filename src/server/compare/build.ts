@@ -2,6 +2,7 @@ import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { getDatabase } from "@/server/db/client";
 import { formatCurrency, formatPricePerMg } from "@/lib/format";
 import { vendorPriceIndex, valueVsMarketPerMg } from "@/lib/curation";
+import { evidenceBadgeFor } from "@/lib/evidence-badge-derive";
 import { markWinners, type CompareEntry, type CompareCell } from "@/lib/compare-model";
 import { composeVerdictForVendorSlug } from "@/server/verify/trust-graph";
 import { getVendorAggregatorRatings } from "@/server/external/repository";
@@ -72,8 +73,11 @@ export async function buildComparison(slugs: string[]): Promise<{ entries: Compa
       vsMedian: vsMed != null ? { text: `${vsMed > 0 ? "+" : ""}${vsMed}%`, num: vsMed, tone: vsMed <= 0 ? "good" : "bad" } : { text: "—" },
 
       tests: { text: String(vendor?.coaCount ?? 0), num: vendor?.coaCount ?? 0 },
-      purity: vendor?.medianPurity != null ? { text: `${vendor.medianPurity.toFixed(1)}%`, num: vendor.medianPurity } : { text: "—" },
-      evidence: { text: p.evidenceLabel || "—" },
+      // Tested purity must be THIS listing's independent result (vendor+compound scoped) — never the
+      // vendor's cross-compound median, which prints a purity for a compound the vendor never tested.
+      purity: coa?.independentPurity != null ? { text: `${coa.independentPurity.toFixed(1)}%`, num: coa.independentPurity } : { text: "—" },
+      // Evidence tier from the live verdict, not the frozen catalog label.
+      evidence: { text: evidenceBadgeFor(p).label },
 
       verdict: { text: VERDICT_LABEL[sig.verdict] ?? sig.verdict, num: VERDICT_RANK[sig.verdict] ?? 2, tone: VERDICT_TONE[sig.verdict] ?? "neutral" },
       trustpilot: sig.trustpilot != null ? { text: `${sig.trustpilot}/5`, num: sig.trustpilot, tone: sig.trustpilot >= 4 ? "good" : sig.trustpilot < 3 ? "bad" : "warn" } : { text: "No profile" },

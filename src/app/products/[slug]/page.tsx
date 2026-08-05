@@ -6,6 +6,7 @@ import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVend
 import { formatCurrency, vendorStatusLabel } from "@/lib/format";
 import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
+import { evidenceBadgeFor } from "@/lib/evidence-badge-derive";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { EvidenceMatrix } from "@/components/evidence-matrix";
 import { deriveEvidenceDimensions } from "@/server/verify/evidence-dimensions";
@@ -109,7 +110,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="flex flex-col">
             <div className="flex flex-wrap items-center gap-2">
-              <EvidenceBadge level={product.evidenceLevel} label={product.evidenceLabel} />
+              <EvidenceBadge {...evidenceBadgeFor(product)} />
               <DataOriginBadge origin={product.origin} />
               <span className="ink-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-black/60">{compound.category}</span>
             </div>
@@ -152,7 +153,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-center">
                   <VendorTiny value={String(vendor.coaCount)} label="Lab tests" />
-                  <VendorTiny value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Purity" />
+                  <VendorTiny value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median purity" />
                   <VendorTiny value={String(vendor.productCount)} label="Listings" />
                 </div>
                 <ExternalLink className="size-4 shrink-0 text-black/30" />
@@ -187,6 +188,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {compoundLabTests.length > 0 && (
           <div className="mt-6">
+            <p className="mb-2 text-[12px] font-semibold leading-5 text-[var(--muted)]">These certificates are for <strong className="text-black/70">{compound.name}</strong> across <strong className="text-black/70">every maker VIAL tracks</strong> — not necessarily {vendor.name}&rsquo;s own stock. This listing&rsquo;s specific evidence is the matrix above.</p>
             <LabTestsPanel tests={compoundLabTests} heading={`Independent lab tests on record for ${compound.name}`} />
           </div>
         )}

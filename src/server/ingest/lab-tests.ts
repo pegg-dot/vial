@@ -162,9 +162,11 @@ export interface LabTestRow {
 
 const LAB_TEST_COLS = `lab,test_id,verify_url,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,measured_content,tested_at,janoshik_listed,janoshik_made_by,janoshik_checked_at,test_type,is_blind,test_note,is_independent`;
 
-export async function getLabTestsForCompound(db: SqlConnection, compoundSlug: string, limit = 12): Promise<LabTestRow[]> {
+export async function getLabTestsForCompound(db: SqlConnection, compoundSlug: string, limit = 20): Promise<LabTestRow[]> {
+  // Independent records first, so a high-purity self-published row can never bump a counted
+  // independent test out of the limit (which made the "N independent" stat exceed the rows shown).
   return (await db.query<LabTestRow>(
-    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE compound_slug = $1 ORDER BY is_blind DESC, purity_pct DESC NULLS LAST, updated_at DESC LIMIT $2`,
+    `SELECT ${LAB_TEST_COLS} FROM lab_test_records WHERE compound_slug = $1 ORDER BY is_independent DESC, is_blind DESC, purity_pct DESC NULLS LAST, updated_at DESC LIMIT $2`,
     [compoundSlug, limit],
   )).rows;
 }
