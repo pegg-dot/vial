@@ -66,13 +66,22 @@ export function parseTotalMg(quantity: string | undefined, name = ""): number | 
     if (distinct.length > 1) return undefined;   // multi-strength pack (e.g. a two-compound combo) — ambiguous
   }
 
-  // 4) An ambiguous multi-size bundle ("2mg/5mg vial", "5/10/50/100mg") — no per-mg; split at ingest.
+  // 4) Trust a clean single-strength DECLARED QUANTITY as this listing's size — it's the size the
+  //    price is actually for. Skip when the name shows a capsule/tablet/liquid container (whose real
+  //    total is handled above), so a size-range in a product title ("… 2mg/5mg vial") no longer
+  //    blanks a listing whose own quantity says exactly which size it is.
+  const qMg = parseMg(quantity ?? "");
+  const qSingle = qMg != null && [...(quantity ?? "").matchAll(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\b/gi)].length === 1;
+  const container = /\b(?:capsules?|tablets?|tabs?|softgels?)\b/i.test(text) || /\d\s*m[lL]\b/.test(text);
+  if (qSingle && !container) return qMg;
+
+  // 5) An ambiguous multi-size bundle with no single declared size ("2mg/5mg vial") — no per-mg.
   if (distinct.length > 1 && /\d\s*(?:mg|mcg|µg)?\s*\/\s*\d/i.test(text)) return undefined;
 
-  // 5) A capsule/tablet container with no stated count — total is unknown, so no per-mg.
+  // 6) A capsule/tablet container with no stated count — total is unknown, so no per-mg.
   if (/\b(?:capsules?|tablets?|tabs?|softgels?)\b/i.test(text) && strengths.length && !count) return undefined;
 
-  // 6) The common case: a single stated strength (one vial).
+  // 7) The common case: a single stated strength (one vial).
   return parseMg(quantity ?? "") ?? (distinct.length === 1 ? distinct[0] : undefined);
 }
 

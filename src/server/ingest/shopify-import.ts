@@ -154,17 +154,23 @@ export async function importShopifyCatalog(
     const compoundSlug = matchCompound(product.title, input.compounds);
     if (!compoundSlug) { result.skipped += 1; continue; }
     result.matched += 1;
-    const variants = [...product.variants].sort((a, b) => Number(a.price) - Number(b.price));
-    const variant = variants.find((v) => v.available) ?? variants[0];
-    const price = Number(variant?.price);
-    if (!Number.isFinite(price) || price < PRICE_MIN || price > PRICE_MAX) { result.skipped += 1; continue; }
-    const variantSize = variant?.title && variant.title !== "Default Title" ? variant.title : null;
-    candidates.push({
-      compoundSlug, price,
-      quantity: variantSize ?? sizeFromName(product.title),
-      name: product.title, url: `https://${input.domain}/products/${product.handle}`,
-      available: Boolean(variant?.available), image: shopifyImage(product),
-    });
+    // One candidate PER VARIANT (each real size the vendor sells), so a product whose title bundles
+    // several sizes ("… 2mg/5mg vial") becomes one listing per size with its OWN price — instead of
+    // collapsing to just the cheapest variant. recordAllSizes then dedupes by size and caps the count.
+    let any = false;
+    for (const variant of product.variants) {
+      const price = Number(variant?.price);
+      if (!Number.isFinite(price) || price < PRICE_MIN || price > PRICE_MAX) continue;
+      const variantSize = variant?.title && variant.title !== "Default Title" ? variant.title : null;
+      candidates.push({
+        compoundSlug, price,
+        quantity: variantSize ?? sizeFromName(product.title),
+        name: product.title, url: `https://${input.domain}/products/${product.handle}`,
+        available: Boolean(variant?.available), image: shopifyImage(product),
+      });
+      any = true;
+    }
+    if (!any) result.skipped += 1;
   }
   for (const rec of await recordAllSizes(db, input, candidates)) result.imported.push(rec);
   return result;
