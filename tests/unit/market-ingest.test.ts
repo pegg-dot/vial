@@ -82,6 +82,17 @@ describe("manufacturer → vendor matching", () => {
     expect(matchVendor("Amino Asylum", [...vs].reverse())).toBe("amino-asylum");
   });
 
+  it("a short manufacturer token inside two different vendor keys is ambiguous → null (overlap, not key length)", () => {
+    // "Core" sits inside both "corepeptides" and "corelabs"; the real overlap is 4 for both, so it's a
+    // tie and must not be confidently attributed to the longer-keyed vendor.
+    const vs = [
+      { slug: "core-peptides", name: "Core Peptides", domain: "corepeptides.com" },
+      { slug: "core-labs", name: "Core Labs", domain: "corelabs.com" },
+    ];
+    expect(matchVendor("Core", vs)).toBeNull();
+    expect(matchVendor("Core", [...vs].reverse())).toBeNull();
+  });
+
   it("fails toward null on a genuine tie — never confidently mis-attributes a certificate", () => {
     // Two DIFFERENT vendors whose keys match the manufacturer equally well (same length) — ambiguous,
     // so the COA must not be handed to either; it stays attributed at the compound level.

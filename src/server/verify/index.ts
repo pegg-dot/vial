@@ -72,14 +72,20 @@ async function checkReddit(name: string): Promise<Signal> {
   const posts = result.posts;
   if (posts.length === 0) return { ok: false, label: "Community (r/Peptides)", detail: "No mentions found. Real vendors get talked about — silence is a mild warning." };
   const scammy = posts.filter((p) => classifyPost(p) === "negative");
-  if (scammy.length > 0) return { ok: false, label: "Community (r/Peptides)", detail: `${posts.length} mentions, and ${scammy.length} look like scam/quality complaints. Read them before buying.` };
+  // Require corroboration before this reads as a red signal — a single negative-classified post
+  // (which can be a mis-scored post DEFENDING a vendor) must not flag, matching the composed
+  // community seam's neg>=2 gate. One lone complaint is a "read it yourself," not a verdict.
+  if (scammy.length >= 2) return { ok: false, label: "Community (r/Peptides)", detail: `${posts.length} mentions, and ${scammy.length} look like scam/quality complaints. Read them before buying.` };
+  if (scammy.length === 1) return { ok: null, label: "Community (r/Peptides)", detail: `${posts.length} mentions; 1 looks like a complaint — thin, read it yourself before judging.` };
   return { ok: true, label: "Community (r/Peptides)", detail: `${posts.length} mentions found and none flagged as scams.` };
 }
 
 async function coaSignal(domain: string): Promise<Signal> {
   const db = await getDatabase();
   const r = await db.query<{ n: string }>(
-    `SELECT COUNT(*) n FROM lab_test_records WHERE LOWER(manufacturer) LIKE $1 OR LOWER(verify_url) LIKE $1`,
+    // is_independent so a self-published certificate can never render as a green "Independent COAs /
+    // third-party" affirmation — the same T1 filter every other "independent" surface applies.
+    `SELECT COUNT(*) n FROM lab_test_records WHERE is_independent AND (LOWER(manufacturer) LIKE $1 OR LOWER(verify_url) LIKE $1)`,
     [`%${domain.replace(/\.[a-z]+$/, "")}%`],
   );
   const n = Number(r.rows[0]?.n ?? 0);

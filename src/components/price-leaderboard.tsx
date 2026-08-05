@@ -16,10 +16,12 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
   // can never disagree with them for the same listing.
   const isSuspicious = (p: Product) => p.trust?.priceFlag === "too-cheap";
 
-  // Best independently-tested purity per vendor for this compound — display column only.
+  // Best INDEPENDENTLY-tested purity per vendor for this compound — display column only. Must exclude
+  // self-published records (is_independent=false) or a vendor's own number would render in the same
+  // emerald "independent test purity" pill the rest of the app reserves for third-party evidence.
   const purityByVendor = new Map<string, number>();
   for (const t of labTests) {
-    if (!t.vendor_slug || t.purity_pct == null) continue;
+    if (!t.vendor_slug || t.purity_pct == null || t.is_independent === false) continue;
     const p = Number(t.purity_pct);
     if (!purityByVendor.has(t.vendor_slug) || p > purityByVendor.get(t.vendor_slug)!) purityByVendor.set(t.vendor_slug, p);
   }

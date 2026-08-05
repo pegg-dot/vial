@@ -104,7 +104,10 @@ export function vendorPriceIndex(
     else byCompound.set(p.compoundSlug, [p.pricePerMg]);
   }
   const marketMed = new Map<string, number>();
-  for (const [slug, arr] of byCompound) { const m = median(arr); if (m) marketMed.set(slug, m); }
+  // Same min-peer floor as the compound-page verdict: a market with fewer than MIN_PERMG_PEERS priced
+  // listings has no real "typical price," so we withhold it here too — otherwise the vendor page would
+  // show a confident "-25% vs market" off a 2-listing market that the compound page refuses to judge.
+  for (const [slug, arr] of byCompound) { if (arr.length < MIN_PERMG_PEERS) continue; const m = median(arr); if (m) marketMed.set(slug, m); }
   const deltas: number[] = [];
   for (const l of vendorListings) {
     if (!l.pricePerMg || l.pricePerMg <= 0) continue;

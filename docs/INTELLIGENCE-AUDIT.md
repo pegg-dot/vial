@@ -148,3 +148,43 @@ right and are the templates for the rest:
 
 Every fix must FAIL TOWARD UNKNOWN and be adversarially verified for over-correction (a stricter matcher must still
 accept the legitimate cases). Progress tracked in `.superpowers/sdd/progress.md`.
+
+---
+
+## Final whole-branch verification (pre-deploy)
+
+A 20-agent verification workflow (gate → 5 parallel arc-reviewers → adversarial confirmation of every finding)
+ran the full branch against this doc + the live server. Gate: lint / tsc / full suite all green. It confirmed the
+enumerated T1–T6 + coherence + consumer deliverables landed and are correct live, and surfaced **9 real defects**,
+all now FIXED (each with a regression test + live re-check):
+
+- **[fixed] buyer-read fabricated a price clearance** it never computed — a null `priceFlag` means "cleared" only
+  when the detector actually ran; an unreadable size / thin market left it null with no evaluation, yet the card
+  still printed "price within normal range" on 243/522 listings. Now gated on `priceAssessable`; unassessable →
+  honest "we couldn't place this price." (The exact assert-from-absence sin, in our own new code.)
+- **[fixed] buyer-read low-purity headline** said "No independent test … yet" while the same card + badge + COA
+  panel + matrix all showed a test that measured below claim — a headline branch now acknowledges it.
+- **[fixed] `verify/index.ts` coaSignal** counted lab records without `is_independent` yet labeled them
+  "Independent COAs" (green) on the /verify unknown-domain path — self-published read as third-party. Filtered.
+- **[fixed] borrowed-certificate (counterfeit) branch** matched foreign SELF-PUBLISHED records, so an editable COA
+  sharing a date-format batch code could drive a false "cert mismatch." Now requires `is_independent` (coa-cross-check + listing-trust).
+- **[fixed] `matchVendor`** ranked specificity by the vendor key's length, not the actual overlap, so a short
+  ambiguous manufacturer token was confidently attributed instead of failing to null. Ranks by overlap now.
+- **[fixed] `vendorPriceIndex`** had no min-peer floor → a confident "±% vs market" on a 1–2 listing market the
+  compound page refuses to judge. Same `MIN_PERMG_PEERS` floor applied.
+- **[fixed] PriceLeaderboard "Tested purity"** built from all lab rows (self-published could show as
+  independent-tested purity). Filtered `is_independent`.
+- **[fixed] vendor `latest_tested`** wasn't `is_independent`-filtered like its sibling coaCount → a
+  self-published-only vendor showed "last tested" beside "0 independent tests." Filtered.
+- **[fixed] /verify community check** flagged on a SINGLE negative post → now requires ≥2 (matches T6's stored-seam
+  gate); a lone complaint is neutral-with-a-note. (Reddit path is inert without creds; classifyPost NEG-before-POS
+  ordering is the deferred audit item D, noted below.)
+
+**Deferred residuals (documented, not defects in scope):**
+- `cascade.ts` Curator price-outlier signal is still on size-blind sticker median — an INTERNAL opportunity signal,
+  not a consumer "vs market" verdict; T3 was scoped to card/page/compare. Same disease, different subsystem; left for
+  a future intelligence-layer pass.
+- `compound.medianPricePerMg` is snapshot-computed and null on single-record fetches (`getCompoundBySlug`) — verified
+  no surface reads it off that path (ProductCard uses the snapshot); intentional, safe.
+- Audit group D (reddit classifier NEG-before-POS; single-probe site-status) remains as originally scoped-out; the
+  live /verify community *volume* gate is now aligned, the classifier ordering is a deeper reddit change left deferred.

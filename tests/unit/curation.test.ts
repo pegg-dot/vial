@@ -49,14 +49,20 @@ describe("curation", () => {
     const s = listingMarketStats(65, [65]);
     expect(s).toMatchObject({ count: 1, low: 65, high: 65, med: 65, rank: 1, positionPct: 0, vsMedianPct: 0 });
   });
-  it("vendorPriceIndex reports how a vendor's $/mg compares to the market median", () => {
+  it("vendorPriceIndex reports how a vendor's $/mg compares to the market median (markets with enough peers)", () => {
     const all = [
-      { compoundSlug: "bpc-157", pricePerMg: 4 }, { compoundSlug: "bpc-157", pricePerMg: 6 }, // market median 5
-      { compoundSlug: "tb-500", pricePerMg: 10 }, { compoundSlug: "tb-500", pricePerMg: 20 }, // market median 15
+      { compoundSlug: "bpc-157", pricePerMg: 4 }, { compoundSlug: "bpc-157", pricePerMg: 5 }, { compoundSlug: "bpc-157", pricePerMg: 6 }, // median 5, 3 listings
+      { compoundSlug: "tb-500", pricePerMg: 10 }, { compoundSlug: "tb-500", pricePerMg: 15 }, { compoundSlug: "tb-500", pricePerMg: 20 }, // median 15, 3 listings
     ] as never;
     // vendor sells bpc at 4 (−20% vs 5) and tb-500 at 12 (−20% vs 15) → median −20%
     const idx = vendorPriceIndex([{ compoundSlug: "bpc-157", pricePerMg: 4 }, { compoundSlug: "tb-500", pricePerMg: 12 }] as never, all);
     expect(idx).toEqual({ medianPctVsMarket: -20, comparedCount: 2 });
+  });
+
+  it("vendorPriceIndex WITHHOLDS a verdict on a thin market (< min peers) — matches the compound-page floor", () => {
+    // Only 2 priced listings market-wide → no real 'typical price' → no confident +/-% verdict.
+    const all = [{ compoundSlug: "x", pricePerMg: 4 }, { compoundSlug: "x", pricePerMg: 6 }] as never;
+    expect(vendorPriceIndex([{ compoundSlug: "x", pricePerMg: 4 }] as never, all)).toEqual({ medianPctVsMarket: null, comparedCount: 0 });
   });
   it("vendorPriceIndex returns null when nothing is comparable", () => {
     expect(vendorPriceIndex([{ compoundSlug: "x", pricePerMg: undefined }] as never, [] as never)).toEqual({ medianPctVsMarket: null, comparedCount: 0 });

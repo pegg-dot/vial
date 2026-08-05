@@ -21,6 +21,7 @@ export interface BuyerReadInput {
   status: string; // the crossCheckCoa status for THIS vendor+compound
   independentPurity: number | null;
   priceFlag: "too-cheap" | "price-drop" | null;
+  priceAssessable: boolean; // true only when the too-cheap detector actually RAN (readable size + enough peers) — a null priceFlag means "cleared" only when this is true; otherwise it means "couldn't evaluate"
   compoundCoas: number; // independent COAs for the compound, across ALL makers
   compoundMedianPurity: number | null;
   vendorFlagged: boolean;
@@ -76,14 +77,26 @@ export function buildBuyerRead(i: BuyerReadInput): BuyerRead {
   } else {
     points.push({ tone: "info", text: `We hold no independent tests for ${i.compoundName} from any maker yet — unknown stays visible.` });
   }
+  // Only make a price statement when the too-cheap detector actually RAN. A null priceFlag means
+  // "cleared" ONLY when the price was assessable (readable size + enough peers); otherwise the price
+  // was never evaluated, and asserting "within normal range" would be a fabricated clearance.
   if (i.priceFlag !== "too-cheap") {
-    points.push({ tone: "info", text: `Price sits within the normal range for ${i.compoundName} — no cheap-fake red flag.` });
+    points.push(i.priceAssessable
+      ? { tone: "info", text: `Price sits within the normal range for ${i.compoundName} — no cheap-fake red flag.` }
+      : { tone: "info", text: `We couldn't place this listing's price — its size isn't readable or the market's too thin — so there's no cheap-fake check here.` });
   }
 
+  const isLowPurity = i.status === "low-purity";
   return {
-    verdict: i.status === "low-purity" ? "flagged" : "untested",
-    headline: `No independent test of ${poss(i.vendorName)} ${i.compoundName} yet`,
+    // A low-purity listing HAS an independent test (it just measured below claim) — the headline must
+    // not deny the very test the body reports (kept coherent with the badge / COA panel / matrix).
+    verdict: isLowPurity ? "flagged" : "untested",
+    headline: isLowPurity
+      ? `Independently tested — but ${i.compoundName} came in below the usual purity`
+      : `No independent test of ${poss(i.vendorName)} ${i.compoundName} yet`,
     points,
-    action: `To verify before you buy: ask ${i.vendorName} for the Janoshik COA for your batch number, then paste it into Verify — VIAL confirms it's a real, unedited lab record.`,
+    action: isLowPurity
+      ? `Purity can vary batch to batch — ask ${i.vendorName} for the COA covering YOUR batch and check it in Verify.`
+      : `To verify before you buy: ask ${i.vendorName} for the Janoshik COA for your batch number, then paste it into Verify — VIAL confirms it's a real, unedited lab record.`,
   };
 }

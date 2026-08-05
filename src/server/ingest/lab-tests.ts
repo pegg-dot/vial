@@ -85,16 +85,22 @@ export function matchVendor(manufacturer: string, vendors: { slug: string; name:
   // earlier, inflating that vendor's "independently tested"). Keep the longest matching key per vendor,
   // then take the clear winner; a genuine tie between two different vendors is ambiguous, so we fail
   // toward null (the COA stays attributed at the compound level rather than to a confidently-wrong vendor).
-  const hits: { slug: string; keyLen: number }[] = [];
+  const hits: { slug: string; overlap: number }[] = [];
   for (const v of vendors) {
     const keys = [norm(v.name), norm(v.domain.replace(/\.[a-z]+$/, ""))].filter((k) => k.length >= 5);
     let best = 0;
-    for (const k of keys) if (m.includes(k) || k.includes(m)) best = Math.max(best, k.length);
-    if (best) hits.push({ slug: v.slug, keyLen: best });
+    // Specificity is the length of the ACTUAL overlapping substring, not the vendor key's length: when
+    // a short manufacturer token sits inside the key (k.includes(m)) the real overlap is m.length, so
+    // two differently-sized keys both containing the same short token tie — and a tie fails to null.
+    for (const k of keys) {
+      const overlap = m.includes(k) ? k.length : k.includes(m) ? m.length : 0;
+      if (overlap > best) best = overlap;
+    }
+    if (best) hits.push({ slug: v.slug, overlap: best });
   }
   if (hits.length === 0) return null;
-  hits.sort((a, b) => b.keyLen - a.keyLen);
-  if (hits.length === 1 || hits[0].keyLen > hits[1].keyLen) return hits[0].slug;
+  hits.sort((a, b) => b.overlap - a.overlap);
+  if (hits.length === 1 || hits[0].overlap > hits[1].overlap) return hits[0].slug;
   return null; // two different vendors match equally well — don't guess
 }
 

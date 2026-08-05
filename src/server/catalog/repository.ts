@@ -26,7 +26,7 @@ async function queryVendors(){ const db=await getDatabase(); return (await db.qu
   (SELECT array_agg(t.purity_pct) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.purity_pct IS NOT NULL AND t.is_independent) real_purities,
   (SELECT COUNT(*) FROM batch_passports bp WHERE bp.vendor_id=o.id AND bp.status='published') real_passports,
   (SELECT COUNT(*) FROM vendor_reviews v WHERE v.vendor_slug=o.slug) real_reviews,
-  (SELECT MAX(t.tested_at) FROM lab_test_records t WHERE t.vendor_slug=o.slug) latest_tested
+  (SELECT MAX(t.tested_at) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.is_independent) latest_tested
   FROM organizations o WHERE o.organization_type='vendor' ORDER BY o.display_name`)).rows.map(toVendor); }
 async function queryProducts(){ const db=await getDatabase(); const products=(await db.query<ProductRow>(`SELECT l.*,p.name,p.declared_quantity,p.declared_form,c.slug AS compound_slug,o.slug AS vendor_slug FROM listings l JOIN products p ON p.id=l.product_id JOIN compounds c ON c.id=p.compound_id JOIN organizations o ON o.id=p.vendor_id WHERE p.status='active' ORDER BY l.featured DESC,l.price ASC,p.name ASC`)).rows.map(toProduct); const trust=await computeListingTrustMap(db,products); for(const product of products) product.trust=trust.get(product.slug); return products; }
 export async function getCatalogSnapshot():Promise<CatalogSnapshot>{ const [compounds,vendors,products]=await Promise.all([queryCompounds(),queryVendors(),queryProducts()]);

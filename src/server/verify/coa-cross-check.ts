@@ -147,7 +147,10 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
     )).rows;
     const isSameVendor = (r: LabRow) => r.vendor_slug === input.vendorSlug || (Boolean(r.manufacturer) && norm(r.manufacturer).includes(norm(input.vendorSlug)));
     const positive = rows.find((r) => isSameVendor(r) && r.compound_slug === input.compoundSlug && r.is_independent);
-    const borrowed = rows.find((r) => !isSameVendor(r) && (r.vendor_slug || r.manufacturer));
+    // A counterfeit ("borrowed certificate") accusation must rest on an INDEPENDENT foreign record —
+    // a different maker's editable self-published COA sharing a batch code (date-format collisions are
+    // real) can't drive a "mismatch"; without independent backing we fall through to unknown, not blame.
+    const borrowed = rows.find((r) => !isSameVendor(r) && r.is_independent && (r.vendor_slug || r.manufacturer));
     if (positive) {
       const p = positive.purity_pct != null ? Number(positive.purity_pct) : null;
       return {

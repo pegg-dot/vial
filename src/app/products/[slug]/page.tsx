@@ -177,6 +177,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             status: coaCheck.status,
             independentPurity: coaCheck.independentPurity ?? null,
             priceFlag: product.trust?.priceFlag ?? null,
+            priceAssessable: Boolean(product.pricePerMg) && perMgPeers.length >= 4,
             compoundCoas: product.trust?.compoundCoas ?? 0,
             compoundMedianPurity: product.trust?.compoundMedianPurity ?? null,
             vendorFlagged: product.trust?.vendorFlagged ?? false,

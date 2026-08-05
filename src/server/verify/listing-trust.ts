@@ -110,9 +110,10 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
     const bc = l.batchCode && norm(l.batchCode).length >= 6 ? norm(l.batchCode) : null;
     const batchRows = bc ? (batchByCode.get(bc) ?? []) : [];
     const isSameVendor = (r: LabRow) => r.vendor_slug === l.vendorSlug || (Boolean(r.manufacturer) && norm(r.manufacturer).includes(vTok));
-    // Positive: the vendor's OWN independent record for THIS compound. Borrowed: a different maker's.
+    // Positive: the vendor's OWN independent record for THIS compound. Borrowed: a different maker's
+    // INDEPENDENT record (an editable self-published foreign COA sharing a batch code must not accuse).
     const batchHit = batchRows.find((r) => isSameVendor(r) && r.compound_slug === l.compoundSlug && r.is_independent)
-                  ?? batchRows.find((r) => !isSameVendor(r) && (r.vendor_slug || r.manufacturer))
+                  ?? batchRows.find((r) => !isSameVendor(r) && r.is_independent && (r.vendor_slug || r.manufacturer))
                   ?? null;
 
     const status = coaStatusFrom({
