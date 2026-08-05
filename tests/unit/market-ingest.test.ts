@@ -69,4 +69,26 @@ describe("manufacturer → vendor matching", () => {
     expect(matchVendor("Bluum Peptides", vendors)).toBe("bluum-peptides");
     expect(matchVendor("www.LLYbio.com", vendors)).toBeNull();
   });
+
+  it("attributes to the MOST SPECIFIC vendor, not the first that happens to overlap", () => {
+    // Manufacturer "Amino Asylum" overlaps a broad "Amino" (key contained in it) and the specific
+    // "Amino Asylum". First-match-wins would grab whichever iterates first; best-match picks the longer key.
+    const vs = [
+      { slug: "amino-generic", name: "Amino", domain: "amino.com" },              // key "amino" (5) — broad
+      { slug: "amino-asylum", name: "Amino Asylum", domain: "aminoasylum.com" },  // key "aminoasylum" (11)
+    ];
+    expect(matchVendor("Amino Asylum", vs)).toBe("amino-asylum");
+    // order-independence: the specific vendor wins regardless of list order.
+    expect(matchVendor("Amino Asylum", [...vs].reverse())).toBe("amino-asylum");
+  });
+
+  it("fails toward null on a genuine tie — never confidently mis-attributes a certificate", () => {
+    // Two DIFFERENT vendors whose keys match the manufacturer equally well (same length) — ambiguous,
+    // so the COA must not be handed to either; it stays attributed at the compound level.
+    const vs = [
+      { slug: "peptide-co-a", name: "Peptide Co", domain: "peptideco.com" },
+      { slug: "peptide-co-b", name: "Peptide Co", domain: "peptidehub.com" },
+    ];
+    expect(matchVendor("Peptide Co", vs)).toBeNull();
+  });
 });

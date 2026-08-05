@@ -9,7 +9,9 @@ Branch: intelligence-remediation. Plan: docs/INTELLIGENCE-AUDIT.md
       compare cell. 8 unit tests. Verifier found compare skipped the floor → fixed (commit 93ef915, share snapshot median).
 - [x] T4 review confidence into verdict — DONE (472cf83) + hardened (79f522f: normalize volume/confidence,
       fail-safe vs gatherer typos; fixed 3 seed rows; D2 comment). Verifier: 2 defects fixed, R1 accepted (cernum).
-- [ ] T5 matching fails safe (needs re-ingest) — DEFERRED (domain-risky; re-ingest is owner's lane; see audit note)
+- [~] T5 matching fails safe — PARTIAL. matchVendor: first-match-wins → most-specific + null-on-tie (fail-safe, no
+      data loss, 3 tests). matchCompound: DEFERRED — variant absorption is owner-endorsed (test:17), aggressive
+      rejection risks dropping real listings on owner-lane re-ingest. See audit note.
 - [x] T6 (Tier 2) confidence dimension on Signal + verdict weighting — DONE. Signal.confidence tier
       (verified/reported/inferred); composeVerdict tags all 10 seams + verifiedCount; vendor-page tier chips +
       honest "N signals · M verified"; community seam now volume-weighed (closes verifier R2). Full suite 392 green.

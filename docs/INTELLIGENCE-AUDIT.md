@@ -108,9 +108,20 @@ right and are the templates for the rest:
   intended behavior, not a regression; whether a wall of self-published COAs should itself escalate past caution is a
   separate integrity-flag-weighting question. (R2, → T6) the community seam still forces avoid on one mention despite
   loaded counts — the same pattern, deferred to T6's reliability work.
-- [ ] **T5. Matching fails safe** — `matchCompound`/`matchVendor` return "unmatched" on ambiguity (adopt
-  `resolveActionToVendor`'s strict discipline: anchored/exact or null; reject salt/ester/DAC/blend absorption).
-  Needs re-ingest.
+- [~] **T5. Matching fails safe** — PARTIAL, scoped down after review:
+  - **DONE (`matchVendor`, `ingest/lab-tests.ts`)** — replaced first-match-wins (which handed a COA to whichever
+    vendor iterated first, inflating its "independently tested") with **most-specific-match**: keep the longest
+    key overlap per vendor, take the clear winner, and **fail toward null on a genuine tie** so an ambiguous
+    certificate stays attributed at the compound level rather than to a confidently-wrong vendor. Order-independent.
+    3 tests. Fail-safe, no data loss (a null just means unattributed).
+  - **DEFERRED (`matchCompound`) — OWNER DECISION.** The audit flagged variant absorption ("CJC-1295 DAC" →
+    `cjc-1295`) as wrong, but the codebase's own test (`market-ingest.test.ts:17`) *deliberately* treats it as
+    correct ("variant, still one compound"), and blends already return null. An aggressive salt/ester/DAC/blend
+    rejection would (a) contradict that owner-endorsed design, (b) only take effect on a re-ingest (the owner's
+    lane), and (c) risk silently DROPPING real listings from the live catalog. Per no-destructive-changes, this is
+    left as an explicit owner call rather than force-shipped. If pursued: tokenize the title, require a
+    token-boundary match, and treat a distinct-molecule modifier (DAC) with no exact compound as unmatched.
+  - Both matchers only affect FUTURE ingests; a re-ingest (owner's lane) is required to re-attribute existing rows.
 
 ### Tier 2 — structural
 - [x] **T6. Confidence/provenance dimension** — `Signal` now carries a `confidence` tier (`verified` = a

@@ -80,11 +80,22 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 export function matchVendor(manufacturer: string, vendors: { slug: string; name: string; domain: string }[]): string | null {
   const m = norm(manufacturer);
   if (!m) return null;
+  // Attribute a COA's manufacturer to a vendor by the MOST SPECIFIC key overlap — never the first in
+  // the list (the old behavior silently gave the certificate to whichever vendor happened to iterate
+  // earlier, inflating that vendor's "independently tested"). Keep the longest matching key per vendor,
+  // then take the clear winner; a genuine tie between two different vendors is ambiguous, so we fail
+  // toward null (the COA stays attributed at the compound level rather than to a confidently-wrong vendor).
+  const hits: { slug: string; keyLen: number }[] = [];
   for (const v of vendors) {
     const keys = [norm(v.name), norm(v.domain.replace(/\.[a-z]+$/, ""))].filter((k) => k.length >= 5);
-    if (keys.some((k) => m.includes(k) || k.includes(m))) return v.slug;
+    let best = 0;
+    for (const k of keys) if (m.includes(k) || k.includes(m)) best = Math.max(best, k.length);
+    if (best) hits.push({ slug: v.slug, keyLen: best });
   }
-  return null;
+  if (hits.length === 0) return null;
+  hits.sort((a, b) => b.keyLen - a.keyLen);
+  if (hits.length === 1 || hits[0].keyLen > hits[1].keyLen) return hits[0].slug;
+  return null; // two different vendors match equally well — don't guess
 }
 
 export interface LabTestInput {
