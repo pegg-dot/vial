@@ -19,6 +19,8 @@ import { ProductPhoto } from "@/components/product-photo";
 import { VendorMark } from "@/components/vendor-mark";
 import { getPublicPassportForBatchCode } from "@/server/evidence-network/repository";
 import { CoaCrossCheckPanel } from "@/components/coa-cross-check-panel";
+import { BuyerReadCard } from "@/components/buyer-read";
+import { buildBuyerRead } from "@/lib/buyer-read";
 import { crossCheckCoa } from "@/server/verify/coa-cross-check";
 import { getDatabase } from "@/server/db/client";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
@@ -166,6 +168,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VIAL."}
             </p>
           </div>
+
+          <BuyerReadCard read={buildBuyerRead({
+            status: coaCheck.status,
+            independentPurity: coaCheck.independentPurity ?? null,
+            priceFlag: product.trust?.priceFlag ?? null,
+            compoundCoas: product.trust?.compoundCoas ?? 0,
+            compoundMedianPurity: product.trust?.compoundMedianPurity ?? null,
+            vendorFlagged: product.trust?.vendorFlagged ?? false,
+            compoundName: compound.name,
+            vendorName: vendor.name,
+          })} />
         </div>
       </section>
 
