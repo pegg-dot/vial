@@ -1,7 +1,7 @@
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { getDatabase } from "@/server/db/client";
 import { formatCurrency, formatPricePerMg } from "@/lib/format";
-import { median, vendorPriceIndex, valueVsMarketPerMg } from "@/lib/curation";
+import { vendorPriceIndex, valueVsMarketPerMg } from "@/lib/curation";
 import { markWinners, type CompareEntry, type CompareCell } from "@/lib/compare-model";
 import { composeVerdictForVendorSlug } from "@/server/verify/trust-graph";
 import { getVendorAggregatorRatings } from "@/server/external/repository";
@@ -24,16 +24,6 @@ export async function buildComparison(slugs: string[]): Promise<{ entries: Compa
   const vendorBySlug = new Map(vendors.map((v) => [v.slug, v]));
   const compoundBySlug = new Map(compounds.map((c) => [c.slug, c]));
   const selected = wanted.map((s) => bySlug.get(s)).filter((p): p is Product => Boolean(p));
-
-  // Per-compound market baseline (base rate): median $/mg. Sticker-price medians are deliberately
-  // NOT kept — every "vs market" verdict must run on cost-per-mg so size can't distort it.
-  const compoundBaseline = new Map<string, { medPerMg: number | null }>();
-  for (const c of new Set(selected.map((p) => p.compoundSlug))) {
-    const listings = products.filter((p) => p.compoundSlug === c);
-    compoundBaseline.set(c, {
-      medPerMg: median(listings.map((p) => p.pricePerMg).filter((v): v is number => typeof v === "number")),
-    });
-  }
 
   // Per-vendor signals, fetched once per distinct vendor.
   const vendorSignals = new Map<string, { verdict: string; trustpilot: number | null; enforcement: { severity: string } | null; blind: number; priceIndex: number | null }>();
@@ -60,7 +50,9 @@ export async function buildComparison(slugs: string[]): Promise<{ entries: Compa
     const vendor = vendorBySlug.get(p.vendorSlug) as Vendor | undefined;
     const compound = compoundBySlug.get(p.compoundSlug);
     const sig = vendorSignals.get(p.vendorSlug)!;
-    const base = compoundBaseline.get(p.compoundSlug);
+    // The SAME floored median $/mg the card and product page use (null below MIN_PERMG_PEERS), so all
+    // three surfaces show — or withhold — the value verdict in lockstep. Never an ad-hoc thin-market median.
+    const medPerMg = compound?.medianPricePerMg ?? null;
     const coa = await crossCheckCoa(db, {
       vendorSlug: p.vendorSlug, vendorName: vendor?.name ?? p.vendorSlug,
       compoundSlug: p.compoundSlug, compoundName: compound?.name ?? p.compoundSlug,
@@ -71,12 +63,12 @@ export async function buildComparison(slugs: string[]): Promise<{ entries: Compa
       v != null && baseline && baseline > 0 ? Math.round(((v - baseline) / baseline) * 100) : null;
     // "Value vs market" compares cost-per-mg to the compound's median $/mg — never sticker price,
     // which is size-blind (a 30mg vial looks "expensive" beside 2mg vials). Unknown size → no verdict.
-    const vsMed = valueVsMarketPerMg(p.pricePerMg, base?.medPerMg);
+    const vsMed = valueVsMarketPerMg(p.pricePerMg, medPerMg);
     const foundedYear = vendor?.founded && /^\d{4}$/.test(vendor.founded) ? Number(vendor.founded) : null;
 
     const cells: Record<string, CompareCell> = {
       price: { text: formatCurrency(p.price), num: p.price },
-      perMg: p.pricePerMg ? { text: formatPricePerMg(p.pricePerMg), num: p.pricePerMg, baselinePct: pct(p.pricePerMg, base?.medPerMg) } : { text: "—" },
+      perMg: p.pricePerMg ? { text: formatPricePerMg(p.pricePerMg), num: p.pricePerMg, baselinePct: pct(p.pricePerMg, medPerMg) } : { text: "—" },
       vsMedian: vsMed != null ? { text: `${vsMed > 0 ? "+" : ""}${vsMed}%`, num: vsMed, tone: vsMed <= 0 ? "good" : "bad" } : { text: "—" },
 
       tests: { text: String(vendor?.coaCount ?? 0), num: vendor?.coaCount ?? 0 },
