@@ -9,6 +9,7 @@ const entry = (o: Partial<{ slug: string; coaCount: number; medianPurity: number
   defunct: false,
   integrityFlagged: false,
   reviewSentiment: o.reviewSentiment ?? null,
+  verdict: (o.redFlag ?? false) ? "avoid" : "trusted",
   redFlag: o.redFlag ?? false,
 });
 
