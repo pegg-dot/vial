@@ -31,9 +31,15 @@ describe("parseTotalMg — total delivered milligrams", () => {
     expect(parseTotalMg("50MG", "SLUBAM (BAM15 50MG & SLUPP332 250MCG) 60 Capsules")).toBeUndefined();
   });
 
-  it("returns undefined for an ambiguous multi-size bundle (split at ingestion instead)", () => {
-    expect(parseTotalMg("2MG", "TESAMORELIN PEPTIDE 2MG/5MG VIAL")).toBeUndefined();
-    expect(parseTotalMg("5MG", "GHK-CU COPPER PEPTIDE 5MG/10MG/50MG/100MG VIAL")).toBeUndefined();
+  it("trusts the declared single size even when the product title lists a size range", () => {
+    // Each split variant carries its own quantity; the "2mg/5mg" in the title must not blank it.
+    expect(parseTotalMg("2MG", "TESAMORELIN PEPTIDE 2MG/5MG VIAL")).toBe(2);
+    expect(parseTotalMg("5MG", "GHK-CU COPPER PEPTIDE 5MG/10MG/50MG/100MG VIAL")).toBe(5);
+  });
+
+  it("returns undefined for a multi-size title with no single declared size", () => {
+    expect(parseTotalMg("", "TESAMORELIN PEPTIDE 2MG/5MG VIAL")).toBeUndefined();
+    expect(parseTotalMg("1 vial", "GHK-CU COPPER PEPTIDE 5MG/10MG/50MG/100MG VIAL")).toBeUndefined();
   });
 
   it("returns undefined for a capsule/tablet container with no stated count (unknown total)", () => {
