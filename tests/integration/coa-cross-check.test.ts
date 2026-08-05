@@ -7,12 +7,12 @@ process.env.VIAL_PGLITE_MEMORY = "true";
 process.env.VIAL_SESSION_SECRET = "coa-cross-check-test-secret-at-least-32chars";
 process.env.VIAL_PRIVACY_HASH_SECRET = "coa-cross-check-privacy-secret-at-least-32chars";
 
-async function seedLabTest(row: { vendor_slug: string | null; manufacturer: string; compound_slug: string; batch_code?: string; purity?: number; verify?: string }) {
+async function seedLabTest(row: { vendor_slug: string | null; manufacturer: string; compound_slug: string; batch_code?: string; purity?: number; verify?: string; independent?: boolean }) {
   const db = await getDatabase();
   await db.query(
-    `INSERT INTO lab_test_records (id,lab,verify_url,verify_key,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,origin)
-     VALUES ($1,'Janoshik Analytical',$2,$3,$4,$5,$6,$7,$8,$9,'live')`,
-    [newId("labtest"), row.verify ?? `https://verify.janoshik.com/tests/${newId("t")}`, "KEY" + Math.floor(row.purity ?? 99), row.compound_slug, row.compound_slug, row.manufacturer, row.vendor_slug, row.batch_code ?? null, row.purity ?? null],
+    `INSERT INTO lab_test_records (id,lab,verify_url,verify_key,compound_slug,sample_name,manufacturer,vendor_slug,batch_code,purity_pct,is_independent,origin)
+     VALUES ($1,'Janoshik Analytical',$2,$3,$4,$5,$6,$7,$8,$9,$10,'live')`,
+    [newId("labtest"), row.verify ?? `https://verify.janoshik.com/tests/${newId("t")}`, "KEY" + Math.floor(row.purity ?? 99), row.compound_slug, row.compound_slug, row.manufacturer, row.vendor_slug, row.batch_code ?? null, row.purity ?? null, row.independent ?? true],
   );
 }
 
@@ -70,5 +70,36 @@ describe("COA cross-verification", () => {
     const db = await getDatabase();
     const r = await crossCheckCoa(db, { vendorSlug: "quiet-vendor", vendorName: "Quiet Vendor", compoundSlug: "mk-677", compoundName: "MK-677", reportIssuer: "", reportConfirmed: false, batchCode: "" });
     expect(r.status).toBe("no-claim");
+  });
+
+  it("does NOT treat a vendor's own self-published COA as independent verification", async () => {
+    await seedLabTest({ vendor_slug: "selfy-labs", manufacturer: "Selfy Labs", compound_slug: "kisspeptin-10", purity: 99, independent: false });
+    const db = await getDatabase();
+    const r = await crossCheckCoa(db, { vendorSlug: "selfy-labs", compoundSlug: "kisspeptin-10", reportIssuer: "Janoshik", reportConfirmed: true, batchCode: "" });
+    expect(r.status).toBe("unbacked");   // claims testing, but the only record is the vendor's own word
+  });
+
+  it("does NOT show a DIFFERENT compound's purity as this batch's verification", async () => {
+    // Same vendor's independent record for SELANK, batch shared; the vendor also lists SEMAX citing it.
+    await seedLabTest({ vendor_slug: "shared-batch-labs", manufacturer: "Shared Batch Labs", compound_slug: "selank", batch_code: "SBL-777-2026", purity: 99.5 });
+    const db = await getDatabase();
+    const r = await crossCheckCoa(db, { vendorSlug: "shared-batch-labs", compoundSlug: "semax", reportIssuer: "Janoshik", reportConfirmed: true, batchCode: "SBL-777-2026" });
+    expect(r.status).not.toBe("batch-verified");    // the batch is real, but for SELANK not SEMAX
+    expect(r.independentPurity ?? null).not.toBe(99.5);  // must not borrow selank's number
+  });
+
+  it("does NOT batch-verify from a self-published certificate", async () => {
+    await seedLabTest({ vendor_slug: "selfbatch", manufacturer: "SelfBatch", compound_slug: "tesamorelin", batch_code: "SELF-9001-X", purity: 98, independent: false });
+    const db = await getDatabase();
+    const r = await crossCheckCoa(db, { vendorSlug: "selfbatch", compoundSlug: "tesamorelin", reportIssuer: "Janoshik", reportConfirmed: true, batchCode: "SELF-9001-X" });
+    expect(r.status).not.toBe("batch-verified");
+  });
+
+  it("ignores a too-short (collision-prone) batch code rather than asserting a batch verdict", async () => {
+    await seedLabTest({ vendor_slug: "short-a", manufacturer: "Short A", compound_slug: "aod-9604", batch_code: "AB12", purity: 99 });
+    const db = await getDatabase();
+    const r = await crossCheckCoa(db, { vendorSlug: "short-b", compoundSlug: "aod-9604", reportIssuer: "Janoshik", reportConfirmed: true, batchCode: "AB12" });
+    expect(r.status).not.toBe("mismatch");        // 4-char code is too collision-prone to accuse
+    expect(r.status).not.toBe("batch-verified");
   });
 });

@@ -21,8 +21,8 @@ async function queryCompounds(){ const db=await getDatabase(); return (await db.
   FROM compounds c ORDER BY c.canonical_name`)).rows.map(toCompound); }
 async function queryVendors(){ const db=await getDatabase(); return (await db.query<VendorRow>(`SELECT o.*,
   (SELECT COUNT(*) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.vendor_id=o.id) real_listings,
-  (SELECT COUNT(*) FROM lab_test_records t WHERE t.vendor_slug=o.slug) real_coas,
-  (SELECT array_agg(t.purity_pct) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.purity_pct IS NOT NULL) real_purities,
+  (SELECT COUNT(*) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.is_independent) real_coas,
+  (SELECT array_agg(t.purity_pct) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.purity_pct IS NOT NULL AND t.is_independent) real_purities,
   (SELECT COUNT(*) FROM batch_passports bp WHERE bp.vendor_id=o.id AND bp.status='published') real_passports,
   (SELECT COUNT(*) FROM vendor_reviews v WHERE v.vendor_slug=o.slug) real_reviews,
   (SELECT MAX(t.tested_at) FROM lab_test_records t WHERE t.vendor_slug=o.slug) latest_tested

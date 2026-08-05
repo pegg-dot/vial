@@ -45,7 +45,7 @@ function median(values: number[]): number {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-interface LabRow { vendor_slug: string | null; manufacturer: string; compound_slug: string | null; batch_code: string | null; purity_pct: string | number | null }
+interface LabRow { vendor_slug: string | null; manufacturer: string; compound_slug: string | null; batch_code: string | null; purity_pct: string | number | null; is_independent: boolean }
 
 /** Compute a compact trust verdict for many listings in one lab-records read. */
 export async function computeListingTrustMap(db: SqlConnection, listings: TrustInput[]): Promise<Map<string, ListingTrust>> {
@@ -55,7 +55,7 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
   const flaggedVendors = await getFlaggedVendorSlugs(db);
   const compoundSlugs = [...new Set(listings.map((l) => l.compoundSlug))];
   const records = (await db.query<LabRow>(
-    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct
+    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,is_independent
        FROM lab_test_records WHERE compound_slug = ANY($1)`,
     [compoundSlugs],
   )).rows;
@@ -66,14 +66,17 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
   // batch query, or the grid chip would miss a counterfeit the product page flags red. Ordered
   // so a batch shared by multiple records resolves deterministically.
   const batchRecords = (await db.query<LabRow>(
-    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct
+    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,is_independent
        FROM lab_test_records
       WHERE batch_code IS NOT NULL
       ORDER BY tested_at DESC NULLS LAST, id`,
   )).rows;
-  const byBatch = new Map<string, LabRow>();
+  // ALL records per normalized batch code, so a listing's cited batch is judged against the RIGHT
+  // one: a positive needs the vendor's OWN independent record for THIS compound; a different maker's
+  // record is the borrowed-cert signal. Floor ≥6 so short/date-like codes can't collide.
+  const batchByCode = new Map<string, LabRow[]>();
   for (const r of batchRecords) {
-    if (r.batch_code) { const k = norm(r.batch_code); if (k.length >= 4 && !byBatch.has(k)) byBatch.set(k, r); }
+    if (r.batch_code) { const k = norm(r.batch_code); if (k.length >= 6) { const a = batchByCode.get(k); if (a) a.push(r); else batchByCode.set(k, [r]); } }
   }
 
   // Compound-level independent evidence: how many COAs (and their median measured purity) we
@@ -81,7 +84,7 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
   // to judge a vendor's claim, even when the vendor itself has no COA.
   const coasByCompound = new Map<string, { count: number; purities: number[] }>();
   for (const r of records) {
-    if (!r.compound_slug) continue;
+    if (!r.compound_slug || !r.is_independent) continue;   // "independent COAs" must exclude self-published
     const agg = coasByCompound.get(r.compound_slug) ?? { count: 0, purities: [] };
     agg.count += 1;
     if (r.purity_pct != null) agg.purities.push(Number(r.purity_pct));
@@ -100,11 +103,17 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
   for (const l of listings) {
     // Independent records for this vendor + compound.
     const vTok = norm(l.vendorSlug);
-    const independent = records.filter((r) => r.compound_slug === l.compoundSlug && (r.vendor_slug === l.vendorSlug || (r.manufacturer && norm(r.manufacturer).includes(vTok))));
+    const independent = records.filter((r) => r.is_independent && r.compound_slug === l.compoundSlug && (r.vendor_slug === l.vendorSlug || (r.manufacturer && norm(r.manufacturer).includes(vTok))));
     const purities = independent.map((r) => (r.purity_pct != null ? Number(r.purity_pct) : null)).filter((p): p is number => p != null);
     const bestPurity = purities.length ? Math.max(...purities) : null;
 
-    const batchHit = l.batchCode && norm(l.batchCode).length >= 4 ? byBatch.get(norm(l.batchCode)) ?? null : null;
+    const bc = l.batchCode && norm(l.batchCode).length >= 6 ? norm(l.batchCode) : null;
+    const batchRows = bc ? (batchByCode.get(bc) ?? []) : [];
+    const isSameVendor = (r: LabRow) => r.vendor_slug === l.vendorSlug || (Boolean(r.manufacturer) && norm(r.manufacturer).includes(vTok));
+    // Positive: the vendor's OWN independent record for THIS compound. Borrowed: a different maker's.
+    const batchHit = batchRows.find((r) => isSameVendor(r) && r.compound_slug === l.compoundSlug && r.is_independent)
+                  ?? batchRows.find((r) => !isSameVendor(r) && (r.vendor_slug || r.manufacturer))
+                  ?? null;
 
     const status = coaStatusFrom({
       claimsTesting: claimsRealTesting(l.reportIssuer, l.reportConfirmed),

@@ -67,6 +67,7 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 interface LabRow {
   vendor_slug: string | null; manufacturer: string; compound_slug: string | null;
   batch_code: string | null; purity_pct: string | number | null; verify_url: string; sample_name: string; tested_at: string | null;
+  is_independent: boolean;
 }
 
 /** Whether a listing's advertised issuer names a real independent lab. */
@@ -116,59 +117,68 @@ export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): 
   // All independent records for this COMPOUND (evidence the vendor can't edit). We derive both
   // the vendor-specific matches and the compound-wide aggregate from one read.
   const compoundRecords = (await db.query<LabRow>(
-    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name,tested_at
+    `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name,tested_at,is_independent
        FROM lab_test_records WHERE compound_slug = $1 ORDER BY purity_pct DESC NULLS LAST`,
     [input.compoundSlug],
   )).rows;
   const vTok = norm(input.vendorSlug);
-  const independent = compoundRecords.filter((r) => r.vendor_slug === input.vendorSlug || (r.manufacturer && norm(r.manufacturer).includes(vTok)));
-  const compoundPurities = compoundRecords.map((r) => (r.purity_pct != null ? Number(r.purity_pct) : null)).filter((p): p is number => p != null);
-  const compoundEvidence = compoundRecords.length
-    ? { count: compoundRecords.length, medianPurity: compoundPurities.length ? median(compoundPurities) : null, compoundSlug: input.compoundSlug }
+  // "Independent" means exactly that: a self-published (is_independent=false) COA is the vendor's own
+  // word, not third-party corroboration, so it must NOT back a "verified/independent" claim.
+  const indieRecords = compoundRecords.filter((r) => r.is_independent);
+  const independent = indieRecords.filter((r) => r.vendor_slug === input.vendorSlug || (r.manufacturer && norm(r.manufacturer).includes(vTok)));
+  const compoundPurities = indieRecords.map((r) => (r.purity_pct != null ? Number(r.purity_pct) : null)).filter((p): p is number => p != null);
+  const compoundEvidence = indieRecords.length
+    ? { count: indieRecords.length, medianPurity: compoundPurities.length ? median(compoundPurities) : null, compoundSlug: input.compoundSlug }
     : undefined;
 
-  // 1. Borrowed-certificate check: does the cited batch resolve to a record made by SOMEONE ELSE?
-  if (input.batchCode && input.batchCode.trim().length >= 4) {
+  // 1. Batch cross-check. A positive "this exact batch tested at X%" requires the vendor's OWN,
+  //    INDEPENDENT record FOR THIS COMPOUND — otherwise the batch string can resolve to a different
+  //    product's certificate and we'd print the wrong purity as proof. A different maker's record
+  //    is the borrowed-certificate (counterfeit) signal. Floor at ≥6 normalized chars so short or
+  //    date-like batch codes can't collide into a false verdict.
+  if (input.batchCode && norm(input.batchCode).length >= 6) {
     const bc = norm(input.batchCode);
-    const byBatch = (await db.query<LabRow>(
-      `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name,tested_at
+    const rows = (await db.query<LabRow>(
+      `SELECT vendor_slug,manufacturer,compound_slug,batch_code,purity_pct,verify_url,sample_name,tested_at,is_independent
          FROM lab_test_records
         WHERE batch_code IS NOT NULL AND REGEXP_REPLACE(LOWER(batch_code),'[^a-z0-9]','','g') = $1
-        ORDER BY tested_at DESC NULLS LAST, id
-        LIMIT 1`,
+        ORDER BY tested_at DESC NULLS LAST, id`,
       [bc],
-    )).rows[0];
-    if (byBatch) {
-      const sameVendor = byBatch.vendor_slug === input.vendorSlug || norm(byBatch.manufacturer).includes(norm(input.vendorSlug));
-      if (!sameVendor && (byBatch.vendor_slug || byBatch.manufacturer)) {
-        return {
-          status: "mismatch",
-          claimedIssuer: input.reportIssuer,
-          headline: "Cited certificate belongs to a different manufacturer",
-          detail: `The batch this listing cites resolves to an independent record made by ${byBatch.manufacturer}, not ${vendorLabel}. A certificate borrowed from another maker is one of the clearest counterfeit signals — do not treat it as proof of this vendor's product.`,
-          independentUrl: byBatch.verify_url,
-          signals: [
-            { ok: false, label: "Certificate attribution", detail: `Batch traces to ${byBatch.manufacturer}, not ${vendorLabel}.` },
-            { ok: false, label: "As proof of this product", detail: "A borrowed COA proves nothing about what's actually in this vial." },
-          ],
-        };
-      }
-      // Exact batch, right maker — the strongest positive we can give from documents.
-      const p = byBatch.purity_pct != null ? Number(byBatch.purity_pct) : null;
+    )).rows;
+    const isSameVendor = (r: LabRow) => r.vendor_slug === input.vendorSlug || (Boolean(r.manufacturer) && norm(r.manufacturer).includes(norm(input.vendorSlug)));
+    const positive = rows.find((r) => isSameVendor(r) && r.compound_slug === input.compoundSlug && r.is_independent);
+    const borrowed = rows.find((r) => !isSameVendor(r) && (r.vendor_slug || r.manufacturer));
+    if (positive) {
+      const p = positive.purity_pct != null ? Number(positive.purity_pct) : null;
       return {
         status: "batch-verified",
         claimedIssuer: input.reportIssuer,
         independentPurity: p,
-        independentUrl: byBatch.verify_url,
-        testedAt: byBatch.tested_at, stale: isStale(byBatch.tested_at),
+        independentUrl: positive.verify_url,
+        testedAt: positive.tested_at, stale: isStale(positive.tested_at),
         headline: `This exact batch was independently tested${p != null ? ` at ${p.toFixed(2)}%` : ""}`,
-        detail: `The batch this listing cites matches an independent record from the lab's own feed, attributed to ${vendorLabel}. That's the same batch, tested by a third party — the best documentary evidence available. It still isn't a promise about the vial you'll receive.`,
+        detail: `The batch this listing cites matches an independent record for ${vendorLabel}'s ${compoundLabel} in the lab's own feed. That's the same batch, tested by a third party — the best documentary evidence available. It still isn't a promise about the vial you'll receive.`,
         signals: [
-          { ok: true, label: "Certificate attribution", detail: `Batch resolves to an independent record for ${vendorLabel}.` },
+          { ok: true, label: "Certificate attribution", detail: `Batch resolves to an independent record for ${vendorLabel}'s ${compoundLabel}.` },
           { ok: p != null ? p >= 95 : null, label: "Measured purity", detail: p != null ? `Independently measured at ${p.toFixed(2)}%.` : "Purity not printed on the certificate." },
         ],
       };
     }
+    if (borrowed) {
+      return {
+        status: "mismatch",
+        claimedIssuer: input.reportIssuer,
+        headline: "Cited certificate belongs to a different manufacturer",
+        detail: `The batch this listing cites resolves to a lab record made by ${borrowed.manufacturer}, not ${vendorLabel}. A certificate borrowed from another maker is one of the clearest counterfeit signals — do not treat it as proof of this vendor's product.`,
+        independentUrl: borrowed.verify_url,
+        signals: [
+          { ok: false, label: "Certificate attribution", detail: `Batch traces to ${borrowed.manufacturer}, not ${vendorLabel}.` },
+          { ok: false, label: "As proof of this product", detail: "A borrowed COA proves nothing about what's actually in this vial." },
+        ],
+      };
+    }
+    // Otherwise (the vendor's own but a different compound, or self-published only) → no batch
+    // conclusion; fall through to the backing check. We never assert a batch claim we can't stand behind.
   }
 
   // 2. Backing check: they advertise real-lab testing — is there ANY independent record for them?
