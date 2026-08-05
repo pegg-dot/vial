@@ -3,7 +3,7 @@ import type { AgentRun, Compound, Product, Vendor } from "./types";
 // Seeded demo records omit `origin`; it defaults to 'demo' in the DB and mapper.
 // The public Compound/Vendor/Product types require `origin` because every record
 // read back from the DB always carries it.
-type SeedCompound = Omit<Compound, "origin" | "coaCount" | "medianPurity">;
+type SeedCompound = Omit<Compound, "origin" | "coaCount" | "medianPurity" | "medianPricePerMg">;
 type SeedVendor = Omit<Vendor, "origin" | "kind" | "coaCount" | "medianPurity" | "passportCount" | "reviewCount" | "latestTestedAt">;
 type SeedProduct = Omit<Product, "origin" | "externalUrl">;
 

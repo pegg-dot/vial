@@ -1,7 +1,7 @@
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { getDatabase } from "@/server/db/client";
 import { formatCurrency, formatPricePerMg } from "@/lib/format";
-import { median, vendorPriceIndex } from "@/lib/curation";
+import { median, vendorPriceIndex, valueVsMarketPerMg } from "@/lib/curation";
 import { markWinners, type CompareEntry, type CompareCell } from "@/lib/compare-model";
 import { composeVerdictForVendorSlug } from "@/server/verify/trust-graph";
 import { getVendorAggregatorRatings } from "@/server/external/repository";
@@ -25,12 +25,12 @@ export async function buildComparison(slugs: string[]): Promise<{ entries: Compa
   const compoundBySlug = new Map(compounds.map((c) => [c.slug, c]));
   const selected = wanted.map((s) => bySlug.get(s)).filter((p): p is Product => Boolean(p));
 
-  // Per-compound market baselines (base rates): median sticker price and median $/mg.
-  const compoundBaseline = new Map<string, { medPrice: number | null; medPerMg: number | null }>();
+  // Per-compound market baseline (base rate): median $/mg. Sticker-price medians are deliberately
+  // NOT kept — every "vs market" verdict must run on cost-per-mg so size can't distort it.
+  const compoundBaseline = new Map<string, { medPerMg: number | null }>();
   for (const c of new Set(selected.map((p) => p.compoundSlug))) {
     const listings = products.filter((p) => p.compoundSlug === c);
     compoundBaseline.set(c, {
-      medPrice: median(listings.map((p) => p.price)),
       medPerMg: median(listings.map((p) => p.pricePerMg).filter((v): v is number => typeof v === "number")),
     });
   }
@@ -69,7 +69,9 @@ export async function buildComparison(slugs: string[]): Promise<{ entries: Compa
 
     const pct = (v: number | null | undefined, baseline: number | null | undefined) =>
       v != null && baseline && baseline > 0 ? Math.round(((v - baseline) / baseline) * 100) : null;
-    const vsMed = pct(p.price, base?.medPrice);
+    // "Value vs market" compares cost-per-mg to the compound's median $/mg — never sticker price,
+    // which is size-blind (a 30mg vial looks "expensive" beside 2mg vials). Unknown size → no verdict.
+    const vsMed = valueVsMarketPerMg(p.pricePerMg, base?.medPerMg);
     const foundedYear = vendor?.founded && /^\d{4}$/.test(vendor.founded) ? Number(vendor.founded) : null;
 
     const cells: Record<string, CompareCell> = {

@@ -71,12 +71,21 @@ right and are the templates for the rest:
 ## Remediation plan
 
 ### Tier 1 — surgical, highest ROI ("stop discarding what you already store")
-- [ ] **T1. COA truthfulness** — scope the batch match to `compound_slug` (+ floor ≥6); filter `is_independent=TRUE`
+- [x] **T1. COA truthfulness** — scoped the batch match to `compound_slug` (+ floor ≥6); filtered `is_independent=TRUE`
   everywhere the UI says "independent" (cross-check, listing-trust, vendor coaCount/medianPurity). Read-time.
+  *Adversarial verifier caught one missed surface — the **compound-level** `real_coas`/`real_purities` in
+  `catalog/repository.ts:17-18` still counted self-published COAs under an "Independent lab tests" label (drove the
+  compound-page tier chip, the `testedOnly` filter, and `mostVerified`). Now filtered too; card and page agree.*
+  Residual (conservative, not fixed): ≥6 floor drops genuine 4-5-char batch codes; a NULL `compound_slug` on the
+  vendor's own cited batch no longer batch-verifies; `coaStatusFrom` stays exported with a latent ≥4 gate; honest
+  resellers citing a maker's real batch still read "borrowed" (pre-existing). All fail toward unknown.
 - [ ] **T2. Purity is a document read, not a measurement** — qualify every displayed purity ("read from the
   certificate, not re-measured by VIAL"), copying the batch-passport pattern. Display-only.
-- [ ] **T3. Size-normalize "vs market"** — compute the delta against the compound's median **$/mg**, not sticker;
-  fail toward no-badge when the size is unknown. Add a min-peer guard.
+- [x] **T3. Size-normalize "vs market"** — every "vs market" verdict now runs on cost-per-mg, never sticker price.
+  Added a live `compound.medianPricePerMg` (computed from `parseTotalMg`, min-peer floor of 3) + two shared pure
+  helpers (`compoundMedianPerMg`, `valueVsMarketPerMg`) wired into the card badge, the product-page market panel
+  (relabeled $/mg + a "size not comparable" null state), and the compare "Value vs market" cell. Fails toward
+  no-badge whenever the size is unreadable or the market is thin. 8 unit tests lock the size-bug + fail-to-unknown.
 - [ ] **T4. Review confidence into the verdict** — pass `confidence`/`reviewVolume`; a low-confidence/sparse
   negative must not single-handedly force "avoid."
 - [ ] **T5. Matching fails safe** — `matchCompound`/`matchVendor` return "unmatched" on ambiguity (adopt

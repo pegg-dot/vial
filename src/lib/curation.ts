@@ -57,6 +57,25 @@ export function median(values: number[]): number | null {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
+// A "vs market" verdict is a value claim, so it must run on cost-per-mg — never sticker price, which
+// is size-blind (a 30mg vial looks "expensive" beside 2mg vials). And it needs a real middle: below
+// this many size-readable peers we return no baseline, so the UI shows no badge. Fail toward unknown.
+export const MIN_PERMG_PEERS = 3;
+
+/** The compound's typical cost-per-mg — the baseline a listing is judged against. Only listings whose
+ *  size we can read count; below `minPeers`, returns null (no baseline → no verdict). */
+export function compoundMedianPerMg(pricePerMgs: number[], minPeers = MIN_PERMG_PEERS): number | null {
+  const priced = pricePerMgs.filter((v) => typeof v === "number" && v > 0);
+  return priced.length >= minPeers ? median(priced) : null;
+}
+
+/** A listing's value vs the compound market, on cost-per-mg. Returns null — no verdict — when the
+ *  listing's size is unknown or the compound has no per-mg baseline. Positive = pricier than typical. */
+export function valueVsMarketPerMg(pricePerMg: number | null | undefined, medianPerMg: number | null | undefined): number | null {
+  if (!pricePerMg || pricePerMg <= 0 || !medianPerMg || medianPerMg <= 0) return null;
+  return Math.round(((pricePerMg - medianPerMg) / medianPerMg) * 100);
+}
+
 export interface MarketStats {
   price: number;
   count: number;          // number of priced listings for the compound (incl. this one)

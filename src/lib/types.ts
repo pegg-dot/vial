@@ -25,9 +25,10 @@ export interface Compound {
   aliases: string[];
   listings: number;
   medianPrice: number;
+  medianPricePerMg: number | null;   // median $/mg across listings whose size we can read; null when too few
   priceChange: number;
   documentationCoverage: number;
-  coaCount: number;         // independent + all lab certificates on record for this compound
+  coaCount: number;         // independent lab certificates on record for this compound (self-published excluded)
   medianPurity: number | null;
   accent: [string, string, string];
   researchNote: string;

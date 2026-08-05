@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compoundTrustTier, trending, mostVerified, bestValue, compoundPriceRange, listingMarketStats, median, vendorPriceIndex } from "@/lib/curation";
+import { compoundTrustTier, trending, mostVerified, bestValue, compoundPriceRange, listingMarketStats, median, vendorPriceIndex, compoundMedianPerMg, valueVsMarketPerMg, MIN_PERMG_PEERS } from "@/lib/curation";
 
 const C = (o: Partial<{ slug: string; coaCount: number; medianPurity: number | null; listings: number; priceChange: number }>) =>
   ({ slug: "x", coaCount: 0, medianPurity: null, listings: 0, priceChange: 0, ...o } as never);
@@ -60,5 +60,47 @@ describe("curation", () => {
   });
   it("vendorPriceIndex returns null when nothing is comparable", () => {
     expect(vendorPriceIndex([{ compoundSlug: "x", pricePerMg: undefined }] as never, [] as never)).toEqual({ medianPctVsMarket: null, comparedCount: 0 });
+  });
+
+  describe("compoundMedianPerMg — the per-mg baseline, with a min-peer guard", () => {
+    it("returns the median $/mg once there are enough size-readable peers", () => {
+      expect(compoundMedianPerMg([2, 4, 6])).toBe(4);
+    });
+    it("fails toward null below the peer floor (no thin-market verdict)", () => {
+      expect(compoundMedianPerMg([2, 4])).toBeNull();
+      expect(compoundMedianPerMg([])).toBeNull();
+    });
+    it("counts only readable sizes (drops zero/negative before the count)", () => {
+      // two real per-mg values + junk → still under the floor of 3 → null
+      expect(compoundMedianPerMg([5, 0, -3, 7])).toBeNull();
+      expect(compoundMedianPerMg([5, 0, 7, 9])).toBe(7);
+    });
+    it("MIN_PERMG_PEERS is the shared floor", () => {
+      expect(MIN_PERMG_PEERS).toBe(3);
+      expect(compoundMedianPerMg([1, 2, 3], MIN_PERMG_PEERS)).toBe(2);
+    });
+  });
+
+  describe("valueVsMarketPerMg — the size-honest 'vs market' verdict", () => {
+    it("scores against cost-per-mg, not sticker price", () => {
+      expect(valueVsMarketPerMg(1.2, 1.0)).toBe(20);   // 20% pricier per mg
+      expect(valueVsMarketPerMg(0.6, 1.0)).toBe(-40);  // 40% cheaper per mg
+    });
+    it("a big-vial bargain reads GREEN and a small-vial ripoff reads RED — the size bug, cured", () => {
+      const medianPerMg = 4; // typical $/mg for the compound
+      // 30mg vial at $60 → $2/mg → well below typical → negative (good), even though $60 sticker is high
+      expect(valueVsMarketPerMg(2, medianPerMg)).toBeLessThan(0);
+      // 2mg vial at $40 → $20/mg → far above typical → positive (bad), even though $40 sticker is low
+      expect(valueVsMarketPerMg(20, medianPerMg)).toBeGreaterThan(0);
+    });
+    it("FAILS TOWARD UNKNOWN — no verdict when the size is unreadable", () => {
+      expect(valueVsMarketPerMg(undefined, 1.0)).toBeNull();
+      expect(valueVsMarketPerMg(null, 1.0)).toBeNull();
+      expect(valueVsMarketPerMg(0, 1.0)).toBeNull();
+    });
+    it("no verdict when the compound has no per-mg baseline (thin market)", () => {
+      expect(valueVsMarketPerMg(1.2, null)).toBeNull();
+      expect(valueVsMarketPerMg(1.2, 0)).toBeNull();
+    });
   });
 });

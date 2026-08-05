@@ -52,7 +52,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!vendor || !compound) notFound();
 
   const allForCompound = await getProductsByCompoundSlug(product.compoundSlug);
-  const marketStats = listingMarketStats(product.price, allForCompound.map((p) => p.price));
+  const listingCount = allForCompound.length;
+  // Market position runs on cost-per-mg, never sticker price — a 30mg vial isn't "expensive" next to
+  // 2mg vials. If we can't read THIS listing's size, we can't place it, so stats is null (no verdict).
+  const perMgPeers = allForCompound.map((p) => p.pricePerMg).filter((v): v is number => typeof v === "number" && v > 0);
+  const marketStats = product.pricePerMg ? listingMarketStats(product.pricePerMg, perMgPeers) : null;
   const db = await getDatabase();
   const coaCheck = await crossCheckCoa(db, {
     vendorSlug: product.vendorSlug, vendorName: vendor.name,
@@ -231,7 +235,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <Link href={`/compounds/${compound.slug}`} className="ink hard press group flex items-center justify-between gap-4 rounded-[18px] bg-white px-6 py-5">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#0e8f80]">Same compound</p>
-            <p className="mt-1 text-lg font-extrabold tracking-[-.02em]">See the full {compound.name} market{marketStats.count > 1 ? ` — all ${marketStats.count} vendors` : ""}, price history & lab tests</p>
+            <p className="mt-1 text-lg font-extrabold tracking-[-.02em]">See the full {compound.name} market{listingCount > 1 ? ` — all ${listingCount} vendors` : ""}, price history & lab tests</p>
           </div>
           <span className="ink-1 hard-sm grid size-11 shrink-0 place-items-center rounded-full bg-[#eafff7] transition group-hover:translate-x-0.5"><ExternalLink className="size-5 text-[#0e8f80]" /></span>
         </Link>
