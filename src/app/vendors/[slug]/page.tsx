@@ -78,7 +78,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
     reputationDimensions: reputation?.dimensions ?? [],
     aggregators: aggregatorRatings.map((a) => ({ source: a.source, score: a.score, max_score: a.max_score })),
     signals: vendorSignals,
-    review: vendorReview ? { sentiment: vendorReview.sentiment } : null,
+    review: vendorReview ? { sentiment: vendorReview.sentiment, reviewVolume: vendorReview.reviewVolume, confidence: vendorReview.confidence } : null,
     community: communitySignal ? { sentiment: communitySignal.sentiment } : null,
     links: vendorLinks.map((l) => ({ strength: l.strength, linkedSlug: l.linkedSlug })),
     status: vendorStatus ? { status: vendorStatus.status } : null,

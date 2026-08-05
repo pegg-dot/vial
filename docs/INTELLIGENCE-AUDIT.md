@@ -86,8 +86,17 @@ right and are the templates for the rest:
   helpers (`compoundMedianPerMg`, `valueVsMarketPerMg`) wired into the card badge, the product-page market panel
   (relabeled $/mg + a "size not comparable" null state), and the compare "Value vs market" cell. Fails toward
   no-badge whenever the size is unreadable or the market is thin. 8 unit tests lock the size-bug + fail-to-unknown.
-- [ ] **T4. Review confidence into the verdict** — pass `confidence`/`reviewVolume`; a low-confidence/sparse
-  negative must not single-handedly force "avoid."
+  *Verifier caught a follow-up: compare's baseline skipped the min-peer floor and disagreed with the card/page on
+  thin compounds (semaglutide) — fixed by sharing the snapshot `medianPricePerMg`. Residual (judgment, not fixed):
+  the floor of 3 blanks the badge on ~20/60 compounds, skewed to GLP-1 blockbusters whose sizes `parseTotalMg`
+  can't read — the real remedy is better size parsing (T5-adjacent), not lowering the floor.*
+- [x] **T4. Review confidence into the verdict** — `composeVerdict` now weighs the buyer-review seam by
+  `confidence`/`reviewVolume`, not sentiment alone. A negative/scam review only forces "avoid" when well-supported
+  (high confidence OR moderate/heavy volume); a thin/low-confidence negative is CAUTION, not a verdict-ending avoid.
+  Symmetrically, a thin positive no longer inflates trust. Threaded the two fields through all three VerdictInput
+  construction sites (vendor page, `composeVerdictForVendorSlug`, directory) — the directory `redFlag` gate is the
+  same composed verdict, so a lone sketchy review no longer sinks a vendor in the listing. Missing provenance =
+  treated as not-well-supported (fail toward unknown). 1 new verify test + updated directory-risk cases.
 - [ ] **T5. Matching fails safe** — `matchCompound`/`matchVendor` return "unmatched" on ambiguity (adopt
   `resolveActionToVendor`'s strict discipline: anchored/exact or null; reject salt/ester/DAC/blend absorption).
   Needs re-ingest.

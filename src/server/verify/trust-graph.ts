@@ -25,7 +25,7 @@ export interface VerdictInput {
   reputationDimensions: Array<{ key: string; status: string; value: string }>;
   aggregators: Array<{ source: string; score: number | null; max_score: number | null }>;
   signals: { domain_age_note: string | null; research_disclaimer: boolean | null; notable_copy: string | null; payment_methods: unknown } | null;
-  review: { sentiment: string } | null;
+  review: { sentiment: string; reviewVolume?: string; confidence?: string } | null;
   community: { classification?: string | null; sentiment?: string | null } | null;
   links: Array<{ strength: string; linkedSlug: string }>;
   status: { status: string } | null;
@@ -102,12 +102,26 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
     if (noRuo) factors.push({ ok: null, label: "Research-use notice", detail: "No research-use-only disclaimer found on the homepage." });
   }
 
-  // 6. Buyer reputation (gathered reviews).
+  // 6. Buyer reputation (gathered reviews). Weigh the signal by how well-supported it is, never by
+  // sentiment alone. A negative verdict only ENDS in "avoid" when it's well-supported — high
+  // confidence, or real volume. A lone, low-confidence report is a reason for CAUTION, not a
+  // verdict-ending "avoid": fail toward unknown, don't let one sketchy review nuke an otherwise-clean
+  // vendor. Symmetrically, a thin positive doesn't get to inflate trust.
   if (v.review) {
     const s = v.review.sentiment;
-    if (s === "scam" || s === "negative") { factors.push({ ok: false, label: "Buyer reviews", detail: s === "scam" ? "Buyers report scam/fraud." : "Reviews are mostly negative." }); reasons.avoid.push("buyer scam/fraud reports"); }
-    else if (s === "mixed") { factors.push({ ok: null, label: "Buyer reviews", detail: "Mixed reports from buyers." }); reasons.caution.push("mixed buyer reports"); }
-    else if (s === "positive") { factors.push({ ok: true, label: "Buyer reviews", detail: "Mostly positive buyer reports." }); reasons.trust.push("mostly-positive buyer reports"); }
+    const wellSupported = v.review.confidence === "high" || v.review.reviewVolume === "moderate" || v.review.reviewVolume === "heavy";
+    const thin = wellSupported ? "" : " — but from limited or low-confidence reports, so we weigh it lightly";
+    if (s === "scam" || s === "negative") {
+      factors.push({ ok: false, label: "Buyer reviews", detail: (s === "scam" ? "Buyers report scam/fraud" : "Reviews are mostly negative") + thin + "." });
+      if (wellSupported) reasons.avoid.push("well-supported buyer scam/fraud reports");
+      else reasons.caution.push("some negative buyer reports (limited or low-confidence)");
+    } else if (s === "mixed") {
+      factors.push({ ok: null, label: "Buyer reviews", detail: "Mixed reports from buyers." });
+      reasons.caution.push("mixed buyer reports");
+    } else if (s === "positive") {
+      factors.push({ ok: true, label: "Buyer reviews", detail: "Mostly positive buyer reports" + thin + "." });
+      if (wellSupported) reasons.trust.push("mostly-positive buyer reports");
+    }
   }
 
   // 7. Community (r/Peptides) signal.
@@ -187,7 +201,7 @@ export async function composeVerdictForVendorSlug(
     reputationDimensions: reputation?.dimensions ?? [],
     aggregators: aggregatorRatings.map((a) => ({ source: a.source, score: a.score, max_score: a.max_score })),
     signals: vendorSignals,
-    review: vendorReview ? { sentiment: vendorReview.sentiment } : null,
+    review: vendorReview ? { sentiment: vendorReview.sentiment, reviewVolume: vendorReview.reviewVolume, confidence: vendorReview.confidence } : null,
     community: communitySignal ? { sentiment: communitySignal.sentiment } : null,
     links: vendorLinks.map((l) => ({ strength: l.strength, linkedSlug: l.linkedSlug })),
     status: vendorStatus ? { status: vendorStatus.status } : null,

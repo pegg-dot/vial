@@ -54,12 +54,28 @@ describe("trust graph — composeVerdict folds every seam into ONE verdict (no b
     expect(r.factors.some((f) => f.label === "Independent testing" && f.ok === false)).toBe(true);
   });
 
-  it("severe enforcement OR buyer scam reports force AVOID and outrank everything else", () => {
+  it("severe enforcement OR well-supported buyer scam reports force AVOID and outrank everything else", () => {
     expect(composeVerdict({ ...EMPTY, enforcement: [{ severity: "severe" }] }).verdict).toBe("avoid");
-    expect(composeVerdict({ ...EMPTY, review: { sentiment: "scam" } }).verdict).toBe("avoid");
+    // A scam sentiment backed by real volume + confidence forces avoid.
+    expect(composeVerdict({ ...EMPTY, review: { sentiment: "scam", reviewVolume: "heavy", confidence: "high" } }).verdict).toBe("avoid");
     // Real testing evidence does NOT launder a proven enforcement action.
     const withTests = composeVerdict({ ...EMPTY, coaCount: 5, medianPurity: 99, enforcement: [{ severity: "severe" }] });
     expect(withTests.verdict).toBe("avoid");
+  });
+
+  it("a THIN negative review does not single-handedly force AVOID — it's caution, and confidence gates the difference", () => {
+    // One low-confidence, sparse scam report must not nuke an otherwise-clean vendor. (The confidently-
+    // wrong bug: a single sketchy review used to force "avoid".) Fails toward caution, not avoid.
+    const thin = composeVerdict({ ...EMPTY, review: { sentiment: "scam", reviewVolume: "sparse", confidence: "low" } });
+    expect(thin.verdict).toBe("caution");
+    expect(thin.verdict).not.toBe("avoid");
+    // Missing volume/confidence (unknown provenance) is treated as NOT well-supported → caution, not avoid.
+    expect(composeVerdict({ ...EMPTY, review: { sentiment: "scam" } }).verdict).toBe("caution");
+    // But high confidence alone is enough to escalate a sparse report to avoid.
+    expect(composeVerdict({ ...EMPTY, review: { sentiment: "negative", reviewVolume: "sparse", confidence: "high" } }).verdict).toBe("avoid");
+    // A thin POSITIVE symmetrically does not inflate to "trusted" on its own.
+    const thinPos = composeVerdict({ ...EMPTY, review: { sentiment: "positive", reviewVolume: "sparse", confidence: "low" } });
+    expect(thinPos.verdict).not.toBe("trusted");
   });
 
   it("open_risk_flags semantics: 'established' means NONE on record (good), 'disputed' means flags present (bad)", () => {
