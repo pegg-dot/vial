@@ -1,5 +1,7 @@
 # Intelligence remediation progress
 Branch: intelligence-remediation. Plan: docs/INTELLIGENCE-AUDIT.md
+STATUS: ✅ MERGED TO main + DEPLOYED (fast-forward d8b18e2..cbfe2f8, 2026-08-05). 16 commits. Full suite 415 green.
+Final 20-agent verification workflow found+fixed 9 more defects (incl. buyer-read price fabrication) before merge.
 - [x] T1 COA truthfulness — DONE (commit b44ca5b, 4 tests). Adversarial verifier found 1 missed surface:
       compound-level real_coas/real_purities counted self-published under "Independent lab tests" — CLOSED this commit.
 - [x] T2 purity = document read qualifier — DONE. Canonical PURITY_PROVENANCE (lib/provenance-copy.ts) on COA
