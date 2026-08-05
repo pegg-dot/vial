@@ -11,7 +11,7 @@ import { getStoredCommunitySignal } from "@/server/ingest/reddit";
 import { getLabTestsForVendor } from "@/server/ingest/lab-tests";
 import { getVendorFlags } from "@/server/verify/coa-integrity";
 import { getVendorLinks } from "@/server/verify/vendor-linkage";
-import { getVendorReview } from "@/server/verify/vendor-reviews";
+import { getVendorReview, normalizeReviewVolume, normalizeReviewConfidence } from "@/server/verify/vendor-reviews";
 import { getVendorStatus } from "@/server/verify/vendor-status";
 import { getVendorAggregatorRatings, getVendorSignals } from "@/server/external/repository";
 import { getDatabase } from "@/server/db/client";
@@ -109,7 +109,11 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
   // vendor. Symmetrically, a thin positive doesn't get to inflate trust.
   if (v.review) {
     const s = v.review.sentiment;
-    const wellSupported = v.review.confidence === "high" || v.review.reviewVolume === "moderate" || v.review.reviewVolume === "heavy";
+    // Normalize free-text volume/confidence to the canonical enum so a gatherer typo can't silently
+    // disable the gate (an out-of-enum value like "high" volume must not read as not-well-supported).
+    const vol = normalizeReviewVolume(v.review.reviewVolume);
+    const conf = normalizeReviewConfidence(v.review.confidence);
+    const wellSupported = conf === "high" || vol === "moderate" || vol === "heavy";
     const thin = wellSupported ? "" : " — but from limited or low-confidence reports, so we weigh it lightly";
     if (s === "scam" || s === "negative") {
       factors.push({ ok: false, label: "Buyer reviews", detail: (s === "scam" ? "Buyers report scam/fraud" : "Reviews are mostly negative") + thin + "." });

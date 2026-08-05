@@ -100,6 +100,14 @@ right and are the templates for the rest:
   construction sites (vendor page, `composeVerdictForVendorSlug`, directory) — the directory `redFlag` gate is the
   same composed verdict, so a lone sketchy review no longer sinks a vendor in the listing. Missing provenance =
   treated as not-well-supported (fail toward unknown). 1 new verify test + updated directory-risk cases.
+  *Verifier hardening: (D1) the volume/confidence gate used raw string-equality and the seed had 3 out-of-enum
+  values ("low"/"high") that silently read as not-well-supported — added `normalizeReviewVolume/Confidence` (synonym
+  map, unknown→null) at the verdict + fixed the seed, so a gatherer typo can't disable scam detection. (D2) updated
+  the directory doctrine comment. (R1, ACCEPTED) exactly one demo vendor, `cernum-biosciences`, flips avoid→caution
+  (its only avoid-driver was a sparse/medium negative; its ~14 COA-integrity flags still yield caution) — this is the
+  intended behavior, not a regression; whether a wall of self-published COAs should itself escalate past caution is a
+  separate integrity-flag-weighting question. (R2, → T6) the community seam still forces avoid on one mention despite
+  loaded counts — the same pattern, deferred to T6's reliability work.
 - [ ] **T5. Matching fails safe** — `matchCompound`/`matchVendor` return "unmatched" on ambiguity (adopt
   `resolveActionToVendor`'s strict discipline: anchored/exact or null; reject salt/ester/DAC/blend absorption).
   Needs re-ingest.

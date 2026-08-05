@@ -6,6 +6,29 @@ import type { SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 
 export type ReviewSentiment = "positive" | "mixed" | "negative" | "scam" | "unknown";
+export type ReviewVolume = "none" | "sparse" | "moderate" | "heavy";
+export type ReviewConfidence = "low" | "medium" | "high";
+
+// The verdict gates on these two enums (a thin/low-confidence negative must NOT force "avoid"). The
+// values arrive as free-text JSON from an offline gatherer with no schema enforcement, so a typo
+// ("high"/"low" as a VOLUME, "strong" as confidence) would silently read as not-well-supported and
+// disable the gate — the exact failure a verifier caught in seed data. Normalize synonyms to the
+// canonical enum at the one place that matters (the verdict), so no source can quietly break it.
+export function normalizeReviewVolume(v: string | null | undefined): ReviewVolume | null {
+  const s = (v ?? "").toLowerCase().trim();
+  if (["heavy", "high", "large", "many", "lots", "extensive"].includes(s)) return "heavy";
+  if (["moderate", "medium", "med", "some", "fair"].includes(s)) return "moderate";
+  if (["sparse", "low", "few", "light", "thin"].includes(s)) return "sparse";
+  if (["none", "zero", "0", ""].includes(s)) return "none";
+  return null; // unrecognized → unknown; the caller treats it as not-well-supported (fail toward caution)
+}
+export function normalizeReviewConfidence(c: string | null | undefined): ReviewConfidence | null {
+  const s = (c ?? "").toLowerCase().trim();
+  if (["high", "strong"].includes(s)) return "high";
+  if (["medium", "med", "moderate"].includes(s)) return "medium";
+  if (["low", "weak"].includes(s)) return "low";
+  return null;
+}
 
 export interface VendorReview {
   vendorSlug: string;

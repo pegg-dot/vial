@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extractDomain, looksLikeCoaCode, findKnownVendor, vendorVerdict } from "@/server/verify";
 import { composeVerdict, type VerdictInput } from "@/server/verify/trust-graph";
+import { normalizeReviewVolume, normalizeReviewConfidence } from "@/server/verify/vendor-reviews";
 
 // A vendor with nothing on record — every seam empty. The base against which each seam is toggled.
 const EMPTY: VerdictInput = {
@@ -76,6 +77,26 @@ describe("trust graph — composeVerdict folds every seam into ONE verdict (no b
     // A thin POSITIVE symmetrically does not inflate to "trusted" on its own.
     const thinPos = composeVerdict({ ...EMPTY, review: { sentiment: "positive", reviewVolume: "sparse", confidence: "low" } });
     expect(thinPos.verdict).not.toBe("trusted");
+  });
+
+  it("a gatherer typo in volume/confidence can't silently disable the scam gate (fail-safe normalization)", () => {
+    // "high" is not a canonical volume enum member, but it plainly means heavy — it must still count
+    // as well-supported, or a scam vendor with a typo'd volume would never be flagged.
+    expect(composeVerdict({ ...EMPTY, review: { sentiment: "scam", reviewVolume: "high" } }).verdict).toBe("avoid");
+    expect(composeVerdict({ ...EMPTY, review: { sentiment: "scam", confidence: "strong" } }).verdict).toBe("avoid");
+    // "low" volume normalizes to sparse → still just caution.
+    expect(composeVerdict({ ...EMPTY, review: { sentiment: "scam", reviewVolume: "low", confidence: "low" } }).verdict).toBe("caution");
+  });
+
+  it("review volume/confidence normalizers map synonyms and reject the unknown", () => {
+    expect(normalizeReviewVolume("high")).toBe("heavy");
+    expect(normalizeReviewVolume("low")).toBe("sparse");
+    expect(normalizeReviewVolume("MODERATE")).toBe("moderate");
+    expect(normalizeReviewVolume("heavy")).toBe("heavy");
+    expect(normalizeReviewVolume("banana")).toBeNull();
+    expect(normalizeReviewConfidence("strong")).toBe("high");
+    expect(normalizeReviewConfidence("med")).toBe("medium");
+    expect(normalizeReviewConfidence(undefined)).toBeNull();
   });
 
   it("open_risk_flags semantics: 'established' means NONE on record (good), 'disputed' means flags present (bad)", () => {

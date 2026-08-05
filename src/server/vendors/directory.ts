@@ -22,10 +22,11 @@ export interface VendorRiskSignals {
 
 // The directory's per-vendor risk IS the composed verdict the vendor page and /verify show — never
 // a second, ad-hoc rule. redFlag (the ranking gate that sinks a vendor under every priority) is
-// exactly "the verdict is avoid". composeVerdict decides every nuance in one place: negative/scam
-// reviews and community/operator-network links are avoid; a borrowed-COA integrity flag or a
-// caution-level enforcement record is caution (not avoid); a `blocked` status (bot protection, not
-// death) is ignored. reputationDimensions/aggregators/signals are the seams NOT batched here; they
+// exactly "the verdict is avoid". composeVerdict decides every nuance in one place: a WELL-SUPPORTED
+// negative/scam review (high confidence or real volume) and community/operator-network links are
+// avoid — but a thin/low-confidence negative review is only caution, so the directory no longer
+// red-flags a vendor on one sketchy report; a borrowed-COA integrity flag or a caution-level
+// enforcement record is caution (not avoid); a `blocked` status (bot protection, not death) is ignored. reputationDimensions/aggregators/signals are the seams NOT batched here; they
 // only ever produce caution/trust reasons, never avoid, so the redFlag gate is exact — only a rare
 // caution-level display nuance (e.g. an open reputation risk-flag or a very young domain) lives on
 // the vendor page and not the directory card. If you ever add an AVOID reason to composeVerdict
