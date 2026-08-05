@@ -6,6 +6,7 @@ import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/
 import { vendorPriceIndex } from "@/lib/curation";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { vendorStatusLabel } from "@/lib/format";
+import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
@@ -153,6 +154,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             />
             <HeroStat icon={Star} value={vendor.reviewCount > 0 ? String(vendor.reviewCount) : "—"} label="Buyer reviews on file" />
           </div>
+          {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-white/55">{PURITY_PROVENANCE_SHORT}</p>}
         </div>
       </section>
 

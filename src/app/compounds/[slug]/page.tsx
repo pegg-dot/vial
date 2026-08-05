@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3 } from "lucide-react";
 import { ArtMolecule, ArtDroplet } from "@/components/vial-art";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
+import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 import { formatCurrency } from "@/lib/format";
 import { educationFor } from "@/lib/compound-education";
 import { depthFor } from "@/lib/compound-depth";
@@ -103,6 +104,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />
           <Stat icon={BookOpen} label="Known aliases" value={String(compound.aliases.length + 1)} />
         </div>
+        {compound.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT}</p>}
       </section>
 
       {edu ? (

@@ -79,8 +79,11 @@ right and are the templates for the rest:
   Residual (conservative, not fixed): ≥6 floor drops genuine 4-5-char batch codes; a NULL `compound_slug` on the
   vendor's own cited batch no longer batch-verifies; `coaStatusFrom` stays exported with a latent ≥4 gate; honest
   resellers citing a maker's real batch still read "borrowed" (pre-existing). All fail toward unknown.
-- [ ] **T2. Purity is a document read, not a measurement** — qualify every displayed purity ("read from the
-  certificate, not re-measured by VIAL"), copying the batch-passport pattern. Display-only.
+- [x] **T2. Purity is a document read, not a measurement** — one canonical qualifier (`src/lib/provenance-copy.ts`,
+  full + short forms) now rides every authoritative purity surface: the COA cross-check panel, the compound-page
+  and vendor-page headline stats, and the product-page market panel's "real/active mg" note. Says the figure is
+  read from the lab's certificate as issued — VIAL doesn't re-run the assay or sample the vial. The detailed
+  `LabTestsPanel` (on all three detail pages) already carried the same discipline. Display-only, no logic change.
 - [x] **T3. Size-normalize "vs market"** — every "vs market" verdict now runs on cost-per-mg, never sticker price.
   Added a live `compound.medianPricePerMg` (computed from `parseTotalMg`, min-peer floor of 3) + two shared pure
   helpers (`compoundMedianPerMg`, `valueVsMarketPerMg`) wired into the card badge, the product-page market panel
