@@ -7,7 +7,7 @@ export function GET() {
     info: {
       title: "VIAL Evidence API",
       version: "10.0.0",
-      description: "Published market data (demo unless marked Live) plus authenticated consumer-intelligence endpoints, and a bearer-authenticated public API (/api/public/v1) for programmatic read access, exports, and the category-standard identity registry over published, review-gated data.",
+      description: "Published market data (aggregated from real public sources, marked Live) plus authenticated consumer-intelligence endpoints, and a bearer-authenticated public API (/api/public/v1) for programmatic read access, exports, and the category-standard identity registry over published, review-gated data.",
     },
     servers: [{ url: siteUrl }],
     components: {

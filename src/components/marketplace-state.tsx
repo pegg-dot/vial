@@ -193,7 +193,7 @@ function SearchOverlay({ catalog, onClose }: { catalog: CatalogSnapshot; onClose
         {results.products.length>0&&<SearchSection label="Listings">{results.products.map(product=>{const vendor=vendors.find(item=>item.slug===product.vendorSlug);return <SearchLink key={product.slug} href={`/products/${product.slug}`} title={`${product.name} ${product.quantity}`} meta={`${vendor?.name} · $${product.price} · ${product.evidenceLabel}`} mark={product.quantity} accent={product.accent[0]} onSelect={onClose}/>})}</SearchSection>}
         {results.vendors.length>0&&<SearchSection label="Vendors">{results.vendors.map(vendor=><SearchLink key={vendor.slug} href={`/vendors/${vendor.slug}`} title={vendor.name} meta={`${vendor.productCount} products · ${vendor.coaCount} lab tests`} mark={vendor.initials} accent={vendor.accent[0]} onSelect={onClose}/>)}</SearchSection>}
       </div>}</div>
-      <div className="flex items-center justify-between border-t-2 border-[#111214] px-5 py-3 text-xs font-semibold text-[var(--muted)]"><span>Demo data unless marked Live</span><span className="hidden sm:inline">Press Esc to close</span></div>
+      <div className="flex items-center justify-between border-t-2 border-[#111214] px-5 py-3 text-xs font-semibold text-[var(--muted)]"><span>{catalog.products.some((p) => p.origin === "demo") ? "Demo data unless marked Live" : "Live data from real public sources"}</span><span className="hidden sm:inline">Press Esc to close</span></div>
     </section>
   </div>;
 }

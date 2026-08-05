@@ -111,7 +111,7 @@ export default function DevelopersPage() {
 
       <section className="border-t-2 border-[#111214]">
         <div className="mx-auto max-w-[1120px] px-5 py-12 sm:px-8">
-          <p className="text-sm font-medium leading-6 text-[var(--muted)]">Data is demo unless marked Live. The registry publishes only reviewed events and issued reports. No endpoint can publish, approve evidence, or move money — every public scope is read-only.</p>
+          <p className="text-sm font-medium leading-6 text-[var(--muted)]">Data is aggregated from real public sources and marked Live; any seeded demo records are clearly labeled. The registry publishes only reviewed events and issued reports. No endpoint can publish, approve evidence, or move money — every public scope is read-only.</p>
         </div>
       </section>
     </>
