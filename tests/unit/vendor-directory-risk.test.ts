@@ -4,7 +4,7 @@ import { assessVendorRisk } from "@/server/vendors/directory";
 // The directory's redFlag is now exactly "the composed verdict is avoid" — the SAME verdict the
 // vendor page and /verify show. These cases are the concrete divergences the old ad-hoc gate had.
 const V = { name: "Test Vendor", coaCount: 0, medianPurity: null };
-const CLEAN = { enforcement: [] as Array<{ severity: string }>, reviewSentiment: null as string | null, reviewVolume: null as string | null, reviewConfidence: null as string | null, communitySentiment: null as string | null, links: [] as Array<{ strength: string; linkedSlug: string }>, status: "operating", integrityFlagged: false };
+const CLEAN = { enforcement: [] as Array<{ severity: string }>, reviewSentiment: null as string | null, reviewVolume: null as string | null, reviewConfidence: null as string | null, communitySentiment: null as string | null, communityMentionCount: null as number | null, communityNegativeCount: null as number | null, links: [] as Array<{ strength: string; linkedSlug: string }>, status: "operating", integrityFlagged: false };
 const risk = (over: Partial<typeof CLEAN>) => assessVendorRisk(V, { ...CLEAN, ...over });
 
 describe("assessVendorRisk (directory redFlag == vendor-page verdict avoid)", () => {
@@ -59,8 +59,12 @@ describe("assessVendorRisk (directory redFlag == vendor-page verdict avoid)", ()
     expect(r.redFlag).toBe(false);
   });
 
-  it("community scam/negative reports → avoid — the directory had no such input before", () => {
-    expect(risk({ communitySentiment: "negative" })).toEqual({ verdict: "avoid", redFlag: true });
+  it("a CORROBORATED community negative → avoid; a lone mention is only caution", () => {
+    expect(risk({ communitySentiment: "negative", communityMentionCount: 4, communityNegativeCount: 2 })).toEqual({ verdict: "avoid", redFlag: true });
+    // One thin community mention must not red-flag a vendor — same fail-toward-caution as reviews.
+    const thin = risk({ communitySentiment: "negative", communityMentionCount: 1, communityNegativeCount: 1 });
+    expect(thin.verdict).toBe("caution");
+    expect(thin.redFlag).toBe(false);
   });
 
   it("a strong operator-network link to a flagged storefront → avoid", () => {

@@ -80,7 +80,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
     aggregators: aggregatorRatings.map((a) => ({ source: a.source, score: a.score, max_score: a.max_score })),
     signals: vendorSignals,
     review: vendorReview ? { sentiment: vendorReview.sentiment, reviewVolume: vendorReview.reviewVolume, confidence: vendorReview.confidence } : null,
-    community: communitySignal ? { sentiment: communitySignal.sentiment } : null,
+    community: communitySignal ? { sentiment: communitySignal.sentiment, mentionCount: communitySignal.mention_count, negativeCount: communitySignal.negative_count, positiveCount: communitySignal.positive_count } : null,
     links: vendorLinks.map((l) => ({ strength: l.strength, linkedSlug: l.linkedSlug })),
     status: vendorStatus ? { status: vendorStatus.status } : null,
     flagCount: vendorFlags.length,
@@ -137,7 +137,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               <div className="ink inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: v.accent }}><v.icon className="size-4" /> VIAL verdict</div>
               <h2 className="mt-4 text-3xl font-extrabold tracking-[-.03em]">{v.label}</h2>
               <p className="mt-2 text-[15px] font-medium leading-7 text-[#111214]/75">{verdict.summary}</p>
-              <p className="mt-auto pt-4 text-[11px] font-bold uppercase tracking-[.1em] text-[#111214]/45">Weighed across {composed.weighed} independent signal{composed.weighed === 1 ? "" : "s"}</p>
+              <p className="mt-auto pt-4 text-[11px] font-bold uppercase tracking-[.1em] text-[#111214]/45">Weighed across {composed.weighed} signal{composed.weighed === 1 ? "" : "s"} · {composed.verifiedCount} independently verified</p>
             </div>
           </div>
 
@@ -160,8 +160,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
       {/* ── The trust graph: what the verdict is built on, seam by seam ─────────────── */}
       <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8">
-        <SectionHead eyebrow="The trust graph" title="What this verdict is built on" note={`${composed.weighed} signals`} />
-        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Every angle we hold on {vendor.name}, folded into one verdict &mdash; each traceable to its source below. We never blend these into a single score; a green here and a red there stay visible.</p>
+        <SectionHead eyebrow="The trust graph" title="What this verdict is built on" note={`${composed.weighed} signals · ${composed.verifiedCount} verified`} />
+        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Every angle we hold on {vendor.name}, folded into one verdict &mdash; each traceable to its source below. We never blend these into a single score; a green here and a red there stay visible. Each carries a tier &mdash; <span className="font-bold text-[#0a6b60]">Verified</span> (a record we can point at), <span className="font-bold text-[#2b31d8]">Reported</span> (a third-party account), or <span className="font-bold text-black/55">Inferred</span> (a heuristic read) &mdash; so a guess never reads like a fact.</p>
         <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {composed.factors.map((f) => (
             <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[16px] p-4 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>
@@ -169,7 +169,10 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                 {f.ok === true ? <Check className="size-3.5" /> : f.ok === false ? <X className="size-3.5" /> : <CircleDashed className="size-3.5" />}
               </span>
               <div>
-                <p className="text-[13px] font-extrabold tracking-[-.01em]">{f.label}</p>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <p className="text-[13px] font-extrabold tracking-[-.01em]">{f.label}</p>
+                  {f.confidence && <TierChip tier={f.confidence} />}
+                </div>
                 <p className="mt-0.5 text-[13px] font-medium leading-5 text-[var(--muted)]">{f.detail}</p>
               </div>
             </div>
@@ -251,4 +254,15 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
 function HeroStat({ icon: Icon, value, label, accent }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; value: string; label: string; accent?: string }) {
   return <div className="ink hard rounded-[16px] bg-white p-4 text-[#111214]"><Icon className="size-4" style={{ color: accent ?? "#39414e" }} /><p className="mt-3 text-2xl font-extrabold tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
+}
+
+// How much a signal can be trusted, shown next to it so a guess never wears a fact's clothes.
+const TIER_CHIP: Record<"verified" | "reported" | "inferred", { label: string; cls: string; hint: string }> = {
+  verified: { label: "Verified", cls: "bg-[#0e8f80]/12 text-[#0a6b60]", hint: "Backed by a document, government record, or hard shared identifier." },
+  reported: { label: "Reported", cls: "bg-[#2b31d8]/10 text-[#2b31d8]", hint: "A third-party human account — buyer reviews, community, tracker scores." },
+  inferred: { label: "Inferred", cls: "bg-[#111214]/[.06] text-black/45", hint: "A heuristic read or single probe — treat it as a lead, not a proven fact." },
+};
+function TierChip({ tier }: { tier: "verified" | "reported" | "inferred" }) {
+  const t = TIER_CHIP[tier];
+  return <span title={t.hint} className={`ink-1 rounded-full px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-[.08em] ${t.cls}`}>{t.label}</span>;
 }

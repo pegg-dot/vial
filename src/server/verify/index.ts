@@ -10,7 +10,14 @@ import { searchPeptides, classifyPost } from "@/server/ingest/reddit";
 import { composeVerdictForVendorSlug } from "./trust-graph";
 
 export type Verdict = "trusted" | "caution" | "avoid" | "high-risk" | "unproven" | "info";
-export interface Signal { ok: boolean | null; label: string; detail: string }
+// How much a signal can be trusted — its PROVENANCE tier, orthogonal to whether it's good/bad (`ok`).
+// The whole point of VIAL is that a guess must not wear a fact's clothes: a regex read off a
+// storefront ("inferred") can't render identically to a public FDA conviction ("verified").
+//   verified — a document / government record / hard shared identifier we can point at
+//   reported — a third-party human account (buyer reviews, community mentions, tracker scores)
+//   inferred — a heuristic / regex / single unretried probe (domain age, storefront copy, site status)
+export type SignalConfidence = "verified" | "reported" | "inferred";
+export interface Signal { ok: boolean | null; label: string; detail: string; confidence?: SignalConfidence }
 export interface VerifyResult {
   query: string;
   kind: "vendor" | "coa" | "compound" | "unknown-domain" | "nothing";

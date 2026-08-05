@@ -113,9 +113,18 @@ right and are the templates for the rest:
   Needs re-ingest.
 
 ### Tier 2 — structural
-- [ ] **T6. Confidence/provenance dimension** on `Signal` and derived claims; the verdict **weighs** by confidence
-  (no more decide-by-presence); the UI renders *verified ≠ guessed*; site-status/enforcement/reddit signals carry
-  their reliability tier and can't alone force "avoid."
+- [x] **T6. Confidence/provenance dimension** — `Signal` now carries a `confidence` tier (`verified` = a
+  document/government record/hard shared identifier · `reported` = a third-party human account · `inferred` = a
+  heuristic or single unretried probe). `composeVerdict` tags every one of its 10 seams, exposes a `verifiedCount`,
+  and the vendor-page trust-graph renders a per-factor tier chip + an honest "N signals · M independently verified"
+  line — so a regex read off a storefront can no longer render identically to a public FDA conviction (*verified ≠
+  guessed*). The **community seam is now weighed by mention volume** exactly like reviews (closes the T4-verifier's
+  R2): one thin r/Peptides mention is caution, not a verdict-ending "avoid"; counts threaded through all three
+  construction sites (vendor page, `composeVerdictForVendorSlug`, directory query). 3 new tests.
+  *Deliberately NOT done (owner decision, per no-destructive-changes): the protective avoid verdict is kept
+  conservative — an `inferred` site-status/storefront signal still names the problem and can contribute to avoid;
+  T6 makes its low reliability VISIBLE rather than silently downgrading a safety signal. Whether to bar `inferred`
+  signals from solo-forcing avoid is a product call left to the owner.*
 
 Every fix must FAIL TOWARD UNKNOWN and be adversarially verified for over-correction (a stricter matcher must still
 accept the legitimate cases). Progress tracked in `.superpowers/sdd/progress.md`.

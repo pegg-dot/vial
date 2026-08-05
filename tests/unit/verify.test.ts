@@ -125,6 +125,30 @@ describe("trust graph — composeVerdict folds every seam into ONE verdict (no b
     expect(realConflict.verdict).toBe("caution");
   });
 
+  it("every factor carries a reliability tier, and verifiedCount counts only document/record-backed ones", () => {
+    // A regex read off a storefront must NOT render like a public FDA conviction.
+    const r = composeVerdict({ ...EMPTY, enforcement: [{ severity: "severe" }],
+      signals: { domain_age_note: "~3 months old, VERY YOUNG", research_disclaimer: true, notable_copy: "back online after downtime", payment_methods: [] } });
+    const enforcement = r.factors.find((f) => f.label === "Government enforcement");
+    const storefront = r.factors.find((f) => f.label === "Storefront signal");
+    expect(enforcement?.confidence).toBe("verified");
+    expect(storefront?.confidence).toBe("inferred");
+    // verifiedCount ⊆ weighed, and never counts an inferred/reported signal.
+    expect(r.verifiedCount).toBe(r.factors.filter((f) => f.confidence === "verified").length);
+    expect(r.verifiedCount).toBeLessThanOrEqual(r.weighed);
+  });
+
+  it("community: one thin mention is caution, not avoid — the confidently-wrong pattern, cured on this seam too", () => {
+    // A single stranger's post can't nuke a vendor.
+    const thin = composeVerdict({ ...EMPTY, community: { sentiment: "negative", mentionCount: 1, negativeCount: 1 } });
+    expect(thin.verdict).toBe("caution");
+    // Corroborated across multiple mentions → avoid.
+    const corroborated = composeVerdict({ ...EMPTY, community: { sentiment: "scam", mentionCount: 5, negativeCount: 3 } });
+    expect(corroborated.verdict).toBe("avoid");
+    // The community factor is a third-party account → "reported" tier, never "verified".
+    expect(thin.factors.find((f) => f.label === "Community")?.confidence).toBe("reported");
+  });
+
   it("real independent testing + corroboration earns TRUSTED, and counts the weighed signals", () => {
     const r = composeVerdict({ ...EMPTY, coaCount: 3, medianPurity: 99.2, blindCount: 1,
       reputationDimensions: [{ key: "evidence_corroboration", status: "established", value: "3 tests" }] });
