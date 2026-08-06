@@ -7,6 +7,7 @@
 
 import type { SqlConnection } from "@/server/db/client";
 import { recordCatalogListing, upsertLiveVendor } from "./live-sources";
+import { extractJanoshikRefs, resolveStorefrontCoaClaims, coaKey, type JanoshikRef } from "./storefront-coa";
 
 export interface CompoundRef { slug: string; name: string; aliases: string[] }
 
@@ -45,7 +46,7 @@ export function matchCompound(title: string, compounds: CompoundRef[]): string |
 }
 
 interface ShopifyVariant { title: string; price: string; available: boolean; grams?: number }
-interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[]; images?: { src?: string }[] }
+interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[]; images?: { src?: string }[]; body_html?: string }
 
 function shopifyImage(p: ShopifyProduct): string | undefined {
   const src = p.images?.find((i) => i.src && /^https?:\/\//i.test(i.src))?.src;
@@ -78,7 +79,7 @@ export interface ImportResult {
 }
 
 // One matched (vendor, compound, size) offer, ready to record as a listing.
-export interface Candidate { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string }
+export interface Candidate { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string; coa?: { batchCode: string | null } }
 
 const sizeSlug = (q: string) => q.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 12) || "std";
 const MAX_SIZES_PER_COMPOUND = 5;
@@ -124,7 +125,7 @@ export async function recordAllSizes(
         externalUrl: c.url, price: c.price,
         availability: c.available ? "In stock" : "Unavailable",
         sourceUrl: c.url, sourceLabel: `${input.vendorName} — ${c.name.slice(0, 80)}`,
-        imageUrl: c.image,
+        imageUrl: c.image, coa: c.coa,
       });
       imported.push({ slug: listingSlug, compound: compoundSlug, price: c.price });
     }
@@ -149,11 +150,32 @@ export async function importShopifyCatalog(
 
   // One candidate per matched product (using its cheapest available variant); recordAllSizes
   // dedupes by size and records every distinct vial size the vendor sells for a compound.
+  // Collect each product's published Janoshik verify links (scoped to its compound) and batch-resolve
+  // them against the certificates VIAL ALREADY HOLDS — this is what lets a storefront listing carry
+  // independent evidence instead of "no lab test". Only held, compound-matched records resolve.
+  const refsByCompound = new Map<string, Set<string>>();
+  const productRefs = new Map<ShopifyProduct, JanoshikRef[]>();
+  for (const product of products) {
+    const compoundSlug = matchCompound(product.title, input.compounds);
+    if (!compoundSlug) continue;
+    const refs = extractJanoshikRefs(product.body_html);
+    if (!refs.length) continue;
+    productRefs.set(product, refs);
+    const set = refsByCompound.get(compoundSlug) ?? new Set<string>();
+    for (const r of refs) set.add(r.verifyUrl);
+    refsByCompound.set(compoundSlug, set);
+  }
+  const coaClaims = await resolveStorefrontCoaClaims(db, input.vendorSlug, refsByCompound);
+
   const candidates: Candidate[] = [];
   for (const product of products) {
     const compoundSlug = matchCompound(product.title, input.compounds);
     if (!compoundSlug) { result.skipped += 1; continue; }
     result.matched += 1;
+    // The resolved COA claim (if any) rides on every variant of this product — they share the page.
+    // Look up by compound+URL so a boilerplate footer link can't drag another compound's claim over.
+    const resolved = (productRefs.get(product) ?? []).map((r) => coaClaims.get(coaKey(compoundSlug, r.verifyUrl))).find(Boolean);
+    const coa = resolved ? { batchCode: resolved.batchCode } : undefined;
     // One candidate PER VARIANT (each real size the vendor sells), so a product whose title bundles
     // several sizes ("… 2mg/5mg vial") becomes one listing per size with its OWN price — instead of
     // collapsing to just the cheapest variant. recordAllSizes then dedupes by size and caps the count.
@@ -166,7 +188,7 @@ export async function importShopifyCatalog(
         compoundSlug, price,
         quantity: variantSize ?? sizeFromName(product.title),
         name: product.title, url: `https://${input.domain}/products/${product.handle}`,
-        available: Boolean(variant?.available), image: shopifyImage(product),
+        available: Boolean(variant?.available), image: shopifyImage(product), coa,
       });
       any = true;
     }

@@ -47,46 +47,9 @@ for (const v of legit) {
   });
 }
 
-// Import full catalogs (with real prices) from vendors whose Shopify /products.json works.
-const shopify = legit.filter((v) => v.productsJsonWorks);
-console.log(`\nImporting catalogs from ${shopify.length} Shopify vendors…`);
-let totalListings = 0;
-for (const v of shopify) {
-  try {
-    const r = await importShopifyCatalog(db, {
-      vendorSlug: v.slug, vendorName: v.name, domain: v.domain, location: v.location,
-      description: `${v.reputationSummary ?? ""} Aggregated from ${v.name}'s public catalog.`.trim(),
-      compounds: compoundRefs,
-    });
-    totalListings += r.imported.length;
-    await recordCollectorRun(db, { collector: "shopify", target: v.domain, items: r.imported.length, ok: true });
-    console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched)`);
-  } catch (e) {
-    await recordCollectorRun(db, { collector: "shopify", target: v.domain, items: 0, ok: false });
-    console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
-  }
-}
-
-// Import full catalogs from vendors running WooCommerce (public Store API).
-const woo = legit.filter((v) => v.wooWorks);
-console.log(`\nImporting catalogs from ${woo.length} WooCommerce vendors…`);
-for (const v of woo) {
-  try {
-    const r = await importWooCommerceCatalog(db, {
-      vendorSlug: v.slug, vendorName: v.name, domain: v.domain, location: v.location,
-      description: `${v.reputationSummary ?? ""} Aggregated from ${v.name}'s public catalog.`.trim(),
-      compounds: compoundRefs,
-    });
-    totalListings += r.imported.length;
-    await recordCollectorRun(db, { collector: "woocommerce", target: v.domain, items: r.imported.length, ok: true });
-    console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched)`);
-  } catch (e) {
-    await recordCollectorRun(db, { collector: "woocommerce", target: v.domain, items: 0, ok: false });
-    console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
-  }
-}
-
-// Janoshik COA references, with vision-read purity merged in where available.
+// Janoshik COA references FIRST — the lab evidence must land before the storefront catalogs so the
+// storefront-COA linker (in importShopifyCatalog) can resolve each listing's published verify link
+// against the certificates VIAL holds. With vision-read purity merged in where available.
 const feedFile = new URL("janoshik-feed-snapshot.html", DATA);
 const purities = existsSync(new URL("janoshik-purities.json", DATA)) ? readJson("janoshik-purities.json") : {};
 if (existsSync(feedFile)) {
@@ -144,6 +107,47 @@ if (existsSync(vendorCoaFile)) {
     if (res.compoundSlug && res.vendorSlug) green += 1;
   }
   console.log(`  ${green}/${vcoas.length} tied a vendor listing to its own independent COA`);
+}
+
+// Import full catalogs (with real prices) from vendors whose Shopify /products.json works. Runs
+// AFTER the lab evidence above so importShopifyCatalog can link each listing's published Janoshik
+// verify link to a held certificate (stamping the listing's testing claim for the cross-check).
+const shopify = legit.filter((v) => v.productsJsonWorks);
+console.log(`\nImporting catalogs from ${shopify.length} Shopify vendors…`);
+let totalListings = 0;
+for (const v of shopify) {
+  try {
+    const r = await importShopifyCatalog(db, {
+      vendorSlug: v.slug, vendorName: v.name, domain: v.domain, location: v.location,
+      description: `${v.reputationSummary ?? ""} Aggregated from ${v.name}'s public catalog.`.trim(),
+      compounds: compoundRefs,
+    });
+    totalListings += r.imported.length;
+    await recordCollectorRun(db, { collector: "shopify", target: v.domain, items: r.imported.length, ok: true });
+    console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched)`);
+  } catch (e) {
+    await recordCollectorRun(db, { collector: "shopify", target: v.domain, items: 0, ok: false });
+    console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
+  }
+}
+
+// Import full catalogs from vendors running WooCommerce (public Store API).
+const woo = legit.filter((v) => v.wooWorks);
+console.log(`\nImporting catalogs from ${woo.length} WooCommerce vendors…`);
+for (const v of woo) {
+  try {
+    const r = await importWooCommerceCatalog(db, {
+      vendorSlug: v.slug, vendorName: v.name, domain: v.domain, location: v.location,
+      description: `${v.reputationSummary ?? ""} Aggregated from ${v.name}'s public catalog.`.trim(),
+      compounds: compoundRefs,
+    });
+    totalListings += r.imported.length;
+    await recordCollectorRun(db, { collector: "woocommerce", target: v.domain, items: r.imported.length, ok: true });
+    console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched)`);
+  } catch (e) {
+    await recordCollectorRun(db, { collector: "woocommerce", target: v.domain, items: 0, ok: false });
+    console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
+  }
 }
 
 // Vendor integrity flags — derive "salvage title" red flags from vendors whose published
