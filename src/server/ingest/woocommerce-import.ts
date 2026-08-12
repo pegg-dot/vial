@@ -8,6 +8,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import { upsertLiveVendor } from "./live-sources";
 import { matchCompound, recordAllSizes, type Candidate, type CompoundRef, type ImportResult } from "./shopify-import";
+import { detectAdvertisedTesting } from "./storefront-coa";
 
 const UA = "VialGrade-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
 const PRICE_MIN = 5;
@@ -20,6 +21,10 @@ export interface WooProduct {
   is_in_stock: boolean;
   prices: { price: string | null; price_range: { min_amount: string } | null; currency_minor_unit: number } | null;
   images?: { src?: string }[];
+  // The Store API returns the product body. Vendors state their testing claim here — no Woo
+  // storefront in the tracked set publishes a per-product verify link, so the claim is the signal.
+  description?: string;
+  short_description?: string;
 }
 
 // First usable image URL from a WooCommerce product (the Store API returns full-size srcs).
@@ -90,7 +95,11 @@ export async function importWooCommerceCatalog(
     const quantity = wooQuantity(product.name);
     const key = `${compoundSlug}::${quantity.toLowerCase()}`;
     const prev = bySize.get(key);
-    if (!prev || price < prev.price) bySize.set(key, { compoundSlug, price, quantity, name: product.name, url: product.permalink || `https://${input.domain}`, available: Boolean(product.is_in_stock), image: wooImage(product) });
+    // The vendor's own advertised testing claim. Never upgraded to "verified" — a claim with no
+    // independent record VialGrade holds resolves to "Testing unverified" in the cross-check.
+    const advertised = detectAdvertisedTesting(`${product.description ?? ""} ${product.short_description ?? ""}`);
+    const coa = advertised ? { batchCode: null, issuer: advertised.issuer } : undefined;
+    if (!prev || price < prev.price) bySize.set(key, { compoundSlug, price, quantity, name: product.name, url: product.permalink || `https://${input.domain}`, available: Boolean(product.is_in_stock), image: wooImage(product), coa });
   }
   for (const rec of await recordAllSizes(db, input, [...bySize.values()])) result.imported.push(rec);
   return result;

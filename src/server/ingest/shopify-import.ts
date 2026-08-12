@@ -7,7 +7,7 @@
 
 import type { SqlConnection } from "@/server/db/client";
 import { recordCatalogListing, upsertLiveVendor } from "./live-sources";
-import { extractJanoshikRefs, resolveStorefrontCoaClaims, coaKey, type JanoshikRef } from "./storefront-coa";
+import { extractJanoshikRefs, resolveStorefrontCoaClaims, coaKey, detectAdvertisedTesting, type JanoshikRef } from "./storefront-coa";
 
 export interface CompoundRef { slug: string; name: string; aliases: string[] }
 
@@ -79,7 +79,7 @@ export interface ImportResult {
 }
 
 // One matched (vendor, compound, size) offer, ready to record as a listing.
-export interface Candidate { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string; coa?: { batchCode: string | null } }
+export interface Candidate { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string; coa?: { batchCode: string | null; issuer?: string } }
 
 const sizeSlug = (q: string) => q.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 12) || "std";
 const MAX_SIZES_PER_COMPOUND = 5;
@@ -175,7 +175,12 @@ export async function importShopifyCatalog(
     // The resolved COA claim (if any) rides on every variant of this product — they share the page.
     // Look up by compound+URL so a boilerplate footer link can't drag another compound's claim over.
     const resolved = (productRefs.get(product) ?? []).map((r) => coaClaims.get(coaKey(compoundSlug, r.verifyUrl))).find(Boolean);
-    const coa = resolved ? { batchCode: resolved.batchCode } : undefined;
+    // No resolvable verify link is the common case. Fall back to the vendor's own advertised
+    // testing claim so the listing reads "Testing unverified" rather than a silent "No lab test".
+    const advertised = resolved ? null : detectAdvertisedTesting(product.body_html);
+    const coa = resolved
+      ? { batchCode: resolved.batchCode }
+      : advertised ? { batchCode: null, issuer: advertised.issuer } : undefined;
     // One candidate PER VARIANT (each real size the vendor sells), so a product whose title bundles
     // several sizes ("… 2mg/5mg vial") becomes one listing per size with its OWN price — instead of
     // collapsing to just the cheapest variant. recordAllSizes then dedupes by size and caps the count.

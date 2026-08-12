@@ -93,7 +93,7 @@ export interface LiveListingInput {
   /** A resolved storefront-published Janoshik COA claim for this listing (present = the vendor advertises
    *  a confirmed Janoshik test VialGrade holds for this compound). Stamps the listing's testing claim so the
    *  hardened crossCheckCoa can decide the verdict; never itself a verdict. */
-  coa?: { batchCode: string | null };
+  coa?: { batchCode: string | null; issuer?: string };
 }
 
 /**
@@ -303,12 +303,12 @@ export async function recordCatalogListing(
      SET price = $2, availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
          last_checked = 'just now', price_history = CASE WHEN price_history = '[]'::jsonb THEN $4::jsonb ELSE price_history END,
          image_url = COALESCE($5, image_url),
-         report_issuer = CASE WHEN $6 THEN 'Janoshik' ELSE report_issuer END,
+         report_issuer = CASE WHEN $6 THEN $8 ELSE report_issuer END,
          report_confirmed = CASE WHEN $6 THEN TRUE ELSE report_confirmed END,
          batch_code = COALESCE($7, batch_code),
          observed_at = NOW(), updated_at = NOW()
      WHERE id = $1`,
-    [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null, hasCoa, input.coa?.batchCode ?? null],
+    [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null, hasCoa, input.coa?.batchCode ?? null, input.coa?.issuer ?? 'Janoshik'],
   );
   return { productId, listingId };
 }

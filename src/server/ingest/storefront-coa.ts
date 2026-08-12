@@ -113,3 +113,68 @@ export async function resolveStorefrontCoaClaims(
   }
   return out;
 }
+
+// ── Advertised-testing detection ────────────────────────────────────────────────────────────────
+//
+// The 2026-08-12 coverage audit found the wedge above cannot lift coverage for this catalog: across
+// 20 live WooCommerce storefronts there are ZERO `verify.janoshik.com` links. What vendors publish
+// instead is a marketing CLAIM — "every lot supported by an independent Janoshik COA" — with the
+// certificates on a separate page, unlinked per product.
+//
+// That gap is itself the product's subject. A listing whose vendor advertises third-party testing we
+// cannot confirm is meaningfully different from one that claims nothing, and the trust graph already
+// has the honest verdict for it: `unbacked` — "Testing unverified". This detects the claim so those
+// listings stop rendering as a silent "No lab test".
+//
+// It must stay conservative: the output becomes a published statement about a real business. It fires
+// only on an explicit assertion that an OUTSIDE party did the testing — never on in-house testing,
+// purity guarantees, or generic "lab grade" copy.
+
+const LAB_NAMES: { pattern: RegExp; issuer: string }[] = [
+  { pattern: /janoshik/i, issuer: "Janoshik" },
+  { pattern: /mz\s*biolabs?/i, issuer: "MZ Biolabs" },
+  { pattern: /colmaric/i, issuer: "Colmaric" },
+];
+
+// An outside party did the testing. "third-party tested", "independent lab testing", "tested by an
+// independent laboratory". Requires BOTH the outsider word and a testing word near it.
+const THIRD_PARTY_CLAIM = /\b(third[\s-]?party|independent(?:ly)?)\b[^.]{0,60}\b(test|tested|testing|assay|assayed|verified|analysis|analyzed|coa|certificate of analysis|lab|laborator)/i;
+const TESTING_BY_OUTSIDER = /\b(test|tested|testing|assay|assayed|verified|analy[sz]ed)\b[^.]{0,60}\b(third[\s-]?party|independent(?:ly)?)\b/i;
+
+// Kill switches — copy that mentions the words but is not an outside-testing claim.
+const IN_HOUSE = /\b(in[\s-]?house|our own|on[\s-]?site)\b[^.]{0,30}\b(lab|laborator|test)/i;
+const NEGATED = /\b(no|not|without|lacks?|never)\b[^.]{0,30}\b(third[\s-]?party|independent)\b/i;
+
+function plainText(html: string): string {
+  return html
+    .replace(/&#45;/g, "-").replace(/&amp;/gi, "&").replace(/&nbsp;/gi, " ")
+    .replace(/&#8217;/g, "'").replace(/&#8211;/g, "-")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+export interface AdvertisedTesting {
+  issuer: string;
+}
+
+/**
+ * Detects a storefront's claim that an INDEPENDENT party tested the product.
+ *
+ * Returns the named laboratory when one is identified, otherwise a generic "Third-party lab" for an
+ * unnamed claim. Returns null when the copy makes no outside-testing claim — a gap must never be
+ * upgraded into a claim the vendor did not make.
+ */
+export function detectAdvertisedTesting(html: string | null | undefined): AdvertisedTesting | null {
+  if (!html) return null;
+  const text = plainText(html);
+  if (NEGATED.test(text)) return null;
+
+  // A named independent lab is the strongest form of the claim and stands on its own.
+  for (const { pattern, issuer } of LAB_NAMES) {
+    if (pattern.test(text)) return { issuer };
+  }
+
+  if (IN_HOUSE.test(text)) return null;
+  if (THIRD_PARTY_CLAIM.test(text) || TESTING_BY_OUTSIDER.test(text)) return { issuer: "Third-party lab" };
+  return null;
+}
