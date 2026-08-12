@@ -8,7 +8,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import { upsertLiveVendor } from "./live-sources";
 import { matchCompound, recordAllSizes, type Candidate, type CompoundRef, type ImportResult } from "./shopify-import";
-import { detectAdvertisedTesting } from "./storefront-coa";
+import { detectAdvertisedTesting, extractJanoshikRefs } from "./storefront-coa";
 
 const UA = "VialGrade-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
 const PRICE_MIN = 5;
@@ -97,7 +97,11 @@ export async function importWooCommerceCatalog(
     const prev = bySize.get(key);
     // The vendor's own advertised testing claim. Never upgraded to "verified" — a claim with no
     // independent record VialGrade holds resolves to "Testing unverified" in the cross-check.
-    const advertised = detectAdvertisedTesting(`${product.description ?? ""} ${product.short_description ?? ""}`);
+    // Same rule as the Shopify path: a page citing a verify link belongs to the wedge, not to
+    // prose detection. No tracked Woo storefront publishes one today, but the guarantee must not
+    // depend on that staying true.
+    const body = `${product.description ?? ""} ${product.short_description ?? ""}`;
+    const advertised = extractJanoshikRefs(body).length > 0 ? null : detectAdvertisedTesting(body);
     const coa = advertised ? { batchCode: null, issuer: advertised.issuer } : undefined;
     if (!prev || price < prev.price) bySize.set(key, { compoundSlug, price, quantity, name: product.name, url: product.permalink || `https://${input.domain}`, available: Boolean(product.is_in_stock), image: wooImage(product), coa });
   }

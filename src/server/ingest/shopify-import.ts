@@ -175,9 +175,14 @@ export async function importShopifyCatalog(
     // The resolved COA claim (if any) rides on every variant of this product — they share the page.
     // Look up by compound+URL so a boilerplate footer link can't drag another compound's claim over.
     const resolved = (productRefs.get(product) ?? []).map((r) => coaClaims.get(coaKey(compoundSlug, r.verifyUrl))).find(Boolean);
-    // No resolvable verify link is the common case. Fall back to the vendor's own advertised
-    // testing claim so the listing reads "Testing unverified" rather than a silent "No lab test".
-    const advertised = resolved ? null : detectAdvertisedTesting(product.body_html);
+    // Fall back to the vendor's own advertised testing claim so a listing reads "Testing
+    // unverified" rather than a silent "No lab test" — but ONLY when the page cites no verify
+    // link at all. If it cites one, the wedge above is the authority: when it declines to stamp
+    // (wrong compound, self-published, unresolvable) that is a deliberate refusal, and letting a
+    // prose claim override it would reintroduce exactly the boilerplate-footer leak the wedge
+    // keys by compound+URL to prevent.
+    const citesAnyRef = (productRefs.get(product) ?? []).length > 0;
+    const advertised = resolved || citesAnyRef ? null : detectAdvertisedTesting(product.body_html);
     const coa = resolved
       ? { batchCode: resolved.batchCode }
       : advertised ? { batchCode: null, issuer: advertised.issuer } : undefined;

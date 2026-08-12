@@ -82,6 +82,39 @@ describe("storefront-published COA linking — the coverage wedge", () => {
     expect(l.report_confirmed).toBe(false);
   });
 
+  // The 2026-08-12 coverage audit found ZERO verify links across 20 live WooCommerce storefronts.
+  // What vendors publish is the CLAIM. Recording it turns a silent "No lab test" into the honest
+  // "Testing unverified" — never into "verified".
+  it("records an advertised testing claim when the page cites NO verify link", async () => {
+    await seedCompound("bpc-157", "BPC-157");
+    await runImport("prosestore", [product({
+      body_html: "<p>Every lot is supported by an independent Janoshik COA. COAs available on our Lab Tests page.</p>",
+    })]);
+    const l = await listing("prosestore-bpc-157");
+    expect(l.report_issuer).toBe("Janoshik");
+
+    // ...and it resolves to UNBACKED, not verified — no independent record backs this vendor.
+    const db = await getDatabase();
+    const check = await crossCheckCoa(db, {
+      vendorSlug: "prosestore", compoundSlug: "bpc-157",
+      reportIssuer: l.report_issuer, reportConfirmed: l.report_confirmed, batchCode: l.batch_code ?? undefined,
+    });
+    expect(check.status).toBe("unbacked");
+  });
+
+  it("does NOT let a prose claim override the wedge's refusal to stamp a cited link", async () => {
+    await seedCompound("bpc-157", "BPC-157");
+    await seedCompound("tb-500", "TB-500");
+    // The page cites a verify link the wedge will decline (cert is for a different compound) AND
+    // carries reassuring prose. The refusal must win, or the boilerplate-footer leak returns.
+    await seedLabTest({ vendor_slug: "footerstore", manufacturer: "Footer Store", compound_slug: "tb-500", verify: VERIFY });
+    await runImport("footerstore", [product({
+      body_html: `<p>Independent third-party tested. <a href="${VERIFY}">Janoshik COA</a></p>`,
+    })]);
+    const l = await listing("footerstore-bpc-157");
+    expect(l.report_issuer).toBe("");
+  });
+
   it("NEVER attaches a cert for a DIFFERENT compound than the product it's embedded on", async () => {
     // The held cert for this verify URL is for tb-500, but it's embedded on a bpc-157 product page.
     await seedLabTest({ vendor_slug: "stakelabs", manufacturer: "Stake Labs", compound_slug: "tb-500", verify: VERIFY, batch_code: BATCH });
