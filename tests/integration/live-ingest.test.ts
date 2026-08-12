@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
 
 // Minimal HTML mirroring the real schema.org/JSON-LD Product+Offer shape verified live
 // on the vendor product pages (e.g. eternalpeptides.com), so the test exercises the same
@@ -94,7 +94,7 @@ describe("live BPC-157 ingest end to end", () => {
 
     // Live vendors must be resolvable in the public registry (not excluded like before).
     const resolved = await m.resolveToRegistry("Eternal Peptides", "vendor");
-    expect(resolved.best?.vialId).toBe("vial:vendor:eternal-peptides");
+    expect(resolved.best?.registryId).toBe("vialgrade:vendor:eternal-peptides");
   });
 
   it("links a listing to the REAL source id when the URL already has a source (no dangling FK)", async () => {

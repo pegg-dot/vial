@@ -7,7 +7,7 @@ import { getIntelligenceMetrics, getPublicSignals, getTraceRoots } from "@/serve
 import { Bell, Bot, Braces, Database, GitBranch, Lightbulb, RadioTower, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Agent operations", description: "The live control architecture behind VIAL's source-backed catalog." };
+export const metadata: Metadata = { title: "Agent operations", description: "The live control architecture behind VialGrade's source-backed catalog." };
 export const dynamic = "force-dynamic";
 
 export default async function OperationsPage() {

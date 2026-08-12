@@ -22,7 +22,7 @@ export const compounds: SeedCompound[] = [
     documentationCoverage: 67,
     accent: ["#6d5dfc", "#9f8dff", "#c9fbff"],
     researchNote:
-      "Research summaries on VIAL describe published literature only. They do not establish the identity, quality, safety, or legal status of any listed physical product.",
+      "Research summaries on VialGrade describe published literature only. They do not establish the identity, quality, safety, or legal status of any listed physical product.",
   },
   {
     slug: "kpv",
@@ -54,7 +54,7 @@ export const compounds: SeedCompound[] = [
     documentationCoverage: 100,
     accent: ["#855cff", "#d66dff", "#ffd6f7"],
     researchNote:
-      "A publication about a molecule is not evidence that a commercial vial contains that molecule. VIAL keeps those concepts separate.",
+      "A publication about a molecule is not evidence that a commercial vial contains that molecule. VialGrade keeps those concepts separate.",
   },
   {
     slug: "ghk-cu",
@@ -86,7 +86,7 @@ export const compounds: SeedCompound[] = [
     documentationCoverage: 50,
     accent: ["#e26b32", "#ff9a66", "#ffe3cc"],
     researchNote:
-      "Regulatory and research contexts vary by jurisdiction. VIAL records dated sources rather than assigning a permanent legal label.",
+      "Regulatory and research contexts vary by jurisdiction. VialGrade records dated sources rather than assigning a permanent legal label.",
   },
   {
     slug: "epitalon",
@@ -155,7 +155,7 @@ export const vendors: SeedVendor[] = [
     name: "Meridian Biosciences",
     initials: "MB",
     description:
-      "A fictional independent profile showing how VIAL can aggregate public catalog and document information before seller participation.",
+      "A fictional independent profile showing how VialGrade can aggregate public catalog and document information before seller participation.",
     location: "Phoenix, AZ",
     founded: "2024",
     profileStatus: "unclaimed",
@@ -266,7 +266,7 @@ export const products: SeedProduct[] = [
       { label: "Document authenticity", status: "established", detail: "Report identifier confirmed by the named issuer." },
       { label: "Batch linkage", status: "established", detail: "The public report names the same declared batch code as the listing." },
       { label: "Chemical identity", status: "established", detail: "Identity was reported by LC-MS in the uploaded document." },
-      { label: "Declared quantity", status: "partial", detail: "Quantity is reported, but VIAL did not select the sample." },
+      { label: "Declared quantity", status: "partial", detail: "Quantity is reported, but VialGrade did not select the sample." },
       { label: "Sterility", status: "not-tested", detail: "No sterility result appears in the current evidence package." },
       { label: "Endotoxin", status: "not-tested", detail: "No endotoxin result appears in the current evidence package." },
     ],

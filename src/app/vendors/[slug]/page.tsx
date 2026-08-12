@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building2, Check, CircleAlert, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
+import { ArrowLeft, Building2, Check, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
 import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
 import { vendorPriceIndex } from "@/lib/curation";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
@@ -11,8 +11,9 @@ import { TierChip } from "@/components/signal-tier-chip";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
-import type { Verdict } from "@/server/verify";
 import { composeVerdict } from "@/server/verify/trust-graph";
+import { gradeFromVerdict } from "@/server/verify/grade";
+import { VialGradeCard } from "@/components/vial-grade-card";
 import { getVendorRegulatoryActions } from "@/server/regulatory/repository";
 import { EnforcementBanner } from "@/components/enforcement-banner";
 import { FollowButton } from "@/components/follow-button";
@@ -41,20 +42,11 @@ import { SectionHead, JumpNav } from "@/components/vendor-report-chrome";
 export const dynamic = "force-dynamic";
 
 const STEEL = "#39414e";
-const VERDICT_UI: Record<Verdict, { label: string; bg: string; accent: string; icon: typeof ShieldCheck }> = {
-  trusted: { label: "Generally trusted", bg: "bg-[#e6fbf6]", accent: "#0e8f80", icon: ShieldCheck },
-  caution: { label: "Proceed with caution", bg: "bg-[#fff6e6]", accent: "#b26a00", icon: CircleAlert },
-  unproven: { label: "Unproven", bg: "bg-[#fff6e6]", accent: "#b26a00", icon: CircleDashed },
-  info: { label: "For your information", bg: "bg-[#eef0ff]", accent: "#2b31d8", icon: CircleDashed },
-  "high-risk": { label: "High risk", bg: "bg-[#ffecea]", accent: "#d3372c", icon: CircleAlert },
-  avoid: { label: "Avoid — do not buy", bg: "bg-[#ffecea]", accent: "#d3372c", icon: X },
-};
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) return {};
-  return { title: vendor.name, description: `What VIAL knows about ${vendor.name}: verdict, independent lab tests, reputation, and market history.` };
+  return { title: vendor.name, description: `What VialGrade knows about ${vendor.name}: verdict, independent lab tests, reputation, and market history.` };
 }
 
 export default async function VendorPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -86,8 +78,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
     status: vendorStatus ? { status: vendorStatus.status } : null,
     flagCount: vendorFlags.length,
   });
-  const verdict = { verdict: composed.verdict, summary: composed.summary };
-  const v = VERDICT_UI[composed.verdict];
+  // The headline letter is a projection of the verdict above — same seams, no second opinion.
+  const grade = gradeFromVerdict(composed, { coaCount: vendor.coaCount });
 
   const hasAlerts = (vendorStatus && vendorStatus.status !== "operating") || vendorFlags.length > 0 || enforcement.length > 0;
   const secondaryLabel = vendor.kind === "storefront" ? "Listings" : "Batch passports";
@@ -133,13 +125,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               </div>
             </div>
 
-            {/* the bottom line — the composed verdict */}
-            <div className={`ink hard-lg flex flex-col rounded-[22px] p-6 text-[#111214] ${v.bg}`}>
-              <div className="ink inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: v.accent }}><v.icon className="size-4" /> VIAL verdict</div>
-              <h2 className="mt-4 text-3xl font-extrabold tracking-[-.03em]">{v.label}</h2>
-              <p className="mt-2 text-[15px] font-medium leading-7 text-[#111214]/75">{verdict.summary}</p>
-              <p className="mt-auto pt-4 text-[11px] font-bold uppercase tracking-[.1em] text-[#111214]/45">Weighed across {composed.weighed} signal{composed.weighed === 1 ? "" : "s"} · {composed.verifiedCount} independently verified</p>
-            </div>
+            {/* the bottom line — the headline grade, its reason, and the dimensions it rests on */}
+            <VialGradeCard grade={grade} summary={composed.summary} />
           </div>
 
           {/* at-a-glance stats */}
@@ -162,7 +149,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       {/* ── The trust graph: what the verdict is built on, seam by seam ─────────────── */}
       <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8">
         <SectionHead eyebrow="The trust graph" title="What this verdict is built on" note={`${composed.weighed} signals · ${composed.verifiedCount} verified`} />
-        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Every angle we hold on {vendor.name}, folded into one verdict &mdash; each traceable to its source below. We never blend these into a single score; a green here and a red there stay visible. Each carries a tier &mdash; <span className="font-bold text-[#0a6b60]">Verified</span> (a record we can point at), <span className="font-bold text-[#2b31d8]">Reported</span> (a third-party account), or <span className="font-bold text-black/55">Inferred</span> (a heuristic read) &mdash; so a guess never reads like a fact.</p>
+        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Every angle we hold on {vendor.name}, folded into one verdict &mdash; each traceable to its source below. The grade above is a shorthand for this page, not a replacement for it: it follows a stated rule you can check, and a green here and a red there stay visible rather than averaging out. Each carries a tier &mdash; <span className="font-bold text-[#0a6b60]">Verified</span> (a record we can point at), <span className="font-bold text-[#2b31d8]">Reported</span> (a third-party account), or <span className="font-bold text-black/55">Inferred</span> (a heuristic read) &mdash; so a guess never reads like a fact.</p>
         <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {composed.factors.map((f) => (
             <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[16px] p-4 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>

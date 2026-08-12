@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const TYPES: RegistryEntityType[] = ["compound", "vendor", "product", "lab", "batch", "source"];
 
-// Maps a real-world label to a canonical VIAL ID — the public entry point to the
+// Maps a real-world label to a canonical VialGrade ID — the public entry point to the
 // resolution flywheel.
 export async function GET(request: Request) {
   const auth = await requireApiKey(request, "identity:read");
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const type = typeParam && TYPES.includes(typeParam as RegistryEntityType) ? (typeParam as RegistryEntityType) : undefined;
   const resolution = await resolveToRegistry(label, type);
   return NextResponse.json(
-    { data: resolution, meta: { standard: "vial-registry", version: "v1", readonly: true } },
+    { data: resolution, meta: { standard: "vialgrade-registry", version: "v1", readonly: true } },
     { headers: { "cache-control": "no-store" } },
   );
 }

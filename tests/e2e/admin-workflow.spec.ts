@@ -55,8 +55,8 @@ test("health is public while run receipts require staff", async ({ request }) =>
 
 test("staff can ingest, review, publish, and observe a catalog update", async ({ page }) => {
   await page.goto("/admin/login");
-  await page.getByLabel("Staff email").fill("jon@vial.test");
-  await page.getByLabel("Password").fill("VialDemoAdmin!2026");
+  await page.getByLabel("Staff email").fill("jon@vialgrade.test");
+  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
   await expect(page.getByRole("heading", { name: "Market operations" })).toBeVisible();
 
@@ -85,8 +85,8 @@ test("staff can ingest, review, publish, and observe a catalog update", async ({
 
 test("a controlled fixture change creates one visible cascade", async ({ page }) => {
   await page.goto("/admin/login");
-  await page.getByLabel("Staff email").fill("jon@vial.test");
-  await page.getByLabel("Password").fill("VialDemoAdmin!2026");
+  await page.getByLabel("Staff email").fill("jon@vialgrade.test");
+  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
   await expect(page.getByRole("heading", { name: "Market operations" })).toBeVisible();
   await page.goto("/admin/sources");

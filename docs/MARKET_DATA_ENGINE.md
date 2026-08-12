@@ -1,4 +1,4 @@
-# VIAL 2.0 market-data engine
+# VialGrade 2.0 market-data engine
 
 ## Purpose
 
@@ -31,7 +31,7 @@ The included benchmark is intentionally small and fictional. It proves the archi
 
 ## Confidence
 
-Extractor confidence is not the same as truth probability. VIAL records calibration bins and correction outcomes so confidence can be compared with observed accuracy over time.
+Extractor confidence is not the same as truth probability. VialGrade records calibration bins and correction outcomes so confidence can be compared with observed accuracy over time.
 
 ## Freshness
 

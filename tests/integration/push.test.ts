@@ -11,13 +11,13 @@ const sub = (endpoint: string) => ({ endpoint, keys: { p256dh: `p-${endpoint}`, 
 
 describe("web push — per-user isolation, targeting, pruning", () => {
   beforeEach(() => {
-    process.env.VIAL_PGLITE_MEMORY = "true";
+    process.env.VIALGRADE_PGLITE_MEMORY = "true";
     delete (globalThis as { __vialDbPromise?: unknown }).__vialDbPromise;
     process.env.VAPID_PUBLIC_KEY = "test-pub"; process.env.VAPID_PRIVATE_KEY = "test-priv";
   });
 
   it("stores subscriptions scoped to the owning user", async () => {
-    await seedUser("user:a", "a@vial.test"); await seedUser("user:b", "b@vial.test");
+    await seedUser("user:a", "a@vialgrade.test"); await seedUser("user:b", "b@vialgrade.test");
     await saveSubscription("user:a", sub("https://push.example/a1"));
     await saveSubscription("user:b", sub("https://push.example/b1"));
     expect((await getSubscriptionsForUser("user:a")).map((s) => s.endpoint)).toEqual(["https://push.example/a1"]);
@@ -25,7 +25,7 @@ describe("web push — per-user isolation, targeting, pruning", () => {
   });
 
   it("delivers ONLY to the target user's devices — never another user's", async () => {
-    await seedUser("user:a", "a@vial.test"); await seedUser("user:b", "b@vial.test");
+    await seedUser("user:a", "a@vialgrade.test"); await seedUser("user:b", "b@vialgrade.test");
     await saveSubscription("user:a", sub("https://push.example/a1"));
     await saveSubscription("user:a", sub("https://push.example/a2"));
     await saveSubscription("user:b", sub("https://push.example/b1"));
@@ -38,7 +38,7 @@ describe("web push — per-user isolation, targeting, pruning", () => {
   });
 
   it("prunes a subscription the push service reports as gone (410)", async () => {
-    await seedUser("user:a", "a@vial.test");
+    await seedUser("user:a", "a@vialgrade.test");
     await saveSubscription("user:a", sub("https://push.example/live"));
     await saveSubscription("user:a", sub("https://push.example/dead"));
     const sender: PushSender = { send: async (s) => { if (s.endpoint.endsWith("dead")) throw Object.assign(new Error("gone"), { statusCode: 410 }); return { statusCode: 201 }; } };
@@ -49,7 +49,7 @@ describe("web push — per-user isolation, targeting, pruning", () => {
   });
 
   it("lets a user unsubscribe their own device", async () => {
-    await seedUser("user:a", "a@vial.test");
+    await seedUser("user:a", "a@vialgrade.test");
     await saveSubscription("user:a", sub("https://push.example/a1"));
     await removeSubscriptionForUser("user:a", "https://push.example/a1");
     expect(await getSubscriptionsForUser("user:a")).toHaveLength(0);

@@ -34,7 +34,7 @@ export default async function SellerOverviewPage() {
           </div>
           <Link href="/seller/integrations" className={`${secondaryButton} mt-5 w-full`}>Manage connections</Link>
         </Panel>
-        <Panel title="AI-assisted matching" description="VIAL proposes canonical compound matches, quantities, and evidence relationships. You approve every change.">
+        <Panel title="AI-assisted matching" description="VialGrade proposes canonical compound matches, quantities, and evidence relationships. You approve every change.">
           <div className="ink rounded-[16px] bg-[#6d5dfc] p-5 text-white"><Sparkles className="size-5" /><p className="mt-8 text-2xl font-extrabold tracking-[-.04em]">{context.products.filter((row) => Number((row as { match_confidence?: unknown }).match_confidence ?? 0) >= .9).length} high-confidence matches</p><p className="mt-2 text-sm leading-6 text-white/60">No listing is published automatically. Imports remain reviewable drafts.</p></div>
         </Panel>
       </div>

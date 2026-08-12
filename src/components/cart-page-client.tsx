@@ -51,7 +51,7 @@ export function CartPageClient() {
         <dl className="mt-6 space-y-3 text-sm">
           <SummaryRow label="Subtotal" value={money(cart.subtotal)} />
           <SummaryRow label="Seller shipping" value={money(cart.shipping)} />
-          <SummaryRow label="VIAL fee" value={money(cart.platformFee)} />
+          <SummaryRow label="VialGrade fee" value={money(cart.platformFee)} />
           <SummaryRow label="Estimated tax" value={money(cart.tax)} />
           <div className="border-t border-white/15 pt-4"><SummaryRow label="Total" value={money(cart.total)} strong /></div>
         </dl>

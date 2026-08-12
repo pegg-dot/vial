@@ -3,22 +3,22 @@ import Link from "next/link";
 import { ArrowUpRight, Boxes, Fingerprint, GitBranch, KeyRound, ScrollText, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Developers — the VIAL registry standard",
-  description: "The canonical VIAL ID scheme, the public registry and reputation endpoints, and the versioned methodology third parties cite.",
+  title: "Developers — the VialGrade registry standard",
+  description: "The canonical VialGrade ID scheme, the public registry and reputation endpoints, and the versioned methodology third parties cite.",
 };
 
 const ID_EXAMPLES = [
-  { id: "vial:compound:bpc-157", of: "A compound in the market data spine" },
-  { id: "vial:vendor:northstar-research", of: "A vendor / research supplier" },
-  { id: "vial:lab:aperture-analytical", of: "A laboratory, sourced from its real profile record" },
-  { id: "vial:batch:hx-bpc-2607", of: "A batch, sourced from its published passport" },
+  { id: "vialgrade:compound:bpc-157", of: "A compound in the market data spine" },
+  { id: "vialgrade:vendor:northstar-research", of: "A vendor / research supplier" },
+  { id: "vialgrade:lab:aperture-analytical", of: "A laboratory, sourced from its real profile record" },
+  { id: "vialgrade:batch:hx-bpc-2607", of: "A batch, sourced from its published passport" },
 ];
 
 const ENDPOINTS = [
-  { method: "GET", path: "/api/public/v1/id/{vialId}", scope: "identity:read", of: "Resolve a canonical ID to its record — aliases, provenance URL, relationships." },
-  { method: "GET", path: "/api/public/v1/resolve?label=&type=", scope: "identity:read", of: "Map a messy real-world label (or a former slug) to a canonical VIAL ID." },
-  { method: "GET", path: "/api/public/v1/batches/{vialBatchId}", scope: "market:read", of: "Batch-history record: decomposed confidence + append-only version history." },
-  { method: "GET", path: "/api/public/v1/reputation/{vialId}", scope: "reputation:read", of: "Reputation record: decomposable, provenance-linked dimensions — never a score." },
+  { method: "GET", path: "/api/public/v1/id/{registryId}", scope: "identity:read", of: "Resolve a canonical ID to its record — aliases, provenance URL, relationships." },
+  { method: "GET", path: "/api/public/v1/resolve?label=&type=", scope: "identity:read", of: "Map a messy real-world label (or a former slug) to a canonical VialGrade ID." },
+  { method: "GET", path: "/api/public/v1/batches/{batchId}", scope: "market:read", of: "Batch-history record: decomposed confidence + append-only version history." },
+  { method: "GET", path: "/api/public/v1/reputation/{registryId}", scope: "reputation:read", of: "Reputation record: decomposable, provenance-linked dimensions — never a score." },
   { method: "GET", path: "/api/public/v1/catalog", scope: "market:read", of: "Published, review-gated catalog projection." },
   { method: "GET", path: "/api/public/v1/signals", scope: "signals:read", of: "Published opportunity/risk signals." },
   { method: "GET", path: "/api/public/v1/export", scope: "export:read", of: "Bounded JSON/CSV export of catalog or signals." },
@@ -39,9 +39,9 @@ export default function DevelopersPage() {
       <section className="border-b-2 border-[#111214]">
         <div className="mx-auto max-w-[1120px] px-5 py-16 sm:px-8 sm:py-24">
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Developers · category infrastructure</p>
-          <h1 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[.94] tracking-[-.065em] sm:text-7xl">Build on the VIAL registry.</h1>
+          <h1 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[.94] tracking-[-.065em] sm:text-7xl">Build on the VialGrade registry.</h1>
           <p className="mt-7 max-w-2xl text-base font-medium leading-7 text-[var(--muted)] sm:text-lg">
-            VIAL publishes stable, resolvable identifiers for compounds, vendors, labs, and batches — bound to a versioned provenance and reputation standard. The identifier is the join key the rest of the ecosystem can cite.
+            VialGrade publishes stable, resolvable identifiers for compounds, vendors, labs, and batches — bound to a versioned provenance and reputation standard. The identifier is the join key the rest of the ecosystem can cite.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/api/openapi.json" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#111214] px-4 py-2.5 text-sm font-bold text-white">OpenAPI document <ArrowUpRight className="size-4" /></Link>
@@ -51,9 +51,9 @@ export default function DevelopersPage() {
       </section>
 
       <section className="mx-auto max-w-[1120px] px-5 py-14 sm:px-8 sm:py-20">
-        <div className="flex items-center gap-2"><Fingerprint className="size-4 text-[#2b31d8]" /><h2 className="text-2xl font-extrabold tracking-[-.03em]">The VIAL ID scheme</h2></div>
+        <div className="flex items-center gap-2"><Fingerprint className="size-4 text-[#2b31d8]" /><h2 className="text-2xl font-extrabold tracking-[-.03em]">The VialGrade ID scheme</h2></div>
         <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-          Every identifier is <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[13px]">vial:&#123;type&#125;:&#123;slug&#125;</code>. IDs are immutable and keyed on stable source identity, not the slug — so a rename keeps the same ID and the former slug still resolves.
+          Every identifier is <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[13px]">vialgrade:&#123;type&#125;:&#123;slug&#125;</code>. IDs are immutable and keyed on stable source identity, not the slug — so a rename keeps the same ID and the former slug still resolves.
         </p>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-sm">
@@ -95,7 +95,7 @@ export default function DevelopersPage() {
           <div>
             <div className="flex items-center gap-2"><GitBranch className="size-4 text-[#2b31d8]" /><h2 className="text-2xl font-extrabold tracking-[-.03em]">Batch history is versioned</h2></div>
             <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">A cited passport is a record, not a mutable row. Every material change appends an immutable version, and the headline confidence is decomposed into its basis — which labs, sampling independence, methods, and the established / conflicting / unknown split. Disagreement between independent samples is preserved, never averaged away.</p>
-            <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">An accredited laboratory can attach corroborating evidence to a batch by posting to <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[12px]">/api/public/v1/id/&#123;vialId&#125;/evidence-proposals</code> with an <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[12px]">evidence:propose</code> token. Submissions land in human review — they never publish automatically.</p>
+            <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">An accredited laboratory can attach corroborating evidence to a batch by posting to <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[12px]">/api/public/v1/id/&#123;registryId&#125;/evidence-proposals</code> with an <code className="rounded bg-black/[.05] px-1.5 py-0.5 font-mono text-[12px]">evidence:propose</code> token. Submissions land in human review — they never publish automatically.</p>
           </div>
           <div>
             <div className="flex items-center gap-2"><ScrollText className="size-4 text-[#2b31d8]" /><h2 className="text-2xl font-extrabold tracking-[-.03em]">Reputation, methodology {`reputation-v1`}</h2></div>

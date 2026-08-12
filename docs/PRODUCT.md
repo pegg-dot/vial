@@ -2,7 +2,7 @@
 
 ## Product summary
 
-VIAL is an evidence-first market interface for fictional peptide research listings. It lets users search, compare, save, inspect, and monitor products without flattening documentation quality into one unexplained score.
+VialGrade is an evidence-first market interface for fictional peptide research listings. It lets users search, compare, save, inspect, and monitor products without flattening documentation quality into one unexplained score.
 
 The public interface is intentionally simple. The operational system underneath it preserves sources, snapshots, changes, human decisions, causal traces, alerts, and second-order market signals.
 
@@ -109,7 +109,7 @@ The current build implements only information display. It does not activate outb
 ### Public signals
 
 1. User opens the signals page.
-2. VIAL shows selected cross-market conditions such as price dispersion, thin availability, evidence gaps, or concentration.
+2. VialGrade shows selected cross-market conditions such as price dispersion, thin availability, evidence gaps, or concentration.
 3. Each card states that it is an informational market signal, not a recommendation.
 4. Sensitive operational signals remain staff-only.
 
@@ -120,7 +120,7 @@ The current build implements only information display. It does not activate outb
 1. Staff define or inspect a source policy.
 2. A manual action or schedule creates a durable job.
 3. The transport validates the source before reading content.
-4. VIAL captures an immutable snapshot and diff.
+4. VialGrade captures an immutable snapshot and diff.
 5. Only changed claims enter review.
 6. The job, attempt, tools, and events remain inspectable.
 
@@ -205,6 +205,6 @@ Complete. A source can be scheduled, fetched through a bounded transport, diffed
 Not complete. Production still requires a labeled accuracy benchmark, versioned migrations, real source publication policies, source disputes and correction workflows, reviewer assignment, durable accounts, notification delivery, monitoring, and production access controls.
 
 
-## VIAL 5 commerce product
+## VialGrade 5 commerce product
 
 The consumer checkout is a policy-gated surface, not a universal buy button. It explains the active provider mode, merchant model, and individual activation checks before creating a provider payment. Seller and staff workspaces expose onboarding requirements, underwriting, activation decisions, provider events, transfers, reserves, and settlement without allowing sellers to approve themselves.

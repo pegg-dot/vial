@@ -2,7 +2,7 @@
 
 ## Current truth
 
-VIAL runs a bounded, tool-oriented workflow for source refresh and publication. The specialist stages are implemented with deterministic code so the initial system is reproducible, testable, and easy to audit.
+VialGrade runs a bounded, tool-oriented workflow for source refresh and publication. The specialist stages are implemented with deterministic code so the initial system is reproducible, testable, and easy to audit.
 
 The design supports future model-assisted extraction or entity resolution, but no free-form model output controls authentication, permissions, publication, alerts, opportunity state, or transactions.
 
@@ -276,6 +276,6 @@ Add model assistance only where deterministic extraction has measured limits:
 
 The next operational tools should focus on reviewer assignment, source policy templates, source disputes, and durable notifications rather than broader autonomous browsing.
 
-## VIAL Laboratory MCP
+## VialGrade Laboratory MCP
 
 The V6 laboratory MCP server exposes scoped read tools and proposal tools. It can inspect laboratory status, orders, methods, and custody and prepare analytical-result or report-draft proposals. It cannot approve a result, sign or issue a report, revoke a report, publish a passport, or change evidence policy. Those authorities remain in conventional permissioned application code.

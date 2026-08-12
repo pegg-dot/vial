@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { getEnvironment, resetEnvironmentForTests } from "@/server/config/env";
 import { MockCommerceProvider, MockFraudProvider, MockTaxProvider } from "@/server/commerce/providers/mock";
 
-const tracked = ["NODE_ENV", "VIAL_COMMERCE_MODE", "VIAL_PAYMENT_PROVIDER", "STRIPE_SECRET_KEY", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET", "VIAL_LIVE_COMMERCE_ENABLED", "VIAL_LIVE_COMMERCE_ACK"] as const;
+const tracked = ["NODE_ENV", "VIALGRADE_COMMERCE_MODE", "VIALGRADE_PAYMENT_PROVIDER", "STRIPE_SECRET_KEY", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET", "VIALGRADE_LIVE_COMMERCE_ENABLED", "VIALGRADE_LIVE_COMMERCE_ACK"] as const;
 const mutableEnv = process.env as Record<string, string | undefined>;
 const original = Object.fromEntries(tracked.map((key) => [key, mutableEnv[key]]));
 
@@ -18,8 +18,8 @@ afterEach(() => {
 describe("VIAL 5 commerce contracts", () => {
   it("rejects live Stripe keys outside live mode", () => {
     Object.assign(process.env, { NODE_ENV: "test" });
-    process.env.VIAL_PAYMENT_PROVIDER = "stripe";
-    process.env.VIAL_COMMERCE_MODE = "test";
+    process.env.VIALGRADE_PAYMENT_PROVIDER = "stripe";
+    process.env.VIALGRADE_COMMERCE_MODE = "test";
     process.env.STRIPE_SECRET_KEY = "sk_live_forbidden";
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_live_forbidden";
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_forbidden";
@@ -29,12 +29,12 @@ describe("VIAL 5 commerce contracts", () => {
 
   it("requires independent gates before live commerce", () => {
     Object.assign(process.env, { NODE_ENV: "test" });
-    process.env.VIAL_PAYMENT_PROVIDER = "stripe";
-    process.env.VIAL_COMMERCE_MODE = "live";
+    process.env.VIALGRADE_PAYMENT_PROVIDER = "stripe";
+    process.env.VIALGRADE_COMMERCE_MODE = "live";
     process.env.STRIPE_SECRET_KEY = "sk_live_example";
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_live_example";
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_example";
-    process.env.VIAL_LIVE_COMMERCE_ENABLED = "false";
+    process.env.VIALGRADE_LIVE_COMMERCE_ENABLED = "false";
     resetEnvironmentForTests();
     expect(() => getEnvironment()).toThrow(/Live commerce is disabled/);
   });
@@ -43,19 +43,19 @@ describe("VIAL 5 commerce contracts", () => {
 
   it("accepts a complete Stripe test configuration", () => {
     Object.assign(process.env, { NODE_ENV: "test" });
-    process.env.VIAL_PAYMENT_PROVIDER = "stripe";
-    process.env.VIAL_COMMERCE_MODE = "test";
+    process.env.VIALGRADE_PAYMENT_PROVIDER = "stripe";
+    process.env.VIALGRADE_COMMERCE_MODE = "test";
     process.env.STRIPE_SECRET_KEY = "sk_test_example";
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_example";
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_example";
     resetEnvironmentForTests();
-    expect(getEnvironment().VIAL_COMMERCE_MODE).toBe("test");
+    expect(getEnvironment().VIALGRADE_COMMERCE_MODE).toBe("test");
   });
 
   it("requires a webhook secret for Stripe because order finalization is asynchronous", () => {
     Object.assign(process.env, { NODE_ENV: "test" });
-    process.env.VIAL_PAYMENT_PROVIDER = "stripe";
-    process.env.VIAL_COMMERCE_MODE = "test";
+    process.env.VIALGRADE_PAYMENT_PROVIDER = "stripe";
+    process.env.VIALGRADE_COMMERCE_MODE = "test";
     process.env.STRIPE_SECRET_KEY = "sk_test_example";
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_example";
     delete process.env.STRIPE_WEBHOOK_SECRET;

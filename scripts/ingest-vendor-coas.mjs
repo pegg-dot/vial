@@ -1,9 +1,9 @@
-process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
+process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Ingest vendor-published, independent-lab COAs (the green "independently tested" path) WITHOUT
 // re-fetching live catalogs. Records each certificate tied to its vendor's slug so the vendor's
 // "Independently tested?" reputation dimension reflects real third-party evidence. Idempotent
 // (keyed on the certificate URL). Gated; run with the dev server stopped.
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-vendor-coas.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-vendor-coas.mjs
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
 import { upsertLiveVendor, recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
@@ -16,7 +16,7 @@ import { reconcileVendorKinds } from "../src/server/catalog/vendor-kind.ts";
 import { recordRegulatoryAction } from "../src/server/regulatory/repository.ts";
 import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const DATA = new URL("./data/", import.meta.url);
 const readJson = (name) => JSON.parse(readFileSync(new URL(name, DATA), "utf8"));
@@ -33,7 +33,7 @@ const seenVendors = new Map();
 for (const v of vcoas) if (!seenVendors.has(v.vendorSlug)) seenVendors.set(v.vendorSlug, v.vendorName);
 for (const [slug, name] of seenVendors) {
   const existing = (await db.query(`SELECT 1 FROM organizations WHERE slug=$1`, [slug])).rows.length > 0;
-  if (!existing) await upsertLiveVendor(db, { slug, name, domains: [], description: `Research-peptide vendor. Aggregated from public sources; VIAL does not endorse any vendor.` });
+  if (!existing) await upsertLiveVendor(db, { slug, name, domains: [], description: `Research-peptide vendor. Aggregated from public sources; VialGrade does not endorse any vendor.` });
 }
 
 let green = 0, byVendor = {};

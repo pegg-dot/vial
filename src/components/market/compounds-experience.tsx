@@ -12,7 +12,7 @@ import { StackCard } from "./stack-card";
 import { CompoundMarketTable } from "./compound-market-table";
 import { QuickViewModal } from "./quick-view-modal";
 
-// The compound directory — VIAL's "terminal". A ranked market table (default) or
+// The compound directory — VialGrade's "terminal". A ranked market table (default) or
 // category shelves, plus a trending strip and stacks, all with quick-view.
 export function CompoundsExperience({ initialShelf = null }: { initialShelf?: string | null }) {
   const { catalog } = useMarketplace();

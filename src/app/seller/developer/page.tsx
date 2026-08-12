@@ -17,9 +17,9 @@ export default async function SellerDeveloperPage() {
     db.query(`SELECT d.* FROM seller_webhook_deliveries d JOIN seller_webhook_endpoints e ON e.id=d.endpoint_id WHERE e.seller_id=$1 ORDER BY d.created_at DESC LIMIT 25`, [context.sellerId]),
   ]);
   const tokens = tokenResult.rows as TokenRow[];
-  const configuration = JSON.stringify({ mcpServers: { vialSeller: { command: "npm", args: ["run", "mcp:seller"], env: { VIAL_MCP_SELLER_TOKEN: "paste-token-here", VIAL_DATABASE_URL: "postgres://…" } } } }, null, 2);
+  const configuration = JSON.stringify({ mcpServers: { vialSeller: { command: "npm", args: ["run", "mcp:seller"], env: { VIALGRADE_MCP_SELLER_TOKEN: "paste-token-here", VIALGRADE_DATABASE_URL: "postgres://…" } } } }, null, 2);
   return <>
-    <SellerPageHeader title="Developer" description="Connect automation through scoped APIs or the VIAL Seller MCP. Read and proposal tools are available; publishing and approval remain human-gated." />
+    <SellerPageHeader title="Developer" description="Connect automation through scoped APIs or the VialGrade Seller MCP. Read and proposal tools are available; publishing and approval remain human-gated." />
     <div className="mt-7 grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
       <Panel title="Scoped API tokens" description="Create least-privilege tokens for an approved seller operator."><DeveloperTokenClient initialTokens={tokens} /></Panel>
       <div className="space-y-6">

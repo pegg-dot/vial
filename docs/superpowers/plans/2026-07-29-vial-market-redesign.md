@@ -1,8 +1,8 @@
-# VIAL Market & Compounds Redesign Implementation Plan
+# VialGrade Market & Compounds Redesign Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the flat `/market` (≈408-listing) and `/compounds` (≈60-compound) walls into a StockX/GOAT/CoinMarketCap-grade browse experience — 9-shelf categories, algorithmic curated rows, a terminal ranked table, stacks/blends, and a quick-view modal with prev/next paging — that also conveys what VIAL is (the verification layer).
+**Goal:** Turn the flat `/market` (≈408-listing) and `/compounds` (≈60-compound) walls into a StockX/GOAT/CoinMarketCap-grade browse experience — 9-shelf categories, algorithmic curated rows, a terminal ranked table, stacks/blends, and a quick-view modal with prev/next paging — that also conveys what VialGrade is (the verification layer).
 
 **Architecture:** Presentation-only. Three **pure modules** (`market-taxonomy`, `stacks`, `curation`) compute all grouping/ranking/trust from the existing `CatalogSnapshot`; a set of **shared UI components** render them; two client **experience** orchestrators (`market-experience`, `compounds-experience`) read the catalog already shipped to the browser by the root-layout `MarketplaceProvider` (`useMarketplace()`), hold quick-view state, and compose the rows. No backend/schema/ingestion/trust-logic changes.
 
@@ -473,10 +473,10 @@ export function TrustTierChip({ tier }: { tier: TrustTier }) {
 - [ ] **Step 1: Implement** — a 3-cell band under the hero. Each cell: `ink-1 hard rounded-[18px] bg-white p-5`, an icon chip (`Layers3`/`ShieldCheck`/`ArrowUpRight`), a bold title + one muted line:
   1. **Every vendor & price, side by side** — "One screen for what a compound costs across the market."
   2. **Cross-checked against independent lab tests** — "Real third-party COAs you can verify — not vendor marketing."
-  3. **We hand you to the vendor** — "VIAL never sells or takes payment. It keeps you from getting scammed."
+  3. **We hand you to the vendor** — "VialGrade never sells or takes payment. It keeps you from getting scammed."
   Grid `sm:grid-cols-3 gap-4`. No "safe"/endorsement language.
 - [ ] **Step 2: Verify** — `npm run typecheck`.
-- [ ] **Step 3: Commit** — `git commit -m "feat(market): what-VIAL-is value band"`
+- [ ] **Step 3: Commit** — `git commit -m "feat(market): what-VialGrade-is value band"`
 
 ---
 

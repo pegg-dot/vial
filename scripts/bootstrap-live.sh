@@ -5,22 +5,22 @@
 #
 # Usage:
 #   # Production (managed Postgres):
-#   DATABASE_URL=postgres://…  VIAL_LIVE_INGEST_APPROVED=true  ./scripts/bootstrap-live.sh
-#   # Local dev (file-backed PGlite): just VIAL_LIVE_INGEST_APPROVED=true ./scripts/bootstrap-live.sh
+#   DATABASE_URL=postgres://…  VIALGRADE_LIVE_INGEST_APPROVED=true  ./scripts/bootstrap-live.sh
+#   # Local dev (file-backed PGlite): just VIALGRADE_LIVE_INGEST_APPROVED=true ./scripts/bootstrap-live.sh
 #
-# Requires: VIAL_LIVE_INGEST_APPROVED=true (live network + writes are gated). Never seeds demos
-# (each script self-guards VIAL_SEED_FIXTURES=false). Run with the dev server STOPPED locally
+# Requires: VIALGRADE_LIVE_INGEST_APPROVED=true (live network + writes are gated). Never seeds demos
+# (each script self-guards VIALGRADE_SEED_FIXTURES=false). Run with the dev server STOPPED locally
 # (file-backed PGlite is single-writer); on managed Postgres that doesn't apply.
 set -euo pipefail
-export VIAL_SEED_FIXTURES=false
+export VIALGRADE_SEED_FIXTURES=false
 
-if [ "${VIAL_LIVE_INGEST_APPROVED:-}" != "true" ]; then
-  echo "Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true (live network + writes are gated)."; exit 1
+if [ "${VIALGRADE_LIVE_INGEST_APPROVED:-}" != "true" ]; then
+  echo "Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true (live network + writes are gated)."; exit 1
 fi
 
 run() { echo; echo "▶ $*"; node --import tsx "$@"; }
 
-echo "== VIAL live-data bootstrap =="
+echo "== VialGrade live-data bootstrap =="
 echo "Target: ${DATABASE_URL:+managed Postgres}${DATABASE_URL:-local PGlite}"
 
 # 1) Compounds + vendor profiles + live Shopify/WooCommerce catalogs + Janoshik feed COAs + flags +

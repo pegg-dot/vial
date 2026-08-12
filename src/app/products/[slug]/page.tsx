@@ -164,8 +164,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <p className="mt-3 text-[11px] leading-4 text-[var(--muted)]">
               {product.origin === "live"
-                ? "Real listing aggregated from the vendor's public page. Buying happens on their site, never on VIAL — outbound links stay off until the affiliate step is approved."
-                : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VIAL."}
+                ? "Real listing aggregated from the vendor's public page. Buying happens on their site, never on VialGrade — outbound links stay off until the affiliate step is approved."
+                : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VialGrade."}
             </p>
           </div>
         </div>
@@ -206,7 +206,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {compoundLabTests.length > 0 && (
           <div className="mt-6">
-            <p className="mb-2 text-[12px] font-semibold leading-5 text-[var(--muted)]">These certificates are for <strong className="text-black/70">{compound.name}</strong> across <strong className="text-black/70">every maker VIAL tracks</strong> — not necessarily {vendor.name}&rsquo;s own stock. This listing&rsquo;s specific evidence is the matrix above.</p>
+            <p className="mb-2 text-[12px] font-semibold leading-5 text-[var(--muted)]">These certificates are for <strong className="text-black/70">{compound.name}</strong> across <strong className="text-black/70">every maker VialGrade tracks</strong> — not necessarily {vendor.name}&rsquo;s own stock. This listing&rsquo;s specific evidence is the matrix above.</p>
             <LabTestsPanel tests={compoundLabTests} heading={`Independent lab tests on record for ${compound.name}`} />
           </div>
         )}

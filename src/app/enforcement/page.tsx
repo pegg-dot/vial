@@ -42,7 +42,7 @@ export default async function Page() {
       {actions.length === 0 && <p className="text-sm font-medium text-[var(--muted)]">No enforcement records ingested yet.</p>}
       <div className="ink mt-10 rounded-[20px] bg-[#111214] p-7 text-white shadow-[5px_5px_0_0_#d3372c]"><Scale className="size-5 text-[#ff9b8f]" />
         <h2 className="mt-5 text-2xl font-extrabold">A record is a fact, not a verdict on the product.</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">An FDA warning letter usually means a seller marketed unapproved drugs &mdash; it doesn&rsquo;t always mean the specific product you&rsquo;re looking at is impure. We show the record and the source so you can judge; we distinguish a proven criminal outcome from a mere charge, and a warning letter from a conviction. We never infer guilt VIAL cannot source.</p>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">An FDA warning letter usually means a seller marketed unapproved drugs &mdash; it doesn&rsquo;t always mean the specific product you&rsquo;re looking at is impure. We show the record and the source so you can judge; we distinguish a proven criminal outcome from a mere charge, and a warning letter from a conviction. We never infer guilt VialGrade cannot source.</p>
       </div>
     </section>
   </div>;

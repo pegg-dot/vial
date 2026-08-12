@@ -1,4 +1,4 @@
-# VIAL changelog
+# VialGrade changelog
 
 ## 5.0.0 - Approved commerce architecture
 

@@ -1,4 +1,4 @@
-# VIAL 1.0 threat model
+# VialGrade 1.0 threat model
 
 ## Protected assets
 
@@ -61,7 +61,7 @@ Controls include lockfiles, dependency audit gates, CI verification, static secu
 
 Controls include versioned migrations, full embedded restore drills, PostgreSQL backup scripts, readiness probes, and documented recovery steps. Provider-level point-in-time recovery must be enabled in production.
 
-## VIAL 5 payment-specific threats
+## VialGrade 5 payment-specific threats
 
 ### Forged or duplicated provider events
 
@@ -87,7 +87,7 @@ Controls include customer-only cart, checkout, order, and checkout-status bounda
 
 Controls include separate sandbox, test, and live modes; key-prefix validation; required webhook secret; explicit enable and acknowledgement gates; versioned activation policies; and per-seller, per-SKU, per-customer, per-jurisdiction checks.
 
-## VIAL 6 evidence-network threats
+## VialGrade 6 evidence-network threats
 
 ### Custody-history tampering
 

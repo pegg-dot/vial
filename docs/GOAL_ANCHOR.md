@@ -10,7 +10,7 @@ A market participant who currently moves between vendor sites, community discuss
 
 ## Core value
 
-VIAL turns disconnected claims into normalized, dated, source-aware records and makes every downstream consequence traceable.
+VialGrade turns disconnected claims into normalized, dated, source-aware records and makes every downstream consequence traceable.
 
 The product is real when a user can answer:
 
@@ -80,6 +80,6 @@ Operational hardening and benchmarked coverage:
 Every feature should improve comparison quality, evidence clarity, freshness, record integrity, or the ability to understand downstream effects. Features that do not advance one of those outcomes belong in the parking lot.
 
 
-## VIAL 5.0 current phase
+## VialGrade 5.0 current phase
 
 The current release adds approved-commerce architecture: provider onboarding, underwriting, activation decisions, processor intent and event handling, tax and fraud boundaries, transfers, reserves, settlement, and a fail-closed live-mode gate. Production transactions remain outside the current boundary until external approvals exist.

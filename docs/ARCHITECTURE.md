@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-VIAL is a Next.js modular monolith backed by PostgreSQL-compatible storage. It now includes a controlled refresh scheduler and a causal intelligence graph.
+VialGrade is a Next.js modular monolith backed by PostgreSQL-compatible storage. It now includes a controlled refresh scheduler and a causal intelligence graph.
 
 ```mermaid
 flowchart TD
@@ -60,7 +60,7 @@ flowchart TD
 
 ### Local development
 
-PGlite stores a PostgreSQL-compatible database in `.data/pglite`. It can also run in memory for builds, tests, and audit servers through `VIAL_PGLITE_MEMORY=true`.
+PGlite stores a PostgreSQL-compatible database in `.data/pglite`. It can also run in memory for builds, tests, and audit servers through `VIALGRADE_PGLITE_MEMORY=true`.
 
 ### Deployed environments
 
@@ -105,7 +105,7 @@ Live HTTP is constrained before any content reaches the extractor:
 
 ## Causal cascade
 
-An approved claim does more than update one listing. VIAL creates an explicit event tree under the same root that began the source change.
+An approved claim does more than update one listing. VialGrade creates an explicit event tree under the same root that began the source change.
 
 ```mermaid
 flowchart TD
@@ -220,7 +220,7 @@ Deferred. Current listing checkout mode is information-only. No payment or trans
   fails if the version count diverges from the registered migrations.
 - Source artifacts are stored in PostgreSQL rather than content-addressed object storage, and the
   rendered report/raw-data artifacts behind `document_hash`/`raw_data_hash` are not persisted — so
-  verification confirms a hash VIAL holds but cannot yet reproduce the artifact for an outsider.
+  verification confirms a hash VialGrade holds but cannot yet reproduce the artifact for an outsider.
 - No real external source is enabled in the fictional seed.
 - No robots or terms policy evaluation is automated.
 - The extractor is deterministic; the model provider seam exists but stays inert until benchmarked
@@ -241,7 +241,7 @@ Deferred. Current listing checkout mode is information-only. No payment or trans
 7. Search specialization after measured need
 8. Carefully gated policy and commerce modules only if legally supportable
 
-## VIAL 2.0 market-data plane
+## VialGrade 2.0 market-data plane
 
 V2 adds four bounded modules inside the modular monolith:
 

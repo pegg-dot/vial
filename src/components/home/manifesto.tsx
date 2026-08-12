@@ -7,7 +7,7 @@ const MOST = [
   "Reviews you can’t tell are real",
   "Pages that vanish when they get caught",
 ];
-const VIAL = [
+const VialGrade = [
   "The third-party COA, linked to the batch",
   "Purity read off the actual certificate",
   "Reputation pulled from public records",
@@ -22,12 +22,12 @@ export function HomeManifesto() {
       </div>
       <div className="mx-auto max-w-[1080px] px-5 py-20 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Why VIAL exists</p>
+          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Why VialGrade exists</p>
           <h2 className="mt-4 text-balance text-[clamp(2.6rem,6vw,4.4rem)] font-extrabold leading-[.92] tracking-[-.045em]">
             The whole market runs on <span className="text-[#2b31d8]">&ldquo;trust me.&rdquo;</span>
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg font-medium leading-8 text-[var(--muted)]">
-            Grey-market peptides are sold on a stranger&rsquo;s word and a purity number you can&rsquo;t check. VIAL replaces the word with the receipt.
+            Grey-market peptides are sold on a stranger&rsquo;s word and a purity number you can&rsquo;t check. VialGrade replaces the word with the receipt.
           </p>
         </div>
 
@@ -44,11 +44,11 @@ export function HomeManifesto() {
             </ul>
           </div>
           <div className="ink hard-blue relative rounded-[22px] bg-white p-7 sm:p-9">
-            <span className="ink absolute right-6 top-6 rounded-full bg-[#2b31d8] px-3 py-1 text-[11px] font-bold uppercase tracking-[.1em] text-white">The VIAL way</span>
+            <span className="ink absolute right-6 top-6 rounded-full bg-[#2b31d8] px-3 py-1 text-[11px] font-bold uppercase tracking-[.1em] text-white">The VialGrade way</span>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">What you get here</p>
             <p className="mt-3 max-w-[15ch] text-2xl font-extrabold tracking-[-.03em] text-[#111214]">Here&rsquo;s the test. Check it yourself.</p>
             <ul className="mt-6 space-y-3.5">
-              {VIAL.map((t) => (
+              {VialGrade.map((t) => (
                 <li key={t} className="flex items-start gap-3 text-[15px] font-semibold leading-6 text-[#111214]">
                   <span className="ink-1 mt-0.5 grid size-6 shrink-0 place-items-center rounded-md bg-[#2b31d8]"><Check className="size-3.5 text-white" /></span>{t}
                 </li>

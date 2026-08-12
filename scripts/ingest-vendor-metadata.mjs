@@ -5,14 +5,14 @@
 // location are merged onto the vendor record (never overwriting existing values with blanks).
 //
 // Live-data write to the dev DB. Gated; run with the dev server STOPPED.
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-vendor-metadata.mjs
-process.env.VIAL_SEED_FIXTURES ||= "false";
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-vendor-metadata.mjs
+process.env.VIALGRADE_SEED_FIXTURES ||= "false";
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
 import { recordAggregatorRating } from "../src/server/external/repository.ts";
 import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const file = new URL("./data/vendor-trustpilot.json", import.meta.url);
 if (!existsSync(file)) { console.log("No vendor-trustpilot.json found."); process.exit(1); }

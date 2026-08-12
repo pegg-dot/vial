@@ -3,7 +3,7 @@ import Link from "next/link";
 import { EyeOff, FlaskConical, PackageSearch, Users } from "lucide-react";
 import { getSamplingStats } from "@/server/public-repository";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Independent testing", description: "Who selected the sample — blind vs vendor-submitted — across the certificates VIAL aggregates." };
+export const metadata: Metadata = { title: "Independent testing", description: "Who selected the sample — blind vs vendor-submitted — across the certificates VialGrade aggregates." };
 
 export default async function Page() {
   const s = await getSamplingStats();
@@ -17,7 +17,7 @@ export default async function Page() {
   return <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24">
     <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]">Independent testing</p>
     <h1 className="mt-4 max-w-5xl text-5xl font-extrabold tracking-[-.065em] sm:text-7xl">The question is not only what passed. It is who selected the sample.</h1>
-    <p className="mt-6 max-w-3xl text-base font-medium leading-7 text-[var(--muted)]">A certificate is only as strong as how its sample was chosen. Across the {s.total} certificates VIAL aggregates, here is how many were sampled each way. We don&rsquo;t run these tests &mdash; we surface who did and how the sample was obtained.</p>
+    <p className="mt-6 max-w-3xl text-base font-medium leading-7 text-[var(--muted)]">A certificate is only as strong as how its sample was chosen. Across the {s.total} certificates VialGrade aggregates, here is how many were sampled each way. We don&rsquo;t run these tests &mdash; we surface who did and how the sample was obtained.</p>
     <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{models.map(([code, Icon, title, text, stat]) =>
       <div key={code} className="ink-1 hard rounded-[18px] bg-white p-6">
         <span className="ink-1 grid size-11 place-items-center rounded-2xl bg-[#e6fbf4]"><Icon className="size-5 text-[#0e8f80]" /></span>

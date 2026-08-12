@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 // Outbound handoff: /go?l=<listingSlug>. Records the click (demand data) and 302-redirects to the
 // vendor's own product page. The destination is resolved server-side from the listing's stored
-// external_url — never from the request — so this is not an open redirect. VIAL never sells or
+// external_url — never from the request — so this is not an open redirect. VialGrade never sells or
 // touches money; this simply hands the buyer to the vendor, and is the seam where affiliate
 // monetization attaches. Unknown/demo/urlless listings fall back to the market.
 export async function GET(request: Request) {

@@ -8,17 +8,17 @@
 // simply have no archive yet — that's honest, they're skipped.
 //
 // Live network + writes to the dev DB. Gated; run with the dev server STOPPED.
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-wayback-prices.mjs [maxListings]
-process.env.VIAL_SEED_FIXTURES ||= "false";
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-wayback-prices.mjs [maxListings]
+process.env.VIALGRADE_SEED_FIXTURES ||= "false";
 import { getDatabase } from "../src/server/db/client.ts";
 import { extractArchivedPrice, snapshotDate } from "../src/server/ingest/wayback-prices.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const MAX = Number(process.argv[2] ?? 60);
 const TARGET_DATES = ["20240101", "20240601", "20241101", "20250401", "20250901", "20260201"];
-const UA = "Mozilla/5.0 (compatible; VIAL-Wayback/1.0)";
+const UA = "Mozilla/5.0 (compatible; VialGrade-Wayback/1.0)";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchText(url, throttle, tries = 3) {

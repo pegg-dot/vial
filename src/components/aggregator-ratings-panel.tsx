@@ -2,7 +2,7 @@ import { ExternalLink, Gauge } from "lucide-react";
 import type { AggregatorRating } from "@/server/external/repository";
 
 // What independent third-party aggregators publish about a vendor. Each row is attributed to its
-// source and links out — VIAL reports what the aggregator says, never adopts it as our own verdict.
+// source and links out — VialGrade reports what the aggregator says, never adopts it as our own verdict.
 const SOURCE_LABEL: Record<string, string> = { peptigrity: "Peptigrity", finnrick: "Finnrick", batchguild: "BatchGuild" };
 
 export function AggregatorRatingsPanel({ ratings, vendorName }: { ratings: AggregatorRating[]; vendorName: string }) {

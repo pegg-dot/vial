@@ -23,12 +23,12 @@ export default function Page() {
 
       <div className="ink-1 mt-8 flex items-start gap-3 rounded-[14px] bg-[#fff4e0] p-4">
         <Scale className="mt-0.5 size-5 shrink-0 text-[#b26a00]" />
-        <p className="text-sm leading-6 text-[#111214]/80"><span className="font-semibold">This is general information, not legal or medical advice.</span> VIAL sells nothing, encourages no human use, and is not a law firm. Laws change and vary by state — consult a licensed attorney and physician for your situation.</p>
+        <p className="text-sm leading-6 text-[#111214]/80"><span className="font-semibold">This is general information, not legal or medical advice.</span> VialGrade sells nothing, encourages no human use, and is not a law firm. Laws change and vary by state — consult a licensed attorney and physician for your situation.</p>
       </div>
 
       <section className="mt-12">
         <h2 className="text-2xl font-extrabold tracking-[-.04em]">Three legal categories</h2>
-        <p className="mt-2 text-sm text-[var(--muted)]">Not everything on VIAL sits in the same legal bucket. The status on each compound page tells you which one it’s in.</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">Not everything on VialGrade sits in the same legal bucket. The status on each compound page tells you which one it’s in.</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {CATEGORIES.map((c) => {
             const Icon = c.icon;
@@ -58,7 +58,7 @@ export default function Page() {
         </div>
       </section>
 
-      <p className="mt-10 text-sm leading-7 text-[var(--muted)]">The bottom line: buying most research peptides in the US isn’t itself a crime, but nothing here is FDA-approved, tested for human safety, or sold as fit to use — and the prescription drugs and investigational agonists carry sharply higher legal exposure. VIAL exists to make that reality legible, not to tell you what to do with it.</p>
+      <p className="mt-10 text-sm leading-7 text-[var(--muted)]">The bottom line: buying most research peptides in the US isn’t itself a crime, but nothing here is FDA-approved, tested for human safety, or sold as fit to use — and the prescription drugs and investigational agonists carry sharply higher legal exposure. VialGrade exists to make that reality legible, not to tell you what to do with it.</p>
 
       <div className="mt-8 flex flex-wrap gap-3 text-sm font-bold text-[#2b31d8]">
         <Link href="/legal/disclaimer">Research & medical disclaimer</Link>

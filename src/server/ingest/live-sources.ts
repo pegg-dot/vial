@@ -10,12 +10,12 @@
 // the commerce double-gate. Live fetching is intentional, never a silent default.
 
 import type { SqlConnection } from "@/server/db/client";
-import { mintVialId } from "@/server/registry/repository";
+import { mintRegistryId } from "@/server/registry/repository";
 
 export class LiveIngestNotApprovedError extends Error {
   constructor() {
     super(
-      "Live ingest is not approved. Set VIAL_LIVE_INGEST_APPROVED=true (or pass { approved: true }) to register real HTTP sources.",
+      "Live ingest is not approved. Set VIALGRADE_LIVE_INGEST_APPROVED=true (or pass { approved: true }) to register real HTTP sources.",
     );
     this.name = "LiveIngestNotApprovedError";
   }
@@ -23,7 +23,7 @@ export class LiveIngestNotApprovedError extends Error {
 
 export function isLiveIngestApproved(options?: { approved?: boolean }): boolean {
   if (options?.approved === true) return true;
-  return process.env.VIAL_LIVE_INGEST_APPROVED === "true";
+  return process.env.VIALGRADE_LIVE_INGEST_APPROVED === "true";
 }
 
 function initials(name: string): string {
@@ -72,10 +72,10 @@ export async function upsertLiveVendor(db: SqlConnection, input: LiveVendorInput
       new Date().toISOString().slice(0, 10),
     ],
   );
-  // Mint a public, resolvable vial:vendor: ID so live vendors appear in the registry /
+  // Mint a public, resolvable vialgrade:vendor: ID so live vendors appear in the registry /
   // public ID API alongside demo entities (the ingest previously skipped this, so the
   // "citeable identity" product excluded 100% of real data).
-  await mintVialId(db, { entityType: "vendor", sourceEntityType: "organization", sourceEntityId: id, displayName: input.name, slug: input.slug, currentEntityId: id });
+  await mintRegistryId(db, { entityType: "vendor", sourceEntityType: "organization", sourceEntityId: id, displayName: input.name, slug: input.slug, currentEntityId: id });
   return id;
 }
 
@@ -91,7 +91,7 @@ export interface LiveListingInput {
   externalUrl: string;
   accent?: [string, string, string];
   /** A resolved storefront-published Janoshik COA claim for this listing (present = the vendor advertises
-   *  a confirmed Janoshik test VIAL holds for this compound). Stamps the listing's testing claim so the
+   *  a confirmed Janoshik test VialGrade holds for this compound). Stamps the listing's testing claim so the
    *  hardened crossCheckCoa can decide the verdict; never itself a verdict. */
   coa?: { batchCode: string | null };
 }
@@ -124,7 +124,7 @@ export async function upsertLiveListing(db: SqlConnection, input: LiveListingInp
        SET external_url = EXCLUDED.external_url, origin = 'live', checkout_mode = 'outbound', updated_at = NOW()`,
     [listingId, input.slug, productId, JSON.stringify(input.accent ?? ["#6d5dfc", "#8a7bff", "#b777ff"]), input.externalUrl],
   );
-  await mintVialId(db, { entityType: "product", sourceEntityType: "product", sourceEntityId: productId, displayName: input.name, slug: input.slug, currentEntityId: productId });
+  await mintRegistryId(db, { entityType: "product", sourceEntityType: "product", sourceEntityId: productId, displayName: input.name, slug: input.slug, currentEntityId: productId });
   return { productId, listingId };
 }
 
@@ -255,7 +255,7 @@ export async function upsertLiveCompound(db: SqlConnection, input: LiveCompoundI
       input.researchNote ?? DEFAULT_RESEARCH_NOTE,
     ],
   );
-  await mintVialId(db, { entityType: "compound", sourceEntityType: "compound", sourceEntityId: id, displayName: input.name, slug: input.slug, currentEntityId: id });
+  await mintRegistryId(db, { entityType: "compound", sourceEntityType: "compound", sourceEntityId: id, displayName: input.name, slug: input.slug, currentEntityId: id });
   return id;
 }
 
@@ -293,7 +293,7 @@ export async function recordCatalogListing(
     realSourceId = sourceId;
   }
   await db.query(`UPDATE listings SET source_id = $2 WHERE id = $1`, [listingId, realSourceId]);
-  // When the storefront published a Janoshik COA VIAL holds for this compound, stamp the testing claim
+  // When the storefront published a Janoshik COA VialGrade holds for this compound, stamp the testing claim
   // (issuer + the cited batch) so the hardened crossCheckCoa can resolve the verdict. Presence of the
   // claim — not the batch — sets the issuer, since a Janoshik link without a printed batch still means
   // "the vendor advertises a confirmed independent test." Sticky on re-ingest that doesn't re-find it.

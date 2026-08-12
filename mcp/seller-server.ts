@@ -8,9 +8,9 @@ import { matchSellerProduct } from "../src/server/seller/matching";
 
 async function main() {
 
-const rawToken = process.env.VIAL_MCP_SELLER_TOKEN?.trim();
+const rawToken = process.env.VIALGRADE_MCP_SELLER_TOKEN?.trim();
 if (!rawToken) {
-  console.error("VIAL_MCP_SELLER_TOKEN is required");
+  console.error("VIALGRADE_MCP_SELLER_TOKEN is required");
   process.exit(1);
 }
 
@@ -140,7 +140,7 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error("VIAL Seller MCP server ready on stdio");
+console.error("VialGrade Seller MCP server ready on stdio");
 
 }
 

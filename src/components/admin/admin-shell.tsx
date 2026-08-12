@@ -95,7 +95,7 @@ export function AdminShell({ role, principal, children }: { role: StaffRole; pri
         <aside className="border-b-2 border-[#111214] bg-[#111214] p-5 text-white lg:border-b-0 lg:border-r-2 lg:p-6">
           <div className="flex items-start justify-between gap-4 lg:block">
             <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#8fa2ff]">VIAL control plane</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#8fa2ff]">VialGrade control plane</p>
               <p className="mt-2 text-xl font-extrabold tracking-[-.02em]">Market operations</p>
             </div>
             <span className="rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-extrabold uppercase text-white/80">{role}</span>

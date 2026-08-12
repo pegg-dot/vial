@@ -14,11 +14,11 @@ import {
   verifyCustodyChain,
 } from "@/server/evidence-network/repository";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SEED_FIXTURES = "true";
-process.env.VIAL_SEED_DEMO_ACCOUNTS = "true";
-process.env.VIAL_SESSION_SECRET = "evidence-network-session-secret-at-least-32";
-process.env.VIAL_PRIVACY_HASH_SECRET = "evidence-network-privacy-secret-at-least-32";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SEED_FIXTURES = "true";
+process.env.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
+process.env.VIALGRADE_SESSION_SECRET = "evidence-network-session-secret-at-least-32";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "evidence-network-privacy-secret-at-least-32";
 
 describe("VIAL 6.0 evidence and laboratory network", () => {
   beforeAll(async () => { await resetDatabaseForTests(); globalThis.__vialEvidenceSeedPromise = undefined; await ensureEvidenceNetworkSeed(); });

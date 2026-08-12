@@ -4,14 +4,14 @@
 // between "independent" storefronts — Google Analytics / GTM / Facebook-pixel IDs, Shopify handle
 // — then recomputes vendor links (web IDs + shared COA lots + shared upstream manufacturers).
 //
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-vendor-fingerprints.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-vendor-fingerprints.mjs
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { readFileSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
 import { recordFingerprint, computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { dhash } from "../src/server/verify/photo-hash.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const vendors = JSON.parse(readFileSync(new URL("./data/peptide-vendors.json", import.meta.url), "utf8")).filter((v) => !v.redFlag);
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36";

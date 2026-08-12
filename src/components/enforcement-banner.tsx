@@ -6,7 +6,7 @@ const TYPE_LABEL: Record<string, string> = { warning_letter: "Warning letter", i
 
 // The loudest, most sourced signal on a vendor page: a public government enforcement record. Every
 // row links to its primary source, states the outcome plainly, and never editorializes — it's a
-// fact about a government action, not VIAL's accusation.
+// fact about a government action, not VialGrade's accusation.
 export function EnforcementBanner({ actions, vendorName }: { actions: RegulatoryActionRow[]; vendorName: string }) {
   if (actions.length === 0) return null;
   const severe = actions.some((a) => a.severity === "severe");
@@ -21,7 +21,7 @@ export function EnforcementBanner({ actions, vendorName }: { actions: Regulatory
           <h2 className="mt-0.5 text-xl font-semibold tracking-[-.02em]">{severe ? "On a government enforcement record" : `${actions.length} public regulatory record${actions.length === 1 ? "" : "s"}`}</h2>
         </div>
       </div>
-      <p className="mt-3 text-sm leading-6 opacity-85">These are official public records naming {vendorName} (or an operator VIAL matched to it). We report the action and link the source; we do not add an accusation of our own.</p>
+      <p className="mt-3 text-sm leading-6 opacity-85">These are official public records naming {vendorName} (or an operator VialGrade matched to it). We report the action and link the source; we do not add an accusation of our own.</p>
       <div className="mt-4 space-y-3">
         {actions.map((a) => (
           <div key={a.id} className="rounded-2xl bg-white/70 p-4">

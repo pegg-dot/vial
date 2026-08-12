@@ -1,8 +1,8 @@
-process.env.VIAL_PGLITE_MEMORY="true";
-process.env.VIAL_SEED_FIXTURES="true";
-process.env.VIAL_SEED_DEMO_ACCOUNTS="true";
-process.env.VIAL_SESSION_SECRET="market-data-audit-session-secret-32-characters";
-process.env.VIAL_PRIVACY_HASH_SECRET="market-data-audit-privacy-secret-32-characters";
+process.env.VIALGRADE_PGLITE_MEMORY="true";
+process.env.VIALGRADE_SEED_FIXTURES="true";
+process.env.VIALGRADE_SEED_DEMO_ACCOUNTS="true";
+process.env.VIALGRADE_SESSION_SECRET="market-data-audit-session-secret-32-characters";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET="market-data-audit-privacy-secret-32-characters";
 const {getDatabase,resetDatabaseForTests}=await import("../src/server/db/client.ts");
 const {searchMarket}=await import("../src/server/search/engine.ts");
 await resetDatabaseForTests();

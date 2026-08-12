@@ -4,9 +4,9 @@ import { recordLabTest } from "@/server/ingest/lab-tests";
 import { upsertLiveVendor } from "@/server/ingest/live-sources";
 import { projectLiveBatchPassports, getLivePassportEvidence } from "@/server/evidence-network/live-passports";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "live-passport-test-secret-at-least-32-characters-long";
-process.env.VIAL_PRIVACY_HASH_SECRET = "live-passport-privacy-secret-at-least-32-characters";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "live-passport-test-secret-at-least-32-characters-long";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "live-passport-privacy-secret-at-least-32-characters";
 
 const compounds = [{ slug: "bpc-157", name: "BPC-157", aliases: ["bpc157"] }];
 const resolve = { compounds, vendors: [] as { slug: string; name: string; domain: string }[] };

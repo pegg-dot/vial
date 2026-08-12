@@ -89,7 +89,7 @@ export default async function AgentsPage() {
           </div>
           <div className="mt-6 border-t border-white/25 pt-5 text-xs leading-5 text-white/55">
             <p className="font-bold text-white/80">To measure the model</p>
-            <p className="mt-2">Set <span className="font-mono text-white/80">ANTHROPIC_API_KEY</span>, run <span className="font-mono text-white/80">npm run extract:smoke</span>, and — only if it beats the baseline — set <span className="font-mono text-white/80">VIAL_MODEL_EXTRACTOR_APPROVED=true</span>. Until then extraction stays deterministic.</p>
+            <p className="mt-2">Set <span className="font-mono text-white/80">ANTHROPIC_API_KEY</span>, run <span className="font-mono text-white/80">npm run extract:smoke</span>, and — only if it beats the baseline — set <span className="font-mono text-white/80">VIALGRADE_MODEL_EXTRACTOR_APPROVED=true</span>. Until then extraction stays deterministic.</p>
           </div>
         </div>
       </section>
@@ -130,7 +130,7 @@ export default async function AgentsPage() {
                 <span className="text-xs font-medium text-[var(--muted)]">agreement {pct(s.agreement_rate)} · {cents(s.cost_cents)}</span>
               </div>
             ))}
-            {cp.shadowRuns.length === 0 && <p className="ink-1 mt-3 rounded-[12px] bg-[#f7f7f4] px-4 py-6 text-center text-xs font-medium text-[var(--muted)]">No shadow runs yet — set an API key and run with <span className="font-mono">VIAL_EXTRACTOR=shadow</span> to measure the model against live traffic at zero risk.</p>}
+            {cp.shadowRuns.length === 0 && <p className="ink-1 mt-3 rounded-[12px] bg-[#f7f7f4] px-4 py-6 text-center text-xs font-medium text-[var(--muted)]">No shadow runs yet — set an API key and run with <span className="font-mono">VIALGRADE_EXTRACTOR=shadow</span> to measure the model against live traffic at zero risk.</p>}
           </div>
         </div>
       </section>

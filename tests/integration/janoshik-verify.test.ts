@@ -3,9 +3,9 @@ import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { recordLabTest, getLabTestsForVendor } from "@/server/ingest/lab-tests";
 import { annotateJanoshikListings } from "@/server/verify/janoshik-verify";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "janoshik-verify-test-secret-at-least-32-characters";
-process.env.VIAL_PRIVACY_HASH_SECRET = "janoshik-verify-privacy-secret-at-least-32-characters";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "janoshik-verify-test-secret-at-least-32-characters";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "janoshik-verify-privacy-secret-at-least-32-characters";
 
 const resolve = { compounds: [], vendors: [{ slug: "acme-peptide", name: "Acme Peptide", domain: "acme.com" }] };
 const entry = (verifyKey: string, manufacturer = "acme.com") => ({ testId: verifyKey, sampleName: "BPC-157 5mg", manufacturer, client: "", verifyUrl: `https://verify.janoshik.com/tests/1-BPC157_${verifyKey}`, verifyKey, note: "" });

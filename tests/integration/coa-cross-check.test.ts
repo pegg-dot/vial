@@ -3,9 +3,9 @@ import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { crossCheckCoa } from "@/server/verify/coa-cross-check";
 import { newId } from "@/server/db/ids";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "coa-cross-check-test-secret-at-least-32chars";
-process.env.VIAL_PRIVACY_HASH_SECRET = "coa-cross-check-privacy-secret-at-least-32chars";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "coa-cross-check-test-secret-at-least-32chars";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "coa-cross-check-privacy-secret-at-least-32chars";
 
 async function seedLabTest(row: { vendor_slug: string | null; manufacturer: string; compound_slug: string; batch_code?: string; purity?: number; verify?: string; independent?: boolean }) {
   const db = await getDatabase();

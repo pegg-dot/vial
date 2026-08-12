@@ -75,7 +75,7 @@ async function seedEvidenceNetwork() {
   const labOrgId = "org:aperture-analytical";
   await db.query(
     `INSERT INTO organizations(id,slug,organization_type,display_name,legal_name,aliases,domains,profile_status,participation_status,location,founded,description,initials,accent)
-     VALUES($1,'aperture-analytical','laboratory','Aperture Analytical','Aperture Analytical LLC (fictional)',$2::jsonb,$3::jsonb,'claimed','network','Miami, FL','2024','Fictional analytical laboratory used to demonstrate VIAL chain-of-custody and structured-report workflows.','AA',$4::jsonb)
+     VALUES($1,'aperture-analytical','laboratory','Aperture Analytical','Aperture Analytical LLC (fictional)',$2::jsonb,$3::jsonb,'claimed','network','Miami, FL','2024','Fictional analytical laboratory used to demonstrate VialGrade chain-of-custody and structured-report workflows.','AA',$4::jsonb)
      ON CONFLICT(id) DO UPDATE SET organization_type='laboratory',updated_at=NOW()`,
     [labOrgId, JSON.stringify(["Aperture Analytical (fictional)"]), JSON.stringify(["aperture.test"]), JSON.stringify(["#7c3aed", "#2dd4bf"])]
   );
@@ -127,7 +127,7 @@ async function seedEvidenceNetwork() {
     await db.query(`INSERT INTO laboratory_samples(id,test_order_id,kit_id,sample_code,blind_code,source_type,source_entity_id,declared_batch_code,sampling_model,sample_condition,seal_status,storage_condition,quantity_received,quantity_unit,accession_status,accessioned_by,received_at,root_event_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'acceptable','intact','ambient documented',1,'vial','accessioned','user:lab:elena',NOW(),$10) ON CONFLICT(id) DO NOTHING`, [sampleId, orderId, kitId, spec.sample, `BLIND-${spec.suffix}-2607`, spec.model, sellerBatch?.id ?? listing?.id ?? null, batchCode, spec.model, root]);
     const existing = Number((await db.query<QueryResultRow & { count: string | number }>(`SELECT COUNT(*) count FROM sample_custody_events WHERE sample_id=$1`, [sampleId])).rows[0]?.count ?? 0);
     if (!existing) {
-      await addCustodyEventTx(db, { sampleId, eventType: "sample_registered", actorType: "platform", actorId: "vial", location: "VIAL sampling desk", metadata: { samplingModel: spec.model }, rootEventId: root, occurredAt: new Date("2026-07-12T14:00:00Z") });
+      await addCustodyEventTx(db, { sampleId, eventType: "sample_registered", actorType: "platform", actorId: "vial", location: "VialGrade sampling desk", metadata: { samplingModel: spec.model }, rootEventId: root, occurredAt: new Date("2026-07-12T14:00:00Z") });
       await addCustodyEventTx(db, { sampleId, eventType: "seal_applied", actorType: "sampler", actorId: spec.model === "blind_purchase" ? "sampler:independent" : "seller:helixtest", location: "Collection point", metadata: { seal: `SEAL-${spec.suffix}-01` }, rootEventId: root, occurredAt: new Date("2026-07-12T14:15:00Z") });
       await addCustodyEventTx(db, { sampleId, eventType: "received", actorType: "laboratory", actorId: labId, location: "Aperture receiving", metadata: { condition: "acceptable", seal: "intact" }, rootEventId: root, occurredAt: new Date("2026-07-13T16:30:00Z") });
       await addCustodyEventTx(db, { sampleId, eventType: "accessioned", actorType: "user", actorId: "user:lab:elena", location: "Controlled accessioning", metadata: { blindCode: `BLIND-${spec.suffix}-2607` }, rootEventId: root, occurredAt: new Date("2026-07-13T17:00:00Z") });
@@ -163,7 +163,7 @@ async function seedEvidenceNetwork() {
 }
 
 export async function ensureEvidenceNetworkSeed() {
-  const fixturesEnabled = process.env.VIAL_SEED_FIXTURES === "true" || (process.env.NODE_ENV !== "production" && process.env.VIAL_SEED_FIXTURES !== "false");
+  const fixturesEnabled = process.env.VIALGRADE_SEED_FIXTURES === "true" || (process.env.NODE_ENV !== "production" && process.env.VIALGRADE_SEED_FIXTURES !== "false");
   if (!fixturesEnabled) return;
   if (!globalThis.__vialEvidenceSeedPromise) globalThis.__vialEvidenceSeedPromise = seedEvidenceNetwork().catch(error => { globalThis.__vialEvidenceSeedPromise = undefined; throw error; });
   return globalThis.__vialEvidenceSeedPromise;
@@ -243,12 +243,12 @@ export interface BatchConfidenceBasis {
 }
 
 export interface BatchStandardRecord {
-  vialId: string;
+  registryId: string;
   declaredBatchCode: string;
   slug: string;
   status: string;
-  // 'vial-operated' = evidence from VIAL's own sampling/custody chain (demo passports);
-  // 'external-certificates' = aggregated independent third-party COAs VIAL did not sample or
+  // 'vial-operated' = evidence from VialGrade's own sampling/custody chain (demo passports);
+  // 'external-certificates' = aggregated independent third-party COAs VialGrade did not sample or
   // hold in custody. The two carry differently-shaped confidenceBasis objects — consumers should
   // branch on evidenceType. External passports never assert regulatory-grade certainty.
   evidenceType: "vial-operated" | "external-certificates";
@@ -262,18 +262,18 @@ export interface BatchStandardRecord {
   provenanceUrl: string;
 }
 
-// The public batch-history standard record: resolves a vial:batch ID to its current
+// The public batch-history standard record: resolves a vialgrade:batch ID to its current
 // decomposed passport plus the full append-only version history.
-export async function getBatchStandardRecord(vialBatchId: string, connection?: SqlConnection): Promise<BatchStandardRecord | null> {
+export async function getBatchStandardRecord(batchId: string, connection?: SqlConnection): Promise<BatchStandardRecord | null> {
   await ensureEvidenceNetworkSeed();
   const db = connection ?? await getDatabase();
-  const reg = (await db.query<QueryResultRow & { source_entity_id: string; provenance_url: string }>(`SELECT source_entity_id,provenance_url FROM registry_identifiers WHERE vial_id=$1 AND entity_type='batch'`, [vialBatchId])).rows[0];
+  const reg = (await db.query<QueryResultRow & { source_entity_id: string; provenance_url: string }>(`SELECT source_entity_id,provenance_url FROM registry_identifiers WHERE registry_id=$1 AND entity_type='batch'`, [batchId])).rows[0];
   if (!reg) return null;
   const passport = (await db.query<QueryResultRow & Record<string, unknown>>(`SELECT * FROM batch_passports WHERE id=$1 AND status='published'`, [reg.source_entity_id])).rows[0];
   if (!passport) return null;
   const versions = (await db.query<QueryResultRow & { version: number; evidence_confidence: string | number; sampling_level: string; confidence_basis: unknown; created_at: string }>(`SELECT version,evidence_confidence,sampling_level,confidence_basis,created_at FROM passport_versions WHERE passport_id=$1 ORDER BY version DESC`, [passport.id])).rows;
   return {
-    vialId: vialBatchId,
+    registryId: batchId,
     declaredBatchCode: String(passport.declared_batch_code),
     slug: String(passport.slug),
     status: String(passport.status),
@@ -313,7 +313,7 @@ export async function getPublicLaboratory(slug: string) { await ensureEvidenceNe
 export async function listPublicPassports() { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); return (await db.query(`SELECT bp.*,o.display_name vendor_name,o.slug vendor_slug,p.name product_name,c.canonical_name compound_name,c.slug compound_slug_join,l.slug listing_slug,(SELECT COUNT(*) FROM passport_evidence_links pel WHERE pel.passport_id=bp.id AND pel.status='active')+(SELECT COUNT(*) FROM passport_lab_tests plt WHERE plt.passport_id=bp.id) evidence_links,(SELECT COUNT(*) FROM evidence_conflicts ec WHERE ec.passport_id=bp.id AND ec.status='open') open_conflicts FROM batch_passports bp LEFT JOIN organizations o ON o.id=bp.vendor_id LEFT JOIN products p ON p.id=bp.product_id LEFT JOIN compounds c ON c.slug=bp.compound_slug LEFT JOIN listings l ON l.id=bp.listing_id WHERE bp.status='published' ORDER BY bp.origin='live' DESC,bp.evidence_confidence DESC,bp.updated_at DESC`)).rows; }
 export async function getPublicPassportForBatchCode(batchCode: string) { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); return (await db.query(`SELECT bp.*,o.display_name vendor_name,p.name product_name FROM batch_passports bp LEFT JOIN organizations o ON o.id=bp.vendor_id LEFT JOIN products p ON p.id=bp.product_id WHERE bp.status='published' AND LOWER(bp.declared_batch_code)=LOWER($1) ORDER BY bp.updated_at DESC LIMIT 1`, [batchCode])).rows[0] ?? null; }
 export async function getPublicPassport(slug: string) { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); const passport = (await db.query(`SELECT bp.*,o.display_name vendor_name,o.slug vendor_slug,p.name product_name,c.canonical_name compound_name,l.slug listing_slug FROM batch_passports bp LEFT JOIN organizations o ON o.id=bp.vendor_id LEFT JOIN products p ON p.id=bp.product_id LEFT JOIN compounds c ON c.slug=bp.compound_slug LEFT JOIN listings l ON l.id=bp.listing_id WHERE bp.slug=$1 AND bp.status='published'`, [slug])).rows[0]; if (!passport) return null;
-  // A live passport aggregates real external certificates, not VIAL-run reports/custody, so its
+  // A live passport aggregates real external certificates, not VialGrade-run reports/custody, so its
   // evidence is the linked COAs — the demo report/custody joins are empty for it.
   if (passport.origin === "live") { const labTests = await getLivePassportEvidence(db, String(passport.id)); return { passport, labTests, reports: [], conflicts: [], custody: [] }; }
   const [reports, conflicts, custody] = await Promise.all([db.query(`SELECT DISTINCT lr.*,pel.status evidence_link_status,lp.display_name laboratory_name,lp.slug laboratory_slug,ls.sample_code,ls.sampling_model FROM passport_evidence_links pel JOIN laboratory_reports lr ON lr.id=pel.report_id JOIN laboratory_profiles lp ON lp.id=lr.laboratory_id JOIN laboratory_samples ls ON ls.id=lr.sample_id WHERE pel.passport_id=$1 ORDER BY lr.issued_at DESC,lr.version DESC`, [passport.id]), db.query(`SELECT * FROM evidence_conflicts WHERE passport_id=$1 ORDER BY created_at DESC`, [passport.id]), db.query(`SELECT DISTINCT c.*,s.sample_code,s.sampling_model FROM sample_custody_events c JOIN laboratory_samples s ON s.id=c.sample_id JOIN laboratory_reports lr ON lr.sample_id=s.id JOIN passport_evidence_links pel ON pel.report_id=lr.id WHERE pel.passport_id=$1 ORDER BY s.sample_code,c.sequence_number`, [passport.id])]); return { passport, labTests: [], reports: reports.rows, conflicts: conflicts.rows, custody: custody.rows }; }
@@ -354,12 +354,12 @@ const EVIDENCE_PROPOSAL_TYPES = new Set(["evidence-link", "batch-claim", "report
 export type EvidenceProposalResult = { ok: true; id: string; status: string } | { ok: false; code: number; error: string };
 
 // The external-submission flywheel: an authenticated lab attaches evidence against a
-// public VIAL ID. It ALWAYS lands as a pending proposal in the human review queue and can
+// public VialGrade ID. It ALWAYS lands as a pending proposal in the human review queue and can
 // NEVER publish, issue, or approve (AGENTS: no bearer/MCP path may publish or approve
 // evidence). Extracted/submitted content is inert data until a human reviews it.
 // Authentication + scope are enforced by the route's requireLaboratoryBearerScope gate;
 // this function receives the already-authenticated laboratory identity.
-export async function submitEvidenceProposal(input: { laboratoryId: string; tokenId: string; vialId: string; proposalType: string; payload: Record<string, unknown> }): Promise<EvidenceProposalResult> {
+export async function submitEvidenceProposal(input: { laboratoryId: string; tokenId: string; registryId: string; proposalType: string; payload: Record<string, unknown> }): Promise<EvidenceProposalResult> {
   if (!EVIDENCE_PROPOSAL_TYPES.has(input.proposalType)) return { ok: false, code: 400, error: `Unknown proposal type. Allowed: ${[...EVIDENCE_PROPOSAL_TYPES].join(", ")}` };
   const serialized = JSON.stringify(input.payload ?? {});
   if (serialized.length > 8192) return { ok: false, code: 400, error: "Payload exceeds 8KB" };
@@ -370,14 +370,14 @@ export async function submitEvidenceProposal(input: { laboratoryId: string; toke
   const limit = await consumeRateLimit({ bucket: "evidence-proposal", key: input.laboratoryId, limit: 30, windowSeconds: 60 });
   if (!limit.allowed) return { ok: false, code: 429, error: "Rate limit exceeded" };
 
-  const reg = (await db.query<QueryResultRow & { source_entity_type: string; source_entity_id: string; entity_type: string }>(`SELECT source_entity_type,source_entity_id,entity_type FROM registry_identifiers WHERE vial_id=$1 AND status='active'`, [input.vialId])).rows[0];
-  if (!reg) return { ok: false, code: 404, error: "Unknown VIAL ID" };
+  const reg = (await db.query<QueryResultRow & { source_entity_type: string; source_entity_id: string; entity_type: string }>(`SELECT source_entity_type,source_entity_id,entity_type FROM registry_identifiers WHERE registry_id=$1 AND status='active'`, [input.registryId])).rows[0];
+  if (!reg) return { ok: false, code: 404, error: "Unknown VialGrade ID" };
 
   const id = newId("lab-proposal");
   await db.query(
     `INSERT INTO laboratory_work_proposals(id,laboratory_id,proposal_type,subject_type,subject_id,payload,status,created_by)
      VALUES($1,$2,$3,$4,$5,$6::jsonb,'pending',$7)`,
-    [id, input.laboratoryId, input.proposalType, reg.source_entity_type, reg.source_entity_id, JSON.stringify({ vialId: input.vialId, entityType: reg.entity_type, submitted: input.payload ?? {} }), `lab-token:${input.tokenId}`],
+    [id, input.laboratoryId, input.proposalType, reg.source_entity_type, reg.source_entity_id, JSON.stringify({ registryId: input.registryId, entityType: reg.entity_type, submitted: input.payload ?? {} }), `lab-token:${input.tokenId}`],
   );
   return { ok: true, id, status: "pending" };
 }

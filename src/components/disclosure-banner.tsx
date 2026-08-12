@@ -10,8 +10,8 @@ export function DisclosureBanner({ hasDemo = false }: { hasDemo?: boolean }) {
         <FlaskConical className="size-3.5 shrink-0" aria-hidden="true" />
         <span>
           {hasDemo
-            ? <>Records are demo unless marked <strong className="font-semibold text-emerald-700">Live</strong> — Live data is aggregated from real public sources. VIAL never sells; it links out to the vendor.</>
-            : <><strong className="font-semibold text-emerald-700">Live</strong> data — every record is aggregated from real public sources. VIAL never sells; it links out to the vendor.</>}
+            ? <>Records are demo unless marked <strong className="font-semibold text-emerald-700">Live</strong> — Live data is aggregated from real public sources. VialGrade never sells; it links out to the vendor.</>
+            : <><strong className="font-semibold text-emerald-700">Live</strong> data — every record is aggregated from real public sources. VialGrade never sells; it links out to the vendor.</>}
         </span>
       </div>
     </div>

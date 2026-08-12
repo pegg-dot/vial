@@ -1,12 +1,12 @@
 process.env.NODE_ENV="test";
-process.env.VIAL_PGLITE_MEMORY="true";
-process.env.VIAL_SEED_FIXTURES="true";
-process.env.VIAL_SEED_DEMO_ACCOUNTS="true";
-process.env.VIAL_SESSION_SECRET="commerce-v5-audit-session-secret-at-least-32";
-process.env.VIAL_PRIVACY_HASH_SECRET="commerce-v5-audit-privacy-secret-at-least-32";
-process.env.VIAL_COMMERCE_MODE="sandbox";
-process.env.VIAL_PAYMENT_PROVIDER="mock";
-process.env.VIAL_MOCK_WEBHOOK_SECRET="commerce-v5-audit-webhook-secret";
+process.env.VIALGRADE_PGLITE_MEMORY="true";
+process.env.VIALGRADE_SEED_FIXTURES="true";
+process.env.VIALGRADE_SEED_DEMO_ACCOUNTS="true";
+process.env.VIALGRADE_SESSION_SECRET="commerce-v5-audit-session-secret-at-least-32";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET="commerce-v5-audit-privacy-secret-at-least-32";
+process.env.VIALGRADE_COMMERCE_MODE="sandbox";
+process.env.VIALGRADE_PAYMENT_PROVIDER="mock";
+process.env.VIALGRADE_MOCK_WEBHOOK_SECRET="commerce-v5-audit-webhook-secret";
 
 const {resetEnvironmentForTests}=await import("../src/server/config/env.ts");
 const {getDatabase,resetDatabaseForTests}=await import("../src/server/db/client.ts");
@@ -53,8 +53,8 @@ try{
   await db.query(`INSERT INTO commerce_provider_payment_intents(id,checkout_attempt_id,provider,mode,provider_payment_id,provider_account_id,charge_model,merchant_of_record,amount,currency,application_fee,status,idempotency_key) VALUES('provider-intent:audit-async',$1,'mock_connect_v5','sandbox',$2,(SELECT provider_account_id FROM commerce_provider_accounts WHERE seller_id=$3),'direct','seller',$4,'USD',1,'requires_action','audit-commerce-v5-async')`,[prepared.attemptId,asyncProviderPaymentId,asyncListing.seller_id,prepared.cart.total]);
   await db.query(`UPDATE commerce_checkout_attempts SET payment_intent_id='provider-intent:audit-async',status='requires_action',processor_payment_id=$2 WHERE id=$1`,[prepared.attemptId,asyncProviderPaymentId]);
   const asyncPayload=JSON.stringify({id:"evt_audit_async_v5",type:"payment_intent.succeeded",data:{object:{id:asyncProviderPaymentId}}});
-  const asyncSignature=createHmac("sha256",process.env.VIAL_MOCK_WEBHOOK_SECRET).update(asyncPayload).digest("hex");
-  await ingestProviderWebhook({payload:asyncPayload,signature:asyncSignature,secret:process.env.VIAL_MOCK_WEBHOOK_SECRET});
+  const asyncSignature=createHmac("sha256",process.env.VIALGRADE_MOCK_WEBHOOK_SECRET).update(asyncPayload).digest("hex");
+  await ingestProviderWebhook({payload:asyncPayload,signature:asyncSignature,secret:process.env.VIALGRADE_MOCK_WEBHOOK_SECRET});
   const asyncOrders=await db.query(`SELECT id FROM commerce_orders WHERE checkout_attempt_id=$1`,[prepared.attemptId]);
   if(asyncOrders.rows.length!==1)failures.push(`Expected one webhook-finalized order, got ${asyncOrders.rows.length}`);
   const asyncEvent=(await db.query(`SELECT id FROM commerce_webhook_events WHERE provider_event_id='evt_audit_async_v5'`)).rows[0];
@@ -66,6 +66,6 @@ try{
   const dashboard=await approvedCommerceDashboard();
   if(dashboard.liveEnabled)failures.push("Live commerce unexpectedly enabled");
   if(String(dashboard.mode)!=="sandbox")failures.push(`Expected sandbox mode, got ${dashboard.mode}`);
-  if(failures.length){console.error("VIAL 5 commerce audit failed:\n- "+failures.join("\n- "));process.exitCode=1;}
-  else console.log(`VIAL 5 commerce audit passed: schema v${version}, ${accounts} provider accounts, synchronous and signed-webhook checkout finalization, idempotent replay, ${transferCount} multi-seller transfers, explicit tax and fraud decisions, zero-variance settlement, and live commerce disabled.`);
+  if(failures.length){console.error("VialGrade 5 commerce audit failed:\n- "+failures.join("\n- "));process.exitCode=1;}
+  else console.log(`VialGrade 5 commerce audit passed: schema v${version}, ${accounts} provider accounts, synchronous and signed-webhook checkout finalization, idempotent replay, ${transferCount} multi-seller transfers, explicit tax and fraud decisions, zero-variance settlement, and live commerce disabled.`);
 }finally{await resetDatabaseForTests();resetEnvironmentForTests();}

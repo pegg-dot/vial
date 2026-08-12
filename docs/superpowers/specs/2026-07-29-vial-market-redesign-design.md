@@ -1,4 +1,4 @@
-# VIAL Market & Compounds Redesign — Design Spec
+# VialGrade Market & Compounds Redesign — Design Spec
 
 **Date:** 2026-07-29 · **Status:** approved (self-run under Nate's standing full-autonomy grant) · **Author:** Claude (Fable 5)
 
@@ -7,10 +7,10 @@
 `/market` renders **~408 listings** as one flat, undifferentiated filterable grid; `/compounds`
 renders **~60 compounds** as one flat grid with a single goal filter. Both are 20-second scroll
 walls. There is no category structure, no curation, no "trending," no bundles/stacks, no quick-view,
-and no carousels. Worse, the pages don't convey **what VIAL is** — a verification layer that keeps a
+and no carousels. Worse, the pages don't convey **what VialGrade is** — a verification layer that keeps a
 buyer from getting scammed. A first-time visitor can't tell what to look at, what they need, or why
 the business exists. Nate's directive: make these feel like a real marketplace (StockX / GOAT / a
-peptide storefront), categorized the right way, that also *shows* what VIAL does.
+peptide storefront), categorized the right way, that also *shows* what VialGrade does.
 
 This is a **presentation/IA redesign**. No backend, schema, ingestion, or trust-logic changes. All
 data already exists; we are re-merchandising it.
@@ -83,9 +83,9 @@ goal-key → shelf map; a compound with no goal tag falls to a computed shelf fr
 
 ## The Market page — top to bottom
 
-1. **Value band ("What VIAL is").** Lean 3-beat strip, not a wall of copy:
+1. **Value band ("What VialGrade is").** Lean 3-beat strip, not a wall of copy:
    *Every vendor & price, side by side · Cross-checked against independent lab tests you can verify ·
-   We hand you to the vendor — VIAL never sells.* This satisfies "convey what VIAL is" without
+   We hand you to the vendor — VialGrade never sells.* This satisfies "convey what VialGrade is" without
    re-adding architecture jargon. Compact, persistent under the hero.
 2. **Category rail.** 9 shelf pills (generalized `home-goal-rail`), horizontal scroll; each filters
    the browse grid below (client) and is a real entry point.
@@ -93,7 +93,7 @@ goal-key → shelf map; a compound with no goal tag falls to a computed shelf fr
    listing coverage + lab activity + |priceChange| + a curated Tier-1 boost (Retatrutide,
    Tirzepatide, BPC-157, TB-500, Semaglutide). Neutral label "Most looked-up," never "best."
 4. **Independently verified.** Carousel of compounds with the strongest independent evidence
-   (blind/batch-matched COAs, highest median purity). This row *is* VIAL's pitch, merchandised.
+   (blind/batch-matched COAs, highest median purity). This row *is* VialGrade's pitch, merchandised.
 5. **Best value right now.** Cheapest legit listings by real $/active-mg (market-wide extract of the
    leaderboard logic), "too cheap?" outliers flagged in amber — shown, not hidden.
 6. **Stacks & blends.** Curated bundle cards. **Blend** = a single-vial pre-mix SKU where a real
@@ -105,7 +105,7 @@ goal-key → shelf map; a compound with no goal tag falls to a computed shelf fr
    `market-client` as one section (not the whole page). Result count + reset. Category-rail clicks
    and quick-view live here too.
 
-### Curated stacks (mapped to VIAL compound slugs; only render components that exist as listings)
+### Curated stacks (mapped to VialGrade compound slugs; only render components that exist as listings)
 
 | Name | Kind | Components | Neutral goal label |
 |---|---|---|---|
@@ -140,7 +140,7 @@ Stacks are labeled **"commonly discussed research combinations,"** never protoco
 tile (one labeled number + row metric) → **quick-view** (stat block) → **full ticker page**
 (leaderboard, lab tests, history). Nobody gets all data at once; nobody hits a dead end.
 
-## Quick-view modal (VIAL enhancement, grounded in CMC row→detail)
+## Quick-view modal (VialGrade enhancement, grounded in CMC row→detail)
 
 Neither StockX nor GOAT uses a browse-level quick-view; Nate explicitly asked for one ("a modal pops
 up; scrollable across like a carousel"), so this is a deliberate step beyond them. Click a compound
@@ -156,7 +156,7 @@ tile's quick-view previews the *listing* (vendor, price, $/mg, evidence, Buy-at-
 
 - Thin hero + stats (kept).
 - **Trending compounds** strip (same momentum ranking).
-- **View toggle: Terminal ⇄ Shelves.** This is the strongest expression of VIAL's Bloomberg-terminal
+- **View toggle: Terminal ⇄ Shelves.** This is the strongest expression of VialGrade's Bloomberg-terminal
   identity and the CoinMarketCap ranked-table pattern:
   - **Terminal (default on desktop):** a dense, sortable ranked **market table** — rank #, compound
     (name + shelf), vendors (listings), price range `from $X`, price-change Δ (▲/▼ %), median tested
@@ -182,7 +182,7 @@ tile's quick-view previews the *listing* (vendor, price, $/mg, evidence, Buy-at-
   the workflow-resume constraint honest).
 
 **UI (`components/market/`):**
-- `vial-value-band.tsx` — the 3-beat "what VIAL is" strip.
+- `vial-value-band.tsx` — the 3-beat "what VialGrade is" strip.
 - `category-rail.tsx` — 9-shelf pill rail (server-rendered, links + client filter hook).
 - `compound-ticker-card.tsx` — scannable tile: name, shelf, labeled `from $X`, price-change delta
   (▲/▼ %), tested-purity chip, listings count, trust-tier chip, Demo/Live badge, save/follow. Opens

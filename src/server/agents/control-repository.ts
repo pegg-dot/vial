@@ -154,8 +154,8 @@ export async function getExtractionControlPlane(): Promise<ExtractionControlPlan
   const shadowCount = Number((await db.query<{ n: string | number }>(`SELECT COUNT(*) n FROM extraction_shadow_runs`)).rows[0]?.n ?? 0);
 
   const clientAvailable = Boolean(process.env.ANTHROPIC_API_KEY?.trim());
-  const modelApproved = process.env.VIAL_MODEL_EXTRACTOR_APPROVED === "true";
-  const mode = process.env.VIAL_EXTRACTOR ?? "deterministic";
+  const modelApproved = process.env.VIALGRADE_MODEL_EXTRACTOR_APPROVED === "true";
+  const mode = process.env.VIALGRADE_EXTRACTOR ?? "deterministic";
   const modelBeatsBaseline = Boolean(latestBaseline && latestModelRun && Number(latestModelRun.f1) > Number(latestBaseline.f1) && Number(latestModelRun.precision) >= Number(latestBaseline.precision));
 
   return {

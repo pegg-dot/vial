@@ -1,8 +1,8 @@
-process.env.VIAL_PGLITE_MEMORY="true";
-process.env.VIAL_SEED_FIXTURES="true";
-process.env.VIAL_SEED_DEMO_ACCOUNTS="true";
-process.env.VIAL_SESSION_SECRET="evidence-v6-audit-session-secret-at-least-32";
-process.env.VIAL_PRIVACY_HASH_SECRET="evidence-v6-audit-privacy-secret-at-least-32";
+process.env.VIALGRADE_PGLITE_MEMORY="true";
+process.env.VIALGRADE_SEED_FIXTURES="true";
+process.env.VIALGRADE_SEED_DEMO_ACCOUNTS="true";
+process.env.VIALGRADE_SESSION_SECRET="evidence-v6-audit-session-secret-at-least-32";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET="evidence-v6-audit-privacy-secret-at-least-32";
 
 const { getDatabase, resetDatabaseForTests } = await import("../src/server/db/client.ts");
 const {
@@ -58,10 +58,10 @@ try {
   if (directPublishedProposals > 0) failures.push("Proposal-only laboratory automation bypassed human issue controls");
 
   if (failures.length) {
-    console.error("VIAL 6.0 evidence-network audit failed:\n- " + failures.join("\n- "));
+    console.error("VialGrade 6.0 evidence-network audit failed:\n- " + failures.join("\n- "));
     process.exitCode = 1;
   } else {
-    console.log("VIAL 6.0 evidence-network audit passed: method scope, custody integrity, structured reports, report lifecycle, multidimensional passports, conflict preservation, explicit unknowns, and proposal-only automation are intact.");
+    console.log("VialGrade 6.0 evidence-network audit passed: method scope, custody integrity, structured reports, report lifecycle, multidimensional passports, conflict preservation, explicit unknowns, and proposal-only automation are intact.");
   }
 } finally {
   await resetDatabaseForTests();

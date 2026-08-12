@@ -20,7 +20,7 @@ export function VendorVerdictBanner({ verdict, summary }: { verdict: Verdict; su
     <div className={`flex items-start gap-4 rounded-[18px] p-5 hard sm:p-6 ${s.wrap}`}>
       <span className={`ink mt-0.5 grid size-10 shrink-0 place-items-center rounded-[12px] text-white ${s.ring}`}><Icon className="size-5" /></span>
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-[.12em] opacity-80">VIAL verdict</p>
+        <p className="text-[11px] font-bold uppercase tracking-[.12em] opacity-80">VialGrade verdict</p>
         <h2 className="mt-1 text-2xl font-extrabold tracking-[-.03em]">{s.label}</h2>
         <p className="mt-2 text-sm font-medium leading-6 opacity-90">{summary}</p>
       </div>

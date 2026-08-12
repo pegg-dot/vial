@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { recordPriceObservation, getCompoundPriceSeries, getListingPriceMeta } from "@/server/ingest/price-history";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "price-history-test-secret-at-least-32-characters";
-process.env.VIAL_PRIVACY_HASH_SECRET = "price-history-privacy-secret-at-least-32-characters";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "price-history-test-secret-at-least-32-characters";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "price-history-privacy-secret-at-least-32-characters";
 
 describe("price history", () => {
   beforeAll(async () => { await resetDatabaseForTests(); await getDatabase(); });

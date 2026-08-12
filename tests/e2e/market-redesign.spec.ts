@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const SHOTS = process.env.VIAL_SHOT_DIR ?? "audits/market-redesign";
+const SHOTS = process.env.VIALGRADE_SHOT_DIR ?? "audits/market-redesign";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => window.localStorage.clear());

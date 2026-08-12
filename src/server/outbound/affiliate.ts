@@ -21,7 +21,7 @@ export interface AffiliateRule {
 
 // No live deals yet. Add rules as they're negotiated. Example (commented) shapes:
 //   "eternal-peptides": { kind: "params", params: { ref: "vial" } },
-//   "*":                 { kind: "template", template: "https://go.sovrn.com/?u={dest}&aff=VIAL" },
+//   "*":                 { kind: "template", template: "https://go.sovrn.com/?u={dest}&aff=VialGrade" },
 export const AFFILIATE_RULES: Record<string, AffiliateRule> = {};
 
 export interface OutboundResult { url: string; affiliateApplied: boolean }

@@ -4,16 +4,16 @@ import { MockCommerceProvider, MockFraudProvider, MockTaxProvider } from "./mock
 import { StripeConnectAdapter } from "./stripe";
 
 export function getCommerceMode(): CommerceMode {
-  return getEnvironment().VIAL_COMMERCE_MODE;
+  return getEnvironment().VIALGRADE_COMMERCE_MODE;
 }
 
 export function getPaymentProcessor(): PaymentProcessorAdapter {
   const env = getEnvironment();
-  if (env.VIAL_PAYMENT_PROVIDER === "stripe") {
+  if (env.VIALGRADE_PAYMENT_PROVIDER === "stripe") {
     if (!env.STRIPE_SECRET_KEY) throw new Error("STRIPE_SECRET_KEY is required for Stripe mode");
-    return new StripeConnectAdapter(env.VIAL_COMMERCE_MODE, env.STRIPE_SECRET_KEY);
+    return new StripeConnectAdapter(env.VIALGRADE_COMMERCE_MODE, env.STRIPE_SECRET_KEY);
   }
-  return new MockCommerceProvider(env.VIAL_COMMERCE_MODE);
+  return new MockCommerceProvider(env.VIALGRADE_COMMERCE_MODE);
 }
 
 export function getTaxProvider(): TaxProviderAdapter {

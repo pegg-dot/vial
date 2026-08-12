@@ -14,7 +14,7 @@ export function HomeFinalCta() {
         </div>
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">One habit, zero scams</p>
         <h2 className="mx-auto mt-4 max-w-[17ch] text-balance text-[clamp(2.6rem,6.5vw,5rem)] font-extrabold leading-[.9] tracking-[-.045em]">
-          Run it through VIAL <span className="text-[#2b31d8]">before you buy.</span>
+          Run it through VialGrade <span className="text-[#2b31d8]">before you buy.</span>
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-lg font-medium leading-8 text-[var(--muted)]">
           Paste a vendor, a compound, or a COA code. We&rsquo;ll tell you what we know &mdash; and what nobody can verify yet.

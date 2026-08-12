@@ -1,5 +1,5 @@
 // The broader data seams: third-party aggregator ratings, vendor operational signals, offers,
-// news/press, and per-compound scientific literature. Each is sourced and attributed; VIAL reports
+// news/press, and per-compound scientific literature. Each is sourced and attributed; VialGrade reports
 // what it found and links out. (Migration runner splits on ";", so NO semicolons in comments.)
 export const externalDataSchemaSql = String.raw`
 CREATE TABLE IF NOT EXISTS aggregator_ratings (

@@ -5,7 +5,7 @@ const isProduction = process.env.NODE_ENV === "production";
 // (e.g. the local e2e server on http://localhost): the browser upgrades
 // same-origin requests to https and they fail. Only emit it when the canonical
 // site URL is https.
-const servesOverHttps = !(process.env.NEXT_PUBLIC_SITE_URL ?? "https://vial.example").startsWith("http://");
+const servesOverHttps = !(process.env.NEXT_PUBLIC_SITE_URL ?? "https://vialgrade.example").startsWith("http://");
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -37,7 +37,7 @@ const securityHeaders = [
 const config: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
-  typescript: { ignoreBuildErrors: process.env.VIAL_SKIP_NEXT_TYPECHECK === "1" },
+  typescript: { ignoreBuildErrors: process.env.VIALGRADE_SKIP_NEXT_TYPECHECK === "1" },
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
   experimental: { cpus: 1, staticGenerationMaxConcurrency: 1 },
   async headers() {

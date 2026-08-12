@@ -81,7 +81,7 @@ export const connectorDefinitions: ConnectorDefinition[] = [
   },
   {
     provider: "vial_mcp",
-    name: "VIAL Seller MCP",
+    name: "VialGrade Seller MCP",
     description: "Give an approved AI operator scoped tools for onboarding, matching, catalog, and evidence gaps.",
     category: "automation",
     capabilities: ["tools:read", "catalog:propose", "evidence:propose", "approval_required"],
@@ -101,7 +101,7 @@ export function sandboxCatalog(provider: SellerConnectorProvider) {
       externalId: `${provider}:bpc-10`,
       title: "BPC 157 Research Vial 10mg",
       description: "Lyophilized research material. Batch information available separately.",
-      sku: "BPC10-VIAL",
+      sku: "BPC10-VialGrade",
       price: 54,
       inventory: 18,
       tags: ["BPC157", "10 mg", "research"],

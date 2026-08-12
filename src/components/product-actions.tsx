@@ -12,7 +12,7 @@ export function ProductActions({ slug, vendorName, origin = "demo", externalUrl 
 
   const destinationHost = externalUrl ? (() => { try { return new URL(externalUrl).host.replace(/^www\./, ""); } catch { return null; } })() : null;
   const live = origin === "live" && Boolean(destinationHost);
-  const demoNotice = `This is a demo listing, so the vendor link is switched off. VIAL never sells anything or touches your money — on real listings it hands you to the vendor's own site.`;
+  const demoNotice = `This is a demo listing, so the vendor link is switched off. VialGrade never sells anything or touches your money — on real listings it hands you to the vendor's own site.`;
 
   return (
     <div>
@@ -34,7 +34,7 @@ export function ProductActions({ slug, vendorName, origin = "demo", externalUrl 
         </button>
       )}
       {live && (
-        <p className="mt-2 text-center text-xs font-medium text-[var(--muted)]">Hands you to {destinationHost} — VIAL doesn&rsquo;t sell or take payment</p>
+        <p className="mt-2 text-center text-xs font-medium text-[var(--muted)]">Hands you to {destinationHost} — VialGrade doesn&rsquo;t sell or take payment</p>
       )}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <button

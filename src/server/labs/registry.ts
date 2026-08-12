@@ -1,6 +1,6 @@
-// The lab registry — the single source of truth for every testing laboratory VIAL references.
+// The lab registry — the single source of truth for every testing laboratory VialGrade references.
 //
-// This exists for one reason: VIAL publishes factual claims about real companies, so every claim
+// This exists for one reason: VialGrade publishes factual claims about real companies, so every claim
 // here is sourced, hedged, and tiered by how much we can actually stand behind it. Two rules:
 //   1. We only VOUCH that a certificate is "independently tested" when the lab is a confirmed,
 //      real, third-party laboratory (independence: "independent"). Everything else is shown for
@@ -188,7 +188,7 @@ export function canonicalizeLabName(rawLabName: string): string {
 /**
  * Does a certificate from this lab count as INDEPENDENT third-party corroboration? Only true for a
  * confirmed, real, independent lab. An unvetted lab (not in the registry) is conservatively treated
- * as NOT independent — VIAL never vouches for a lab it has not verified.
+ * as NOT independent — VialGrade never vouches for a lab it has not verified.
  */
 export function labCountsAsIndependent(rawLabName: string): boolean {
   const p = getLabProfile(rawLabName);

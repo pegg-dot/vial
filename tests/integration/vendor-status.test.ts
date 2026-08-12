@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { recordVendorStatus, getVendorStatus } from "@/server/verify/vendor-status";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "vendor-status-test-secret-at-least-32-characters";
-process.env.VIAL_PRIVACY_HASH_SECRET = "vendor-status-privacy-secret-at-least-32-characters";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "vendor-status-test-secret-at-least-32-characters";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "vendor-status-privacy-secret-at-least-32-characters";
 
 describe("vendor status store", () => {
   beforeAll(async () => { await resetDatabaseForTests(); await getDatabase(); });

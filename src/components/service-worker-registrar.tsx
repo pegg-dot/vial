@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-// Registers the service worker once on load — this is what makes VIAL installable
+// Registers the service worker once on load — this is what makes VialGrade installable
 // and offline-capable, and is a prerequisite for receiving push notifications.
 export function ServiceWorkerRegistrar() {
   useEffect(() => {

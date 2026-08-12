@@ -3,15 +3,15 @@ import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { createApiKey } from "@/server/api-access/keys";
 import { ensureEvidenceNetworkSeed } from "@/server/evidence-network/repository";
 import { getVendorReputationBySlug, getReputationRecord } from "@/server/reputation/repository";
-import { GET as getReputation } from "@/app/api/public/v1/reputation/[vialId]/route";
+import { GET as getReputation } from "@/app/api/public/v1/reputation/[registryId]/route";
 
 const bearer = (token: string, url: string) => new Request(url, { headers: { authorization: `Bearer ${token}` } });
 
 describe("VIAL 10.0 reputation records", () => {
   beforeEach(async () => {
-    process.env.VIAL_PGLITE_MEMORY = "true";
-    process.env.VIAL_SEED_FIXTURES = "true";
-    process.env.VIAL_SEED_DEMO_ACCOUNTS = "true";
+    process.env.VIALGRADE_PGLITE_MEMORY = "true";
+    process.env.VIALGRADE_SEED_FIXTURES = "true";
+    process.env.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
     delete (globalThis as { __vialEvidenceSeedPromise?: unknown }).__vialEvidenceSeedPromise;
     delete (globalThis as { __vialSellerOpsSeedPromise?: unknown }).__vialSellerOpsSeedPromise;
     await resetDatabaseForTests();
@@ -45,7 +45,7 @@ describe("VIAL 10.0 reputation records", () => {
 
   it("composes a lab integrity record from real report, method, and custody counts", async () => {
     await ensureEvidenceNetworkSeed();
-    const record = await getReputationRecord("vial:lab:aperture-analytical");
+    const record = await getReputationRecord("vialgrade:lab:aperture-analytical");
     expect(record).toBeTruthy();
     expect(record!.subjectType).toBe("lab");
     expect("score" in record!).toBe(false);
@@ -57,20 +57,20 @@ describe("VIAL 10.0 reputation records", () => {
 
   it("serves the reputation record over the public API for reputation:read", async () => {
     const db = await getDatabase();
-    await db.query(`INSERT INTO auth_users(id,email,display_name,account_type,roles) VALUES('user:rep','rep@vial.test','rep','customer','["customer"]'::jsonb) ON CONFLICT(id) DO NOTHING`);
+    await db.query(`INSERT INTO auth_users(id,email,display_name,account_type,roles) VALUES('user:rep','rep@vialgrade.test','rep','customer','["customer"]'::jsonb) ON CONFLICT(id) DO NOTHING`);
     const key = await createApiKey({ ownerId: "user:rep", name: "rep", scopes: ["reputation:read"] });
     const wrongKey = await createApiKey({ ownerId: "user:rep", name: "m", scopes: ["market:read"] });
 
-    const ok = await getReputation(bearer(key.plaintext, "https://api.vial.test/api/public/v1/reputation/vial:vendor:northstar-research"), { params: Promise.resolve({ vialId: "vial:vendor:northstar-research" }) });
+    const ok = await getReputation(bearer(key.plaintext, "https://api.vialgrade.test/api/public/v1/reputation/vialgrade:vendor:northstar-research"), { params: Promise.resolve({ registryId: "vialgrade:vendor:northstar-research" }) });
     expect(ok.status).toBe(200);
     const body = await ok.json();
     expect(body.data.subjectType).toBe("vendor");
     expect(Array.isArray(body.data.dimensions)).toBe(true);
 
-    const forbidden = await getReputation(bearer(wrongKey.plaintext, "https://api.vial.test/api/public/v1/reputation/vial:vendor:northstar-research"), { params: Promise.resolve({ vialId: "vial:vendor:northstar-research" }) });
+    const forbidden = await getReputation(bearer(wrongKey.plaintext, "https://api.vialgrade.test/api/public/v1/reputation/vialgrade:vendor:northstar-research"), { params: Promise.resolve({ registryId: "vialgrade:vendor:northstar-research" }) });
     expect(forbidden.status).toBe(403);
 
-    const missing = await getReputation(bearer(key.plaintext, "https://api.vial.test/api/public/v1/reputation/vial:vendor:ghost"), { params: Promise.resolve({ vialId: "vial:vendor:ghost" }) });
+    const missing = await getReputation(bearer(key.plaintext, "https://api.vialgrade.test/api/public/v1/reputation/vialgrade:vendor:ghost"), { params: Promise.resolve({ registryId: "vialgrade:vendor:ghost" }) });
     expect(missing.status).toBe(404);
   });
 });

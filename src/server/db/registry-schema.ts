@@ -1,6 +1,6 @@
 export const registrySchemaSql = String.raw`
 CREATE TABLE IF NOT EXISTS registry_identifiers (
-  vial_id TEXT PRIMARY KEY,
+  registry_id TEXT PRIMARY KEY,
   entity_type TEXT NOT NULL,
   source_entity_type TEXT NOT NULL,
   source_entity_id TEXT NOT NULL,
@@ -17,12 +17,12 @@ CREATE TABLE IF NOT EXISTS registry_identifiers (
 );
 CREATE TABLE IF NOT EXISTS registry_identifier_aliases (
   id TEXT PRIMARY KEY,
-  vial_id TEXT NOT NULL REFERENCES registry_identifiers(vial_id) ON DELETE CASCADE,
+  registry_id TEXT NOT NULL REFERENCES registry_identifiers(registry_id) ON DELETE CASCADE ON UPDATE CASCADE,
   alias TEXT NOT NULL,
   normalized_alias TEXT NOT NULL,
   alias_type TEXT NOT NULL DEFAULT 'former-slug',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(vial_id, normalized_alias)
+  UNIQUE(registry_id, normalized_alias)
 );
 CREATE INDEX IF NOT EXISTS idx_registry_type ON registry_identifiers(entity_type, status);
 CREATE INDEX IF NOT EXISTS idx_registry_slug ON registry_identifiers(canonical_slug);

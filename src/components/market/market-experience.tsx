@@ -79,7 +79,7 @@ export function MarketExperience() {
       )}
 
       {fresh.length > 0 && (
-        <CollectionRow eyebrow="Just added" title="New on VIAL" blurb="The most recently checked live listings — the market history that keeps growing.">
+        <CollectionRow eyebrow="Just added" title="New on VialGrade" blurb="The most recently checked live listings — the market history that keeps growing.">
           {fresh.map((p) => (
             <div key={p.slug} className="w-[300px] shrink-0 snap-start">
               <ProductCard product={p} />

@@ -28,7 +28,7 @@ export function deriveEvidenceDimensions(coa: CoaCrossCheck): EvidenceDimension[
     : { label: "Batch traceability", status: "unknown", detail: "No specific batch on this listing has been matched to an independent record." };
 
   const sterility: EvidenceDimension = { label: "Sterility & endotoxin", status: "not-tested", detail: "A purity COA does not measure sterility or endotoxins — no such test is on record." };
-  const dose: EvidenceDimension = { label: "Dose / fill accuracy", status: "unknown", detail: "VIAL does not independently measure vial fill or delivered dose." };
+  const dose: EvidenceDimension = { label: "Dose / fill accuracy", status: "unknown", detail: "VialGrade does not independently measure vial fill or delivered dose." };
 
   return [identity, purity, batch, sterility, dose];
 }

@@ -53,7 +53,7 @@ export default async function SellerPaymentsPage() {
       </Panel>
 
       <Panel title="Underwriting package" action={<StatusPill status={String(latestReview?.status ?? "not_submitted")} />}>
-        <div className="ink-1 rounded-[14px] bg-[#f0edff] p-4 text-sm text-[#6d5dfc]"><div className="flex items-center gap-2 font-extrabold"><ShieldCheck className="size-4" />Approval is seller and catalog specific</div><p className="mt-2 text-xs leading-5 text-[#6d5dfc]/80">Payment capabilities alone do not activate listings. VIAL also evaluates legal review, evidence, jurisdiction, customer type, seller standing, and the merchant-of-record model.</p></div>
+        <div className="ink-1 rounded-[14px] bg-[#f0edff] p-4 text-sm text-[#6d5dfc]"><div className="flex items-center gap-2 font-extrabold"><ShieldCheck className="size-4" />Approval is seller and catalog specific</div><p className="mt-2 text-xs leading-5 text-[#6d5dfc]/80">Payment capabilities alone do not activate listings. VialGrade also evaluates legal review, evidence, jurisdiction, customer type, seller standing, and the merchant-of-record model.</p></div>
         <form action={requestUnderwritingAction} className="mt-5 space-y-4">
           <label className="block text-sm font-medium">Requested jurisdictions<input name="jurisdictions" defaultValue="US-SANDBOX" className="field mt-2" /></label>
           <label className="block text-sm font-medium">Notes<textarea name="notes" rows={3} placeholder="Describe the catalog and operating model for review." className="field mt-2" /></label>

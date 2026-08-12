@@ -4,7 +4,7 @@
 // COAs a vendor publishes and derives the ways a certificate program can be fake or hollow:
 // one lot number reused across many products, a certificate self-issued by the vendor's own
 // "lab", a COA that pictures a different compound than the product, or certificates too old to
-// describe current stock. These are the things a buyer can't see but VIAL can — surfaced as
+// describe current stock. These are the things a buyer can't see but VialGrade can — surfaced as
 // loud red flags, never silently swallowed. Purely derived from the evidence; nothing hardcoded.
 
 export interface PostedCoa {

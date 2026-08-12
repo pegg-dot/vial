@@ -40,7 +40,7 @@ export default function ReferenceStandardPage() {
         <div className="mb-7">
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Regulated manufacturers</p>
           <h2 className="mt-3 text-[clamp(2rem,4.5vw,3.4rem)] font-extrabold leading-[.96] tracking-[-.045em]">Who makes the real thing</h2>
-          <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Publicly documented, regulator-inspected peptide manufacturers. VIAL does not sell these or claim any grey-market vendor sources from them — they are here purely as a reference point.</p>
+          <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Publicly documented, regulator-inspected peptide manufacturers. VialGrade does not sell these or claim any grey-market vendor sources from them — they are here purely as a reference point.</p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           {manufacturers.map((m) => (

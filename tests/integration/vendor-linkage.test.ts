@@ -3,9 +3,9 @@ import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { recordFingerprint, computeAndStoreLinkages, getVendorLinks } from "@/server/verify/vendor-linkage";
 import { newId } from "@/server/db/ids";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "vendor-linkage-test-secret-at-least-32-characters";
-process.env.VIAL_PRIVACY_HASH_SECRET = "vendor-linkage-privacy-secret-at-least-32-characters";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "vendor-linkage-test-secret-at-least-32-characters";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "vendor-linkage-privacy-secret-at-least-32-characters";
 
 async function seedLab(vendor: string, compound: string, lot: string | null, maker: string) {
   const db = await getDatabase();

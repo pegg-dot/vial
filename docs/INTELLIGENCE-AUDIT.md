@@ -1,6 +1,6 @@
-# VIAL Intelligence & Verification Audit — "Does the system know what it knows?"
+# VialGrade Intelligence & Verification Audit — "Does the system know what it knows?"
 
-**Thesis.** VIAL exists to replace the vendor's confident-but-unverified word with verified evidence.
+**Thesis.** VialGrade exists to replace the vendor's confident-but-unverified word with verified evidence.
 But across the intelligence layer it commits the same sin it's meant to cure: it derives a claim from
 a shallow heuristic and then **asserts it with the authority of a fact**, with no dimension for its own
 certainty. When a heuristic misfires it doesn't fail toward "I don't know" — it states a confident
@@ -9,9 +9,9 @@ falsehood. The milligram bug was one instance of a systemic pattern.
 **The cure already exists in this codebase — it's just not applied consistently.** Five places do it
 right and are the templates for the rest:
 - `parseTotalMg` (`src/lib/format.ts`) returns `undefined` when size is ambiguous → UI shows no $/mg.
-- The price-drop badge traces to VIAL's own prior observed price (`review/repository.ts`).
+- The price-drop badge traces to VialGrade's own prior observed price (`review/repository.ts`).
 - **Batch passports** (`ingest/live-passports.ts`) cap confidence, filter `is_independent=TRUE`, and
-  print *"read from the document, not re-measured by VIAL… VIAL did not sample, seal, or observe
+  print *"read from the document, not re-measured by VialGrade… VialGrade did not sample, seal, or observe
   custody."*
 - `resolveActionToVendor` (`regulatory/actions.ts`) matches strictly or returns `null`.
 - The reputation layer (`reputation/repository.ts`) filters `is_independent=TRUE`.
@@ -82,7 +82,7 @@ right and are the templates for the rest:
 - [x] **T2. Purity is a document read, not a measurement** — one canonical qualifier (`src/lib/provenance-copy.ts`,
   full + short forms) now rides every authoritative purity surface: the COA cross-check panel, the compound-page
   and vendor-page headline stats, and the product-page market panel's "real/active mg" note. Says the figure is
-  read from the lab's certificate as issued — VIAL doesn't re-run the assay or sample the vial. The detailed
+  read from the lab's certificate as issued — VialGrade doesn't re-run the assay or sample the vial. The detailed
   `LabTestsPanel` (on all three detail pages) already carried the same discipline. Display-only, no logic change.
 - [x] **T3. Size-normalize "vs market"** — every "vs market" verdict now runs on cost-per-mg, never sticker price.
   Added a live `compound.medianPricePerMg` (computed from `parseTotalMg`, min-peer floor of 3) + two shared pure

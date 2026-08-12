@@ -1,8 +1,8 @@
-# VIAL 6.0 evidence and laboratory network
+# VialGrade 6.0 evidence and laboratory network
 
 ## Purpose
 
-VIAL 6.0 connects market evidence to controlled laboratory work. The system does not treat a PDF, a laboratory name, or a vendor-selected sample as universal proof. It records exactly which method was used, which physical sample was tested, who controlled the sample, how custody changed, what result was approved, which report version carries it, and what remains unknown.
+VialGrade 6.0 connects market evidence to controlled laboratory work. The system does not treat a PDF, a laboratory name, or a vendor-selected sample as universal proof. It records exactly which method was used, which physical sample was tested, who controlled the sample, how custody changed, what result was approved, which report version carries it, and what remains unknown.
 
 ## Core graph
 
@@ -48,7 +48,7 @@ A laboratory profile may contain methods both inside and outside its declared sc
 
 ## Sampling hierarchy
 
-VIAL distinguishes evidence by sample control:
+VialGrade distinguishes evidence by sample control:
 
 | Level | Meaning |
 |---|---|
@@ -186,7 +186,7 @@ AI and MCP tools may help structure or prepare work, but they do not hold report
 
 ## Production gates
 
-Before real use, VIAL would need:
+Before real use, VialGrade would need:
 
 - Direct laboratory agreements
 - Verified legal entity and authorized representatives

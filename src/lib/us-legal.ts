@@ -2,7 +2,7 @@
 //
 // Purely informational, NOT legal or medical advice, and NOT an eligibility gate. It states how
 // these compounds are regulated in the United States so a buyer understands the risk they're
-// taking on. VIAL sells nothing and encourages no human use. Consult a licensed attorney and
+// taking on. VialGrade sells nothing and encourages no human use. Consult a licensed attorney and
 // physician. Framing follows AGENTS.md: no dosing/use guidance, unknowns stay visible.
 
 export type LegalCategory = "prescription" | "investigational" | "research-only";

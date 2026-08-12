@@ -3,7 +3,7 @@ import { addCartLine, commerceDashboard, createSandboxCheckout, getOrder, getOrC
 
 describe("commerce sandbox", () => {
   beforeEach(() => {
-    process.env.VIAL_PGLITE_MEMORY = "true";
+    process.env.VIALGRADE_PGLITE_MEMORY = "true";
     delete globalThis.__vialDbPromise;
   });
 
@@ -16,7 +16,7 @@ describe("commerce sandbox", () => {
     expect(cart.eligible).toBe(true);
     const input = {
       customerKey: "commerce-test",
-      email: "test@vial.example",
+      email: "test@vialgrade.example",
       address: { line1: "1 Test", city: "Miami", region: "FL", postalCode: "33101" },
       idempotencyKey: "commerce-idempotency-1",
     };

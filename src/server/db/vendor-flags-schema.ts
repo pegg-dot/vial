@@ -3,7 +3,7 @@
 // Derived red flags about a vendor's certificate program: a reused lot number across many
 // products, self-issued certificates, a COA that pictures a different compound, undated or
 // years-old certificates. Each flag cites what it's for and how severe it is. These are the
-// things a buyer can't see on a vendor's own site but VIAL surfaces loudly.
+// things a buyer can't see on a vendor's own site but VialGrade surfaces loudly.
 export const vendorFlagsSchemaSql = `
 CREATE TABLE IF NOT EXISTS vendor_flags (
   id TEXT PRIMARY KEY,

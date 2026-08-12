@@ -36,9 +36,9 @@ describe("extractor provider seam", () => {
   });
 
   it("selects the deterministic extractor by default", () => {
-    const prev = process.env.VIAL_EXTRACTOR;
-    delete process.env.VIAL_EXTRACTOR;
+    const prev = process.env.VIALGRADE_EXTRACTOR;
+    delete process.env.VIALGRADE_EXTRACTOR;
     expect(getExtractor().id).toBe("deterministic-v2");
-    if (prev !== undefined) process.env.VIAL_EXTRACTOR = prev;
+    if (prev !== undefined) process.env.VIALGRADE_EXTRACTOR = prev;
   });
 });

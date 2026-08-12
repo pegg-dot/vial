@@ -1,10 +1,10 @@
 // Storefront-published COA linking — the coverage wedge.
 //
-// VIAL holds a vendor-specific independent test for only ~11% of listings, because the tested
+// VialGrade holds a vendor-specific independent test for only ~11% of listings, because the tested
 // companies (manufacturers on the Janoshik feed) and the selling storefronts are largely different
 // sets, and the scraped listings carry no batch/testing data. But most storefronts publish their own
 // Janoshik COA — usually a verify.janoshik.com link — right on the product page. This reads those
-// links out of the product body and, when they resolve to a certificate VIAL ALREADY INDEPENDENTLY
+// links out of the product body and, when they resolve to a certificate VialGrade ALREADY INDEPENDENTLY
 // HOLDS for that product's compound, stamps the listing's testing claim (issuer + batch) so the
 // hardened crossCheckCoa can produce the honest verdict.
 //
@@ -64,7 +64,7 @@ export interface StorefrontCoaClaim {
 }
 
 /**
- * Resolve products' Janoshik references against the certificates VIAL ALREADY HOLDS, scoped to each
+ * Resolve products' Janoshik references against the certificates VialGrade ALREADY HOLDS, scoped to each
  * product's own compound. Returns a map keyed by `coaKey(compoundSlug, verifyUrl)` → the testing claim
  * to stamp; call once per import.
  *
@@ -88,7 +88,7 @@ export async function resolveStorefrontCoaClaims(
   if (allUrls.length === 0) return out;
   const vTok = norm(vendorSlug);
 
-  // Only INDEPENDENT records VIAL holds for the CITED compound count — never a self-published row, and
+  // Only INDEPENDENT records VialGrade holds for the CITED compound count — never a self-published row, and
   // never a certificate for a different compound than the product it's embedded on.
   const rows = (await db.query<{ verify_url: string; compound_slug: string | null; batch_code: string | null; vendor_slug: string | null; manufacturer: string | null }>(
     `SELECT verify_url, compound_slug, batch_code, vendor_slug, manufacturer

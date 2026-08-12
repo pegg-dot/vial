@@ -3,7 +3,7 @@ import { ensureAgentControlSeed, getExtractionControlPlane } from "@/server/agen
 
 describe("agent control-plane repository", () => {
   beforeEach(() => {
-    process.env.VIAL_PGLITE_MEMORY = "true";
+    process.env.VIALGRADE_PGLITE_MEMORY = "true";
     delete (globalThis as { __vialDbPromise?: unknown }).__vialDbPromise;
     delete (globalThis as { __vialAgentControlSeed?: unknown }).__vialAgentControlSeed;
   });

@@ -1,8 +1,8 @@
-# VIAL 5.0 commerce architecture
+# VialGrade 5.0 commerce architecture
 
 ## Objective
 
-VIAL 5 converts the earlier commerce simulator into a processor-ready architecture while preserving a fail-closed launch boundary. Payment creation is the final step after policy evaluation, not the first step in eligibility.
+VialGrade 5 converts the earlier commerce simulator into a processor-ready architecture while preserving a fail-closed launch boundary. Payment creation is the final step after policy evaluation, not the first step in eligibility.
 
 ## Independent activation gates
 
@@ -27,11 +27,11 @@ An unknown or failed required check prevents payment creation. Review outcomes c
 
 ### Direct charge
 
-Used when one approved seller owns the cart. The payment is associated with that seller's connected provider account, the seller is modeled as merchant of record, and VIAL records an application fee. VIAL does not create a second platform transfer or platform reserve for this model.
+Used when one approved seller owns the cart. The payment is associated with that seller's connected provider account, the seller is modeled as merchant of record, and VialGrade records an application fee. VialGrade does not create a second platform transfer or platform reserve for this model.
 
 ### Platform separate charge and transfers
 
-Used for multi-seller carts in sandbox and test mode. VIAL creates one platform payment, seller allocations, provider transfers, and risk-based reserves. The platform is modeled as merchant of record.
+Used for multi-seller carts in sandbox and test mode. VialGrade creates one platform payment, seller allocations, provider transfers, and risk-based reserves. The platform is modeled as merchant of record.
 
 The current live policy blocks this platform merchant model until external underwriting, legal, tax, reserve, dispute, and loss-allocation approval exists.
 
@@ -53,7 +53,7 @@ Mock payments can succeed synchronously. Stripe test payments may return `requir
 
 ## Webhook finalization
 
-A provider event is accepted only after signature verification. VIAL stores the provider event ID under a unique constraint, suppresses duplicates, and processes supported event types idempotently.
+A provider event is accepted only after signature verification. VialGrade stores the provider event ID under a unique constraint, suppresses duplicates, and processes supported event types idempotently.
 
 `payment_intent.succeeded`:
 
@@ -91,7 +91,7 @@ Replay is permitted only for signature-verified events and reuses the same idemp
 
 ## Financial records
 
-VIAL keeps independent records for:
+VialGrade keeps independent records for:
 
 - Provider payment intents
 - Provider transfers

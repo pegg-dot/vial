@@ -36,9 +36,9 @@ export class StripeConnectAdapter implements PaymentProcessorAdapter {
 
   constructor(readonly mode: CommerceMode, secretKey: string) {
     if (!secretKey) throw new Error("Stripe secret key is required");
-    if (mode !== "live" && !secretKey.startsWith("sk_test_")) throw new Error("VIAL test commerce requires a Stripe test key");
-    if (mode === "live" && !secretKey.startsWith("sk_live_")) throw new Error("VIAL live commerce requires a Stripe live key");
-    this.stripe = new Stripe(secretKey, { appInfo: { name: "VIAL", version: "5.0.0" } });
+    if (mode !== "live" && !secretKey.startsWith("sk_test_")) throw new Error("VialGrade test commerce requires a Stripe test key");
+    if (mode === "live" && !secretKey.startsWith("sk_live_")) throw new Error("VialGrade live commerce requires a Stripe live key");
+    this.stripe = new Stripe(secretKey, { appInfo: { name: "VialGrade", version: "5.0.0" } });
   }
 
   async createConnectedAccount(input: { businessName: string; email?: string; country: string }): Promise<ProviderAccountSnapshot> {
@@ -46,7 +46,7 @@ export class StripeConnectAdapter implements PaymentProcessorAdapter {
       type: "express",
       country: input.country,
       email: input.email,
-      business_profile: { name: input.businessName, product_description: "VIAL marketplace seller" },
+      business_profile: { name: input.businessName, product_description: "VialGrade marketplace seller" },
       capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
       metadata: { platform: "vial", release: "5.0.0" },
     });

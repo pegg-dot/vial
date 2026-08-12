@@ -5,9 +5,9 @@ import { upsertLiveCompound } from "@/server/ingest/live-sources";
 import { importShopifyCatalog } from "@/server/ingest/shopify-import";
 import { crossCheckCoa } from "@/server/verify/coa-cross-check";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "storefront-coa-test-secret-at-least-32chars";
-process.env.VIAL_PRIVACY_HASH_SECRET = "storefront-coa-privacy-secret-at-least-32chars";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "storefront-coa-test-secret-at-least-32chars";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "storefront-coa-privacy-secret-at-least-32chars";
 
 const VERIFY = "https://verify.janoshik.com/tests/551234-BPC157_K9Z";
 const BATCH = "2026-05-01-A"; // normalizes to "20260501a" (9 chars, over the >=6 floor)

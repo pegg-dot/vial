@@ -100,7 +100,7 @@ async function requestOnce(value: string, options: FetchOptions): Promise<SafeFe
       method: "GET",
       headers: {
         accept: options.allowedContentTypes.join(", "),
-        "user-agent": "VIAL-Source-Monitor/0.3 (+https://vial.local/methodology)",
+        "user-agent": "VialGrade-Source-Monitor/0.3 (+https://vial.local/methodology)",
         ...(options.etag ? { "if-none-match": options.etag } : {}),
         ...(options.lastModified ? { "if-modified-since": options.lastModified } : {}),
       },

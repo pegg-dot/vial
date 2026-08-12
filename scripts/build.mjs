@@ -18,19 +18,19 @@ const typecheck = spawnSync(
 );
 if (typecheck.error) throw typecheck.error;
 if (typecheck.status !== 0) process.exit(typecheck.status ?? 1);
-env.VIAL_SKIP_NEXT_TYPECHECK = "1";
+env.VIALGRADE_SKIP_NEXT_TYPECHECK = "1";
 
 // Local and CI builds without managed PostgreSQL use the embedded, in-memory
 // database only to render static/server pages. Deployed runtimes still fail
 // closed unless DATABASE_URL and production secrets are present.
 if (!env.DATABASE_URL?.trim()) {
   env.NEXT_PUBLIC_SITE_URL ??= "http://127.0.0.1:3000";
-  env.VIAL_PGLITE_MEMORY = "true";
-  env.VIAL_ALLOW_EMBEDDED_DB_FOR_TESTS = "true";
-  env.VIAL_SEED_FIXTURES ??= "true";
-  env.VIAL_SEED_DEMO_ACCOUNTS ??= "true";
-  env.VIAL_SESSION_SECRET ??= "build-only-session-secret-at-least-32-characters";
-  env.VIAL_PRIVACY_HASH_SECRET ??= "build-only-privacy-secret-at-least-32-characters";
+  env.VIALGRADE_PGLITE_MEMORY = "true";
+  env.VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS = "true";
+  env.VIALGRADE_SEED_FIXTURES ??= "true";
+  env.VIALGRADE_SEED_DEMO_ACCOUNTS ??= "true";
+  env.VIALGRADE_SESSION_SECRET ??= "build-only-session-secret-at-least-32-characters";
+  env.VIALGRADE_PRIVACY_HASH_SECRET ??= "build-only-privacy-secret-at-least-32-characters";
 }
 
 const result = spawnSync(

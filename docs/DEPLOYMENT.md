@@ -1,4 +1,4 @@
-# VIAL 1.0 deployment
+# VialGrade 1.0 deployment
 
 ## Supported runtime
 
@@ -17,12 +17,12 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.example
 DATABASE_URL=postgresql://...
 DATABASE_POOL_MAX=5
 DATABASE_SSL=true
-VIAL_SESSION_SECRET=<independent random value, at least 32 characters>
-VIAL_PRIVACY_HASH_SECRET=<independent random value, at least 32 characters>
-VIAL_SEED_FIXTURES=false
-VIAL_SEED_DEMO_ACCOUNTS=false
-VIAL_BUILD_SHA=<immutable commit or build identifier>
-VIAL_RELEASE=1.0.0
+VIALGRADE_SESSION_SECRET=<independent random value, at least 32 characters>
+VIALGRADE_PRIVACY_HASH_SECRET=<independent random value, at least 32 characters>
+VIALGRADE_SEED_FIXTURES=false
+VIALGRADE_SEED_DEMO_ACCOUNTS=false
+VIALGRADE_BUILD_SHA=<immutable commit or build identifier>
+VIALGRADE_RELEASE=1.0.0
 CRON_SECRET=<independent random value>
 ```
 
@@ -96,21 +96,21 @@ Do not deploy when any of these fail:
 - Backup and restore drill
 - Dependency audit
 
-## VIAL 5 commerce configuration
+## VialGrade 5 commerce configuration
 
 The safe default is:
 
 ```text
-VIAL_COMMERCE_MODE=sandbox
-VIAL_PAYMENT_PROVIDER=mock
-VIAL_LIVE_COMMERCE_ENABLED=false
+VIALGRADE_COMMERCE_MODE=sandbox
+VIALGRADE_PAYMENT_PROVIDER=mock
+VIALGRADE_LIVE_COMMERCE_ENABLED=false
 ```
 
 Stripe test mode requires:
 
 ```text
-VIAL_COMMERCE_MODE=test
-VIAL_PAYMENT_PROVIDER=stripe
+VIALGRADE_COMMERCE_MODE=test
+VIALGRADE_PAYMENT_PROVIDER=stripe
 STRIPE_SECRET_KEY=sk_test_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...

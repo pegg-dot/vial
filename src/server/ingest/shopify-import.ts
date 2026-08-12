@@ -53,7 +53,7 @@ function shopifyImage(p: ShopifyProduct): string | undefined {
   return src ? src.replace(/^http:\/\//i, "https://") : undefined;
 }
 
-const UA = "VIAL-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
+const UA = "VialGrade-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
 
 export async function fetchShopifyProducts(domain: string): Promise<ShopifyProduct[] | null> {
   for (const base of [`https://${domain}`, `https://www.${domain}`]) {
@@ -151,7 +151,7 @@ export async function importShopifyCatalog(
   // One candidate per matched product (using its cheapest available variant); recordAllSizes
   // dedupes by size and records every distinct vial size the vendor sells for a compound.
   // Collect each product's published Janoshik verify links (scoped to its compound) and batch-resolve
-  // them against the certificates VIAL ALREADY HOLDS — this is what lets a storefront listing carry
+  // them against the certificates VialGrade ALREADY HOLDS — this is what lets a storefront listing carry
   // independent evidence instead of "no lab test". Only held, compound-matched records resolve.
   const refsByCompound = new Map<string, Set<string>>();
   const productRefs = new Map<ShopifyProduct, JanoshikRef[]>();

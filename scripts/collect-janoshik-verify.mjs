@@ -1,7 +1,7 @@
-process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
+process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Re-verify every stored COA against Janoshik's LIVE public test database.
 //
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-janoshik-verify.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-janoshik-verify.mjs
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 //
 // Our COAs were ingested from a snapshot of this same feed, so this is a liveness check: it confirms
@@ -10,7 +10,7 @@ process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from 
 import { getDatabase } from "../src/server/db/client.ts";
 import { fetchJanoshikPortal, annotateJanoshikListings } from "../src/server/verify/janoshik-verify.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const db = await getDatabase();
 console.log("Fetching Janoshik public feed…");

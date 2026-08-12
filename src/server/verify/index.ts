@@ -1,4 +1,4 @@
-// The verify-anything utility — VIAL's answer to "is this a scam?" for ANYTHING, in or
+// The verify-anything utility — VialGrade's answer to "is this a scam?" for ANYTHING, in or
 // out of the catalog. Paste a vendor domain, a name, or a Janoshik COA code and get a
 // real-time verdict. The point is that "unknown" is a LOUD answer, not a silent gap:
 // for a vendor we've never indexed we run live signals (domain age, COA presence, Reddit
@@ -11,7 +11,7 @@ import { composeVerdictForVendorSlug } from "./trust-graph";
 
 export type Verdict = "trusted" | "caution" | "avoid" | "high-risk" | "unproven" | "info";
 // How much a signal can be trusted — its PROVENANCE tier, orthogonal to whether it's good/bad (`ok`).
-// The whole point of VIAL is that a guess must not wear a fact's clothes: a regex read off a
+// The whole point of VialGrade is that a guess must not wear a fact's clothes: a regex read off a
 // storefront ("inferred") can't render identically to a public FDA conviction ("verified").
 //   verified — a document / government record / hard shared identifier we can point at
 //   reported — a third-party human account (buyer reviews, community mentions, tracker scores)
@@ -132,20 +132,20 @@ export function vendorVerdict(v: KnownVendor): VerifyResult {
       { ok: !avoid, label: "Status", detail: avoid ? "Flagged as defunct, an impersonator, or a scam." : "Operating vendor." },
       { ok: v.publishesJanoshik === true ? true : null, label: "Third-party testing", detail: v.publishesJanoshik === true ? "Advertises independent Janoshik/MZ COAs." : "Independent testing not confirmed." },
     ],
-    link: avoid ? undefined : { href: `/vendors/${v.slug}`, label: `See ${v.name} on VIAL` },
+    link: avoid ? undefined : { href: `/vendors/${v.slug}`, label: `See ${v.name} on VialGrade` },
   };
 }
 
 // The rich path: turn a cross-seam ComposedVerdict into a verify result. This is what makes the
 // verify tool as deep as the vendor page — its signals ARE the trust-graph factors, each traceable.
-// We always link to VIAL's own evidence page (even for "avoid"): it's where the "why" lives, and it
+// We always link to VialGrade's own evidence page (even for "avoid"): it's where the "why" lives, and it
 // never sells — the vendor's storefront is only reachable from a live listing's explicit handoff.
 function verifyResultFromComposed(vendorName: string, slug: string, composed: Awaited<ReturnType<typeof composeVerdictForVendorSlug>>): VerifyResult {
   const c = composed!.composed;
   return {
     query: vendorName, kind: "vendor", verdict: c.verdict,
     headline: c.headline, summary: c.summary, signals: c.factors,
-    link: { href: `/vendors/${slug}`, label: `See ${vendorName} on VIAL` },
+    link: { href: `/vendors/${slug}`, label: `See ${vendorName} on VialGrade` },
   };
 }
 
@@ -195,7 +195,7 @@ async function coaVerdict(code: string, url?: string): Promise<VerifyResult> {
     const stale = coaIsStale(row.tested_at);
     const signals: Signal[] = [
       { ok: true, label: "Certificate", detail: "Resolves to a real, public, vendor-immutable lab record." },
-      { ok: true, label: "Attribution", detail: `Made by ${row.manufacturer}${row.vendor_slug ? ` — a vendor VIAL tracks.` : "."}` },
+      { ok: true, label: "Attribution", detail: `Made by ${row.manufacturer}${row.vendor_slug ? ` — a vendor VialGrade tracks.` : "."}` },
     ];
     if (row.tested_at) signals.push({ ok: !stale, label: "Freshness", detail: stale ? `Analyzed ${row.tested_at} — years old, so it describes an old batch, not necessarily current stock.` : `Analyzed ${row.tested_at}.` });
     return {
@@ -203,7 +203,7 @@ async function coaVerdict(code: string, url?: string): Promise<VerifyResult> {
       headline: `Real COA — ${row.sample_name} by ${row.manufacturer}`,
       summary: `This resolves to a genuine lab record: ${purity}. Confirm the compound and the “Made By” name match the product you're buying — a real certificate for someone else's product proves nothing about yours.`,
       signals,
-      link: row.vendor_slug ? { href: `/vendors/${row.vendor_slug}`, label: `See ${row.manufacturer} on VIAL` } : { href: row.verify_url, label: "Open the certificate on the lab" },
+      link: row.vendor_slug ? { href: `/vendors/${row.vendor_slug}`, label: `See ${row.manufacturer} on VialGrade` } : { href: row.verify_url, label: "Open the certificate on the lab" },
     };
   }
   // Not in our index — if a full URL was pasted, check whether it resolves live.

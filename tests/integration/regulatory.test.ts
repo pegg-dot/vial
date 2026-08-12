@@ -4,9 +4,9 @@ import { upsertLiveVendor } from "@/server/ingest/live-sources";
 import { recordRegulatoryAction, getVendorRegulatoryActions, getVendorRegulatoryVerdict, listRegulatoryActions } from "@/server/regulatory/repository";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "regulatory-test-secret-at-least-32-characters-long";
-process.env.VIAL_PRIVACY_HASH_SECRET = "regulatory-test-privacy-secret-at-least-32-chars";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "regulatory-test-secret-at-least-32-characters-long";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "regulatory-test-privacy-secret-at-least-32-chars";
 
 describe("regulatory actions", () => {
   beforeAll(async () => {

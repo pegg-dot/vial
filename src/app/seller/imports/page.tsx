@@ -25,7 +25,7 @@ export default async function SellerImportsPage({ searchParams }: { searchParams
   const job = selected?.job as Record<string, unknown> | undefined;
   const rows = (selected?.rows ?? []) as Array<Record<string, unknown>>;
   return <>
-    <SellerPageHeader title="Import review" description="VIAL never silently publishes imported products. Every row is normalized, matched, scored, and held for seller confirmation." action={<a href="/seller/integrations" className={secondaryButton}>New import</a>} />
+    <SellerPageHeader title="Import review" description="VialGrade never silently publishes imported products. Every row is normalized, matched, scored, and held for seller confirmation." action={<a href="/seller/integrations" className={secondaryButton}>New import</a>} />
     <div className="mt-7 grid gap-6 xl:grid-cols-[.34fr_.66fr]">
       <Panel title="Import jobs" description={`${jobs.length} dry-run imports`}>
         <div className="space-y-2">{jobs.length ? jobs.map((item) => <a key={String(item.id)} href={`/seller/imports?job=${encodeURIComponent(String(item.id))}`} className={`block rounded-[14px] p-4 transition ${String(item.id) === selectedId ? "ink-1 bg-[#f0edff]" : "ink-1 bg-[#fafaf7] hover:bg-white"}`}><div className="flex items-center justify-between gap-3"><p className="font-bold capitalize">{String(item.source_type).replaceAll("_", " ")}</p><StatusPill status={String(item.status)} /></div><p className="mt-2 text-xs font-medium text-[var(--muted)]">{String(item.row_count)} rows · {String(item.matched_count)} auto-matched · {String(item.review_count)} review</p></a>) : <p className="text-sm font-medium text-[var(--muted)]">No imports yet.</p>}</div>

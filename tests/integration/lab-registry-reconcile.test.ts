@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { recordLabTest, reconcileLabsFromRegistry } from "@/server/ingest/lab-tests";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "lab-reconcile-test-secret-at-least-32-characters-long";
-process.env.VIAL_PRIVACY_HASH_SECRET = "lab-reconcile-privacy-secret-at-least-32-characters";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "lab-reconcile-test-secret-at-least-32-characters-long";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "lab-reconcile-privacy-secret-at-least-32-characters";
 
 const resolve = { compounds: [{ slug: "bpc-157", name: "BPC-157", aliases: ["bpc157"] }], vendors: [] as { slug: string; name: string; domain: string }[] };
 

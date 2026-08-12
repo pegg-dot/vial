@@ -1,4 +1,4 @@
-# VIAL — Vision, Architecture & Handoff (START HERE)
+# VialGrade — Vision, Architecture & Handoff (START HERE)
 
 **Read this top to bottom before touching anything.** The code is complete through v10.0 and
 backed up at `github.com/pegg-dot/vial`. What is **not** done is the *product*: the data is 100%
@@ -7,7 +7,7 @@ down. This doc is the single source of truth for continuing that work.
 
 ---
 
-## 1. What VIAL is (plain English)
+## 1. What VialGrade is (plain English)
 
 **A Bloomberg Terminal / Yahoo Finance for the research-peptide market.** You look up a compound
 (BPC-157, tirzepatide, semaglutide) or a vendor like you'd look up a stock, and you see the real
@@ -24,19 +24,19 @@ BPC-157 vendors under $50."
 
 ## 2. The core reframe — why a solo founder + AI can build this
 
-**VIAL is an AGGREGATOR, not a lab.** Yahoo Finance doesn't audit companies or execute your trades;
-it aggregates public data and links you to your broker. VIAL **never tests a peptide.** It
+**VialGrade is an AGGREGATOR, not a lab.** Yahoo Finance doesn't audit companies or execute your trades;
+it aggregates public data and links you to your broker. VialGrade **never tests a peptide.** It
 aggregates data that already exists publicly and presents it like a terminal. → No lab, no
 scientists, no touching product. This is a "founder behind a computer with Claude Code" business.
 
 **Corollary — CONFIRMED (Nate, 2026-07-21): affiliate-out, no native checkout.** Like Yahoo links you to your broker,
-VIAL links the buyer out to the vendor (affiliate link). VIAL never touches money → this sidesteps
+VialGrade links the buyer out to the vendor (affiliate link). VialGrade never touches money → this sidesteps
 the payments / legal-gray-zone problem **and** preserves neutrality. The cart/checkout that exists
 today is likely the wrong model (see §8).
 
 ## 3. How the data actually gets there (THE crux question)
 
-This market already has structured, public data — it's just scattered across 20 tabs. VIAL
+This market already has structured, public data — it's just scattered across 20 tabs. VialGrade
 centralizes it:
 
 1. **Lab results — the killer source.** [Janoshik Analytical](https://www.peptidehackers.com/blogs/q-a/third-party-peptide-testing-guide)
@@ -51,7 +51,7 @@ centralizes it:
 4. **Scam signals** — the red flags buyers already use are *computable*: no batch-matchable COA,
    price too-good-to-be-true, no real business address, astroturfed reviews, cold-emailing.
 
-**All of this is AI-scrapable/parseable. None of it requires testing.** And critically: **VIAL
+**All of this is AI-scrapable/parseable. None of it requires testing.** And critically: **VialGrade
 already has the ingestion engine built** — `src/server/refresh/` (SSRF-hardened fetch, immutable
 snapshots, the pipeline), the extractor provider seam (`src/server/agents/extractors/`), parser
 contracts, and the review→publication cascade. It is currently **pointed at fixtures.** Making the
@@ -60,7 +60,7 @@ between "made up" and "real," and it is automatable exactly as the founder wants
 
 ## 4. The Bloomberg mapping (the product shape)
 
-| Finance | VIAL |
+| Finance | VialGrade |
 |---|---|
 | Ticker | Compound (`/compounds/bpc-157`) — price across vendors, aggregate tested-purity, news |
 | Company | Vendor (`/vendors/...`) — reputation, price competitiveness, test coverage, red flags |
@@ -161,7 +161,7 @@ visual polish with Fable 5 / Cloud Design.
 2. ~~**Make the data real**~~ **DONE 2026-07-21** — BPC-157 is live end-to-end. 3 real vendors
    (Eternal $34.99, Bluum $42, Biotech $49.40) fetched live from their real product pages +
    the Janoshik public COA feed, run through snapshot→extract→review→publish, marked **Live**.
-   Run it: `VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-real-bpc157.mjs`
+   Run it: `VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-real-bpc157.mjs`
    (dev server stopped first — file-backed PGlite is single-writer). Network-only proof:
    `node --import tsx scripts/live-source-smoke.mjs`. See progress log below.
 3. ~~**UX cleanup**~~ **DONE 2026-07-21** — see progress log below.
@@ -173,7 +173,7 @@ visual polish with Fable 5 / Cloud Design.
 ### Progress log — 2026-07-22 (lab registry: sourced, tiered, wired — defamation-safe)
 
 Nate's concern: as this scales, don't get sued for defamation over half-true lab claims, and make
-sure evidence is actually WIRED into VIAL, not just gathered. Both addressed.
+sure evidence is actually WIRED into VialGrade, not just gathered. Both addressed.
 
 - **Provenance-first research on all 11 labs** (`docs/labs-research.md`) caught two live liabilities:
   **Horizon Analytical** and **SteriGenix** are shown on vendor COAs as independent labs, but
@@ -187,7 +187,7 @@ sure evidence is actually WIRED into VIAL, not just gathered. Both addressed.
 - **`src/server/labs/registry.ts` is the single source of truth.** Each lab tiered
   independent / independence-unverified / unverified; every accreditation carries its verification
   status + whether scope covers peptides; every claim sourced. `canonicalizeLabName` collapses
-  split names (Janoshik/Janoshik Analytical); `labCountsAsIndependent` gates what VIAL vouches for.
+  split names (Janoshik/Janoshik Analytical); `labCountsAsIndependent` gates what VialGrade vouches for.
 - **Wired end-to-end + proven:** recordLabTest applies the registry on write (canonical name +
   is_independent, migration v25); `reconcileLabsFromRegistry` fixed the 250+ existing rows;
   reputation counts only confirmed-independent COAs; passports project only from them **and now
@@ -206,7 +206,7 @@ sure evidence is actually WIRED into VIAL, not just gathered. Both addressed.
 ### Progress log — 2026-07-22 (deepen evidence: blind tests + independent COAs + REAL passports)
 
 The reframe (Nate: "get more STUFF for the vendors we have — lab tests, independent
-records, passports, batches, reports"): VIAL had a full evidence-network architecture
+records, passports, batches, reports"): VialGrade had a full evidence-network architecture
 (labs → sealed samples → hash-chained custody → reports → **batch passports**) running on
 **1 demo record**, while 250+ real certificates sat in a flat side-table beside it, never
 connected. Three increments closed that gap:
@@ -229,10 +229,10 @@ connected. Three increments closed that gap:
    (vendor, compound, batch) cluster of real certificates into a published LIVE batch passport:
    **143 real batches across 44 vendors** (was 1 demo). Decomposed, explainable confidence
    (volume · lab diversity · blind-independence · purity agreement · recency), capped <93%
-   (external COAs never prove every vial). Honest by construction: does NOT fabricate VIAL's
+   (external COAs never prove every vial). Honest by construction: does NOT fabricate VialGrade's
    custody chain the COAs never passed through — links real lab_test_records via a new
    passport_lab_tests join (migration v24) and says so in limitations. Reuses the passport
-   surface → appears on /passports, mints vial:batch registry IDs (144), feeds the vendor
+   surface → appears on /passports, mints vialgrade:batch registry IDs (144), feeds the vendor
    "Independent evidence corroboration" dimension. Detail page forks on origin.
 
 Result vs Nate's screenshot: Vici Peptides went from "No independent tests on record" to
@@ -289,7 +289,7 @@ finding was then fixed across 5 committed batches (all pushed):
 
 - **BPC-157 is real, end to end.** `origin` column ('demo'|'live') is the keystone (migration 14).
   New create-path `src/server/ingest/live-sources.ts` (was gap #1/#2) inserts real vendors/listings
-  and registers real `transport='http'` policies, gated by `VIAL_LIVE_INGEST_APPROVED`.
+  and registers real `transport='http'` policies, gated by `VIALGRADE_LIVE_INGEST_APPROVED`.
   `src/server/ingest/bpc157.ts` provisions Eternal/Bluum/Biotech + the Janoshik feed and runs the
   real fetch → snapshot → extract → review → publish; only sane in-range price/availability
   auto-approves, junk (batch/issuer regex noise) is **held for a human** — the review gate on real data.
@@ -336,9 +336,9 @@ finding was then fixed across 5 committed batches (all pushed):
 - **Repo:** `/Users/natepegg/vial` · `github.com/pegg-dot/vial` (private) · `main` @ 10.0.0, schema v13.
 - **Run:** `npm run dev` → **http://localhost:3000** (use `localhost`, NOT `127.0.0.1` — CSRF blocks
   the login POST on `127.0.0.1`).
-- **Demo logins** (dev-seeded; password `VialDemo<Role>!2026`, e.g. `VialDemoCustomer!2026`):
+- **Demo logins** (dev-seeded; password `VialGradeDemo<Role>!2026`, e.g. `VialGradeDemoCustomer!2026`):
   customer `nora@example.test` · seller `marcus@helixtest.test` · lab `elena@aperture.test` ·
-  admin `jon@vial.test` · reviewer `maya@vial.test`.
+  admin `jon@vialgrade.test` · reviewer `maya@vialgrade.test`.
 - **Verify:** `npm run verify:v10` (lint · typecheck · tests · 9 audits · build). Known: `audit:roles`
   fails **in this sandbox only** (it boots a production `next start` server whose token-seed doesn't
   work here) — proven pre-existing at baseline `1bbba48`, not a regression.

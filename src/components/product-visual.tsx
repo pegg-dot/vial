@@ -35,7 +35,7 @@ export function ProductVisual({
           <div className="absolute left-1/2 top-0 h-[28px] w-[70px] -translate-x-1/2 rounded-t-[13px] rounded-b-[8px] border border-black/15 bg-[linear-gradient(180deg,#d9dde4,#8c939f_55%,#d9dde4)] shadow-[inset_0_1px_1px_rgba(255,255,255,.8)]" />
           <div className="absolute left-1/2 top-[22px] h-[188px] w-[104px] -translate-x-1/2 rounded-[20px_20px_25px_25px] border border-black/10 bg-[linear-gradient(90deg,rgba(255,255,255,.88),rgba(255,255,255,.46)_24%,rgba(255,255,255,.84)_74%,rgba(255,255,255,.38))] shadow-[inset_10px_0_18px_rgba(255,255,255,.7),inset_-8px_0_14px_rgba(10,20,40,.07)] backdrop-blur-sm" />
           <div className="absolute left-1/2 top-[57px] flex h-[112px] w-[92px] -translate-x-1/2 flex-col items-center justify-center rounded-[6px] border border-white/60 bg-white/80 px-2 text-center shadow-sm backdrop-blur">
-            <span className="text-[8px] font-semibold uppercase tracking-[.22em] text-black/38">VIAL index</span>
+            <span className="text-[8px] font-semibold uppercase tracking-[.22em] text-black/38">VialGrade index</span>
             <span className="mt-3 max-w-[78px] text-[14px] font-black leading-[.9] tracking-[-.05em] text-[#111214]">{name}</span>
             <span className="mt-2 text-[9px] font-semibold text-black/45">{quantity}</span>
             <span className="mt-3 h-[3px] w-10 rounded-full bg-[linear-gradient(90deg,var(--accent-a),var(--accent-b))]" />

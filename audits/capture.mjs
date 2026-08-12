@@ -1,7 +1,7 @@
 import { chromium } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
-const baseURL = process.env.VIAL_AUDIT_BASE_URL ?? "http://127.0.0.1:3000";
+const baseURL = process.env.VIALGRADE_AUDIT_BASE_URL ?? "http://127.0.0.1:3000";
 await mkdir("audits/screenshots", { recursive: true });
 
 const browser = await chromium.launch({
@@ -40,7 +40,7 @@ await publicContext.close();
 const staffContext = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
 const staffPage = await staffContext.newPage();
 await staffPage.goto(`${baseURL}/admin/login`, { waitUntil: "networkidle", timeout: 30_000 });
-await staffPage.getByLabel("Staff token").fill(process.env.VIAL_AUDIT_ADMIN_TOKEN ?? "vial-admin");
+await staffPage.getByLabel("Staff token").fill(process.env.VIALGRADE_AUDIT_ADMIN_TOKEN ?? "vial-admin");
 await staffPage.getByRole("button", { name: "Continue securely" }).click();
 await staffPage.getByRole("heading", { name: "Market operations" }).waitFor();
 

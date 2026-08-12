@@ -6,15 +6,15 @@
 // hotlinks it with a graceful fallback to the generated vial when a URL is missing/broken.
 //
 // Live network + writes to the dev DB. Gated so it is never an accident:
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-product-images.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-product-images.mjs
 //   (add --refresh to also re-fetch listings that already have an image)
 //
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { getDatabase } from "../src/server/db/client.ts";
 import { extractProductImage } from "../src/server/ingest/product-image.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
-  console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true to fetch live vendor pages.");
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
+  console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true to fetch live vendor pages.");
   process.exit(1);
 }
 
@@ -39,7 +39,7 @@ for (const row of rows) {
     const res = await fetch(row.external_url, {
       redirect: "follow",
       signal: controller.signal,
-      headers: { "user-agent": "Mozilla/5.0 (compatible; VIAL/1.0; +https://vial.example)" },
+      headers: { "user-agent": "Mozilla/5.0 (compatible; VialGrade/1.0; +https://vialgrade.example)" },
     }).finally(() => clearTimeout(timer));
     if (!res.ok) { console.log(`  · ${row.name}: HTTP ${res.status}`); missed++; continue; }
     const html = await res.text();

@@ -27,15 +27,15 @@ export function getExtractor(): ExtractorProvider {
   const deterministic = new DeterministicExtractor();
   const client = createAnthropicExtractionClient();
   const selection = resolveExtractorSelection({
-    mode: process.env.VIAL_EXTRACTOR ?? "deterministic",
+    mode: process.env.VIALGRADE_EXTRACTOR ?? "deterministic",
     clientAvailable: client.available,
-    modelApproved: process.env.VIAL_MODEL_EXTRACTOR_APPROVED === "true",
+    modelApproved: process.env.VIALGRADE_MODEL_EXTRACTOR_APPROVED === "true",
   });
   if (selection === "deterministic") return deterministic;
   const model = new ModelExtractor({
     client,
-    promptVersion: process.env.VIAL_EXTRACTOR_PROMPT_VERSION ?? "extract-v1",
-    maxOutputTokens: Number(process.env.VIAL_EXTRACTOR_MAX_TOKENS ?? 4000),
+    promptVersion: process.env.VIALGRADE_EXTRACTOR_PROMPT_VERSION ?? "extract-v1",
+    maxOutputTokens: Number(process.env.VIALGRADE_EXTRACTOR_MAX_TOKENS ?? 4000),
   });
   // Shadow: deterministic stays authoritative; the model runs alongside for measurement only.
   if (selection === "shadow") return new ShadowExtractor(deterministic, model);

@@ -1,13 +1,13 @@
-# VIAL roadmap ledger
+# VialGrade roadmap ledger
 
-## VIAL 1.0: production foundation
+## VialGrade 1.0: production foundation
 
 Status: complete.
 
 - Durable identity, revocable sessions, deny-by-default authorization
 - Versioned migrations, PostgreSQL boundary, security, observability, CI, backup, and deployment controls
 
-## VIAL 2.0: market-data engine
+## VialGrade 2.0: market-data engine
 
 Status: complete in source and fictional-fixture verification.
 
@@ -18,7 +18,7 @@ Status: complete in source and fictional-fixture verification.
 
 External launch checkpoints remain counsel-approved real-source pilots and production data ownership.
 
-## VIAL 3.0: consumer intelligence
+## VialGrade 3.0: consumer intelligence
 
 Status: complete in source and fictional-fixture verification.
 
@@ -26,7 +26,7 @@ Status: complete in source and fictional-fixture verification.
 - Saved searches, cross-device comparisons, follows, watchlists, and decision history
 - Explicit preferences, change summaries, relevance thresholds, and quiet hours
 
-## VIAL 4.0: seller operating system
+## VialGrade 4.0: seller operating system
 
 Status: complete in source and sandbox verification.
 
@@ -40,7 +40,7 @@ Status: complete in source and sandbox verification.
 
 External launch checkpoints remain real credentials, seller contracts, processor underwriting, identity verification, product eligibility, and production connector audits.
 
-## VIAL 5.0: approved commerce
+## VialGrade 5.0: approved commerce
 
 Status: complete in source, sandbox, and provider-test architecture.
 
@@ -55,7 +55,7 @@ Status: complete in source, sandbox, and provider-test architecture.
 
 External launch checkpoints remain real processor underwriting, seller agreements, legal SKU and jurisdiction approval, tax and liability determination, fraud operations, insurance, and production credentials.
 
-## VIAL 6.0: evidence and laboratory network
+## VialGrade 6.0: evidence and laboratory network
 
 Status: complete in source and fictional-fixture verification.
 
@@ -70,19 +70,19 @@ Status: complete in source and fictional-fixture verification.
 
 External launch checkpoints remain laboratory agreements, identity and scope verification, method validation review, sampler logistics, raw-data retention, and production object storage.
 
-## VIAL 7.0: production agent control plane
+## VialGrade 7.0: production agent control plane
 
 - Versioned prompts and tools
 - Evaluation gates
 - Shadow and canary deployments
 - Model routing, budgets, failure clustering, and rollback
 
-## VIAL 8.0: native and ambient experience
+## VialGrade 8.0: native and ambient experience
 
 - SwiftUI application
 - Scanning, push notifications, saved offline records, and native seller operations
 
-## VIAL 9.0: enterprise platform
+## VialGrade 9.0: enterprise platform
 
 - Public and private APIs
 - Data exports
@@ -90,7 +90,7 @@ External launch checkpoints remain laboratory agreements, identity and scope ver
 - Laboratory software
 - Research terminal
 
-## VIAL 10.0: category infrastructure
+## VialGrade 10.0: category infrastructure
 
 - Market standards for product identity, evidence, batch history, and vendor reputation
 - Deep network effects and global ecosystem integrations

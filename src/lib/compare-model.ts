@@ -44,7 +44,7 @@ export const COMPARE_DIMS: CompareDim[] = [
   { key: "purity", label: "Tested purity", group: "quality", hint: "Median independently-measured purity." },
   { key: "evidence", label: "Evidence tier", group: "quality", hint: "How strong the evidence tied to this listing is." },
 
-  { key: "verdict", label: "Trust verdict", group: "reliability", hint: "VIAL's composed verdict across every signal we hold on the vendor." },
+  { key: "verdict", label: "Trust verdict", group: "reliability", hint: "VialGrade's composed verdict across every signal we hold on the vendor." },
   { key: "trustpilot", label: "Trustpilot", group: "reliability", hint: "Independent buyer rating (their opinion, not ours)." },
   { key: "reviews", label: "Buyer reviews on file", group: "reliability", hint: "How much buyer feedback exists." },
   { key: "track", label: "Track record", group: "reliability", hint: "How long the vendor has existed — a new site can't fake years of history." },

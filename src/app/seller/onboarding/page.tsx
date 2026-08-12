@@ -18,7 +18,7 @@ export default async function SellerOnboardingPage() {
   const connectedCatalog = context.integrations.some((row) => ["shopify", "woocommerce", "csv", "website"].includes(String((row as Record<string, unknown>).provider)) && ["connected", "sandbox_ready"].includes(String((row as Record<string, unknown>).status)));
   const paymentReady = context.integrations.some((row) => String((row as Record<string, unknown>).provider) === "stripe_connect" && ["connected", "sandbox_ready"].includes(String((row as Record<string, unknown>).status)));
   return <>
-    <SellerPageHeader title="Self-serve onboarding" description="Connect the systems you already use, let VIAL propose canonical matches, then submit one traceable package for review." action={<div className="text-right"><p className="text-4xl font-extrabold tracking-[-.05em]">{Number(readiness?.completion_percent ?? 0)}%</p><p className="text-xs font-medium text-[var(--muted)]">{String(readiness?.overall_state ?? "blocked").replaceAll("_", " ")}</p></div>} />
+    <SellerPageHeader title="Self-serve onboarding" description="Connect the systems you already use, let VialGrade propose canonical matches, then submit one traceable package for review." action={<div className="text-right"><p className="text-4xl font-extrabold tracking-[-.05em]">{Number(readiness?.completion_percent ?? 0)}%</p><p className="text-xs font-medium text-[var(--muted)]">{String(readiness?.overall_state ?? "blocked").replaceAll("_", " ")}</p></div>} />
     <div className="mt-7 grid gap-6 xl:grid-cols-[.68fr_1.32fr]">
       <div className="space-y-6 xl:sticky xl:top-6 xl:self-start">
         <Panel title="Readiness map" description="Eight separate dimensions. Completing one cannot mask another.">{dimensions.map(({ key, ...item }) => <ReadinessRow key={key} {...item} />)}</Panel>
@@ -34,7 +34,7 @@ export default async function SellerOnboardingPage() {
             <label className="text-sm font-medium">Country<select className="field mt-2" name="countryCode" defaultValue={String(profile.country_code ?? "US")}><option value="US">United States</option><option value="CA">Canada</option><option value="GB">United Kingdom</option></select></label>
             <div className="flex items-end"><button className={primaryButton}>Save identity</button></div>
           </form>
-          {businessCandidates[0] && <div className="ink-1 mt-5 flex items-start gap-3 rounded-[14px] bg-[#f0edff] p-4"><Building2 className="mt-0.5 size-4 text-[#6d5dfc]" /><div><p className="text-sm font-extrabold text-[#6d5dfc]">Possible existing VIAL profile: {businessCandidates[0].name}</p><p className="mt-1 text-xs leading-5 text-[#6d5dfc]/70">{businessCandidates[0].reasons.join(" · ")}. This is a match proposal, not an automatic claim.</p></div></div>}
+          {businessCandidates[0] && <div className="ink-1 mt-5 flex items-start gap-3 rounded-[14px] bg-[#f0edff] p-4"><Building2 className="mt-0.5 size-4 text-[#6d5dfc]" /><div><p className="text-sm font-extrabold text-[#6d5dfc]">Possible existing VialGrade profile: {businessCandidates[0].name}</p><p className="mt-1 text-xs leading-5 text-[#6d5dfc]/70">{businessCandidates[0].reasons.join(" · ")}. This is a match proposal, not an automatic claim.</p></div></div>}
         </Panel>
 
         <Panel title="2. Operations" action={<StatusPill status={stepMap.get("operations")?.status ?? "not_started"} />}>
@@ -73,7 +73,7 @@ export default async function SellerOnboardingPage() {
         </Panel>
 
         <Panel title="8. Submit for review" action={<StatusPill status={stepMap.get("review")?.status ?? "not_started"} />}>
-          <p className="text-sm font-medium leading-6 text-[var(--muted)]">VIAL packages identity, operations, connector state, catalog mappings, evidence relationships, payment requirements, team ownership, and accepted terms into one traceable review package.</p>
+          <p className="text-sm font-medium leading-6 text-[var(--muted)]">VialGrade packages identity, operations, connector state, catalog mappings, evidence relationships, payment requirements, team ownership, and accepted terms into one traceable review package.</p>
           <form action={saveOnboardingStepAction} className="mt-5"><input type="hidden" name="step" value="review" /><input type="hidden" name="complete" value="true" /><label className="flex items-start gap-3 text-sm"><input type="checkbox" name="acknowledged" className="mt-1" required /><span>I confirm the sandbox package is accurate and understand production activation requires external approval.</span></label><button disabled={blockers.length > 0} className={`${primaryButton} mt-5`}>Submit review package</button>{blockers.length > 0 && <p className="mt-3 text-xs font-medium text-[#b26a00]">Resolve the readiness blockers listed on the left before submission.</p>}</form>
         </Panel>
       </div>

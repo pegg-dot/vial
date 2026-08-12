@@ -6,7 +6,7 @@
 //   node --import tsx scripts/delete-demos.mjs         (run with the dev server stopped)
 // Never re-seed demo fixtures from this (or any live-data) script: a bare `node` run doesn't load
 // .env.local, so without this the getDatabase() init would recreate the very demos we're deleting.
-process.env.VIAL_SEED_FIXTURES ||= "false";
+process.env.VIALGRADE_SEED_FIXTURES ||= "false";
 import { getDatabase } from "../src/server/db/client.ts";
 
 const db = await getDatabase();
@@ -57,7 +57,7 @@ const steps = [
 ];
 
 // Best-effort teardown of the demo commerce/source sandbox that backs the demo orgs (all fixtures;
-// no live commerce exists — VIAL is affiliate-out). Delete every seller-/source-child row for demo
+// no live commerce exists — VialGrade is affiliate-out). Delete every seller-/source-child row for demo
 // orgs, then the sellers and sources, then the org rows. Anything that can't unwind cleanly is left
 // in place but is invisible: the consumer surface filters to origin='live', and production never
 // creates any of it. Ordered children-first; each guarded.

@@ -1,6 +1,6 @@
 # Audit artifacts
 
-These artifacts document the final VIAL 0.3 production build and its controlled fictional source-to-signal flow.
+These artifacts document the final VialGrade 0.3 production build and its controlled fictional source-to-signal flow.
 
 ## Screenshots
 
@@ -66,4 +66,4 @@ They include the controlled source-refresh cascade from fixture mutation through
 
 ## Screenshot utility
 
-`capture.mjs` expects a running application on `http://127.0.0.1:3000`. It captures public pages, signs into the staff workspace with `VIAL_AUDIT_ADMIN_TOKEN`, advances a deterministic fictional source, runs the opportunity sweep, and captures the resulting operations surfaces.
+`capture.mjs` expects a running application on `http://127.0.0.1:3000`. It captures public pages, signs into the staff workspace with `VIALGRADE_AUDIT_ADMIN_TOKEN`, advances a deterministic fictional source, runs the opportunity sweep, and captures the resulting operations surfaces.

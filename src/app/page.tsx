@@ -28,10 +28,10 @@ export default async function HomePage() {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "VIAL",
-    url: "https://vial.example",
+    name: "VialGrade",
+    url: "https://vialgrade.example",
     description: "Know what's really in the vial. Every peptide vendor's lab tests, prices, and reputation, fact-checked in one place.",
-    potentialAction: { "@type": "SearchAction", target: "https://vial.example/market?q={search_term_string}", "query-input": "required name=search_term_string" },
+    potentialAction: { "@type": "SearchAction", target: "https://vialgrade.example/market?q={search_term_string}", "query-input": "required name=search_term_string" },
   };
 
   return (

@@ -2,7 +2,7 @@
 
 ## Current visual language — the "hard" system (Gumroad × AscendBioLabs)
 
-VIAL's whole app uses one hard design system: **thick black borders, hard OFFSET shadows
+VialGrade's whole app uses one hard design system: **thick black borders, hard OFFSET shadows
 (never soft blur), flat fills (no gradients / no soft glows), a limited palette, bold/extrabold
 type, sharp radii.** It reads sharp and confident, not childish — no cartoon faces, no rainbow,
 no gradient text. This superseded the earlier soft "clinical luxury" look; the durable
@@ -94,7 +94,7 @@ Restyle these and whole trees reskin at once:
 - **Vendor mark** — flat-fill + ink-border identity block (no gradient).
 - **Search command** — labeled modal, keyboard-escapable, grouped entity results.
 - **Compare dock** — persistent action bar, appears only when records are selected.
-- **Trust chip / VIAL verdict** — composed cross-seam verdict; never a single black-box score.
+- **Trust chip / VialGrade verdict** — composed cross-seam verdict; never a single black-box score.
 
 ## Motion
 - Motion communicates state, not decoration. Hover = the `press` sink-into-shadow.
@@ -114,6 +114,6 @@ Restyle these and whole trees reskin at once:
 ## Working rules
 - Restyling is styling-only: never change copy, logic, data, props, or layout to apply the look.
 - Verify visible changes against desktop **and** mobile screenshots (Playwright → dev server →
-  read PNG; internal pages need a demo login: `VialDemo{Customer,Seller,Laboratory,Admin}!2026`).
+  read PNG; internal pages need a demo login: `VialGradeDemo{Customer,Seller,Laboratory,Admin}!2026`).
 - Never run `npm run build` while `next dev` is up (it deletes `.next`); never touch
   `.data/pglite` while dev runs.

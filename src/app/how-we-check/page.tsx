@@ -5,7 +5,7 @@ import { ArtCoa, ArtShieldCheck, VialBuddy } from "@/components/vial-art";
 
 export const metadata: Metadata = {
   title: "How we check",
-  description: "How VIAL decides what counts as proof: lab reports, batch matching, who picked the sample, and what we refuse to guess about.",
+  description: "How VialGrade decides what counts as proof: lab reports, batch matching, who picked the sample, and what we refuse to guess about.",
 };
 
 const ladder = [
@@ -40,7 +40,7 @@ export default function HowWeCheckPage() {
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#8fffd6]">How we check</p>
           <h1 className="mt-5 max-w-4xl text-balance text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">Trust is a chain of evidence, <span className="text-[#8fffd6]">not a green check.</span></h1>
           <p className="mt-7 max-w-2xl text-lg font-medium leading-8 text-white/70">
-            Before you spend money on a peptide, you want three answers: is it real, will I get scammed, and is this the fair price. This page shows exactly how VIAL earns each answer — and what we refuse to guess about.
+            Before you spend money on a peptide, you want three answers: is it real, will I get scammed, and is this the fair price. This page shows exactly how VialGrade earns each answer — and what we refuse to guess about.
           </p>
         </div>
       </section>
@@ -60,7 +60,7 @@ export default function HowWeCheckPage() {
               <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">The evidence ladder</p>
               <h2 className="mt-3 text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[.98] tracking-[-.045em]">How much a lab test really proves</h2>
               <p className="mt-4 text-sm font-medium leading-6 text-[var(--muted)]">
-                &ldquo;Lab tested&rdquo; can mean six very different things. Every listing on VIAL is labeled with where it sits on this ladder. Higher doesn&rsquo;t mean &ldquo;safe&rdquo; — it means stronger proof of a narrower fact.
+                &ldquo;Lab tested&rdquo; can mean six very different things. Every listing on VialGrade is labeled with where it sits on this ladder. Higher doesn&rsquo;t mean &ldquo;safe&rdquo; — it means stronger proof of a narrower fact.
               </p>
             </div>
             <div className="space-y-3">
@@ -83,7 +83,7 @@ export default function HowWeCheckPage() {
         <div className="max-w-3xl">
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Reading a lab report</p>
           <h2 className="mt-3 text-[clamp(2.2rem,5vw,3.6rem)] font-extrabold leading-[.95] tracking-[-.045em]">One report answers six separate questions</h2>
-          <p className="mt-5 text-base font-medium leading-7 text-[var(--muted)]">A polished-looking COA can still dodge most of these. On every listing, VIAL answers each one separately — established, partial, or unknown.</p>
+          <p className="mt-5 text-base font-medium leading-7 text-[var(--muted)]">A polished-looking COA can still dodge most of these. On every listing, VialGrade answers each one separately — established, partial, or unknown.</p>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {reportQuestions.map((q) => (

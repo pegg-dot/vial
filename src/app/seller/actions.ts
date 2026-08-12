@@ -130,7 +130,7 @@ export async function fulfillSellerOrderAction(formData: FormData) {
   const db = await getDatabase();
   const owned = (await db.query(`SELECT 1 FROM commerce_order_lines WHERE order_id=$1 AND seller_id=$2 LIMIT 1`, [orderId, context.sellerId])).rows[0];
   if (!owned) throw new Error("Order not found for this seller");
-  await createShipment({ orderId, sellerId: context.sellerId, carrier: text(formData, "carrier") || "VIAL Sandbox", trackingCode: text(formData, "trackingCode") });
+  await createShipment({ orderId, sellerId: context.sellerId, carrier: text(formData, "carrier") || "VialGrade Sandbox", trackingCode: text(formData, "trackingCode") });
   refreshSeller();
   redirect(`/seller/orders?shipped=${encodeURIComponent(orderId)}`);
 }

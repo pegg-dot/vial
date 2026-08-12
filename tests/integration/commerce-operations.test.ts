@@ -4,14 +4,14 @@ import { getDatabase } from "@/server/db/client";
 import { createRefund, createReturnRequest, createSandboxDispute, createShipment, operationsDashboard, recordWebhook, replayWebhook, reviewReturn, runReconciliation, submitDisputeEvidence } from "@/server/commerce/operations";
 
 describe("commerce operations", () => {
-  beforeEach(() => { process.env.VIAL_PGLITE_MEMORY="true"; delete globalThis.__vialDbPromise; });
+  beforeEach(() => { process.env.VIALGRADE_PGLITE_MEMORY="true"; delete globalThis.__vialDbPromise; });
   it("runs the post-purchase operations with auditable records", async () => {
     const dashboard=await commerceDashboard();
     const eligible=dashboard.eligibility.find((r)=>r.state==="checkout_sandbox");
     await addCartLine({customerKey:"ops-test",listingSlug:String(eligible!.slug),quantity:1});
     const cart=await getOrCreateCart("ops-test");
     expect(cart.eligible).toBe(true);
-    const checkout=await createSandboxCheckout({customerKey:"ops-test",email:"ops@vial.test",address:{line1:"1 Test",city:"Miami",region:"FL",postalCode:"33101"},idempotencyKey:"ops-checkout-1"});
+    const checkout=await createSandboxCheckout({customerKey:"ops-test",email:"ops@vialgrade.test",address:{line1:"1 Test",city:"Miami",region:"FL",postalCode:"33101"},idempotencyKey:"ops-checkout-1"});
     expect(checkout.orderId).toBeTruthy();
     const db=await getDatabase();
     const seller=(await db.query<{seller_id:string}>(`SELECT seller_id FROM commerce_order_lines WHERE order_id=$1 LIMIT 1`,[checkout.orderId!])).rows[0];

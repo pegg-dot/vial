@@ -27,7 +27,7 @@ export default async function ActivationPage() {
       <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#2b31d8]">Policy engine</p>
       <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">SKU activation matrix</h1>
       <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Activation is versioned by seller, SKU, customer type, jurisdiction, processor mode, legal state, evidence, and merchant model. Production approval cannot be recorded while VIAL is in sandbox or test mode.
+        Activation is versioned by seller, SKU, customer type, jurisdiction, processor mode, legal state, evidence, and merchant model. Production approval cannot be recorded while VialGrade is in sandbox or test mode.
       </p>
 
       <section className="mt-8 space-y-4">

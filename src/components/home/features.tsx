@@ -4,14 +4,14 @@ const CARDS = [
   { art: <ArtMolecule className="w-16" />, tint: "bg-[#eef0ff]", title: "Every price, side by side", body: "Same compound, same size, every vendor — lined up so the fair price (and the too-cheap-to-be-real one) is obvious at a glance." },
   { art: <ArtMagnifierVial className="w-16" />, tint: "bg-[#e6fbf6]", title: "Lab tests, matched to the batch", body: "We don't take a COA's word for it. We match the third-party test to the exact batch you'd be buying — or tell you plainly there isn't one." },
   { art: <ArtCoa className="w-14" />, tint: "bg-[#eef0ff]", title: "The receipts, kept", body: "A timestamped copy of what every vendor and lab actually showed. When a page quietly 'disappears,' we still have the proof." },
-  { art: <ArtShieldCheck className="w-14" />, tint: "bg-[#e6fbf6]", title: "Buy direct. We never touch it.", body: "No cart, no checkout, no markup. Once you've decided, we hand you to the vendor's own site. VIAL never sells or sees a dollar." },
+  { art: <ArtShieldCheck className="w-14" />, tint: "bg-[#e6fbf6]", title: "Buy direct. We never touch it.", body: "No cart, no checkout, no markup. Once you've decided, we hand you to the vendor's own site. VialGrade never sells or sees a dollar." },
 ];
 
 export function HomeFeatures() {
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
       <div className="max-w-2xl">
-        <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">What VIAL does for you</p>
+        <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">What VialGrade does for you</p>
         <h2 className="mt-4 text-balance text-[clamp(2.6rem,6vw,4.4rem)] font-extrabold leading-[.92] tracking-[-.045em]">
           Everything you&rsquo;d check, <span className="text-[#2b31d8]">already checked.</span>
         </h2>

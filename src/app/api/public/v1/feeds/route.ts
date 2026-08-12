@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   if (format === "csv") {
     const columns = ["id", "signalType", "entityType", "entityLabel", "title", "score", "confidence", "status"];
     const rows = (filtered as unknown as Record<string, unknown>[]).map((r) => Object.fromEntries(columns.map((c) => [c, r[c]])));
-    return new NextResponse(toCsv(rows, columns), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": 'attachment; filename="vial-risk-feed.csv"', "cache-control": "no-store" } });
+    return new NextResponse(toCsv(rows, columns), { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": 'attachment; filename="vialgrade-risk-feed.csv"', "cache-control": "no-store" } });
   }
   return NextResponse.json({ data: filtered, meta: { source: "published-risk-signals", count: filtered.length, filters: { types, minScore, limit }, version: "v1", readonly: true } }, { headers: { "cache-control": "no-store" } });
 }

@@ -285,7 +285,7 @@ Those require the V6 evidence network or approved external integrations.
 
 The public slugs are stable across adapters.
 
-## VIAL 2.0 market-data tables
+## VialGrade 2.0 market-data tables
 
 - `canonical_entities`
 - `entity_aliases`
@@ -308,7 +308,7 @@ The public slugs are stable across adapters.
 
 Canonical IDs are stable across search, provenance, review, publication, and future APIs. Freshness and reliability remain separate from product quality or suitability.
 
-## VIAL 5 commerce tables
+## VialGrade 5 commerce tables
 
 - `commerce_provider_accounts`
 - `commerce_provider_onboarding_sessions`
@@ -323,9 +323,9 @@ Canonical IDs are stable across search, provenance, review, publication, and fut
 - `commerce_settlement_runs`
 - `commerce_underwriting_reviews`
 
-Provider records remain separate from VIAL orders and ledger entries so external state, internal accounting, and policy decisions can be reconciled independently.
+Provider records remain separate from VialGrade orders and ledger entries so external state, internal accounting, and policy decisions can be reconciled independently.
 
-## VIAL 6 evidence and laboratory domains
+## VialGrade 6 evidence and laboratory domains
 
 ```text
 laboratory_profiles

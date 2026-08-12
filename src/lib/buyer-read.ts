@@ -1,4 +1,4 @@
-// The buyer's read — turns a listing's evidence state into an honest buying decision. VIAL holds a
+// The buyer's read — turns a listing's evidence state into an honest buying decision. VialGrade holds a
 // vendor-specific independent test for only ~11% of listings (the tested companies and the selling
 // storefronts are largely different sets). For the other 89% the old UI dead-ended at "no evidence."
 // That's not useful to a consumer. This composes what we DO know — price sanity, the compound's test
@@ -97,6 +97,6 @@ export function buildBuyerRead(i: BuyerReadInput): BuyerRead {
     points,
     action: isLowPurity
       ? `Purity can vary batch to batch — ask ${i.vendorName} for the COA covering YOUR batch and check it in Verify.`
-      : `To verify before you buy: ask ${i.vendorName} for the Janoshik COA for your batch number, then paste it into Verify — VIAL confirms it's a real, unedited lab record.`,
+      : `To verify before you buy: ask ${i.vendorName} for the Janoshik COA for your batch number, then paste it into Verify — VialGrade confirms it's a real, unedited lab record.`,
   };
 }

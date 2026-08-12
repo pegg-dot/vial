@@ -17,7 +17,7 @@ function humanize(slug: string) {
 }
 
 // The middle rung of the density ladder: a compound snapshot over the browse page,
-// with ←/→ paging across the row (a VIAL-specific enhancement Nate asked for).
+// with ←/→ paging across the row (a VialGrade-specific enhancement Nate asked for).
 export function QuickViewModal({
   items,
   index,

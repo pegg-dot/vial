@@ -6,7 +6,7 @@
 // for each compound, and records it as a dated price observation — turning today's single point
 // into a real multi-month trail. Nothing is fabricated; every point is a real archived price.
 //
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/backfill-prices-wayback.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/backfill-prices-wayback.mjs
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { readFileSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
@@ -14,7 +14,7 @@ import { matchCompound } from "../src/server/ingest/shopify-import.ts";
 import { wooPrice } from "../src/server/ingest/woocommerce-import.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const DATA = new URL("./data/", import.meta.url);
 const readJson = (n) => JSON.parse(readFileSync(new URL(n, DATA), "utf8"));

@@ -9,14 +9,14 @@ import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { resetEnvironmentForTests } from "@/server/config/env";
 
 Object.assign(process.env, { NODE_ENV: "test" });
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SEED_FIXTURES = "true";
-process.env.VIAL_SEED_DEMO_ACCOUNTS = "true";
-process.env.VIAL_SESSION_SECRET = "commerce-v5-session-secret-at-least-32";
-process.env.VIAL_PRIVACY_HASH_SECRET = "commerce-v5-privacy-secret-at-least-32";
-process.env.VIAL_COMMERCE_MODE = "sandbox";
-process.env.VIAL_PAYMENT_PROVIDER = "mock";
-process.env.VIAL_MOCK_WEBHOOK_SECRET = "commerce-v5-webhook-secret";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SEED_FIXTURES = "true";
+process.env.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
+process.env.VIALGRADE_SESSION_SECRET = "commerce-v5-session-secret-at-least-32";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "commerce-v5-privacy-secret-at-least-32";
+process.env.VIALGRADE_COMMERCE_MODE = "sandbox";
+process.env.VIALGRADE_PAYMENT_PROVIDER = "mock";
+process.env.VIALGRADE_MOCK_WEBHOOK_SECRET = "commerce-v5-webhook-secret";
 
 describe("VIAL 5 approved commerce", () => {
   beforeAll(async () => {
@@ -106,9 +106,9 @@ describe("VIAL 5 approved commerce", () => {
 
   it("deduplicates signed provider events", async () => {
     const payload = JSON.stringify({ id: "evt_v5_dedupe", type: "payment_intent.succeeded", data: { object: { id: "pi_missing" } } });
-    const signature = createHmac("sha256", process.env.VIAL_MOCK_WEBHOOK_SECRET!).update(payload).digest("hex");
-    const first = await ingestProviderWebhook({ payload, signature, secret: process.env.VIAL_MOCK_WEBHOOK_SECRET });
-    const second = await ingestProviderWebhook({ payload, signature, secret: process.env.VIAL_MOCK_WEBHOOK_SECRET });
+    const signature = createHmac("sha256", process.env.VIALGRADE_MOCK_WEBHOOK_SECRET!).update(payload).digest("hex");
+    const first = await ingestProviderWebhook({ payload, signature, secret: process.env.VIALGRADE_MOCK_WEBHOOK_SECRET });
+    const second = await ingestProviderWebhook({ payload, signature, secret: process.env.VIALGRADE_MOCK_WEBHOOK_SECRET });
     expect(first.duplicate).toBe(false);
     expect(second.duplicate).toBe(true);
   });
@@ -138,8 +138,8 @@ describe("VIAL 5 approved commerce", () => {
     );
     await database.query(`UPDATE commerce_checkout_attempts SET payment_intent_id='provider-intent:async',status='requires_action',processor_payment_id=$2 WHERE id=$1`, [prepared.attemptId, providerPaymentId]);
     const payload = JSON.stringify({ id: "evt_v5_async_success", type: "payment_intent.succeeded", data: { object: { id: providerPaymentId } } });
-    const signature = createHmac("sha256", process.env.VIAL_MOCK_WEBHOOK_SECRET!).update(payload).digest("hex");
-    const processed = await ingestProviderWebhook({ payload, signature, secret: process.env.VIAL_MOCK_WEBHOOK_SECRET });
+    const signature = createHmac("sha256", process.env.VIALGRADE_MOCK_WEBHOOK_SECRET!).update(payload).digest("hex");
+    const processed = await ingestProviderWebhook({ payload, signature, secret: process.env.VIALGRADE_MOCK_WEBHOOK_SECRET });
     expect(processed.processed).toBe(true);
     const orders = await database.query<{ id: string }>(`SELECT id FROM commerce_orders WHERE checkout_attempt_id=$1`, [prepared.attemptId]);
     expect(orders.rows).toHaveLength(1);
@@ -166,8 +166,8 @@ describe("VIAL 5 approved commerce", () => {
     );
     await database.query(`UPDATE commerce_checkout_attempts SET payment_intent_id='provider-intent:failed',status='requires_action',processor_payment_id=$2 WHERE id=$1`, [prepared.attemptId, providerPaymentId]);
     const payload = JSON.stringify({ id: "evt_v5_async_failed", type: "payment_intent.payment_failed", data: { object: { id: providerPaymentId } } });
-    const signature = createHmac("sha256", process.env.VIAL_MOCK_WEBHOOK_SECRET!).update(payload).digest("hex");
-    await ingestProviderWebhook({ payload, signature, secret: process.env.VIAL_MOCK_WEBHOOK_SECRET });
+    const signature = createHmac("sha256", process.env.VIALGRADE_MOCK_WEBHOOK_SECRET!).update(payload).digest("hex");
+    await ingestProviderWebhook({ payload, signature, secret: process.env.VIALGRADE_MOCK_WEBHOOK_SECRET });
     const attempt = (await database.query<{ status: string }>(`SELECT status FROM commerce_checkout_attempts WHERE id=$1`, [prepared.attemptId])).rows[0];
     expect(attempt.status).toBe("failed");
     expect((await database.query(`SELECT id FROM commerce_orders WHERE checkout_attempt_id=$1`, [prepared.attemptId])).rows).toHaveLength(0);

@@ -4,8 +4,8 @@ export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "VIAL Market Intelligence",
-    short_name: "VIAL",
+    name: "VialGrade Market Intelligence",
+    short_name: "VialGrade",
     description: "Evidence-first peptide market intelligence.",
     start_url: "/",
     display: "standalone",

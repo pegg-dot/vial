@@ -19,11 +19,11 @@ import {
 } from "@/server/consumer-intelligence/repository";
 import { generateMarketChangeSummary, getPersonalizedMarket, runSavedSearch } from "@/server/consumer-intelligence/service";
 
-process.env.VIAL_PGLITE_MEMORY="true";
-process.env.VIAL_SEED_FIXTURES="true";
-process.env.VIAL_SEED_DEMO_ACCOUNTS="true";
-process.env.VIAL_SESSION_SECRET="consumer-intelligence-test-secret-at-least-32";
-process.env.VIAL_PRIVACY_HASH_SECRET="consumer-intelligence-privacy-secret-at-least-32";
+process.env.VIALGRADE_PGLITE_MEMORY="true";
+process.env.VIALGRADE_SEED_FIXTURES="true";
+process.env.VIALGRADE_SEED_DEMO_ACCOUNTS="true";
+process.env.VIALGRADE_SESSION_SECRET="consumer-intelligence-test-secret-at-least-32";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET="consumer-intelligence-privacy-secret-at-least-32";
 const userId="user:customer:nora";
 
 describe("VIAL 3.0 consumer intelligence",()=>{

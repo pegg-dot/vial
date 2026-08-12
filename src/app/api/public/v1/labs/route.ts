@@ -4,8 +4,8 @@ import { getLabsOverview } from "@/server/labs/repository";
 
 export const dynamic = "force-dynamic";
 
-// Public lab-intelligence standard: every testing lab VIAL references, with what we could verify
-// about it. `independence` is the load-bearing field — only "independent" labs are ones VIAL
+// Public lab-intelligence standard: every testing lab VialGrade references, with what we could verify
+// about it. `independence` is the load-bearing field — only "independent" labs are ones VialGrade
 // vouches for as third-party corroboration; "independence-unverified" and "unverified" are shown
 // for transparency but never counted. Accreditation carries its verification status and whether
 // the accredited scope covers peptides. Never an endorsement.
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     sourceUrls: l.sourceUrls,
   }));
   return NextResponse.json(
-    { data, meta: { standard: "vial-labs", version: "v1", readonly: true, note: "independence is what VIAL vouches for; accreditation is only meaningful within its verified scope. Not an endorsement." } },
+    { data, meta: { standard: "vial-labs", version: "v1", readonly: true, note: "independence is what VialGrade vouches for; accreditation is only meaningful within its verified scope. Not an endorsement." } },
     { headers: { "cache-control": "no-store" } },
   );
 }

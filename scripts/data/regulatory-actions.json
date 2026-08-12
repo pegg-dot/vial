@@ -106,7 +106,7 @@
 
 { "actionType":"advisory", "agency":"FDA", "subjectName":"FDA — unapproved HGH (Import Alert 66-71)",
   "title":"Import Alert 66-71 — detention of unapproved HGH imports",
-  "summary":"FDA import alert red-listing 6 (all Chinese) firms shipping unapproved Human Growth Hormone, some manifested as L-Alanine/Glutathione but found to contain undeclared HGH. None are VIAL-tracked vendors.",
+  "summary":"FDA import alert red-listing 6 (all Chinese) firms shipping unapproved Human Growth Hormone, some manifested as L-Alanine/Glutathione but found to contain undeclared HGH. None are VialGrade-tracked vendors.",
   "actionDate":"2026-04-07", "sourceUrl":"https://www.accessdata.fda.gov/cms_ia/importalert_204.html", "isPrimarySource":true },
 
 { "actionType":"advisory", "agency":"FDA", "subjectName":"FDA consumer advisory — SARMs",

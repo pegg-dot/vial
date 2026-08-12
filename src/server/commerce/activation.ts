@@ -51,7 +51,7 @@ function decisionFromChecks(checks: ActivationCheck[]) {
 }
 
 async function seedActivePolicy(connection: SqlConnection) {
-  const version = getEnvironment().VIAL_COMMERCE_POLICY_VERSION;
+  const version = getEnvironment().VIALGRADE_COMMERCE_POLICY_VERSION;
   await connection.query(
     `INSERT INTO commerce_activation_policies(id,version,status,rules,created_by,activated_at)
      VALUES($1,$2,'active',$3::jsonb,'system:v5-seed',NOW())
@@ -139,7 +139,7 @@ export async function ensureApprovedCommerceSeed() {
       );
       continue;
     }
-    const snapshot = await provider.createConnectedAccount({ sellerId: seller.id, businessName: seller.display_name, country: getEnvironment().VIAL_PLATFORM_COUNTRY });
+    const snapshot = await provider.createConnectedAccount({ sellerId: seller.id, businessName: seller.display_name, country: getEnvironment().VIALGRADE_PLATFORM_COUNTRY });
     await upsertProviderAccount(database, seller.id, snapshot);
   }
 }
@@ -152,7 +152,7 @@ export async function createProviderAccountForSeller(input: { sellerId: string; 
   )).rows[0];
   if (!seller) throw new Error("Seller not found");
   const provider = getPaymentProcessor();
-  const snapshot = await provider.createConnectedAccount({ sellerId: input.sellerId, businessName: seller.display_name, email: input.email, country: getEnvironment().VIAL_PLATFORM_COUNTRY });
+  const snapshot = await provider.createConnectedAccount({ sellerId: input.sellerId, businessName: seller.display_name, email: input.email, country: getEnvironment().VIALGRADE_PLATFORM_COUNTRY });
   const id = await upsertProviderAccount(database, input.sellerId, snapshot);
   await database.query(
     `INSERT INTO commerce_underwriting_reviews(id,seller_id,provider_account_id,mode,status,requested_by,catalog_scope,jurisdictions)
@@ -223,7 +223,7 @@ async function sellerActivationChecks(connection: SqlConnection, sellerId: strin
     { key: "payouts", label: "Payout capability", passed: Boolean(row.payouts_enabled), required: true, detail: "Payout capability state" },
     { key: "transfers", label: "Transfer capability", passed: Boolean(row.transfers_enabled), required: true, detail: "Transfer capability state" },
     { key: "requirements", label: "Outstanding requirements", passed: currentDue.length === 0 && pastDue.length === 0, required: true, detail: currentDue.length || pastDue.length ? `${currentDue.length + pastDue.length} requirements outstanding` : "No due requirements" },
-    { key: "seller_readiness", label: "VIAL seller readiness", passed: !["blocked", "not_ready"].includes(normalizeStatus(row.readiness_state)), required: false, detail: row.readiness_state ? `Readiness: ${String(row.readiness_state)}` : "Seller readiness profile not completed" },
+    { key: "seller_readiness", label: "VialGrade seller readiness", passed: !["blocked", "not_ready"].includes(normalizeStatus(row.readiness_state)), required: false, detail: row.readiness_state ? `Readiness: ${String(row.readiness_state)}` : "Seller readiness profile not completed" },
   ];
 }
 
@@ -289,7 +289,7 @@ export async function evaluateCommerceActivation(input: {
     decision,
     mode,
     provider: provider.provider,
-    policyVersion: getEnvironment().VIAL_COMMERCE_POLICY_VERSION,
+    policyVersion: getEnvironment().VIALGRADE_COMMERCE_POLICY_VERSION,
     checks,
     reasonCodes,
     chargeModel,
@@ -311,7 +311,7 @@ export async function approveUnderwriting(input: { sellerId: string; status: "te
   await ensureApprovedCommerceSeed();
   const mode = getCommerceMode();
   if (input.status === "approved" && mode !== "live") throw new Error("Full underwriting approval can only be recorded in live mode");
-  if (input.status === "approved" && !getEnvironment().VIAL_LIVE_COMMERCE_ENABLED) throw new Error("Live commerce is disabled");
+  if (input.status === "approved" && !getEnvironment().VIALGRADE_LIVE_COMMERCE_ENABLED) throw new Error("Live commerce is disabled");
   return withTransaction(async (transaction) => {
     const account = (await transaction.query<QueryResultRow & { id: string }>(`SELECT id FROM commerce_provider_accounts WHERE seller_id=$1 FOR UPDATE`, [input.sellerId])).rows[0];
     if (!account) throw new Error("Provider account not found");
@@ -336,13 +336,13 @@ export async function setListingActivation(input: {
 }) {
   const mode = getCommerceMode();
   if (input.state === "commerce_approved" && mode !== "live") throw new Error("Production commerce approval requires live mode");
-  if (input.state === "commerce_approved" && !getEnvironment().VIAL_LIVE_COMMERCE_ENABLED) throw new Error("Live commerce is disabled");
+  if (input.state === "commerce_approved" && !getEnvironment().VIALGRADE_LIVE_COMMERCE_ENABLED) throw new Error("Live commerce is disabled");
   const database = await getDatabase();
   await database.query(
     `UPDATE commerce_listing_eligibility SET state=$2,processor_review_status=$3,legal_review_status=$4,
        allowed_customer_types=$5::jsonb,allowed_jurisdictions=$6::jsonb,policy_version=$7,reason_codes=$8::jsonb,updated_at=NOW()
      WHERE listing_id=$1`,
-    [input.listingId, input.state, input.processorReviewStatus, input.legalReviewStatus, JSON.stringify(input.allowedCustomerTypes), JSON.stringify(input.allowedJurisdictions), getEnvironment().VIAL_COMMERCE_POLICY_VERSION, JSON.stringify([`updated-by:${input.actorId}`])],
+    [input.listingId, input.state, input.processorReviewStatus, input.legalReviewStatus, JSON.stringify(input.allowedCustomerTypes), JSON.stringify(input.allowedJurisdictions), getEnvironment().VIALGRADE_COMMERCE_POLICY_VERSION, JSON.stringify([`updated-by:${input.actorId}`])],
   );
   return { listingId: input.listingId, state: input.state };
 }
@@ -382,7 +382,7 @@ export async function approvedCommerceDashboard() {
   return {
     mode: getCommerceMode(),
     provider: getPaymentProcessor().provider,
-    liveEnabled: getEnvironment().VIAL_LIVE_COMMERCE_ENABLED,
+    liveEnabled: getEnvironment().VIALGRADE_LIVE_COMMERCE_ENABLED,
     accounts: accounts.rows,
     onboarding: onboarding.rows,
     policies: policies.rows,

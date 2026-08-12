@@ -7,12 +7,12 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const databasePath = mkdtempSync(join(tmpdir(), "vial-lab-mcp-db-"));
 const baseEnv = {
   ...process.env,
-  VIAL_PGLITE_MEMORY: "false",
-  VIAL_PGLITE_PATH: databasePath,
-  VIAL_SEED_FIXTURES: "true",
-  VIAL_SEED_DEMO_ACCOUNTS: "true",
-  VIAL_SESSION_SECRET: "lab-mcp-audit-session-secret-at-least-32",
-  VIAL_PRIVACY_HASH_SECRET: "lab-mcp-audit-privacy-secret-at-least-32",
+  VIALGRADE_PGLITE_MEMORY: "false",
+  VIALGRADE_PGLITE_PATH: databasePath,
+  VIALGRADE_SEED_FIXTURES: "true",
+  VIALGRADE_SEED_DEMO_ACCOUNTS: "true",
+  VIALGRADE_SESSION_SECRET: "lab-mcp-audit-session-secret-at-least-32",
+  VIALGRADE_PRIVACY_HASH_SECRET: "lab-mcp-audit-privacy-secret-at-least-32",
 };
 Object.assign(process.env, baseEnv);
 
@@ -39,7 +39,7 @@ try {
     command: process.execPath,
     args: ["node_modules/tsx/dist/cli.mjs", "mcp/lab-server.ts"],
     cwd: process.cwd(),
-    env: { ...baseEnv, VIAL_MCP_LAB_TOKEN: token.token },
+    env: { ...baseEnv, VIALGRADE_MCP_LAB_TOKEN: token.token },
     stderr: "pipe",
   });
   transport.stderr?.on("data", (chunk) => { stderrOutput += chunk.toString(); });

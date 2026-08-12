@@ -1,22 +1,22 @@
-# VIAL Seller MCP
+# VialGrade Seller MCP
 
 ## Purpose
 
-The VIAL Seller MCP gives an approved AI operator narrowly scoped tools for seller onboarding and operations. It is an automation interface, not an autonomous marketplace administrator.
+The VialGrade Seller MCP gives an approved AI operator narrowly scoped tools for seller onboarding and operations. It is an automation interface, not an autonomous marketplace administrator.
 
 ## Transport
 
 V4 implements a real Model Context Protocol server over stdio:
 
 ```bash
-VIAL_MCP_SELLER_TOKEN=vial_seller_... npm run mcp:seller
+VIALGRADE_MCP_SELLER_TOKEN=vial_seller_... npm run mcp:seller
 ```
 
 Stdio keeps local development and desktop-agent integrations simple. A remote Streamable HTTP deployment is intentionally deferred until production authentication, tenancy, rate limiting, and infrastructure controls are available.
 
 ## Authentication
 
-The server requires a VIAL seller API token created from `/seller/developer`.
+The server requires a VialGrade seller API token created from `/seller/developer`.
 
 Tokens are:
 

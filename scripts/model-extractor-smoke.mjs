@@ -15,7 +15,7 @@ if (!client.available) {
 
 const baseline = await runExtractionBenchmark(new DeterministicExtractor(), goldenCases);
 const model = await runExtractionBenchmark(
-  new ModelExtractor({ client, promptVersion: process.env.VIAL_EXTRACTOR_PROMPT_VERSION ?? "extract-v1", maxOutputTokens: Number(process.env.VIAL_EXTRACTOR_MAX_TOKENS ?? 4000) }),
+  new ModelExtractor({ client, promptVersion: process.env.VIALGRADE_EXTRACTOR_PROMPT_VERSION ?? "extract-v1", maxOutputTokens: Number(process.env.VIALGRADE_EXTRACTOR_MAX_TOKENS ?? 4000) }),
   goldenCases,
 );
 
@@ -27,6 +27,6 @@ console.log("model (haiku):           ", fmt(model));
 // (or matches F1 while never hallucinating and abstaining correctly).
 const beatsF1 = model.score.f1 > baseline.score.f1 && model.score.precision >= baseline.score.precision;
 console.log(beatsF1
-  ? `\n✅ Model BEATS the baseline on F1 (${model.score.f1.toFixed(3)} > ${baseline.score.f1.toFixed(3)}). It is eligible for promotion — set VIAL_MODEL_EXTRACTOR_APPROVED=true to activate.`
-  : `\n⛔ Model does NOT beat the baseline. Keep VIAL_EXTRACTOR=deterministic. The hard cases the baseline misses:` +
+  ? `\n✅ Model BEATS the baseline on F1 (${model.score.f1.toFixed(3)} > ${baseline.score.f1.toFixed(3)}). It is eligible for promotion — set VIALGRADE_MODEL_EXTRACTOR_APPROVED=true to activate.`
+  : `\n⛔ Model does NOT beat the baseline. Keep VIALGRADE_EXTRACTOR=deterministic. The hard cases the baseline misses:` +
     "\n  " + model.caseResults.filter((c) => c.difficulty === "hard").map((c) => `${c.name}: fn=${c.fn} fp=${c.fp}`).join("\n  "));

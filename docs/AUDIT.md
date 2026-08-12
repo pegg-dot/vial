@@ -6,7 +6,7 @@ July 19, 2026
 
 ## Release
 
-VIAL 0.3.0, controlled refresh and cascading intelligence.
+VialGrade 0.3.0, controlled refresh and cascading intelligence.
 
 All catalog entities, vendors, source pages, laboratory names, prices, batch identifiers, reviews, and market conditions in this release are fictional fixtures.
 
@@ -64,7 +64,7 @@ Reports were generated against a production build with headless Chromium. Perfor
 | `/signals` | 98 | 100 | 100 | 100 | 0 | 1,733 ms | 144 ms |
 | `/admin/login` | 98 | 100 | 100 | 100 | 0 | 1,739 ms | 159 ms |
 
-The first VIAL 0.3 Lighthouse pass found low-contrast trace identifiers and supporting copy on `/operations`, plus low-contrast explanatory copy on `/signals`. Those styles were corrected and both routes were re-audited at 100 accessibility.
+The first VialGrade 0.3 Lighthouse pass found low-contrast trace identifiers and supporting copy on `/operations`, plus low-contrast explanatory copy on `/signals`. Those styles were corrected and both routes were re-audited at 100 accessibility.
 
 Machine-readable results are stored at `audits/lighthouse/summary.json`.
 

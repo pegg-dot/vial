@@ -2,15 +2,15 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { createApiKey } from "@/server/api-access/keys";
 import { ensureEvidenceNetworkSeed, recomputePassport, revokeLaboratoryReport, getBatchStandardRecord } from "@/server/evidence-network/repository";
-import { GET as getBatch } from "@/app/api/public/v1/batches/[vialBatchId]/route";
+import { GET as getBatch } from "@/app/api/public/v1/batches/[batchId]/route";
 
 const bearer = (token: string, url: string) => new Request(url, { headers: { authorization: `Bearer ${token}` } });
 
 describe("VIAL 10.0 batch standard", () => {
   beforeEach(async () => {
-    process.env.VIAL_PGLITE_MEMORY = "true";
-    process.env.VIAL_SEED_FIXTURES = "true";
-    process.env.VIAL_SEED_DEMO_ACCOUNTS = "true";
+    process.env.VIALGRADE_PGLITE_MEMORY = "true";
+    process.env.VIALGRADE_SEED_FIXTURES = "true";
+    process.env.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
     delete (globalThis as { __vialEvidenceSeedPromise?: unknown }).__vialEvidenceSeedPromise;
     delete (globalThis as { __vialSellerOpsSeedPromise?: unknown }).__vialSellerOpsSeedPromise;
     await resetDatabaseForTests();
@@ -18,7 +18,7 @@ describe("VIAL 10.0 batch standard", () => {
   });
 
   it("records an immutable passport version with a decomposed confidence basis", async () => {
-    const record = await getBatchStandardRecord("vial:batch:hx-bpc-2607");
+    const record = await getBatchStandardRecord("vialgrade:batch:hx-bpc-2607");
     expect(record).toBeTruthy();
     // The one demo passport's declared batch code is seed-nondeterministic (a featured-order
     // tie in fixtures); the standard contract is the decomposition + history below.
@@ -57,18 +57,18 @@ describe("VIAL 10.0 batch standard", () => {
 
   it("serves the batch standard record over the public API for market:read", async () => {
     const db = await getDatabase();
-    await db.query(`INSERT INTO auth_users(id,email,display_name,account_type,roles) VALUES('user:b','b@vial.test','b','customer','["customer"]'::jsonb) ON CONFLICT(id) DO NOTHING`);
+    await db.query(`INSERT INTO auth_users(id,email,display_name,account_type,roles) VALUES('user:b','b@vialgrade.test','b','customer','["customer"]'::jsonb) ON CONFLICT(id) DO NOTHING`);
     const key = await createApiKey({ ownerId: "user:b", name: "b", scopes: ["market:read"] });
 
-    const direct = await getBatchStandardRecord("vial:batch:hx-bpc-2607");
-    const ok = await getBatch(bearer(key.plaintext, "https://api.vial.test/api/public/v1/batches/vial:batch:hx-bpc-2607"), { params: Promise.resolve({ vialBatchId: "vial:batch:hx-bpc-2607" }) });
+    const direct = await getBatchStandardRecord("vialgrade:batch:hx-bpc-2607");
+    const ok = await getBatch(bearer(key.plaintext, "https://api.vialgrade.test/api/public/v1/batches/vialgrade:batch:hx-bpc-2607"), { params: Promise.resolve({ batchId: "vialgrade:batch:hx-bpc-2607" }) });
     expect(ok.status).toBe(200);
     const body = await ok.json();
     // The API returns exactly what the domain record layer returns.
     expect(body.data.declaredBatchCode).toBe(direct!.declaredBatchCode);
     expect(body.data.confidenceBasis.samplingLevel).toBe("S3");
 
-    const missing = await getBatch(bearer(key.plaintext, "https://api.vial.test/api/public/v1/batches/vial:batch:nope"), { params: Promise.resolve({ vialBatchId: "vial:batch:nope" }) });
+    const missing = await getBatch(bearer(key.plaintext, "https://api.vialgrade.test/api/public/v1/batches/vialgrade:batch:nope"), { params: Promise.resolve({ batchId: "vialgrade:batch:nope" }) });
     expect(missing.status).toBe(404);
   });
 });

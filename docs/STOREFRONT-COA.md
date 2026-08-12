@@ -1,10 +1,10 @@
 # Storefront-published COA linking — the coverage wedge
 
-**Why this exists.** VIAL holds a vendor-specific independent test for only ~11% of listings, because the
+**Why this exists.** VialGrade holds a vendor-specific independent test for only ~11% of listings, because the
 companies that get Janoshik-tested (manufacturers) and the storefronts that sell (the ~15 catalogs we
 scrape) are largely different sets, and the scraped listings carried no batch or testing data. But most
 storefronts publish *their own* Janoshik COA — usually a `verify.janoshik.com/tests/<id>` link — right on
-the product page. This wedge reads those links and, when they resolve to a certificate VIAL already
+the product page. This wedge reads those links and, when they resolve to a certificate VialGrade already
 independently holds for that product's compound, stamps the listing's testing claim so the (hardened)
 `crossCheckCoa` can produce the verdict. That's how a listing moves from "No lab test" to real evidence.
 
@@ -36,7 +36,7 @@ It runs automatically as part of the market ingest — no separate step. The scr
 
 ```bash
 # dev server STOPPED first (file-backed PGlite is single-writer)
-VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-market.mjs
+VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-market.mjs
 ```
 
 Check coverage before/after with the catalog API's per-listing `trust.status` (share of `verified` /
@@ -44,7 +44,7 @@ Check coverage before/after with the catalog API's per-listing `trust.status` (s
 
 ## Honest limitations (deliberate, not corners)
 
-- **Only resolves against certs VIAL already holds** (the Janoshik feed). A storefront citing a Janoshik
+- **Only resolves against certs VialGrade already holds** (the Janoshik feed). A storefront citing a Janoshik
   test not yet in our feed won't link — the follow-up increment is a resolver that fetches
   `verify.janoshik.com` for the ones we don't have (needs the host allowlisted + external fetch).
 - **Shopify only for now.** Extraction reads Shopify `body_html`; ~14 of 15 storefronts are

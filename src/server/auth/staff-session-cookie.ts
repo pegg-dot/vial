@@ -11,14 +11,14 @@ export const STAFF_SESSION_COOKIE = "vial_staff_session";
 export const STAFF_SESSION_TTL_SECONDS = 60 * 60 * 8;
 
 function sessionSecret() {
-  const configured = process.env.VIAL_SESSION_SECRET?.trim();
+  const configured = process.env.VIALGRADE_SESSION_SECRET?.trim();
 
   if (configured) {
     return configured;
   }
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error("VIAL_SESSION_SECRET is required in production");
+    throw new Error("VIALGRADE_SESSION_SECRET is required in production");
   }
 
   return "vial-local-development-secret-change-me";

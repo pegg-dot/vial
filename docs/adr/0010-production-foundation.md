@@ -4,7 +4,7 @@ Status: accepted
 
 ## Decision
 
-VIAL 1.0 uses a modular Next.js application with managed PostgreSQL in deployment, centralized route authorization, database-backed sessions, explicit capabilities, versioned migrations, durable audit records, and provider abstractions.
+VialGrade 1.0 uses a modular Next.js application with managed PostgreSQL in deployment, centralized route authorization, database-backed sessions, explicit capabilities, versioned migrations, durable audit records, and provider abstractions.
 
 PGlite remains a local development and automated-test adapter. It is not the deployed production database.
 
@@ -19,4 +19,4 @@ The application already had broad product coverage. The largest risk was inconsi
 - Production refuses to start without PostgreSQL and strong secrets.
 - Schema changes use tracked migrations.
 - Build and runtime health are independently testable.
-- Future VIAL 2.0 data work can build on a stable operational boundary.
+- Future VialGrade 2.0 data work can build on a stable operational boundary.

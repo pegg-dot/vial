@@ -1,4 +1,4 @@
-// Bold flat-outline "sticker" art for VIAL — Gumroad discipline (thick black strokes, flat fills, no
+// Bold flat-outline "sticker" art for VialGrade — Gumroad discipline (thick black strokes, flat fills, no
 // gradients, no soft shine) with Ascend's scientific edge (measurement ticks, clean geometry).
 // Purely decorative (aria-hidden). Names kept stable so section components don't need rewiring.
 const INK = "#111214";

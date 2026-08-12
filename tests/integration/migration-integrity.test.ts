@@ -7,8 +7,8 @@ import { CURRENT_SCHEMA_VERSION } from "@/server/db/migrations";
 // migration, if versions are non-contiguous, or if a standard table is missing.
 describe("migration integrity (contract discipline)", () => {
   beforeEach(async () => {
-    process.env.VIAL_PGLITE_MEMORY = "true";
-    process.env.VIAL_SEED_FIXTURES = "true";
+    process.env.VIALGRADE_PGLITE_MEMORY = "true";
+    process.env.VIALGRADE_SEED_FIXTURES = "true";
     await resetDatabaseForTests();
   });
 

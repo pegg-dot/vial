@@ -12,7 +12,7 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"], ["html", { outputFolder: "audits/playwright-report", open: "never" }]],
   webServer: {
-    command: "NEXT_PUBLIC_SITE_URL=http://localhost:3000 VIAL_PGLITE_MEMORY=true VIAL_ALLOW_EMBEDDED_DB_FOR_TESTS=true VIAL_SEED_FIXTURES=true VIAL_SEED_DEMO_ACCOUNTS=true VIAL_SESSION_SECRET=vial-e2e-session-secret-at-least-32-characters VIAL_PRIVACY_HASH_SECRET=vial-e2e-privacy-secret-at-least-32-characters npm run start -- --port 3000",
+    command: "NEXT_PUBLIC_SITE_URL=http://localhost:3000 VIALGRADE_PGLITE_MEMORY=true VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS=true VIALGRADE_SEED_FIXTURES=true VIALGRADE_SEED_DEMO_ACCOUNTS=true VIALGRADE_SESSION_SECRET=vial-e2e-session-secret-at-least-32-characters VIALGRADE_PRIVACY_HASH_SECRET=vial-e2e-privacy-secret-at-least-32-characters npm run start -- --port 3000",
     url: "http://localhost:3000",
     timeout: 120_000,
     reuseExistingServer: true,

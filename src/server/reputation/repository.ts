@@ -22,7 +22,7 @@ export interface ReputationDimension {
 }
 
 export interface ReputationRecord {
-  vialId: string | null;
+  registryId: string | null;
   subjectType: "vendor" | "lab";
   displayName: string;
   slug: string;
@@ -51,7 +51,7 @@ async function documentationSeries(db: SqlConnection, vendorOrgId: string): Prom
 }
 
 // Builds the per-vendor reputation record from real, scattered signals — composed, never collapsed.
-export async function buildVendorReputation(db: SqlConnection, org: { id: string; slug: string; display_name: string; profile_status: string; participation_status: string; documentation_current: number; product_count: number }, vialId: string | null): Promise<ReputationRecord> {
+export async function buildVendorReputation(db: SqlConnection, org: { id: string; slug: string; display_name: string; profile_status: string; participation_status: string; documentation_current: number; product_count: number }, registryId: string | null): Promise<ReputationRecord> {
   const dimensions: ReputationDimension[] = [];
 
   dimensions.push({
@@ -162,11 +162,11 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     provenance: { sourceType: regCount > 0 ? "regulatory_actions" : "fraud_cases", url: `/vendors/${org.slug}` },
   });
 
-  return { vialId, subjectType: "vendor", displayName: org.display_name, slug: org.slug, asOf: asOfNow(), methodologyVersion: REPUTATION_METHODOLOGY_VERSION, dimensions };
+  return { registryId, subjectType: "vendor", displayName: org.display_name, slug: org.slug, asOf: asOfNow(), methodologyVersion: REPUTATION_METHODOLOGY_VERSION, dimensions };
 }
 
 // Builds the per-laboratory integrity record from real report/method/custody counts.
-export async function buildLabReputation(db: SqlConnection, lab: { id: string; slug: string; display_name: string; accreditation_status: string; accreditation_body: string | null; accreditation_expires_at: string | null }, vialId: string | null): Promise<ReputationRecord> {
+export async function buildLabReputation(db: SqlConnection, lab: { id: string; slug: string; display_name: string; accreditation_status: string; accreditation_body: string | null; accreditation_expires_at: string | null }, registryId: string | null): Promise<ReputationRecord> {
   const totals = (await db.query<QueryResultRow & Record<string, string | number>>(
     `SELECT
       (SELECT COUNT(*) FROM laboratory_reports WHERE laboratory_id=$1) total_reports,
@@ -220,7 +220,7 @@ export async function buildLabReputation(db: SqlConnection, lab: { id: string; s
     },
   ];
 
-  return { vialId, subjectType: "lab", displayName: lab.display_name, slug: lab.slug, asOf: asOfNow(), methodologyVersion: REPUTATION_METHODOLOGY_VERSION, dimensions };
+  return { registryId, subjectType: "lab", displayName: lab.display_name, slug: lab.slug, asOf: asOfNow(), methodologyVersion: REPUTATION_METHODOLOGY_VERSION, dimensions };
 }
 
 async function loadVendorOrg(db: SqlConnection, whereColumn: "slug" | "id", value: string) {
@@ -230,8 +230,8 @@ async function loadVendorOrg(db: SqlConnection, whereColumn: "slug" | "id", valu
   )).rows[0];
 }
 
-async function vendorVialId(db: SqlConnection, orgId: string): Promise<string | null> {
-  return (await db.query<{ vial_id: string }>(`SELECT vial_id FROM registry_identifiers WHERE source_entity_type='organization' AND source_entity_id=$1 AND entity_type='vendor'`, [orgId])).rows[0]?.vial_id ?? null;
+async function vendorRegistryId(db: SqlConnection, orgId: string): Promise<string | null> {
+  return (await db.query<{ registry_id: string }>(`SELECT registry_id FROM registry_identifiers WHERE source_entity_type='organization' AND source_entity_id=$1 AND entity_type='vendor'`, [orgId])).rows[0]?.registry_id ?? null;
 }
 
 // Page-facing accessor: the vendor reputation record by slug.
@@ -239,24 +239,24 @@ export async function getVendorReputationBySlug(slug: string, connection?: SqlCo
   const db = connection ?? (await getDatabase());
   const org = await loadVendorOrg(db, "slug", slug);
   if (!org) return null;
-  return buildVendorReputation(db, org, await vendorVialId(db, org.id));
+  return buildVendorReputation(db, org, await vendorRegistryId(db, org.id));
 }
 
-// API-facing accessor: dispatch on the registry entity type behind a canonical VIAL ID.
-export async function getReputationRecord(vialId: string, connection?: SqlConnection): Promise<ReputationRecord | null> {
+// API-facing accessor: dispatch on the registry entity type behind a canonical VialGrade ID.
+export async function getReputationRecord(registryId: string, connection?: SqlConnection): Promise<ReputationRecord | null> {
   await ensureEvidenceNetworkSeed();
   const db = connection ?? (await getDatabase());
-  const reg = (await db.query<QueryResultRow & { entity_type: string; source_entity_id: string }>(`SELECT entity_type,source_entity_id FROM registry_identifiers WHERE vial_id=$1`, [vialId])).rows[0];
+  const reg = (await db.query<QueryResultRow & { entity_type: string; source_entity_id: string }>(`SELECT entity_type,source_entity_id FROM registry_identifiers WHERE registry_id=$1`, [registryId])).rows[0];
   if (!reg) return null;
   if (reg.entity_type === "vendor") {
     const org = await loadVendorOrg(db, "id", reg.source_entity_id);
-    return org ? buildVendorReputation(db, org, vialId) : null;
+    return org ? buildVendorReputation(db, org, registryId) : null;
   }
   if (reg.entity_type === "lab") {
     const lab = (await db.query<QueryResultRow & { id: string; slug: string; display_name: string; accreditation_status: string; accreditation_body: string | null; accreditation_expires_at: string | null }>(
       `SELECT id,slug,display_name,accreditation_status,accreditation_body,accreditation_expires_at FROM laboratory_profiles WHERE id=$1`, [reg.source_entity_id],
     )).rows[0];
-    return lab ? buildLabReputation(db, lab, vialId) : null;
+    return lab ? buildLabReputation(db, lab, registryId) : null;
   }
   return null;
 }

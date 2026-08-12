@@ -14,11 +14,11 @@ const files = requested.length > 0
 
 const env = {
   ...process.env,
-  VIAL_PGLITE_MEMORY: "true",
-  VIAL_SEED_FIXTURES: "true",
-  VIAL_SEED_DEMO_ACCOUNTS: "true",
-  VIAL_SESSION_SECRET: "integration-session-secret-at-least-32-characters",
-  VIAL_PRIVACY_HASH_SECRET: "integration-privacy-secret-at-least-32-characters",
+  VIALGRADE_PGLITE_MEMORY: "true",
+  VIALGRADE_SEED_FIXTURES: "true",
+  VIALGRADE_SEED_DEMO_ACCOUNTS: "true",
+  VIALGRADE_SESSION_SECRET: "integration-session-secret-at-least-32-characters",
+  VIALGRADE_PRIVACY_HASH_SECRET: "integration-privacy-secret-at-least-32-characters",
 };
 
 function killGroup(pid) {

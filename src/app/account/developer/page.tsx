@@ -14,7 +14,7 @@ export default async function DeveloperPage() {
     <main className="mx-auto max-w-4xl px-5 py-14">
       <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-[var(--muted)]">Programmatic access</p>
       <h1 className="mt-3 text-5xl font-extrabold tracking-[-.06em]">Developer</h1>
-      <p className="mt-4 max-w-2xl text-[var(--muted)]">Read VIAL&rsquo;s published, review-gated evidence graph over a versioned, rate-limited API. Keys are scoped and revocable; the API is read-only and never exposes commerce, personal, or unpublished data.</p>
+      <p className="mt-4 max-w-2xl text-[var(--muted)]">Read VialGrade&rsquo;s published, review-gated evidence graph over a versioned, rate-limited API. Keys are scoped and revocable; the API is read-only and never exposes commerce, personal, or unpublished data.</p>
 
       <div className="mt-9">
         <DeveloperKeys initialKeys={keys.map((k) => ({ ...k, scopes: k.scopes as string[] }))} />

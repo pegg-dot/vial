@@ -91,7 +91,7 @@ export function CompoundKnowledge({
             <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Batch match.</span> The strongest evidence is a certificate for the exact batch you&rsquo;ll receive, attributed to this vendor — check the cross-verification on the listing.</span></li>
             <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Vendor reputation.</span> See how the vendor is talked about in the community before trusting a new name.</span></li>
           </ul>
-          <p className="mt-3 text-xs text-black/45">Research context only — VIAL never gives dosing, medical, or human-use guidance.</p>
+          <p className="mt-3 text-xs text-black/45">Research context only — VialGrade never gives dosing, medical, or human-use guidance.</p>
         </QA>
       </div>
     </div>

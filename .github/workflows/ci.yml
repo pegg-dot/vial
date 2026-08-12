@@ -57,15 +57,15 @@ jobs:
         run: npm run env:check
         env:
           DATABASE_URL: postgres://vial:vial_ci@127.0.0.1:5432/vial
-          NEXT_PUBLIC_SITE_URL: https://vial.example
-          VIAL_SESSION_SECRET: ci-session-secret-at-least-32-characters
-          VIAL_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters
+          NEXT_PUBLIC_SITE_URL: https://vialgrade.example
+          VIALGRADE_SESSION_SECRET: ci-session-secret-at-least-32-characters
+          VIALGRADE_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters
       - name: Build against PostgreSQL contract
         run: npm run build
         env:
           DATABASE_URL: postgres://vial:vial_ci@127.0.0.1:5432/vial
-          NEXT_PUBLIC_SITE_URL: https://vial.example
-          VIAL_SESSION_SECRET: ci-session-secret-at-least-32-characters
-          VIAL_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters
-          VIAL_SEED_FIXTURES: "true"
-          VIAL_SEED_DEMO_ACCOUNTS: "true"
+          NEXT_PUBLIC_SITE_URL: https://vialgrade.example
+          VIALGRADE_SESSION_SECRET: ci-session-secret-at-least-32-characters
+          VIALGRADE_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters
+          VIALGRADE_SEED_FIXTURES: "true"
+          VIALGRADE_SEED_DEMO_ACCOUNTS: "true"

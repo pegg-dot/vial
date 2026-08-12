@@ -1,12 +1,12 @@
-# VIAL 6.0
+# VialGrade 6.0
 
 **The peptide market, made legible through market data, consumer intelligence, seller operations, approval-gated commerce, and sample-linked evidence.**
 
-VIAL is a web-first market intelligence and marketplace platform. V6 adds an evidence and laboratory network on top of the V1 production foundation, V2 canonical market-data engine, V3 consumer intelligence, V4 seller operating system, and V5 approved-commerce architecture.
+VialGrade is a web-first market intelligence and marketplace platform. V6 adds an evidence and laboratory network on top of the V1 production foundation, V2 canonical market-data engine, V3 consumer intelligence, V4 seller operating system, and V5 approved-commerce architecture.
 
-> Every company, listing, laboratory, report, sample, result, price, batch, account, and transaction in this repository is fictional or sandbox data. VIAL 6.0 does not provide medical guidance, establish product safety, verify real inventory, or enable unapproved production commerce.
+> Every company, listing, laboratory, report, sample, result, price, batch, account, and transaction in this repository is fictional or sandbox data. VialGrade 6.0 does not provide medical guidance, establish product safety, verify real inventory, or enable unapproved production commerce.
 
-## VIAL 6.0 evidence and laboratory network
+## VialGrade 6.0 evidence and laboratory network
 
 - Laboratory identity, team, onboarding, quality-system, and method-scope records
 - Method versions with technique, analyte, matrix, dimensions, limits, uncertainty, validation, and accreditation coverage
@@ -24,7 +24,7 @@ VIAL is a web-first market intelligence and marketplace platform. V6 adds an evi
 
 ## Central evidence principle
 
-A document is not a physical-product verification. VIAL links every analytical claim to:
+A document is not a physical-product verification. VialGrade links every analytical claim to:
 
 ```text
 laboratory → method version → test order → physical sample → custody chain
@@ -52,15 +52,15 @@ npm run dev
 Enable fictional fixtures and demo identities locally:
 
 ```text
-VIAL_SEED_FIXTURES=true
-VIAL_SEED_DEMO_ACCOUNTS=true
+VIALGRADE_SEED_FIXTURES=true
+VIALGRADE_SEED_DEMO_ACCOUNTS=true
 ```
 
 Demo laboratory:
 
 ```text
 elena@aperture.test
-VialDemoLaboratory!2026
+VialGradeDemoLaboratory!2026
 ```
 
 ## Laboratory MCP
@@ -68,7 +68,7 @@ VialDemoLaboratory!2026
 Create a scoped laboratory token in `/lab/developer`, then run:
 
 ```bash
-VIAL_MCP_LAB_TOKEN=vlab_... npm run mcp:lab
+VIALGRADE_MCP_LAB_TOKEN=vlab_... npm run mcp:lab
 ```
 
 The MCP server can read laboratory status, methods, test orders, and custody, and prepare result/report proposals. It cannot approve results, issue reports, revoke reports, publish passports, or change marketplace policy.
@@ -142,4 +142,4 @@ Staff:
 
 ## Next phase
 
-VIAL 7.0 is the production agent control plane: versioned prompts and workflows, tool permissions, evaluation gates, replay, shadow and canary deployments, model routing, budgets, failure clustering, observability, and rollback.
+VialGrade 7.0 is the production agent control plane: versioned prompts and workflows, tool permissions, evaluation gates, replay, shadow and canary deployments, model routing, budgets, failure clustering, observability, and rollback.

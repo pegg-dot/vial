@@ -7,13 +7,13 @@ async function seedUser(id: string, email: string) {
   const db = await getDatabase();
   await db.query(`INSERT INTO auth_users(id,email,display_name,account_type,roles) VALUES($1,$2,$3,'customer','["customer"]'::jsonb) ON CONFLICT(id) DO NOTHING`, [id, email, email]);
 }
-const bearer = (token: string) => new Request("https://api.vial.test/x", { headers: { authorization: `Bearer ${token}` } });
+const bearer = (token: string) => new Request("https://api.vialgrade.test/x", { headers: { authorization: `Bearer ${token}` } });
 
 describe("programmatic API access", () => {
   beforeEach(async () => {
-    process.env.VIAL_PGLITE_MEMORY = "true";
+    process.env.VIALGRADE_PGLITE_MEMORY = "true";
     delete (globalThis as { __vialDbPromise?: unknown }).__vialDbPromise;
-    await seedUser("user:a", "a@vial.test"); await seedUser("user:b", "b@vial.test");
+    await seedUser("user:a", "a@vialgrade.test"); await seedUser("user:b", "b@vialgrade.test");
   });
 
   it("issues a key whose plaintext resolves, storing only the hash", async () => {
@@ -44,7 +44,7 @@ describe("programmatic API access", () => {
 
   it("requireApiKey enforces bearer, scope, and returns owner access", async () => {
     const issued = await createApiKey({ ownerId: "user:a", name: "k", scopes: ["market:read"] });
-    expect((await requireApiKey(new Request("https://api.vial.test/x"), "market:read")).response?.status).toBe(401);
+    expect((await requireApiKey(new Request("https://api.vialgrade.test/x"), "market:read")).response?.status).toBe(401);
     expect((await requireApiKey(bearer("vial_pk_bogus"), "market:read")).response?.status).toBe(401);
     expect((await requireApiKey(bearer(issued.plaintext), "signals:read")).response?.status).toBe(403);
     const ok = await requireApiKey(bearer(issued.plaintext), "market:read");

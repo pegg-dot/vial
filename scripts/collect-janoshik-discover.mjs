@@ -1,7 +1,7 @@
-process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
+process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Discover NEW Janoshik public tests and ingest them (plus re-confirm the ones we hold).
 //
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-janoshik-discover.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-janoshik-discover.mjs
 //   … --offline   → no network: re-ingest from scripts/data/janoshik-feed-snapshot.html
 //                   (used to apply freshly vision-read purities after a live run)
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
@@ -22,7 +22,7 @@ import { recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
 import { projectLiveBatchPassports } from "../src/server/evidence-network/live-passports.ts";
 import { projectEvidenceRegistry } from "../src/server/registry/repository.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const DATA = new URL("./data/", import.meta.url);
 const readJson = (name) => JSON.parse(readFileSync(new URL(name, DATA), "utf8"));

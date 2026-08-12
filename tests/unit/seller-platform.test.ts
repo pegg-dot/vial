@@ -15,10 +15,10 @@ describe("seller platform contracts", () => {
   });
 
   it("generates a constrained Shopify OAuth URL", () => {
-    const url = new URL(buildShopifyInstallUrl({ shop: "demo-store.myshopify.com", clientId: "client", redirectUri: "https://vial.test/api/callback", state: "signed-state" }));
+    const url = new URL(buildShopifyInstallUrl({ shop: "demo-store.myshopify.com", clientId: "client", redirectUri: "https://vialgrade.test/api/callback", state: "signed-state" }));
     expect(url.hostname).toBe("demo-store.myshopify.com");
     expect(url.searchParams.get("scope")).toContain("read_products");
-    expect(() => buildShopifyInstallUrl({ shop: "evil.example.com", clientId: "x", redirectUri: "https://vial.test", state: "x" })).toThrow();
+    expect(() => buildShopifyInstallUrl({ shop: "evil.example.com", clientId: "x", redirectUri: "https://vialgrade.test", state: "x" })).toThrow();
   });
 
   it("exposes catalog, payment, and automation connectors", () => {

@@ -40,7 +40,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     </div>
 
     <div className="mt-6 grid gap-3 sm:grid-cols-4">
-      <div className="ink-1 hard rounded-[18px] bg-white p-5"><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Certificates on VIAL</p><p className="mt-2 text-2xl font-extrabold tabular-nums">{usage.coaCount}</p></div>
+      <div className="ink-1 hard rounded-[18px] bg-white p-5"><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Certificates on VialGrade</p><p className="mt-2 text-2xl font-extrabold tabular-nums">{usage.coaCount}</p></div>
       <div className="ink-1 hard rounded-[18px] bg-white p-5"><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Vendors tested</p><p className="mt-2 text-2xl font-extrabold tabular-nums">{usage.vendorCount}</p></div>
       <div className="ink-1 hard rounded-[18px] bg-white p-5"><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Median purity</p><p className="mt-2 text-2xl font-extrabold tabular-nums">{usage.purityMedian != null ? `${usage.purityMedian.toFixed(1)}%` : "—"}</p></div>
       <div className="ink-1 hard rounded-[18px] bg-white p-5"><p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Public verify portal</p><p className="mt-2 text-sm font-bold">{l.verifyPortal ? <a href={l.verifyPortal} target="_blank" rel="noopener nofollow" className="text-[#0e8f80] hover:underline">Yes →</a> : "None"}</p></div>

@@ -8,9 +8,9 @@ const now=Date.now();
 function cookie(accountType:"customer"|"seller"|"staff",roles:string[]){return encodeSessionEnvelope({version:1,sessionId:`session-${crypto.randomUUID()}`,userId:`user-${accountType}`,accountType,roles:roles as never[],issuedAt:now,expiresAt:now+60_000})}
 
 describe("deny-by-default route perimeter",()=>{
-  const original=process.env.VIAL_SESSION_SECRET;
-  beforeEach(()=>{process.env.VIAL_SESSION_SECRET="unit-test-admin-proxy-secret-at-least-32-characters"});
-  afterEach(()=>{if(original===undefined)delete process.env.VIAL_SESSION_SECRET;else process.env.VIAL_SESSION_SECRET=original});
+  const original=process.env.VIALGRADE_SESSION_SECRET;
+  beforeEach(()=>{process.env.VIALGRADE_SESSION_SECRET="unit-test-admin-proxy-secret-at-least-32-characters"});
+  afterEach(()=>{if(original===undefined)delete process.env.VIALGRADE_SESSION_SECRET;else process.env.VIALGRADE_SESSION_SECRET=original});
   it("runs for protected and public application routes",()=>{
     for(const url of ["/admin/users","/admin/future-page","/account","/seller","/market"])expect(unstable_doesMiddlewareMatch({config,nextConfig:{},url})).toBe(true);
   });

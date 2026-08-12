@@ -1,7 +1,7 @@
-process.env.VIAL_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
+process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures from a live-data script
 // Broad market ingest: real compounds + real vendor catalogs (Shopify /products.json) +
 // Janoshik COA references. Live network + writes to the dev DB. Gated.
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-market.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-market.mjs
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
@@ -16,8 +16,8 @@ import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts"
 import { recordVendorReview } from "../src/server/verify/vendor-reviews.ts";
 import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
-  console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true.");
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
+  console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true.");
   process.exit(1);
 }
 
@@ -42,14 +42,14 @@ for (const v of legit) {
   await upsertLiveVendor(db, {
     slug: v.slug, name: v.name, domains: [v.domain], location: v.location,
     description: v.reputationSummary
-      ? `${v.reputationSummary} Aggregated from public sources; VIAL does not endorse any vendor.`
-      : `Research-peptide vendor. Aggregated from public sources; VIAL does not endorse any vendor.`,
+      ? `${v.reputationSummary} Aggregated from public sources; VialGrade does not endorse any vendor.`
+      : `Research-peptide vendor. Aggregated from public sources; VialGrade does not endorse any vendor.`,
   });
 }
 
 // Janoshik COA references FIRST — the lab evidence must land before the storefront catalogs so the
 // storefront-COA linker (in importShopifyCatalog) can resolve each listing's published verify link
-// against the certificates VIAL holds. With vision-read purity merged in where available.
+// against the certificates VialGrade holds. With vision-read purity merged in where available.
 const feedFile = new URL("janoshik-feed-snapshot.html", DATA);
 const purities = existsSync(new URL("janoshik-purities.json", DATA)) ? readJson("janoshik-purities.json") : {};
 if (existsSync(feedFile)) {
@@ -62,7 +62,7 @@ if (existsSync(feedFile)) {
   for (const v of coaVendors) {
     await upsertLiveVendor(db, {
       slug: v.slug, name: v.name, domains: v.domain ? [v.domain] : [],
-      description: `Identified from public third-party lab records (Janoshik). Independent test history aggregated by VIAL; not an endorsement.`,
+      description: `Identified from public third-party lab records (Janoshik). Independent test history aggregated by VialGrade; not an endorsement.`,
     });
   }
 

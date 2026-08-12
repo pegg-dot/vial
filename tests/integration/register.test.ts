@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
 
 type Mods = {
   getDatabase: typeof import("@/server/db/client").getDatabase;

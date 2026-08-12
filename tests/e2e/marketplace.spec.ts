@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 async function loginCustomer(page: import("@playwright/test").Page) {
   await page.goto("/login");
   await page.getByLabel("Email").fill("nora@example.test");
-  await page.getByLabel("Password").fill("VialDemoCustomer!2026");
+  await page.getByLabel("Password").fill("VialGradeDemoCustomer!2026");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/account/);
 }

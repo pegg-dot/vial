@@ -1,8 +1,8 @@
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SEED_FIXTURES = "true";
-process.env.VIAL_SEED_DEMO_ACCOUNTS = "true";
-process.env.VIAL_SESSION_SECRET = "registry-audit-session-secret-at-least-32-chars";
-process.env.VIAL_PRIVACY_HASH_SECRET = "registry-audit-privacy-secret-at-least-32-chars";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SEED_FIXTURES = "true";
+process.env.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
+process.env.VIALGRADE_SESSION_SECRET = "registry-audit-session-secret-at-least-32-chars";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "registry-audit-privacy-secret-at-least-32-chars";
 
 const { getDatabase, resetDatabaseForTests } = await import("../src/server/db/client.ts");
 const { CURRENT_SCHEMA_VERSION } = await import("../src/server/db/migrations.ts");
@@ -27,22 +27,22 @@ try {
   check(versions.every((v, i) => v === i + 1), `Migration versions are not contiguous: ${versions.join(",")}`);
   check(CURRENT_SCHEMA_VERSION >= 13, `Expected schema >= 13, got ${CURRENT_SCHEMA_VERSION}`);
 
-  // 2. Identity registry — one authoritative VIAL ID per real entity, spines unified.
-  const compound = await getRegistryRecord("vial:compound:bpc-157");
-  check(compound && compound.provenanceUrl === "/compounds/bpc-157", "Compound VIAL ID did not resolve");
-  const vendor = await getRegistryRecord("vial:vendor:northstar-research");
-  check(vendor && vendor.entityType === "vendor", "Vendor VIAL ID did not resolve");
-  const lab = await getRegistryRecord("vial:lab:aperture-analytical");
-  check(lab && lab.sourceEntityType === "laboratory_profile", "Lab VIAL ID not sourced from the real laboratory record (spines not unified)");
-  const batch = await getRegistryRecord("vial:batch:hx-bpc-2607");
-  check(batch && batch.sourceEntityType === "batch_passport", "Batch VIAL ID not sourced from the real passport");
+  // 2. Identity registry — one authoritative VialGrade ID per real entity, spines unified.
+  const compound = await getRegistryRecord("vialgrade:compound:bpc-157");
+  check(compound && compound.provenanceUrl === "/compounds/bpc-157", "Compound VialGrade ID did not resolve");
+  const vendor = await getRegistryRecord("vialgrade:vendor:northstar-research");
+  check(vendor && vendor.entityType === "vendor", "Vendor VialGrade ID did not resolve");
+  const lab = await getRegistryRecord("vialgrade:lab:aperture-analytical");
+  check(lab && lab.sourceEntityType === "laboratory_profile", "Lab VialGrade ID not sourced from the real laboratory record (spines not unified)");
+  const batch = await getRegistryRecord("vialgrade:batch:hx-bpc-2607");
+  check(batch && batch.sourceEntityType === "batch_passport", "Batch VialGrade ID not sourced from the real passport");
 
   // 3. Resolution flywheel — a messy alias maps to the canonical ID.
   const resolved = await resolveToRegistry("BPC157", "compound");
-  check(resolved.best?.vialId === "vial:compound:bpc-157", "Alias resolution did not reach the canonical compound ID");
+  check(resolved.best?.registryId === "vialgrade:compound:bpc-157", "Alias resolution did not reach the canonical compound ID");
 
   // 4. Versioned batch history + decomposed confidence (no black box).
-  const batchRecord = await getBatchStandardRecord("vial:batch:hx-bpc-2607");
+  const batchRecord = await getBatchStandardRecord("vialgrade:batch:hx-bpc-2607");
   check(batchRecord && batchRecord.versions.length >= 1, "Batch passport has no immutable version history");
   check(batchRecord && batchRecord.confidenceBasis && batchRecord.confidenceBasis.samplingLevel, "Confidence was not decomposed into its basis");
   check(batchRecord && batchRecord.confidenceBasis.dimensionSummary.conflicting.includes("quantity"), "Conflict-preserving doctrine lost from the batch standard");
@@ -59,7 +59,7 @@ try {
   check(dims.documentation_currency?.status === "established", "Documentation currency dimension missing/not established");
   check(dims.operational_reliability?.status === "unknown", "Operational reliability should be 'unknown' for a non-storefront vendor (fabricated-score fix)");
   for (const d of rep?.dimensions ?? []) check(d.provenance && d.basis && d.basis.length > 0, `Reputation dimension ${d.key} lacks provenance/basis`);
-  const labRep = await getReputationRecord("vial:lab:aperture-analytical");
+  const labRep = await getReputationRecord("vialgrade:lab:aperture-analytical");
   check(labRep && labRep.subjectType === "lab" && !("score" in labRep), "Lab integrity record missing or scored");
 
   // 6. Boundary — every public standard scope is read-only (no bearer publish path).
@@ -71,10 +71,10 @@ try {
   check(!/Support signal/.test(vendorPage) && !/Median shipping/.test(vendorPage), "Vendor page still renders a fabricated support/shipping score");
 
   if (failures.length) {
-    console.error("VIAL 10.0 registry/standards audit FAILED:\n- " + failures.join("\n- "));
+    console.error("VialGrade 10.0 registry/standards audit FAILED:\n- " + failures.join("\n- "));
     process.exitCode = 1;
   } else {
-    console.log("VIAL 10.0 registry/standards audit passed: unified identity spine, resolvable VIAL IDs, alias flywheel, versioned batch history with decomposed confidence, conflict preservation, composed reputation records with no black-box score, read-only public scopes, and contract-discipline migrations are intact.");
+    console.log("VialGrade 10.0 registry/standards audit passed: unified identity spine, resolvable VialGrade IDs, alias flywheel, versioned batch history with decomposed confidence, conflict preservation, composed reputation records with no black-box score, read-only public scopes, and contract-discipline migrations are intact.");
   }
 } finally {
   await resetDatabaseForTests();

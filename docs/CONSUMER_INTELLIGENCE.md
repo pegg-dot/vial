@@ -1,6 +1,6 @@
-# VIAL 3.0 consumer intelligence
+# VialGrade 3.0 consumer intelligence
 
-VIAL 3.0 turns normalized market data into a durable consumer workspace. The system remembers explicit user choices across sessions without making medical or product-use recommendations.
+VialGrade 3.0 turns normalized market data into a durable consumer workspace. The system remembers explicit user choices across sessions without making medical or product-use recommendations.
 
 ## Core model
 

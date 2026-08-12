@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# VIAL project rules
+# VialGrade project rules
 
 ## Goal
 
@@ -16,8 +16,8 @@ Preserve a premium, evidence-first market interface in which every public claim 
 
 ## Product boundaries
 
-- Do not add native checkout, payment handling, dosage guidance, injection guidance, or human-use recommendations. VIAL never sells or touches money.
-- Outbound vendor handoff is APPROVED and ACTIVE (owner-approved 2026-07-22): on a LIVE listing the "Buy at vendor" control links through `/go?l=<listingSlug>`, which records the click and 302-redirects to the vendor's OWN product page. Rules: the destination is always resolved server-side from the listing's stored `external_url` (never from the request) so it can't become an open redirect; demo listings stay inert (notice only); affiliate monetization attaches only in `src/server/outbound/affiliate.ts` (no per-vendor deals live yet). Keep the honest framing — "hands you to the vendor; VIAL doesn't sell or take payment" — and never present a vendor as endorsed.
+- Do not add native checkout, payment handling, dosage guidance, injection guidance, or human-use recommendations. VialGrade never sells or touches money.
+- Outbound vendor handoff is APPROVED and ACTIVE (owner-approved 2026-07-22): on a LIVE listing the "Buy at vendor" control links through `/go?l=<listingSlug>`, which records the click and 302-redirects to the vendor's OWN product page. Rules: the destination is always resolved server-side from the listing's stored `external_url` (never from the request) so it can't become an open redirect; demo listings stay inert (notice only); affiliate monetization attaches only in `src/server/outbound/affiliate.ts` (no per-vendor deals live yet). Keep the honest framing — "hands you to the vendor; VialGrade doesn't sell or take payment" — and never present a vendor as endorsed.
 - Data provenance is explicit via the `origin` column ('demo' | 'live'), surfaced with the `DataOriginBadge`:
   - **Demo** — seeded fictional companies, labs, prices, reviews, batches, and fixtures. These stay clearly marked demo.
   - **Live** — records aggregated from real public third-party sources (vendor product pages, the Janoshik public COA feed) through the reviewed ingestion pipeline. Real data is permitted and MUST be marked Live; it is never presented as endorsed, verified-safe, or a recommendation. Every value on a Live record must have arrived through snapshot → review → publish, never seeded.
@@ -26,7 +26,7 @@ Preserve a premium, evidence-first market interface in which every public claim 
 - Unknown evidence must remain visible.
 - Do not use an age gate or research-use modal as an eligibility shortcut.
 - Do not present opportunity signals as recommendations to buy or use a product.
-- Registering a Live HTTP source is gated behind `VIAL_LIVE_INGEST_APPROVED=true` (or an explicit `{ approved: true }`); live fetching is intentional, never a silent default. Real hostnames must be allowlisted per policy.
+- Registering a Live HTTP source is gated behind `VIALGRADE_LIVE_INGEST_APPROVED=true` (or an explicit `{ approved: true }`); live fetching is intentional, never a silent default. Real hostnames must be allowlisted per policy.
 
 ## Architecture
 

@@ -1,6 +1,6 @@
 import { BadgeCheck, FlaskConical, Link2, Lock, ScanLine, Wallet } from "lucide-react";
 
-// Ascend-style announcement ticker — a bold bar of what VIAL actually is, scrolling. Facts, not sales.
+// Ascend-style announcement ticker — a bold bar of what VialGrade actually is, scrolling. Facts, not sales.
 const ITEMS: Array<{ icon: React.ComponentType<{ className?: string }>; text: string }> = [
   { icon: FlaskConical, text: "279 lab tests read by hand" },
   { icon: ScanLine, text: "COA-verified — batch by batch" },

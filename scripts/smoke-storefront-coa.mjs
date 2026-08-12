@@ -2,13 +2,13 @@
 // real network and NO touch of the dev .data — safe to run while `next dev` is up.
 //   node --import tsx scripts/smoke-storefront-coa.mjs
 //
-// It seeds a demo storefront + the certificates VIAL "already holds", then runs the REAL
+// It seeds a demo storefront + the certificates VialGrade "already holds", then runs the REAL
 // importShopifyCatalog on four fixture products and prints, for each, what the storefront published
 // and the verdict the hardened crossCheckCoa reaches from the wedge's stamp. This shows both the
 // coverage win and the honesty guards in one readable run.
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET ||= "smoke-storefront-coa-secret-at-least-32chars";
-process.env.VIAL_PRIVACY_HASH_SECRET ||= "smoke-storefront-coa-privacy-at-least-32chars";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET ||= "smoke-storefront-coa-secret-at-least-32chars";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET ||= "smoke-storefront-coa-privacy-at-least-32chars";
 
 import { getDatabase, resetDatabaseForTests } from "../src/server/db/client.ts";
 import { newId } from "../src/server/db/ids.ts";
@@ -17,8 +17,8 @@ import { importShopifyCatalog } from "../src/server/ingest/shopify-import.ts";
 import { crossCheckCoa } from "../src/server/verify/coa-cross-check.ts";
 
 const VENDOR = "demo-store";
-const HELD_BPC = "https://verify.janoshik.com/tests/551234-BPC157_K9Z"; // a cert VIAL holds, made by demo-store
-const FOREIGN_CJC = "https://verify.janoshik.com/tests/660987-CJC1295_A7Q"; // a cert VIAL holds, made by SOMEONE ELSE
+const HELD_BPC = "https://verify.janoshik.com/tests/551234-BPC157_K9Z"; // a cert VialGrade holds, made by demo-store
+const FOREIGN_CJC = "https://verify.janoshik.com/tests/660987-CJC1295_A7Q"; // a cert VialGrade holds, made by SOMEONE ELSE
 
 await resetDatabaseForTests();
 const db = await getDatabase();
@@ -37,7 +37,7 @@ async function heldCert({ vendor_slug, manufacturer, compound_slug, verify, batc
 // Compounds sold.
 for (const [s, n] of [["bpc-157", "BPC-157"], ["tb-500", "TB-500"], ["cjc-1295", "CJC-1295"], ["ipamorelin", "Ipamorelin"]]) await compound(s, n);
 
-// Certificates VIAL already independently holds (from the Janoshik feed):
+// Certificates VialGrade already independently holds (from the Janoshik feed):
 await heldCert({ vendor_slug: VENDOR, manufacturer: "Demo Store", compound_slug: "bpc-157", verify: HELD_BPC, batch: "2026-05-01-A", purity: 99.4 }); // demo-store's OWN
 await heldCert({ vendor_slug: "some-other-maker", manufacturer: "Some Other Maker", compound_slug: "cjc-1295", verify: FOREIGN_CJC, batch: "OM-2026-114-Z", purity: 98.9 }); // a DIFFERENT maker's
 
@@ -69,7 +69,7 @@ const scenarios = [
 ];
 
 console.log("─".repeat(96));
-console.log("PRODUCT".padEnd(14), "WHAT THE STOREFRONT PUBLISHED".padEnd(42), "STAMPED".padEnd(10), "VIAL VERDICT");
+console.log("PRODUCT".padEnd(14), "WHAT THE STOREFRONT PUBLISHED".padEnd(42), "STAMPED".padEnd(10), "VialGrade VERDICT");
 console.log("─".repeat(96));
 for (const [slug, name, what] of scenarios) {
   const l = (await db.query(`SELECT report_issuer, report_confirmed, batch_code FROM listings WHERE slug = $1`, [`${VENDOR}-${slug}`])).rows[0] ?? {};

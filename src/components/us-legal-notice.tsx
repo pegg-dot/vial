@@ -23,7 +23,7 @@ export function UsLegalNotice({ slug }: { slug: string }) {
       <p className="mt-3 text-[15px] font-extrabold leading-6 tracking-[-.02em]">{s.headline}</p>
       <p className="mt-2 text-[13px] font-medium leading-6 text-black/70">{s.detail}</p>
       <Link href="/legal/us-regulations" className="mt-3 inline-block text-xs font-bold text-[#2b31d8] hover:underline">Read the full US legal overview →</Link>
-      <p className="mt-3 text-[10px] leading-4 text-black/40">General information, not legal or medical advice. VIAL sells nothing and encourages no human use.</p>
+      <p className="mt-3 text-[10px] leading-4 text-black/40">General information, not legal or medical advice. VialGrade sells nothing and encourages no human use.</p>
     </div>
   );
 }

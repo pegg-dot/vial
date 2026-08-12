@@ -1,12 +1,12 @@
 // Probe every vendor's domain for liveness / exit-scam status and record it.
 //
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-vendor-status.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-vendor-status.mjs
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { readFileSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
 import { probeVendorStatus, recordVendorStatus } from "../src/server/verify/vendor-status.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true."); process.exit(1); }
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 // Probe ALL vendors — including red-flagged/defunct ones, to confirm they're actually gone.
 const vendors = JSON.parse(readFileSync(new URL("./data/peptide-vendors.json", import.meta.url), "utf8")).filter((v) => v.domain);

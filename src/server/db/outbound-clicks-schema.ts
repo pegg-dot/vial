@@ -2,7 +2,7 @@
 //
 // Every "Buy at vendor" handoff routes through /go, which records the click here before
 // redirecting. Two reasons: (1) this is the leverage for affiliate deals — you can show a vendor
-// exactly how many high-intent, COA-checked buyers VIAL sent them before asking for a rev-share;
+// exactly how many high-intent, COA-checked buyers VialGrade sent them before asking for a rev-share;
 // (2) it lets monetization be swapped in per-vendor later without touching any UI. No PII is
 // stored — just which listing/vendor/compound was clicked and when.
 export const outboundClicksSchemaSql = String.raw`

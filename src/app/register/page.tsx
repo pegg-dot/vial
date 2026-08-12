@@ -46,8 +46,8 @@ export default function RegisterPage() {
     <section className="mx-auto max-w-[520px] px-5 py-20 sm:px-8">
       <div className="ink hard-lg rounded-[24px] bg-white p-8">
         <span className="ink inline-grid size-12 place-items-center rounded-[14px] bg-[#2b31d8] text-white"><UserPlus className="size-6" /></span>
-        <h1 className="mt-6 text-4xl font-extrabold tracking-[-.04em] text-[#111214]">Create your VIAL account.</h1>
-        <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">Free. Save vendors and compounds, and get alerted when a price or lab test changes. VIAL never sells anything.</p>
+        <h1 className="mt-6 text-4xl font-extrabold tracking-[-.04em] text-[#111214]">Create your VialGrade account.</h1>
+        <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">Free. Save vendors and compounds, and get alerted when a price or lab test changes. VialGrade never sells anything.</p>
         {error && <p className="ink-1 mt-4 rounded-[10px] bg-[#fff1f0] px-4 py-3 text-sm font-semibold text-[#d3372c]">{error}</p>}
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <label className="block text-sm font-bold text-[#111214]">Name<input name="displayName" type="text" required autoComplete="name" className="field mt-2" /></label>

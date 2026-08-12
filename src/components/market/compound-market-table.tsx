@@ -26,7 +26,7 @@ function HeaderCell({ label, sortKey, active, onSort, className = "" }: { label:
 }
 
 // The terminal view: a dense, sortable ranked market table (CoinMarketCap pattern) —
-// VIAL's Bloomberg-terminal expression. Scrolls horizontally rather than dropping evidence.
+// VialGrade's Bloomberg-terminal expression. Scrolls horizontally rather than dropping evidence.
 export function CompoundMarketTable({ compounds, products, onOpen }: { compounds: Compound[]; products: Product[]; onOpen: (items: Compound[], index: number) => void }) {
   const [sort, setSort] = useState<SortKey>("trending");
 

@@ -14,7 +14,7 @@ export default function ComparePage() {
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Side-by-side</p>
         <h1 className="mt-3 text-5xl font-extrabold leading-[.95] tracking-[-.065em] sm:text-6xl">Compare the claims, not just the price.</h1>
         <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">
-          VIAL keeps evidence dimensions separate so a low price or a polished document cannot hide missing batch, quantity, or sampling context.
+          VialGrade keeps evidence dimensions separate so a low price or a polished document cannot hide missing batch, quantity, or sampling context.
         </p>
       </div>
       <CompareClient />

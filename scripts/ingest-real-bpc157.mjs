@@ -5,15 +5,15 @@
 // snapshot -> extract -> review pipeline, and approves only sane in-range claims.
 //
 // Live network + writes to the dev DB. Gated so it is never an accident:
-//   VIAL_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-real-bpc157.mjs
+//   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-real-bpc157.mjs
 //
 // Run with the dev server STOPPED (file-backed PGlite is single-writer), then start
 // `npm run dev` to see real BPC-157 listings in the app.
 import { getDatabase } from "../src/server/db/client.ts";
 import { provisionRealBpc157, runLiveIngestAndApprove, REAL_BPC157_VENDORS } from "../src/server/ingest/bpc157.ts";
 
-if (process.env.VIAL_LIVE_INGEST_APPROVED !== "true") {
-  console.log("Refusing to run: set VIAL_LIVE_INGEST_APPROVED=true to register real HTTP sources and fetch live data.");
+if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
+  console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true to register real HTTP sources and fetch live data.");
   process.exit(1);
 }
 

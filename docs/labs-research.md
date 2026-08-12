@@ -1,6 +1,6 @@
 # Testing-lab research — provenance & verification record
 
-This file backs `src/server/labs/registry.ts`. Because VIAL publishes factual claims about real
+This file backs `src/server/labs/registry.ts`. Because VialGrade publishes factual claims about real
 companies, every material claim about a lab is recorded here with its source and a verification
 status. Guiding rules:
 

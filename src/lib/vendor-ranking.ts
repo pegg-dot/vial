@@ -33,7 +33,7 @@ export const PRIORITIES: Priority[] = [
 
 const SENTIMENT_RANK: Record<ReviewSentiment, number> = { positive: 3, mixed: 2, unknown: 1, negative: 0, scam: -1 };
 
-// Internal reliability sort key (never displayed as a number — VIAL shows the signals, not a
+// Internal reliability sort key (never displayed as a number — VialGrade shows the signals, not a
 // score). Rewards independent tests, purity, positive off-site reputation, and market breadth.
 function reliabilityScore(e: VendorDirectoryEntry): number {
   let s = 0;

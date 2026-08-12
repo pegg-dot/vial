@@ -66,7 +66,7 @@ export async function ingestNewJanoshikTests(
       slug: v.slug,
       name: v.name,
       domains: v.domain ? [v.domain] : [],
-      description: `Identified from public third-party lab records (Janoshik). Independent test history aggregated by VIAL; not an endorsement.`,
+      description: `Identified from public third-party lab records (Janoshik). Independent test history aggregated by VialGrade; not an endorsement.`,
     });
     if (!existed) newVendors.push(v.slug);
   }

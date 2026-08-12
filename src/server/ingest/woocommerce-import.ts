@@ -9,7 +9,7 @@ import type { SqlConnection } from "@/server/db/client";
 import { upsertLiveVendor } from "./live-sources";
 import { matchCompound, recordAllSizes, type Candidate, type CompoundRef, type ImportResult } from "./shopify-import";
 
-const UA = "VIAL-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
+const UA = "VialGrade-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
 const PRICE_MIN = 5;
 const PRICE_MAX = 2000;
 

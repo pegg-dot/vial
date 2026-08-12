@@ -10,7 +10,7 @@ describe("embedded backup and restore drill",()=>{
  afterAll(async()=>{await resetDatabaseForTests();if(root)await rm(root,{recursive:true,force:true})});
  it("restores the complete database directory after a corruption marker",async()=>{
   root=await mkdtemp(path.join(os.tmpdir(),"vial-backup-drill-"));const live=path.join(root,"live"),backup=path.join(root,"backup");
-  Object.assign(env,{VIAL_PGLITE_MEMORY:"false",VIAL_PGLITE_PATH:live,VIAL_SEED_FIXTURES:"true",VIAL_SEED_DEMO_ACCOUNTS:"true"});
+  Object.assign(env,{VIALGRADE_PGLITE_MEMORY:"false",VIALGRADE_PGLITE_PATH:live,VIALGRADE_SEED_FIXTURES:"true",VIALGRADE_SEED_DEMO_ACCOUNTS:"true"});
   await resetDatabaseForTests();let db=await getDatabase();
   await db.query(`INSERT INTO app_meta(key,value) VALUES('backup_drill',$1::jsonb) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`,[JSON.stringify({state:"original"})]);
   const before=await db.query<{count:number|string}>(`SELECT COUNT(*)::int AS count FROM information_schema.tables WHERE table_schema='public'`);expect(Number(before.rows[0]?.count)).toBeGreaterThan(50);

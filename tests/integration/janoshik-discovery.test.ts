@@ -3,9 +3,9 @@ import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { recordLabTest } from "@/server/ingest/lab-tests";
 import { ingestNewJanoshikTests, applyPurities, annotateTestTypes } from "@/server/ingest/janoshik-discovery";
 
-process.env.VIAL_PGLITE_MEMORY = "true";
-process.env.VIAL_SESSION_SECRET = "janoshik-discovery-test-secret-at-least-32-chars";
-process.env.VIAL_PRIVACY_HASH_SECRET = "janoshik-discovery-privacy-secret-at-least-32-chars";
+process.env.VIALGRADE_PGLITE_MEMORY = "true";
+process.env.VIALGRADE_SESSION_SECRET = "janoshik-discovery-test-secret-at-least-32-chars";
+process.env.VIALGRADE_PRIVACY_HASH_SECRET = "janoshik-discovery-privacy-secret-at-least-32-chars";
 
 const resolve = {
   compounds: [{ slug: "bpc-157", name: "BPC-157", aliases: ["bpc157", "bpc 157"] }],

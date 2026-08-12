@@ -77,7 +77,7 @@ export async function getEvidenceLibraryStats() {
 /** How the certificates we hold were sampled — the blind vs vendor-submitted split that actually
  *  matters for trust. Customer-sealed and multi-source models don't apply to aggregated COAs. */
 /**
- * THE canonical count of independent certificates VIAL holds: one row per verify_url — a distinct
+ * THE canonical count of independent certificates VialGrade holds: one row per verify_url — a distinct
  * COA (UNIQUE(verify_url) + the ingest ON CONFLICT guarantee one row per certificate). This is the
  * single site-wide "certificates on record" figure. Per-compound (compound.coaCount) and per-vendor
  * (vendor.coaCount) counts are SCOPED SUBSETS: a certificate whose manufacturer or compound didn't

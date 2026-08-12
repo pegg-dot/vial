@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The provenance backend originally required staff to paste captured content. VIAL needs fresher records, but unrestricted browsing would introduce network, security, reproducibility, policy, and publication risks.
+The provenance backend originally required staff to paste captured content. VialGrade needs fresher records, but unrestricted browsing would introduce network, security, reproducibility, policy, and publication risks.
 
 ## Decision
 

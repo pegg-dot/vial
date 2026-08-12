@@ -1,4 +1,4 @@
-// Regulatory & enforcement records — the strongest, safest trust signal VIAL can carry.
+// Regulatory & enforcement records — the strongest, safest trust signal VialGrade can carry.
 //
 // These are PUBLIC official records (FDA warning letters and import alerts, DOJ prosecutions, FTC
 // actions, recalls). Reporting "the FDA issued a warning letter to X on date Y" is factual and

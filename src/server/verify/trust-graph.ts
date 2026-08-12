@@ -1,4 +1,4 @@
-// The trust graph — VIAL's compounding core. Every data seam we hold about a vendor is folded into
+// The trust graph — VialGrade's compounding core. Every data seam we hold about a vendor is folded into
 // ONE composed verdict here, via transparent rules (never a black-box score, per the doctrine). The
 // verdict shows exactly which seams it's built from, each traceable to its source. Adding a new seam
 // means adding one case here — and every verdict across the app gets sharper for free.

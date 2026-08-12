@@ -1,8 +1,8 @@
-# VIAL 4.0 seller operating system
+# VialGrade 4.0 seller operating system
 
 ## Purpose
 
-VIAL 4.0 makes legitimate seller onboarding self-serve without turning onboarding into a cosmetic checklist. Readiness is computed from work actually completed in the platform.
+VialGrade 4.0 makes legitimate seller onboarding self-serve without turning onboarding into a cosmetic checklist. Readiness is computed from work actually completed in the platform.
 
 ## Seller journey
 
@@ -33,7 +33,7 @@ Readiness is separated into eight dimensions:
 7. Team access
 8. Seller agreement
 
-VIAL never collapses these dimensions into a claim that the seller or its products are safe.
+VialGrade never collapses these dimensions into a claim that the seller or its products are safe.
 
 ## Connector registry
 
@@ -45,7 +45,7 @@ The connector registry has pluggable definitions for:
 - Website discovery
 - Stripe Connect onboarding
 - Generic signed webhooks
-- VIAL Seller MCP
+- VialGrade Seller MCP
 
 The V4 repository contains deterministic sandbox implementations and adapter boundaries. Real credentials, external approval, and provider underwriting are not bundled.
 
@@ -67,7 +67,7 @@ Importing does not publish a public listing. Publication, product eligibility, a
 
 ## Canonical matching
 
-Matching uses VIAL's V2 canonical graph and supports:
+Matching uses VialGrade's V2 canonical graph and supports:
 
 - Aliases
 - Punctuation and spacing variants
@@ -91,7 +91,7 @@ Evidence document
 → confirmed or rejected relationship
 ```
 
-A document is not treated as proof of a physical vial's contents. VIAL records what the document claims, who issued it, what it appears linked to, and whether that relationship has been reviewed.
+A document is not treated as proof of a physical vial's contents. VialGrade records what the document claims, who issued it, what it appears linked to, and whether that relationship has been reviewed.
 
 ## Inventory and orders
 

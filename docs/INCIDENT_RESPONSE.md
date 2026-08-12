@@ -1,4 +1,4 @@
-# VIAL incident response
+# VialGrade incident response
 
 ## Severity
 

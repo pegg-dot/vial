@@ -23,9 +23,9 @@ export async function isFeatureFlagEnabled(db: SqlConnection, key: string): Prom
 // No-ops in sandbox/mock (no DB read) so ordinary checkout is unaffected.
 export async function assertLiveCommerceEnabled(db: SqlConnection): Promise<void> {
   const env = getEnvironment();
-  if (!(env.VIAL_PAYMENT_PROVIDER === "stripe" && env.VIAL_COMMERCE_MODE === "live")) return;
+  if (!(env.VIALGRADE_PAYMENT_PROVIDER === "stripe" && env.VIALGRADE_COMMERCE_MODE === "live")) return;
   const flagEnabled = await isFeatureFlagEnabled(db, "commerce_production");
-  if (liveChargeBlocked({ mode: env.VIAL_COMMERCE_MODE, provider: env.VIAL_PAYMENT_PROVIDER, flagEnabled })) {
+  if (liveChargeBlocked({ mode: env.VIALGRADE_COMMERCE_MODE, provider: env.VIALGRADE_PAYMENT_PROVIDER, flagEnabled })) {
     throw new Error("commerce_production is disabled: live payment movement is blocked by the production hard stop");
   }
 }

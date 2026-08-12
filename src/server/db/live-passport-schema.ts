@@ -1,9 +1,9 @@
-// Live batch passports — real batches, projected from the independent certificates VIAL holds.
+// Live batch passports — real batches, projected from the independent certificates VialGrade holds.
 //
-// The batch_passports table was built for VIAL-operated testing (orders/samples/custody/reports).
-// A LIVE passport reuses the same surface (so it appears on /passports and mints a vial:batch ID)
+// The batch_passports table was built for VialGrade-operated testing (orders/samples/custody/reports).
+// A LIVE passport reuses the same surface (so it appears on /passports and mints a vialgrade:batch ID)
 // but sources its evidence from lab_test_records directly, since external COAs never passed
-// through VIAL's own custody chain. origin distinguishes the two; passport_lab_tests carries the
+// through VialGrade's own custody chain. origin distinguishes the two; passport_lab_tests carries the
 // real evidence links (parallel to the demo passport_evidence_links → laboratory_reports chain).
 export const livePassportSchemaSql = String.raw`
 ALTER TABLE batch_passports ADD COLUMN IF NOT EXISTS origin TEXT NOT NULL DEFAULT 'demo';

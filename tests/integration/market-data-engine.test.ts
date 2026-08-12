@@ -5,7 +5,7 @@ import { getBenchmarkDashboard, runParserBenchmark } from "@/server/market-data/
 import { getDataQualityDashboard, recordCorrection, recomputeSourceReliability } from "@/server/market-data/quality";
 import { getSearchQualityDashboard, searchMarket } from "@/server/search/engine";
 
-beforeEach(async()=>{process.env.VIAL_PGLITE_MEMORY="true";process.env.VIAL_SEED_FIXTURES="true";process.env.VIAL_SEED_DEMO_ACCOUNTS="true";await resetDatabaseForTests();});
+beforeEach(async()=>{process.env.VIALGRADE_PGLITE_MEMORY="true";process.env.VIALGRADE_SEED_FIXTURES="true";process.env.VIALGRADE_SEED_DEMO_ACCOUNTS="true";await resetDatabaseForTests();});
 
 describe("VIAL 2.0 market data engine",()=>{
  it("builds a canonical graph and resolves aliases",async()=>{const summary=await getEntityGraphSummary();expect(summary.types.reduce((s,r)=>s+r.count,0)).toBeGreaterThan(25);const resolution=await resolveEntityLabel("BPC157","compound");expect(resolution.best?.entity.canonical_key).toBe("bpc-157");expect(resolution.best?.score).toBeGreaterThan(.95);const caseResult=await createResolutionCase({subjectType:"source-label",subjectId:"fixture",rawLabel:"Epithalon",entityType:"compound"});expect(caseResult.best?.entity.canonical_key).toBe("epitalon");});

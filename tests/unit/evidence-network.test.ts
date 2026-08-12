@@ -24,7 +24,7 @@ describe("VIAL 6 laboratory security contracts", () => {
   });
 
   it("round-trips a laboratory session through the signed envelope", () => {
-    process.env.VIAL_SESSION_SECRET = "laboratory-session-test-secret-at-least-32";
+    process.env.VIALGRADE_SESSION_SECRET = "laboratory-session-test-secret-at-least-32";
     const encoded = encodeSessionEnvelope(envelope);
     expect(decodeSessionEnvelope(encoded, now)?.accountType).toBe("laboratory");
     expect(decodeSessionEnvelope(`${encoded}tampered`, now)).toBeNull();

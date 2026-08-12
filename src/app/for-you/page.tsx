@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product-card";
 import { requirePrincipal } from "@/server/auth/principal";
 import { getPersonalizedMarket, generateMarketChangeSummary, syncWatchlistNotifications } from "@/server/consumer-intelligence/service";
 
-export const metadata: Metadata = { title: "For you", description: "A personalized VIAL market view based on your follows, watchlist, price, vendor, and evidence preferences." };
+export const metadata: Metadata = { title: "For you", description: "A personalized VialGrade market view based on your follows, watchlist, price, vendor, and evidence preferences." };
 export const dynamic = "force-dynamic";
 
 export default async function ForYouPage() {

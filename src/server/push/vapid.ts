@@ -10,5 +10,5 @@ export function getVapidConfig(): VapidConfig | null {
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
   const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
   if (!publicKey || !privateKey) return null;
-  return { publicKey, privateKey, subject: process.env.VAPID_SUBJECT?.trim() || "mailto:ops@vial.example" };
+  return { publicKey, privateKey, subject: process.env.VAPID_SUBJECT?.trim() || "mailto:ops@vialgrade.example" };
 }

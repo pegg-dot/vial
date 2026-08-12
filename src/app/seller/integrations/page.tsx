@@ -11,7 +11,7 @@ export default async function SellerIntegrationsPage() {
   if (!context) return null;
   const connections = new Map(context.integrations.map((row) => [String((row as { provider?: unknown }).provider), row as { status: string; last_synced_at?: string; settings?: unknown }]));
   return <>
-    <SellerPageHeader title="Connections" description="Bring your current store into VIAL instead of rebuilding it. Connect once, review the proposed mapping, then keep catalog and inventory synchronized." />
+    <SellerPageHeader title="Connections" description="Bring your current store into VialGrade instead of rebuilding it. Connect once, review the proposed mapping, then keep catalog and inventory synchronized." />
     <div className="mt-7 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
       {connectorDefinitions.map((definition) => {
         const connection = connections.get(definition.provider);
@@ -27,6 +27,6 @@ export default async function SellerIntegrationsPage() {
         </Panel>;
       })}
     </div>
-    <div className="ink-1 mt-6 rounded-[18px] bg-[#f0edff] p-6"><div className="flex gap-4"><ExternalLink className="size-5 shrink-0 text-[#6d5dfc]" /><div><h2 className="font-extrabold text-[#6d5dfc]">Production integration strategy</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#6d5dfc]/75">Use embedded or hosted processor onboarding for identity requirements, OAuth for Shopify, API credentials plus signed webhooks for WooCommerce, and VIAL’s MCP server only for scoped AI-assisted proposals. Production credentials remain disabled in this release.</p></div></div></div>
+    <div className="ink-1 mt-6 rounded-[18px] bg-[#f0edff] p-6"><div className="flex gap-4"><ExternalLink className="size-5 shrink-0 text-[#6d5dfc]" /><div><h2 className="font-extrabold text-[#6d5dfc]">Production integration strategy</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#6d5dfc]/75">Use embedded or hosted processor onboarding for identity requirements, OAuth for Shopify, API credentials plus signed webhooks for WooCommerce, and VialGrade’s MCP server only for scoped AI-assisted proposals. Production credentials remain disabled in this release.</p></div></div></div>
   </>;
 }
