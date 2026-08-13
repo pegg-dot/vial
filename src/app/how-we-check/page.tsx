@@ -8,13 +8,15 @@ export const metadata: Metadata = {
   description: "How VialGrade decides what counts as proof: lab reports, batch matching, who picked the sample, and what we refuse to guess about.",
 };
 
+// The rungs used to be labelled with their internal codes (D0, D1, S1–S4). Nobody buying a peptide
+// knows what "S3" means, and the code was doing no work the plain title wasn't already doing.
 const ladder = [
-  { code: "D0", title: "We found a document", detail: "A lab report or vendor page exists and we saved a copy. That's all it proves so far — anyone can post a PDF." },
-  { code: "D1", title: "The lab confirms it's theirs", detail: "The laboratory named on the report confirms it really issued it. The paper is genuine — this is where a QR-verifiable COA gets you." },
-  { code: "S1", title: "Tested — but the vendor picked the sample", detail: "A real sample was tested, but the vendor chose which vial went to the lab. A cherry-picked winner proves less than it looks like." },
-  { code: "S2", title: "Tested from a customer's sealed unit", detail: "A customer sent in a sealed unit with documented handling. Harder to game — this is what actually shipped." },
-  { code: "S3", title: "Tested from a blind purchase", detail: "Someone independent bought the product like any customer would and sent it for testing. The vendor never saw it coming." },
-  { code: "S4", title: "Tested repeatedly, from separate sources", detail: "Multiple units of the same batch, bought separately, came back consistent. The strongest evidence we track." },
+  { title: "We found a document", detail: "A lab report or vendor page exists and we saved a copy. That's all it proves so far — anyone can post a PDF." },
+  { title: "The lab confirms it's theirs", detail: "The laboratory named on the report confirms it really issued it. The paper is genuine — this is where a QR-verifiable COA gets you." },
+  { title: "Tested — but the vendor picked the sample", detail: "A real sample was tested, but the vendor chose which vial went to the lab. A cherry-picked winner proves less than it looks like." },
+  { title: "Tested from a customer's sealed unit", detail: "A customer sent in a sealed unit with documented handling. Harder to game — this is what actually shipped." },
+  { title: "Tested from a blind purchase", detail: "Someone independent bought the product like any customer would and sent it for testing. The vendor never saw it coming." },
+  { title: "Tested repeatedly, from separate sources", detail: "Multiple units of the same batch, bought separately, came back consistent. The strongest evidence we track." },
 ];
 
 const reportQuestions = [
@@ -60,13 +62,13 @@ export default function HowWeCheckPage() {
               <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">The evidence ladder</p>
               <h2 className="mt-3 text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[.98] tracking-[-.045em]">How much a lab test really proves</h2>
               <p className="mt-4 text-sm font-medium leading-6 text-[var(--muted)]">
-                &ldquo;Lab tested&rdquo; can mean six very different things. Every listing on VialGrade is labeled with where it sits on this ladder. Higher doesn&rsquo;t mean &ldquo;safe&rdquo; — it means stronger proof of a narrower fact.
+                &ldquo;Lab tested&rdquo; can mean six very different things. Every listing on VialGrade says which of these six it is. Further down the list means stronger proof &mdash; it does not mean &ldquo;safe&rdquo;.
               </p>
             </div>
             <div className="space-y-3">
               {ladder.map((item, index) => (
-                <div key={item.code} className="ink-1 hard relative grid gap-4 rounded-[18px] bg-white p-5 sm:grid-cols-[64px_1fr]">
-                  <span className="ink grid size-14 place-items-center rounded-2xl bg-[#111214] font-mono text-sm font-extrabold text-white">{item.code}</span>
+                <div key={item.title} className="ink-1 hard relative grid gap-4 rounded-[18px] bg-white p-5 sm:grid-cols-[64px_1fr]">
+                  <span className="ink grid size-14 place-items-center rounded-2xl bg-[#111214] text-lg font-extrabold text-white">{index + 1}</span>
                   <div>
                     <h3 className="text-lg font-extrabold tracking-[-.025em]">{item.title}</h3>
                     <p className="mt-2 text-sm font-medium leading-6 text-[var(--muted)]">{item.detail}</p>
@@ -132,7 +134,7 @@ export default function HowWeCheckPage() {
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Go deeper</p>
           <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold tracking-[-.04em]">The full records, if you want them</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <DeepLink href="/passports" title="Batch passports" detail="The complete test record for a specific batch — including results that disagree." />
+            <DeepLink href="/passports" title="Batch test records" detail="The complete test record for a specific batch — including results that disagree." />
             <DeepLink href="/research" title="Lab reports" detail="Every report we've located, what it establishes, and what it doesn't." />
             <DeepLink href="/testing" title="Independent testing" detail="Blind-purchase and sealed-sample programs, and why sample origin matters." />
             <DeepLink href="/labs" title="Laboratories" detail="Who runs the tests, their methods, and their report history." />

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock3, ExternalLink, PackageCheck, Star, Truck } from "lucide-react";
 import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVendorBySlug } from "@/server/catalog/repository";
-import { formatCurrency, vendorStatusLabel } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
+import { vendorClaimLabelShort } from "@/lib/vendor-copy";
 import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
 import { evidenceBadgeFor } from "@/lib/evidence-badge-derive";
@@ -162,7 +163,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <VendorMark initials={vendor.initials} accent={vendor.accent} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-extrabold">{vendor.name}</p>
-                  <p className="text-[11px] font-semibold text-[var(--muted)]">{vendorStatusLabel(vendor.profileStatus)}</p>
+                  <p className="text-[11px] font-semibold text-[var(--muted)]">{vendorClaimLabelShort(vendor.profileStatus)}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-center">
                   <VendorTiny value={String(vendor.coaCount)} label="Lab tests" />

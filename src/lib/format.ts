@@ -12,14 +12,26 @@ export function formatCurrency(value: number) {
 // "$40 / 5mg" against "$55 / 10mg" — the single most useful comparison, and the one
 // a non-expert can't do in their head. Returns undefined when the quantity has no
 // parseable mg (tablets, water, kits, etc.).
-// A single declared strength, in mg (mcg is converted). The primitive used by parseTotalMg.
+// Convert one stated <number><unit> pair to milligrams.
+//
+// Grams are a real unit in this market, not a hypothetical: bulk powders are sold as
+// "DIHEXA POWDER (1 GRAM)", "GLUTATHIONE POWDER (10 GRAMS)" and "NAD+ … Powder, 10 grams", and
+// reading only mg/mcg left every one of those with no cost-per-mg at all.
+function unitToMg(n: string, unit: string): number {
+  const v = Number(n);
+  const u = unit.toLowerCase();
+  if (u === "mcg" || u === "µg") return v / 1000;
+  if (u === "g" || u === "gram" || u === "grams") return v * 1000;
+  return v;
+}
+
+// A single declared strength, in mg (mcg and grams are converted). The primitive used by
+// parseTotalMg. `g` is deliberately excluded when it is a molecular-weight unit ("1419.556 g/mol"),
+// which vendors print in the same spec tables that carry the real size.
 export function parseMg(quantity: string): number | undefined {
   if (!quantity) return undefined;
-  const mg = quantity.match(/(\d+(?:\.\d+)?)\s*mg\b/i);
-  if (mg) return Number(mg[1]);
-  const mcg = quantity.match(/(\d+(?:\.\d+)?)\s*mcg\b/i);
-  if (mcg) return Number(mcg[1]) / 1000;
-  return undefined;
+  const m = quantity.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b(?!\s*\/\s*mol)/i);
+  return m ? unitToMg(m[1], m[2]) : undefined;
 }
 
 // The TOTAL milligrams a listing actually delivers — read from the quantity AND the product name,
@@ -32,36 +44,44 @@ export function parseMg(quantity: string): number | undefined {
 export function parseTotalMg(quantity: string | undefined, name = ""): number | undefined {
   const text = `${name} ${quantity ?? ""}`.replace(/\s+/g, " ").trim();
   if (!text) return undefined;
-  const toMg = (n: string, u: string) => Number(n) / (/mcg|µg/i.test(u) ? 1000 : 1);
-  const strengths = [...text.matchAll(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\b/gi)];
-  const distinct = [...new Set(strengths.map((m) => toMg(m[1], m[2])))];
+  const strengths = [...text.matchAll(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b(?!\s*\/\s*mol)/gi)];
+  const distinct = [...new Set(strengths.map((m) => unitToMg(m[1], m[2])))];
 
   // 1) An explicitly stated total ("… 120MG TOTAL BOTTLE", "TOTAL: 30 mg") wins outright.
-  const total = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\s*total\b/i)
-             || text.match(/\btotal[^0-9]{0,12}(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\b/i);
-  if (total) return toMg(total[1], total[2]);
+  const total = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*total\b/i)
+             || text.match(/\btotal[^0-9]{0,12}(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b/i);
+  if (total) return unitToMg(total[1], total[2]);
 
   // 2) Liquids: total = concentration × volume. "25mg/ml @ 30ml" or "25mg × 30ml" = 750mg, NOT 25mg.
+  //    Vendors write the concentration both ways — "25 mg/mL" and "10mL bottle @ 1mg per mL" are the
+  //    same statement, and only the first was being read.
   const vol = text.match(/(\d+(?:\.\d+)?)\s*m[lL]\b/);
   if (vol) {
     const v = Number(vol[1]);
-    const conc = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\s*\/\s*m[lL]\b/i)                        // "25 mg/ml"
-              || text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\s*(?:x|×)\s*\d+(?:\.\d+)?\s*m[lL]\b/i);   // "25mg × 30ml"
-    if (conc && v > 0) return toMg(conc[1], conc[2]) * v;
-    const dissolved = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\s+in\s+\d/i);                        // "5mg in 5ml" = 5mg total
-    if (dissolved) return toMg(dissolved[1], dissolved[2]);
-    if (strengths.length) return undefined;                                                          // strength + volume but unclear → no guess
+    const conc = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*(?:\/|per)\s*m[lL]\b/i)                 // "25 mg/ml", "1mg per mL"
+              || text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*(?:x|×)\s*\d+(?:\.\d+)?\s*m[lL]\b/i);   // "25mg × 30ml"
+    if (conc && v > 0) return unitToMg(conc[1], conc[2]) * v;
+    const dissolved = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s+in\s+\d/i);                        // "5mg in 5ml" = 5mg total
+    if (dissolved) return unitToMg(dissolved[1], dissolved[2]);
+    if (strengths.length) return undefined;                                                                   // strength + volume but unclear → no guess
   }
-  if (/\/\s*m[lL]\b/i.test(text)) return undefined;                                                   // a concentration with no volume = unknown total
+  if (/(?:\/|per)\s*m[lL]\b/i.test(text)) return undefined;                                                   // a concentration with no volume = unknown total
 
   // 3) Per-unit strength × a unit count (capsule/tablet bottles, multi-vial packs).
-  const count = text.match(/(\d+)\s*(?:capsules?|caps?|tablets?|tabs?|softgels?|servings?|vials?|bottles?)\b/i)
+  //    The count is written with a hyphen as often as a space ("10-vial kit") and capsule bottles
+  //    are counted in "ct" ("50mg capsule/60ct/3000mg"); both were silently unreadable.
+  const count = text.match(/(\d+)[\s-]*(?:capsules?|caps?|tablets?|tabs?|softgels?|servings?|vials?|bottles?|ct)\b/i)
              || text.match(/(?:x|×)\s*(\d+)\b/i)
              || text.match(/\b(\d+)\s*(?:x|×)\b/i);
   if (count) {
     const n = Number(count[1]);
-    const per = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\s*(?:\/|per)\s*(?:capsule|cap|tablet|tab|softgel|serving|vial)/i);
-    if (per && n >= 1) return toMg(per[1], per[2]) * n;
+    // "0.5mg/capsule", "300mcg per tablet" and "5 mg/vial" are the vendor stating a PER-UNIT
+    // strength. Bare adjacency ("50mg capsule/60ct") counts only for capsule/tablet units: a bare
+    // "100MG VIAL" is the whole listing, not one unit of a pack, and reading it as per-unit would
+    // multiply a plain vial by a stray count.
+    const per = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*(?:\/|per)\s*(?:capsules?|caps?|tablets?|tabs?|softgels?|servings?|vials?)\b/i)
+             || text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s+(?:capsules?|caps?|tablets?|tabs?|softgels?)\b/i);
+    if (per && n >= 1) return unitToMg(per[1], per[2]) * n;
     if (distinct.length === 1 && n > 1) return distinct[0] * n;
     if (distinct.length > 1) return undefined;   // multi-strength pack (e.g. a two-compound combo) — ambiguous
   }
@@ -71,18 +91,21 @@ export function parseTotalMg(quantity: string | undefined, name = ""): number | 
   //    total is handled above), so a size-range in a product title ("… 2mg/5mg vial") no longer
   //    blanks a listing whose own quantity says exactly which size it is.
   const qMg = parseMg(quantity ?? "");
-  const qSingle = qMg != null && [...(quantity ?? "").matchAll(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg)\b/gi)].length === 1;
+  const qSingle = qMg != null && [...(quantity ?? "").matchAll(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b/gi)].length === 1;
   const container = /\b(?:capsules?|tablets?|tabs?|softgels?)\b/i.test(text) || /\d\s*m[lL]\b/.test(text);
   if (qSingle && !container) return qMg;
 
-  // 5) An ambiguous multi-size bundle with no single declared size ("2mg/5mg vial") — no per-mg.
-  if (distinct.length > 1 && /\d\s*(?:mg|mcg|µg)?\s*\/\s*\d/i.test(text)) return undefined;
+  // 5) Two or more different strengths and nothing above resolved them: a blend ("5mg + 5mg (10mg)"),
+  //    a size range ("2mg/5mg vial"), a multi-compound kit. Which one this listing's price buys is
+  //    unknowable, so it gets NO cost-per-mg — reading the first number would have priced a 10mg
+  //    blend as 5mg.
+  if (distinct.length > 1) return undefined;
 
   // 6) A capsule/tablet container with no stated count — total is unknown, so no per-mg.
   if (/\b(?:capsules?|tablets?|tabs?|softgels?)\b/i.test(text) && strengths.length && !count) return undefined;
 
   // 7) The common case: a single stated strength (one vial).
-  return parseMg(quantity ?? "") ?? (distinct.length === 1 ? distinct[0] : undefined);
+  return qMg ?? (distinct.length === 1 ? distinct[0] : undefined);
 }
 
 export function pricePerMg(price: number, quantity: string, name = ""): number | undefined {

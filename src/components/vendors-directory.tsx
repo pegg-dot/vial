@@ -6,7 +6,7 @@ import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { VialGradePill } from "@/components/vial-grade-card";
 import { PRIORITIES, rankVendors, type VendorDirectoryEntry } from "@/lib/vendor-ranking";
-import { vendorStatusLabel } from "@/lib/format";
+import { vendorClaimLabelShort } from "@/lib/vendor-copy";
 
 const PAGE = 18;
 const KINDS = [
@@ -96,7 +96,7 @@ function VendorRankCard({ entry, priority, rank }: { entry: VendorDirectoryEntry
                 they could not see. */}
             {v.grade && <VialGradePill grade={v.grade} />}
           </div>
-          <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--muted)]">{vendorStatusLabel(v.profileStatus)}{v.location ? ` · ${v.location}` : ""}</p>
+          <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--muted)]">{vendorClaimLabelShort(v.profileStatus)}{v.location ? ` · ${v.location}` : ""}</p>
         </div>
         <ArrowUpRight className="size-4 shrink-0 text-[#111214] transition group-hover:translate-x-0.5" />
       </div>

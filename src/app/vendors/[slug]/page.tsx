@@ -5,7 +5,7 @@ import { ArrowLeft, Building2, Check, CircleDashed, Clock3, FlaskConical, MapPin
 import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
 import { vendorPriceIndex } from "@/lib/curation";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
-import { vendorStatusLabel } from "@/lib/format";
+import { vendorClaimLabel } from "@/lib/vendor-copy";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 import { TierChip } from "@/components/signal-tier-chip";
 import { ProductCard } from "@/components/product-card";
@@ -89,7 +89,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   await persistVendorGrade(slug, grade, composed.summary).catch(() => {});
 
   const hasAlerts = (vendorStatus && vendorStatus.status !== "operating") || vendorFlags.length > 0 || enforcement.length > 0;
-  const secondaryLabel = vendor.kind === "storefront" ? "Listings" : "Batch passports";
+  const secondaryLabel = vendor.kind === "storefront" ? "Listings" : "Batch test records";
   const secondaryValue = vendor.kind === "storefront" ? vendor.productCount : vendor.passportCount;
 
   // Jump-nav: only sections that actually have content.
@@ -118,7 +118,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.08em] text-white">{vendor.kind === "manufacturer" ? "Manufacturer" : "Storefront"}</span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-bold text-white">{vendorStatusLabel(vendor.profileStatus)}</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-bold text-white">{vendorClaimLabel(vendor.profileStatus)}</span>
                   <DataOriginBadge origin={vendor.origin} />
                 </div>
                 <h1 className="mt-4 text-balance text-[clamp(2rem,4.2vw,3.25rem)] font-extrabold leading-[.95] tracking-[-.04em]">{vendor.name}</h1>
@@ -155,8 +155,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
       {/* ── The trust graph: what the verdict is built on, seam by seam ─────────────── */}
       <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8">
-        <SectionHead eyebrow="The trust graph" title="What this verdict is built on" note={`${composed.weighed} signals · ${composed.verifiedCount} verified`} />
-        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Every angle we hold on {vendor.name}, folded into one verdict &mdash; each traceable to its source below. The grade above is a shorthand for this page, not a replacement for it: it follows a stated rule you can check, and a green here and a red there stay visible rather than averaging out. Each carries a tier &mdash; <span className="font-bold text-[#0a6b60]">Verified</span> (a record we can point at), <span className="font-bold text-[#2b31d8]">Reported</span> (a third-party account), or <span className="font-bold text-black/55">Inferred</span> (a heuristic read) &mdash; so a guess never reads like a fact.</p>
+        <SectionHead eyebrow="What we found" title={`Every check we ran on ${vendor.name}`} note={`Based on ${composed.weighed} check${composed.weighed === 1 ? "" : "s"}. ${composed.verifiedCount > 0 ? `${composed.verifiedCount} backed by a document.` : "None backed by a document."}`} />
+        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Everything we know about {vendor.name}, in one place &mdash; each one comes from something you can read further down this page. The grade above is a summary of this list, not a replacement for it: a good result and a bad one both stay visible instead of cancelling each other out. We mark each one: <span className="font-bold text-[#0a6b60]">Confirmed</span> (we have the document), <span className="font-bold text-[#2b31d8]">Reported</span> (someone else said it), or <span className="font-bold text-black/55">Our guess</span>.</p>
         <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {composed.factors.map((f) => (
             <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[16px] p-4 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>
@@ -191,9 +191,9 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       {/* ── Evidence ────────────────────────────────────────────────────────────────── */}
       {reputation && (
         <section id="reputation" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pt-14 sm:px-8">
-          <SectionHead eyebrow="Reputation" title="We don't boil it down to one rating" note={`methodology ${reputation.methodologyVersion}`} />
+          <SectionHead eyebrow="Reputation" title="We don't boil it down to one rating" />
           <div className="mt-7"><VendorReputationTiles dimensions={reputation.dimensions} /></div>
-          <p className="mt-5 max-w-3xl text-xs font-medium leading-5 text-[var(--muted)]">Each answer stands on its own and cites its source. Where we don&rsquo;t have the evidence, it says unknown &mdash; we never invent a number or blend everything into one score.</p>
+          <p className="mt-5 max-w-3xl text-xs font-medium leading-5 text-[var(--muted)]">Each answer stands on its own and says where it came from. Where we don&rsquo;t have the evidence, it says so &mdash; we never invent a number or blend everything into one score.</p>
         </section>
       )}
 

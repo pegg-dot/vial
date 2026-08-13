@@ -2,15 +2,20 @@ import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { buildOutboundUrl } from "./affiliate";
+import { deviceOf, newClickRef, tagDestination, visitorHash } from "./attribution";
 
-export interface OutboundResolution { destination: string; vendorSlug: string | null; compoundSlug: string | null; affiliateApplied: boolean }
+export interface OutboundResolution { destination: string; vendorSlug: string | null; compoundSlug: string | null; affiliateApplied: boolean; clickRef: string }
 
 /**
  * Resolve a listing slug to the vendor's real product URL and record the click. The destination is
  * ALWAYS looked up from our own stored external_url for that listing — never taken from the request
  * — so this can't be turned into an open redirect. Only live listings with a real URL resolve.
  */
-export async function resolveAndRecordClick(listingSlug: string, connection?: SqlConnection): Promise<OutboundResolution | null> {
+export async function resolveAndRecordClick(
+  listingSlug: string,
+  connection?: SqlConnection,
+  visitor?: { ip?: string | null; userAgent?: string | null; landingPath?: string | null },
+): Promise<OutboundResolution | null> {
   const db = connection ?? (await getDatabase());
   const row = (await db.query<QueryResultRow & { external_url: string | null; vendor_slug: string | null; compound_slug: string | null; origin: string | null }>(
     `SELECT l.external_url, o.slug vendor_slug, c.slug compound_slug, l.origin
@@ -25,12 +30,27 @@ export async function resolveAndRecordClick(listingSlug: string, connection?: Sq
   let host: string | null = null;
   try { host = new URL(row.external_url).host.replace(/^www\./, ""); } catch { return null; }
 
+  const clickRef = newClickRef();
   const { url, affiliateApplied } = buildOutboundUrl(row.vendor_slug ?? "", row.external_url);
+  // A negotiated affiliate rule already carries its own tracking; only tag the plain pass-through.
+  // The UTM tags are what let a vendor confirm our traffic in THEIR analytics with no integration.
+  const destination = affiliateApplied
+    ? url
+    : tagDestination(url, { compoundSlug: row.compound_slug, listingSlug, clickRef });
+
   await db.query(
-    `INSERT INTO outbound_clicks(id, listing_slug, vendor_slug, compound_slug, destination_host, affiliate_applied) VALUES($1,$2,$3,$4,$5,$6)`,
-    [newId("click"), listingSlug, row.vendor_slug, row.compound_slug, host, affiliateApplied],
+    `INSERT INTO outbound_clicks(id, listing_slug, vendor_slug, compound_slug, destination_host,
+       affiliate_applied, click_ref, visitor_hash, landing_path, device)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+    [
+      newId("click"), listingSlug, row.vendor_slug, row.compound_slug, host, affiliateApplied,
+      clickRef,
+      visitorHash(visitor?.ip ?? null, visitor?.userAgent ?? null),
+      visitor?.landingPath ?? null,
+      deviceOf(visitor?.userAgent ?? null),
+    ],
   );
-  return { destination: url, vendorSlug: row.vendor_slug, compoundSlug: row.compound_slug, affiliateApplied };
+  return { destination, vendorSlug: row.vendor_slug, compoundSlug: row.compound_slug, affiliateApplied, clickRef };
 }
 
 export interface VendorClickStat { vendorSlug: string; clicks: number; lastClickAt: string | null }

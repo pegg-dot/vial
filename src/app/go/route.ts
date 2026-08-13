@@ -12,7 +12,13 @@ export async function GET(request: Request) {
   const listingSlug = new URL(request.url).searchParams.get("l");
   const base = new URL(request.url).origin;
   if (!listingSlug) return NextResponse.redirect(`${base}/market`, 302);
-  const resolved = await resolveAndRecordClick(listingSlug).catch(() => null);
+  // Attribution context, recorded privacy-safely: the visitor hash is salted and rotates daily,
+  // so it counts distinct people without being able to identify or follow one.
+  const resolved = await resolveAndRecordClick(listingSlug, undefined, {
+    ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+    userAgent: request.headers.get("user-agent"),
+    landingPath: request.headers.get("referer"),
+  }).catch(() => null);
   if (!resolved) return NextResponse.redirect(`${base}/market`, 302);
   return NextResponse.redirect(resolved.destination, 302);
 }

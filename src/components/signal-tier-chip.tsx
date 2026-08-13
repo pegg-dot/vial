@@ -4,9 +4,9 @@ import type { SignalConfidence } from "@/server/verify";
 // on BOTH surfaces that render trust-graph factors — the vendor page and the /verify tool — so the
 // two can never disagree about what "verified" looks like.
 const TIER_CHIP: Record<SignalConfidence, { label: string; cls: string; hint: string }> = {
-  verified: { label: "Verified", cls: "bg-[#0e8f80]/12 text-[#0a6b60]", hint: "Backed by a document, government record, or hard shared identifier." },
-  reported: { label: "Reported", cls: "bg-[#2b31d8]/10 text-[#2b31d8]", hint: "A third-party human account — buyer reviews, community, tracker scores." },
-  inferred: { label: "Inferred", cls: "bg-[#111214]/[.06] text-black/45", hint: "A heuristic read or single probe — treat it as a lead, not a proven fact." },
+  verified: { label: "Confirmed", cls: "bg-[#0e8f80]/12 text-[#0a6b60]", hint: "We have the document — a lab report, a government record, or a hard shared ID." },
+  reported: { label: "Reported", cls: "bg-[#2b31d8]/10 text-[#2b31d8]", hint: "Someone else said it — buyers, the community, or another tracker." },
+  inferred: { label: "Our guess", cls: "bg-[#111214]/[.06] text-black/45", hint: "Our own read of their site, or one attempt to load it. Treat it as a lead, not a fact." },
 };
 
 export function TierChip({ tier }: { tier: SignalConfidence }) {

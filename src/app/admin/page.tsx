@@ -1,34 +1,118 @@
-import type { Metadata } from "next";
-import { Activity, BellRing, FileCheck2, GitBranch, GitPullRequestArrow, Lightbulb, RadioTower, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { AgentRunTable } from "@/components/agent-run-table";
-import { requireStaff } from "@/server/auth/session";
-import { getRecentAgentRuns } from "@/server/catalog/repository";
-import { getIntelligenceMetrics, getOpportunitySignals, getTraceRoots } from "@/server/intelligence/repository";
-import { getRefreshMetrics } from "@/server/refresh/repository";
-import { getAdminMetrics } from "@/server/review/repository";
+import { redirect } from "next/navigation";
+import { ArrowUpRight, Database, FlaskConical, Link2, MousePointerClick, Users } from "lucide-react";
+import { getCurrentPrincipal } from "@/server/auth/principal";
+import { getAttributionOverview } from "@/server/outbound/partner-report";
+import { getDataFreshness, getBrokenCollectors } from "@/server/health/data-health";
+import { getDatabase } from "@/server/db/client";
 
-export const metadata: Metadata = { title: "Operations overview" };
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Admin" };
 
-export default async function AdminOverviewPage() {
-  await requireStaff();
-  const [metrics, refresh, intelligence, runs, traces, opportunities] = await Promise.all([
-    getAdminMetrics(), getRefreshMetrics(), getIntelligenceMetrics(), getRecentAgentRuns(8), getTraceRoots(3), getOpportunitySignals({ status: "open", limit: 3 }),
-  ]);
-  const cards = [
-    { label: "Pending review", value: metrics.pendingClaims, icon: GitPullRequestArrow, href: "/admin/review", detail: "Atomic human decisions" },
-    { label: "Controlled sources", value: refresh.enabled, icon: RadioTower, href: "/admin/sources", detail: `${refresh.queued} active queue items` },
-    { label: "Causal traces", value: intelligence.traces, icon: GitBranch, href: "/admin/traces", detail: `${intelligence.alerts} generated alerts` },
-    { label: "Open signals", value: intelligence.open, icon: Lightbulb, href: "/admin/opportunities", detail: "Compounding market insights" },
-  ];
-  return <div>
-    <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#2b31d8]">Control plane</p>
-    <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><h1 className="text-4xl font-extrabold tracking-[-.055em] sm:text-5xl">Market operations</h1><p className="mt-4 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">VialGrade now operates as a controlled intelligence system: sources refresh into immutable snapshots, claims wait for review, and approved changes cascade through metrics, alerts, histories, and second-order opportunity signals.</p></div><Link href="/admin/sources" className="ink hard-sm press inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#111214] px-5 text-sm font-bold text-white"><Activity className="size-4"/>Open refresh engine</Link></div>
-    <div className="mt-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(({label,value,icon:Icon,href,detail})=><Link key={label} href={href} className="group ink hard press rounded-[18px] bg-white p-5"><div className="flex items-center justify-between"><span className="ink-1 grid size-10 place-items-center rounded-[12px] bg-[#eef0ff]"><Icon className="size-4 text-[#2b31d8]"/></span><span className="text-xs font-bold text-[var(--muted)] group-hover:text-[#2b31d8]">Open →</span></div><p className="mt-7 text-4xl font-extrabold tabular-nums tracking-[-.06em]">{value}</p><p className="mt-2 text-sm font-bold">{label}</p><p className="mt-1 text-xs font-medium text-[var(--muted)]">{detail}</p></Link>)}</div>
-    <section className="mt-10 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><div className="ink hard rounded-[20px] bg-white p-5 sm:p-7"><div className="flex items-center justify-between gap-4"><div><p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">Run ledger</p><h2 className="mt-2 text-2xl font-extrabold tracking-[-.035em]">Latest workflow receipts</h2></div><Link href="/admin/runs" className="text-sm font-bold text-[#2b31d8]">All runs</Link></div><div className="mt-6"><AgentRunTable runs={runs}/></div></div><div className="ink rounded-[20px] bg-[#111214] p-6 text-white"><div className="flex items-center justify-between"><div><p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#8fa2ff]">Trace activity</p><h2 className="mt-2 text-2xl font-extrabold tracking-[-.035em]">Recent cascades</h2></div><GitBranch className="size-5 text-[#8fa2ff]"/></div><div className="mt-6 space-y-3">{traces.map(trace=><Link key={trace.id} href={`/admin/traces#${trace.id}`} className="block rounded-[12px] border border-white/25 bg-white/[.06] p-4 hover:bg-white/[.12]"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold">{trace.eventType}</p><p className="mt-1 font-mono text-[9px] text-white/30">{trace.id.slice(0,27)}</p></div><span className="rounded-full border border-white/25 bg-white/10 px-2 py-1 text-[9px] font-bold">{trace.events.length} events</span></div><div className="mt-3 flex gap-3 text-[10px] text-white/45"><span>{trace.alertCount} alerts</span><span>{trace.opportunityCount} signals</span></div></Link>)}{traces.length===0&&<p className="py-10 text-center text-sm text-white/45">No traces yet.</p>}</div></div></section>
-    <section className="mt-6 grid gap-4 lg:grid-cols-3"><div className="ink hard rounded-[20px] bg-[#f0edff] p-6"><Sparkles className="size-5 text-[#2b31d8]"/><h2 className="mt-7 text-2xl font-extrabold tracking-[-.04em]">One change compounds.</h2><p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">A batch update can also create a change alert, reopen an evidence gap, recalculate compound coverage, update vendor history, and reveal a new market signal.</p></div>{opportunities.slice(0,2).map(signal=><Link href="/admin/opportunities" key={signal.id} className="ink hard press rounded-[20px] bg-white p-6"><div className="flex items-center justify-between"><Lightbulb className="size-5 text-[#2b31d8]"/><span className="text-3xl font-extrabold tracking-[-.05em] tabular-nums">{Math.round(signal.score)}</span></div><p className="mt-7 text-[10px] font-extrabold uppercase tracking-[.14em] text-[var(--muted)]">{signal.signalType.replaceAll("-"," ")}</p><h2 className="mt-2 text-lg font-extrabold tracking-[-.025em]">{signal.title}</h2><p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">{signal.summary}</p></Link>)}</section>
-    <section className="mt-6 grid gap-4 lg:grid-cols-3"><Info icon={FileCheck2} title="Human publication" text={`${metrics.publications} versioned receipts preserve before and after state.`}/><Info icon={BellRing} title="Watchlist alerts" text="Only reviewed publications generate public change notifications."/><Info icon={RadioTower} title="Bounded refresh" text={`${refresh.stale} enabled sources currently need a successful refresh within 24 hours.`}/></section>
-  </div>;
+const money = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
+function Stat({ icon: Icon, value, label, sub }: { icon: typeof Users; value: string; label: string; sub?: string }) {
+  return (
+    <div className="ink hard rounded-[18px] bg-white p-5">
+      <Icon className="size-5 text-[#2b31d8]" />
+      <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-[-.04em]">{value}</p>
+      <p className="mt-1 text-sm font-bold">{label}</p>
+      {sub && <p className="mt-1 text-xs font-medium leading-5 text-[var(--muted)]">{sub}</p>}
+    </div>
+  );
 }
-function Info({icon:Icon,title,text}:{icon:React.ComponentType<{className?:string}>;title:string;text:string}){return <div className="ink hard rounded-[18px] bg-white p-5"><Icon className="size-4 text-[#2b31d8]"/><h2 className="mt-5 text-sm font-bold">{title}</h2><p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">{text}</p></div>}
+
+export default async function AdminPage() {
+  const principal = await getCurrentPrincipal();
+  if (!principal || principal.accountType !== "staff") redirect("/admin/login?next=%2Fadmin");
+
+  const db = await getDatabase();
+  const [attribution, freshness, broken, counts] = await Promise.all([
+    getAttributionOverview({ days: 30 }),
+    getDataFreshness(),
+    getBrokenCollectors(),
+    db.query<{ vendors: string; listings: string; coas: string; graded: string; due: string }>(
+      `SELECT
+        (SELECT COUNT(*) FROM organizations WHERE organization_type='vendor' AND origin='live') vendors,
+        (SELECT COUNT(*) FROM listings WHERE origin='live') listings,
+        (SELECT COUNT(*) FROM lab_test_records WHERE is_independent) coas,
+        (SELECT COUNT(*) FROM organizations WHERE grade_letter IS NOT NULL) graded,
+        (SELECT COUNT(*) FROM collection_targets WHERE enabled AND next_due_at <= NOW()) due`,
+    ).then(r => r.rows[0]!),
+  ]);
+
+  const { totals, vendors } = attribution;
+
+  return (
+    <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
+      <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Admin</p>
+      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Traffic you can prove you sent</h1>
+      <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+        Last 30 days of outbound handoffs. Every link carries <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[12px]">utm_source=vialgrade</code>,
+        so each vendor below can confirm these numbers in their own analytics without taking our word for it.
+      </p>
+
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="Buyers sent out" sub="clicks through to a vendor" />
+        <Stat icon={Users} value={totals.people.toLocaleString()} label="Distinct people" sub="privacy-safe daily count" />
+        <Stat icon={Link2} value={String(totals.vendors)} label="Vendors receiving traffic" />
+        <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="Confirmed orders" sub={totals.conversions === 0 ? "needs a partner postback or coupon" : "reported back by a partner"} />
+        <Stat icon={Database} value={money(totals.revenueCents)} label="Revenue we drove" sub={totals.revenueCents === 0 ? "zero until a deal is live" : undefined} />
+      </div>
+
+      {/* The pipeline: who we already send buyers to, ranked — i.e. who to approach first. */}
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Who to approach first</h2>
+      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+        Ranked by traffic we are already sending them for free. Open a vendor to get the one-page report to send them.
+      </p>
+      <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+        <table className="w-full min-w-[720px] text-left text-sm">
+          <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+            <tr>
+              <th className="px-5 py-3">Vendor</th><th className="px-5 py-3">Buyers sent</th>
+              <th className="px-5 py-3">People</th><th className="px-5 py-3">Orders</th>
+              <th className="px-5 py-3">Revenue</th><th className="px-5 py-3">Status</th><th className="px-5 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#111214]/10">
+            {vendors.length === 0 && (
+              <tr><td colSpan={7} className="px-5 py-8 text-center text-sm font-medium text-[var(--muted)]">
+                No outbound clicks yet. They start the moment a buyer uses a &ldquo;Buy at vendor&rdquo; button.
+              </td></tr>
+            )}
+            {vendors.map(v => (
+              <tr key={v.vendorSlug}>
+                <td className="px-5 py-3 font-bold">{v.vendorName}</td>
+                <td className="px-5 py-3 font-extrabold tabular-nums">{v.clicks.toLocaleString()}</td>
+                <td className="px-5 py-3 tabular-nums">{v.people.toLocaleString()}</td>
+                <td className="px-5 py-3 tabular-nums">{v.conversions || "—"}</td>
+                <td className="px-5 py-3 tabular-nums">{v.revenueCents ? money(v.revenueCents) : "—"}</td>
+                <td className="px-5 py-3"><span className="ink-1 rounded-full bg-[#f2f2ef] px-2 py-1 text-[11px] font-bold uppercase tracking-[.08em]">{v.status}</span></td>
+                <td className="px-5 py-3">
+                  <Link href={`/admin/partner/${v.vendorSlug}`} className="text-sm font-bold text-[#2b31d8] hover:underline">Report →</Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Is the data healthy?</h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={FlaskConical} value={counts.coas} label="Independent lab tests" />
+        <Stat icon={Database} value={counts.listings} label="Live listings" sub={`${counts.vendors} vendors · ${counts.graded} graded`} />
+        <Stat icon={MousePointerClick} value={counts.due} label="Collection queue due now" sub="drains every 15 minutes" />
+        <Stat
+          icon={Link2}
+          value={String(broken.length)}
+          label="Broken collectors"
+          sub={broken.length ? broken.map(b => b.target).slice(0, 3).join(", ") : "every source that yielded data still does"}
+        />
+      </div>
+      <p className="mt-4 text-xs font-medium text-[var(--muted)]">
+        Listings checked in the last 14 days: {freshness.listings.fresh} fresh · {freshness.listings.aging} aging · {freshness.listings.stale} stale.
+        Lab tests: {freshness.coas.fresh} fresh · {freshness.coas.stale} stale.
+      </p>
+    </div>
+  );
+}

@@ -19,7 +19,10 @@ import { recordCollectorRun } from "../src/server/health/data-health.ts";
 if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 const DATA = new URL("./data/", import.meta.url);
-const readJson = (name) => JSON.parse(readFileSync(new URL(name, DATA), "utf8"));
+// regulatory-actions.json moved under src/ so a deployment can read it (see ingest-external-data).
+const BUNDLED = new URL("../src/server/data/", import.meta.url);
+const resolveData = (name) => existsSync(new URL(name, BUNDLED)) ? new URL(name, BUNDLED) : new URL(name, DATA);
+const readJson = (name) => JSON.parse(readFileSync(resolveData(name), "utf8"));
 const compoundRefs = readJson("peptide-compounds.json").map((c) => ({ slug: c.slug, name: c.name, aliases: c.aliases }));
 const vendorRefs = existsSync(new URL("peptide-vendors.json", DATA)) ? readJson("peptide-vendors.json").map((v) => ({ slug: v.slug, name: v.name, domain: v.domain })) : [];
 const vcoas = readJson("vendor-coas.json");
@@ -93,7 +96,7 @@ const vk = await reconcileVendorKinds(db, retailSlugs);
 console.log(`Vendor kinds: ${vk.storefront} storefronts · ${vk.manufacturer} manufacturers (${vk.changed} updated).`);
 
 // Public regulatory & enforcement records (FDA/DOJ/FTC), resolved strictly to vendors by domain/name.
-if (existsSync(new URL("regulatory-actions.json", DATA))) {
+if (existsSync(resolveData("regulatory-actions.json"))) {
   const actions = readJson("regulatory-actions.json");
   const vendorRows = (await db.query(`SELECT slug, display_name, domains FROM organizations WHERE origin='live' AND organization_type='vendor'`)).rows
     .map((v) => ({ slug: v.slug, name: v.display_name, domains: Array.isArray(v.domains) ? v.domains : JSON.parse(v.domains || "[]") }));

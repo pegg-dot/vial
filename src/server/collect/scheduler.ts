@@ -19,8 +19,15 @@ import { recomputeCompoundStats } from "@/server/ingest/live-sources";
 import { rebuildSearchIndex } from "@/server/search/engine";
 import { recomputeAllVendorGrades } from "@/server/verify/grade-store";
 import type { CompoundRef } from "@/server/ingest/shopify-import";
+import { collectEnforcement } from "./enforcement";
+import { collectNews } from "./news";
+import type { CollectorOutcome } from "./types";
 
-export type CollectorKind = "catalog-shopify" | "catalog-woo" | "vendor-status";
+export type CollectorKind = "catalog-shopify" | "catalog-woo" | "vendor-status" | "enforcement-openfda" | "news-feeds";
+
+// Market-wide collectors run once per tick, not once per vendor. They share this target name.
+const MARKET_TARGET = "market";
+const MARKET_COLLECTORS: CollectorKind[] = ["enforcement-openfda", "news-feeds"];
 
 interface KnownVendor {
   slug: string; name: string; domain: string;
@@ -34,6 +41,11 @@ export const CADENCE_MINUTES: Record<CollectorKind, number> = {
   "catalog-shopify": 6 * 60,
   "catalog-woo": 6 * 60,
   "vendor-status": 24 * 60,
+  // Government publishing rhythms, not ours. FDA posts recalls to openFDA in daily batches, so
+  // asking more than once a day only spends rate limit. Press releases land through the working
+  // day, and a twice-daily pass keeps `/news` current without hammering a public feed.
+  "enforcement-openfda": 24 * 60,
+  "news-feeds": 12 * 60,
 };
 
 const MAX_BACKOFF_MINUTES = 7 * 24 * 60;
@@ -55,6 +67,10 @@ export async function syncCollectionTargets(connection?: SqlConnection): Promise
     else if (v.wooWorks) rows.push({ collector: "catalog-woo", target: v.slug });
     rows.push({ collector: "vendor-status", target: v.slug });
   }
+  // Market-wide intelligence: one target each, independent of the vendor list. These must be
+  // enqueued even when every vendor is red-flagged, because enforcement and news are the seams
+  // that tell a reader WHY.
+  for (const collector of MARKET_COLLECTORS) rows.push({ collector, target: MARKET_TARGET });
   for (const row of rows) {
     await db.query(
       // Conflict on the PRIMARY KEY, not on (collector,target). `id` is derived from both, so the
@@ -117,14 +133,19 @@ async function compoundRefs(db: SqlConnection): Promise<CompoundRef[]> {
   }));
 }
 
-async function runOne(db: SqlConnection, t: DueTarget): Promise<number> {
+async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome> {
+  // Market-wide collectors have no vendor, and they report ok/not-ok themselves rather than
+  // signalling a dead source by throwing.
+  if (t.collector === "enforcement-openfda") return collectEnforcement(db);
+  if (t.collector === "news-feeds") return collectNews(db);
+
   const vendor = vendors().find(v => v.slug === t.target);
   if (!vendor) throw new Error(`unknown vendor ${t.target}`);
 
   if (t.collector === "vendor-status") {
     const status = await probeVendorStatus(vendor.domain);
     await recordVendorStatus(db, vendor.slug, status);
-    return 1;
+    return { items: 1, ok: true };
   }
 
   const compounds = await compoundRefs(db);
@@ -136,7 +157,7 @@ async function runOne(db: SqlConnection, t: DueTarget): Promise<number> {
   const result = t.collector === "catalog-shopify"
     ? await importShopifyCatalog(db, input)
     : await importWooCommerceCatalog(db, input);
-  return result.imported.length;
+  return { items: result.imported.length, ok: true };
 }
 
 export interface TickResult {
@@ -171,10 +192,12 @@ export async function runCollectionTick(
     // and back off for no reason.
     if (Date.now() - started > budgetMs) { budgetExhausted = true; break; }
     try {
-      const items = await runOne(db, t);
-      await settle(db, t, true, items);
-      ran.push({ collector: t.collector, target: t.target, items, ok: true });
-      if (t.collector !== "vendor-status") catalogChanged = true;
+      // A collector reports a dead SOURCE in its return value, not by throwing — a throw here means
+      // a defect in our own code, and the two must stay distinguishable in `collector_runs`.
+      const { items, ok, error } = await runOne(db, t);
+      await settle(db, t, ok, items, error);
+      ran.push({ collector: t.collector, target: t.target, items, ok, ...(error ? { error } : {}) });
+      if (ok && (t.collector === "catalog-shopify" || t.collector === "catalog-woo")) catalogChanged = true;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       await settle(db, t, false, 0, message);

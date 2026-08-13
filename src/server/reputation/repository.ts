@@ -1,6 +1,7 @@
 import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { ensureEvidenceNetworkSeed } from "@/server/evidence-network/repository";
+import { normalizeReviewConfidence, normalizeReviewVolume } from "@/server/verify/vendor-reviews";
 
 // A reputation record is a decomposable, provenance-linked, versioned set of dimensions —
 // explicitly NOT a composite score. Each dimension stands on its own, keeps "unknown"
@@ -54,12 +55,17 @@ async function documentationSeries(db: SqlConnection, vendorOrgId: string): Prom
 export async function buildVendorReputation(db: SqlConnection, org: { id: string; slug: string; display_name: string; profile_status: string; participation_status: string; documentation_current: number; product_count: number }, registryId: string | null): Promise<ReputationRecord> {
   const dimensions: ReputationDimension[] = [];
 
+  // Said in words a buyer uses. The stored words ("unclaimed · independent") read to a shopper like
+  // a compliment, when what they mean is "the vendor has never touched this page".
+  const pageClaimed = org.profile_status !== "unclaimed";
   dimensions.push({
     key: "identity_claim",
     label: "Identity & claim",
     status: "established",
-    value: `${org.profile_status}${org.participation_status ? ` · ${org.participation_status}` : ""}`,
-    basis: "Observed profile claim and participation state.",
+    value: pageClaimed ? "Claimed by the vendor" : "Unclaimed page — nothing here is written by them",
+    basis: pageClaimed
+      ? "Has this vendor claimed their page? Yes — so they can correct what's on it."
+      : "Has this vendor claimed their page? No. Everything here was gathered by us from public sources.",
     provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` },
   });
 
@@ -81,10 +87,10 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
   // newest one is — not a listing-only documentation share that reads 0 for a vendor with no store.
   const docCurrent = Number(org.documentation_current);
   dimensions.push(coaCount > 0
-    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${coaCount} certificate${coaCount === 1 ? "" : "s"} on file${coa?.latest ? ` · latest tested ${coa.latest}` : ""}`, numericValue: coaCount, basis: "Independent third-party certificates on record for this vendor, newest first.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } }
+    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${coaCount} lab test${coaCount === 1 ? "" : "s"} on file${coa?.latest ? ` · newest tested ${coa.latest}` : ""}`, numericValue: coaCount, basis: "The independent lab tests we hold for this vendor, newest first.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } }
     : docCurrent > 0
-    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${docCurrent}%`, numericValue: docCurrent, basis: "Share of observed listings exposing current documentation.", provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` }, series: await documentationSeries(db, org.id) }
-    : { key: "documentation_currency", label: "Documentation currency", status: "unknown", value: "No lab tests on record yet", basis: "No independent third-party certificate is on record for this vendor yet.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } });
+    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${docCurrent}%`, numericValue: docCurrent, basis: "How many of their listings show a dated lab report.", provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` }, series: await documentationSeries(db, org.id) }
+    : { key: "documentation_currency", label: "Documentation currency", status: "unknown", value: "No lab tests on record yet", basis: "We haven't found an independent lab test for this vendor yet.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } });
 
   // Independent evidence corroboration — independent lab tests (COAs) and published batch
   // passports linked to this vendor. COAs are the primary, most common signal: a vendor with
@@ -99,11 +105,11 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
   const openConflicts = Number(passports?.conflicts ?? 0);
   if (coaCount > 0 || passportCount > 0) {
     const parts: string[] = [];
-    if (coaCount > 0) parts.push(`${coaCount} independent COA${coaCount === 1 ? "" : "s"} on record${coaMedian != null ? ` · median ${coaMedian.toFixed(1)}%` : ""}`);
-    if (passportCount > 0) parts.push(`${passportCount} batch passport${passportCount === 1 ? "" : "s"}`);
-    dimensions.push({ key: "evidence_corroboration", label: "Independent evidence corroboration", status: openConflicts > 0 ? "disputed" : "established", value: `${parts.join(" · ")}${openConflicts > 0 ? ` · ${openConflicts} open conflict${openConflicts === 1 ? "" : "s"}` : ""}`, numericValue: coaCount + passportCount, basis: "Independent third-party lab certificates and published batch passports linked to this vendor.", provenance: { sourceType: coaCount > 0 ? "lab_test_records" : "batch_passport", url: `/vendors/${org.slug}` } });
+    if (coaCount > 0) parts.push(`${coaCount} independent lab test${coaCount === 1 ? "" : "s"}${coaMedian != null ? ` · typically ${coaMedian.toFixed(1)}% pure` : ""}`);
+    if (passportCount > 0) parts.push(`${passportCount} batch test record${passportCount === 1 ? "" : "s"}`);
+    dimensions.push({ key: "evidence_corroboration", label: "Independent evidence corroboration", status: openConflicts > 0 ? "disputed" : "established", value: `${parts.join(" · ")}${openConflicts > 0 ? ` · ${openConflicts} result${openConflicts === 1 ? "" : "s"} that disagree` : ""}`, numericValue: coaCount + passportCount, basis: "Independent lab tests and published batch test records linked to this vendor.", provenance: { sourceType: coaCount > 0 ? "lab_test_records" : "batch_passport", url: `/vendors/${org.slug}` } });
   } else {
-    dimensions.push({ key: "evidence_corroboration", label: "Independent evidence corroboration", status: "unknown", value: "No independent tests on record", basis: "No third-party lab certificate or batch passport links independent evidence to this vendor yet.", provenance: { sourceType: "lab_test_records" } });
+    dimensions.push({ key: "evidence_corroboration", label: "Independent evidence corroboration", status: "unknown", value: "No independent tests on record", basis: "Nobody independent has tested this vendor's product, as far as we can find.", provenance: { sourceType: "lab_test_records" } });
   }
 
   // Operational reliability — only real when the vendor operates a participating storefront
@@ -114,8 +120,8 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     `SELECT AVG(refund_rate) refund_rate,AVG(fulfillment_on_time_rate) fulfillment_on_time_rate,COUNT(*) days FROM seller_analytics_daily WHERE seller_id=$1`, [seller.id],
   )).rows[0] : null;
   dimensions.push(seller && analytics && Number(analytics.days) > 0
-    ? { key: "operational_reliability", label: "Operational reliability", status: "established", value: `${Math.round(Number(analytics.fulfillment_on_time_rate) * 100)}% on-time · ${(Number(analytics.refund_rate) * 100).toFixed(1)}% refunds`, numericValue: Number(analytics.fulfillment_on_time_rate), basis: "Fulfillment and refund rates observed from the vendor's participating storefront analytics.", provenance: { sourceType: "seller_analytics_daily", sourceId: seller.id } }
-    : { key: "operational_reliability", label: "Operational reliability", status: "unknown", value: "Not a participating storefront", basis: "This vendor does not operate a participating storefront with observed fulfillment analytics, so operational reliability is not established.", provenance: { sourceType: "seller_analytics_daily" } });
+    ? { key: "operational_reliability", label: "Operational reliability", status: "established", value: `${Math.round(Number(analytics.fulfillment_on_time_rate) * 100)}% on-time · ${(Number(analytics.refund_rate) * 100).toFixed(1)}% refunds`, numericValue: Number(analytics.fulfillment_on_time_rate), basis: "How fast they ship and how often they refund, from their own storefront with us.", provenance: { sourceType: "seller_analytics_daily", sourceId: seller.id } }
+    : { key: "operational_reliability", label: "Operational reliability", status: "unknown", value: "We can't see how they ship", basis: "They don't sell through us, so we can't see how fast they ship.", provenance: { sourceType: "seller_analytics_daily" } });
 
   // Community signal — what real buyers report, gathered from the open web (Reddit, forums,
   // Trustpilot complaints, scam/DOJ reports) and weighted by the community's own asymmetry:
@@ -127,9 +133,13 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
     const sent = gathered.sentiment;
     const status: DimensionStatus = sent === "positive" ? "established" : "disputed";
     const label = sent === "positive" ? "Mostly positive" : sent === "mixed" ? "Mixed reports" : sent === "negative" ? "Mostly negative" : sent === "scam" ? "Scam / fraud reports" : "Reported";
-    dimensions.push({ key: "community_signal", label: "Community signal", status, value: `${label} · ${gathered.review_volume} volume · ${gathered.confidence} confidence`, basis: gathered.summary, provenance: { sourceType: "community_mentions", url: `/vendors/${org.slug}` } });
+    // Plain words for the two enums a buyer would otherwise have to decode ("sparse volume ·
+    // low confidence"). Unrecognized values fall back to the stored word rather than inventing one.
+    const volumeWord = ({ none: "no reports", sparse: "only a few reports", moderate: "a fair number of reports", heavy: "lots of reports" } as Record<string, string>)[normalizeReviewVolume(gathered.review_volume) ?? ""] ?? `${gathered.review_volume} volume`;
+    const confidenceWord = ({ low: "we're not very sure", medium: "we're fairly sure", high: "we're confident" } as Record<string, string>)[normalizeReviewConfidence(gathered.confidence) ?? ""] ?? `${gathered.confidence} confidence`;
+    dimensions.push({ key: "community_signal", label: "Community signal", status, value: `${label} · ${volumeWord} · ${confidenceWord}`, basis: gathered.summary, provenance: { sourceType: "community_mentions", url: `/vendors/${org.slug}` } });
   } else {
-    dimensions.push({ key: "community_signal", label: "Community signal", status: "unknown", value: "No buyer reviews found", basis: "We searched the open web for buyer reviews and reputation reports for this vendor and found nothing substantive yet.", provenance: { sourceType: "community_mentions" } });
+    dimensions.push({ key: "community_signal", label: "Community signal", status: "unknown", value: "No buyer reviews found", basis: "We searched the web for buyer reviews and complaints about this vendor and found nothing solid yet.", provenance: { sourceType: "community_mentions" } });
   }
 
   // Open risk flags — ONLY genuine adverse findings (fraud/abuse cases). Curator
@@ -158,7 +168,7 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
       : regCount > 0 ? `${regCount} enforcement record${regCount === 1 ? "" : "s"}${regSevere > 0 ? " (severe)" : ""}${regLabel ? ` · ${regLabel}` : ""}`
       : `${openFlags} open case${openFlags === 1 ? "" : "s"}`,
     numericValue: totalFlags,
-    basis: "Public regulatory/enforcement actions (FDA, DOJ, FTC) and open fraud cases affecting this vendor. Factual government records, not a recommendation.",
+    basis: "Official government actions (FDA, DOJ, FTC) and open fraud cases against this vendor. These are public records, not our opinion.",
     provenance: { sourceType: regCount > 0 ? "regulatory_actions" : "fraud_cases", url: `/vendors/${org.slug}` },
   });
 
@@ -188,7 +198,7 @@ export async function buildLabReputation(db: SqlConnection, lab: { id: string; s
       label: "Accreditation",
       status: lab.accreditation_status ? "established" : "unknown",
       value: lab.accreditation_status ? `${lab.accreditation_status}${lab.accreditation_body ? ` · ${lab.accreditation_body}` : ""}` : "Not declared",
-      basis: "Declared accreditation status and body for this fictional laboratory.",
+      basis: "The accreditation this laboratory declares, and who granted it.",
       provenance: { sourceType: "laboratory_profile", sourceId: lab.id, url: `/labs/${lab.slug}` },
     },
     {
@@ -197,7 +207,7 @@ export async function buildLabReputation(db: SqlConnection, lab: { id: string; s
       status: totalReports > 0 ? "established" : "unknown",
       value: totalReports > 0 ? `${Number(totals.issued_reports)} issued · ${revoked} revoked (${Math.round((1 - revoked / totalReports) * 100)}% standing)` : "No reports issued",
       numericValue: totalReports > 0 ? Math.round((1 - revoked / totalReports) * 100) : undefined,
-      basis: "Issued-versus-revoked report history — the lab's own track record, decomposed rather than scored.",
+      basis: "How many reports this lab has issued, and how many it later withdrew.",
       provenance: { sourceType: "laboratory_reports", sourceId: lab.id, url: `/labs/${lab.slug}` },
     },
     {
@@ -206,16 +216,16 @@ export async function buildLabReputation(db: SqlConnection, lab: { id: string; s
       status: totalMethods > 0 ? "established" : "unknown",
       value: totalMethods > 0 ? `${validated}/${totalMethods} validated` : "No methods registered",
       numericValue: totalMethods > 0 ? Math.round((validated / totalMethods) * 100) : undefined,
-      basis: "Validated analytical methods in the laboratory's registry.",
+      basis: "How many of the lab's test methods have been validated.",
       provenance: { sourceType: "laboratory_methods", sourceId: lab.id, url: `/labs/${lab.slug}` },
     },
     {
       key: "custody_activity",
       label: "Chain-of-custody activity",
       status: Number(totals.custody_events) > 0 ? "established" : "unknown",
-      value: `${Number(totals.custody_events)} hash-chained events`,
+      value: `${Number(totals.custody_events)} recorded handoffs`,
       numericValue: Number(totals.custody_events),
-      basis: "Hash-chained custody handoffs across the laboratory's accessioned samples.",
+      basis: "Every time a sample changed hands, recorded so the trail can't be edited afterwards.",
       provenance: { sourceType: "sample_custody_events", sourceId: lab.id, url: `/labs/${lab.slug}` },
     },
   ];

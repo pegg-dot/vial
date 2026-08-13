@@ -20,7 +20,14 @@ describe("outbound click handoff", () => {
   it("resolves a live listing to the vendor URL and records the click", async () => {
     const db = await getDatabase();
     const r = await resolveAndRecordClick("acme-bpc-157-5mg", db);
-    expect(r?.destination).toBe("https://www.acme.test/products/bpc-157-5mg?variant=1");
+    // The destination now carries attribution tags — that is what lets a vendor confirm our
+    // traffic in their OWN analytics without any integration. The vendor's own query params must
+    // survive untouched.
+    const dest = new URL(r!.destination);
+    expect(dest.origin + dest.pathname).toBe("https://www.acme.test/products/bpc-157-5mg");
+    expect(dest.searchParams.get("variant")).toBe("1");
+    expect(dest.searchParams.get("utm_source")).toBe("vialgrade");
+    expect(dest.searchParams.get("vg")).toBe(r!.clickRef);
     expect(r?.vendorSlug).toBe("acme-peptide");
     expect(r?.affiliateApplied).toBe(false); // no deal configured
     const clicks = (await db.query<{ n: string | number }>(`SELECT COUNT(*) n FROM outbound_clicks WHERE listing_slug='acme-bpc-157-5mg'`)).rows[0];

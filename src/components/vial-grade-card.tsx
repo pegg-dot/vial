@@ -1,5 +1,5 @@
 import { Check, CircleAlert, CircleDashed, CircleSlash, Factory, ShieldCheck, X } from "lucide-react";
-import type { GradeBand, DimensionState, VialGradeResult } from "@/server/verify/grade";
+import type { GradeBand, DimensionKey, DimensionState, VialGradeResult } from "@/server/verify/grade";
 
 // The pill also renders from the MATERIALIZED grade on a vendor row, which is a plain object
 // rather than a full VialGradeResult — same fields, no dimensions.
@@ -17,18 +17,28 @@ const BAND: Record<GradeBand, { wrap: string; chip: string; accent: string; icon
   reference: { wrap: "bg-[#f2f2ef]", chip: "bg-[#39414e]", accent: "#39414e", icon: Factory },
 };
 
-const STATE: Record<DimensionState, { label: string; icon: typeof ShieldCheck; tone: string }> = {
-  supported: { label: "Evidence on file", icon: ShieldCheck, tone: "text-[#0e8f80]" },
-  // "We checked and found nothing against them" — real, but weaker than evidence FOR them.
-  clear: { label: "Checked — nothing adverse", icon: Check, tone: "text-[#111214]/55" },
-  adverse: { label: "Against", icon: X, tone: "text-[#d3372c]" },
-  conflicting: { label: "Conflicting", icon: CircleAlert, tone: "text-[#b26a00]" },
-  // Neutral observation, not an alarm — styled like a note, not a warning.
-  noted: { label: "Noted", icon: CircleDashed, tone: "text-[#111214]/55" },
-  absent: { label: "Nothing on record", icon: CircleSlash, tone: "text-[#111214]/35" },
+// The row names, in the words a buyer would use. The graph files these as testing / regulatory /
+// reputation / operations; the person reading is asking "do they have lab tests" and "has the
+// government said anything about them", so that is what the row says.
+const DIMENSION_LABEL: Record<DimensionKey, string> = {
+  testing: "Lab tests",
+  regulatory: "Government records",
+  reputation: "Buyer reports",
+  operations: "Business info",
 };
 
-function DimensionRow({ label, state, count }: { label: string; state: DimensionState; count: number }) {
+const STATE: Record<DimensionState, { label: string; icon: typeof ShieldCheck; tone: string }> = {
+  supported: { label: "Yes", icon: ShieldCheck, tone: "text-[#0e8f80]" },
+  // "We checked and found nothing against them" — real, but weaker than evidence FOR them.
+  clear: { label: "Nothing bad found", icon: Check, tone: "text-[#111214]/55" },
+  adverse: { label: "Concerns found", icon: X, tone: "text-[#d3372c]" },
+  conflicting: { label: "Reports disagree", icon: CircleAlert, tone: "text-[#b26a00]" },
+  // Neutral observation, not an alarm — styled like a note, not a warning.
+  noted: { label: "Worth a look", icon: CircleDashed, tone: "text-[#111214]/55" },
+  absent: { label: "Nothing on file", icon: CircleSlash, tone: "text-[#111214]/35" },
+};
+
+function DimensionRow({ dimensionKey, label, state, count }: { dimensionKey: DimensionKey; label: string; state: DimensionState; count: number }) {
   const s = STATE[state];
   const Icon = s.icon;
   // "Nothing on record · 1" is a contradiction. An absent dimension may still hold a factor — the
@@ -36,11 +46,13 @@ function DimensionRow({ label, state, count }: { label: string; state: Dimension
   const showCount = state !== "absent" && count > 0;
   return (
     <div className="flex items-center justify-between gap-3 border-t-2 border-[#111214]/10 py-2.5 first:border-t-0">
-      <span className="text-[13px] font-bold text-[#111214]/80">{label}</span>
+      <span className="text-[13px] font-bold text-[#111214]/80">{DIMENSION_LABEL[dimensionKey] ?? label}</span>
       <span className={`inline-flex items-center gap-1.5 text-[12px] font-bold ${s.tone}`}>
         <Icon className="size-3.5" />
         {s.label}
-        {showCount && <span className="text-[#111214]/40">· {count}</span>}
+        {/* The number is how many checks fed this row — say so, so it can't be misread as
+            "13 lab tests" when it is "1 check that found 13". */}
+        {showCount && <span className="text-[#111214]/40">· {count} check{count === 1 ? "" : "s"}</span>}
       </span>
     </div>
   );
@@ -70,7 +82,7 @@ export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summ
       {/* The decomposition the letter is built from — never collapsed away entirely. */}
       <div className="ink-1 mt-5 rounded-[14px] bg-white/70 px-4 py-1.5">
         {grade.dimensions.map(d => (
-          <DimensionRow key={d.key} label={d.label} state={d.state} count={d.factors.length} />
+          <DimensionRow key={d.key} dimensionKey={d.key} label={d.label} state={d.state} count={d.factors.length} />
         ))}
       </div>
 
@@ -79,10 +91,10 @@ export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summ
         {grade.rationale}
       </p>
 
-      <p className="mt-auto pt-4 text-[11px] font-bold uppercase tracking-[.1em] text-[#111214]/45">
-        {grade.letter === null
-          ? `Only ${grade.weighed} signal${grade.weighed === 1 ? "" : "s"} on record · ${grade.verifiedCount} independently verified`
-          : `Weighed across ${grade.weighed} signal${grade.weighed === 1 ? "" : "s"} · ${grade.verifiedCount} independently verified`}
+      {/* Sentence case, not the uppercase kicker it used to be — this is a sentence now, and
+          "WEIGHED ACROSS 4 SIGNALS" was neither readable nor a phrase anyone says. */}
+      <p className="mt-auto pt-4 text-[11px] font-bold text-[#111214]/45">
+        {`${grade.letter === null ? "Only" : "Based on"} ${grade.weighed} check${grade.weighed === 1 ? "" : "s"}${grade.letter === null ? " so far" : ""}. ${grade.verifiedCount > 0 ? `${grade.verifiedCount} backed by a document.` : "None backed by a document."}`}
       </p>
     </div>
   );

@@ -12,20 +12,28 @@ const PLAIN_DIMENSION_LABELS: Record<string, string> = {
   open_risk_flags: "Scam & red flags",
 };
 
+// The stored status words are ours, not the reader's. "Established" and "disputed" are filing
+// terms; what a buyer is asking is "do you actually know this or not?"
+const STATUS_WORD: Record<string, string> = {
+  established: "Confirmed",
+  unknown: "We don't know",
+  disputed: "Needs a closer look",
+};
+
 const STATUS_MEANING: Record<string, string> = {
-  established: "We hold direct evidence for this, shown on the card with its source. It's a fact we can point to — not a rating we assigned.",
-  unknown: "We have no evidence for this yet. “Unknown” is not a mark against the vendor — it means the data is simply absent, and we refuse to invent a number to fill the gap.",
-  disputed: "The evidence here conflicts with itself. That's a genuine reason for caution, and we show it rather than smoothing it over.",
+  established: "We have the evidence for this, and the card shows where it came from. It's something we can point at — not a rating we made up.",
+  unknown: "We don't have the evidence for this yet. That is not a mark against the vendor — the information simply isn't there, and we won't invent a number to fill the gap.",
+  disputed: "What we found here doesn't line up — either the evidence disagrees with itself, or there is something on record against them. That's a real reason to slow down, so we show it instead of smoothing it over.",
 };
 
 const PROVENANCE_LABELS: Record<string, string> = {
-  lab_test_records: "Independent third-party lab certificates",
-  batch_passport: "Published batch passports",
-  organization: "The vendor's observed public profile",
-  seller_analytics_daily: "Storefront fulfilment analytics",
-  marketplace_reviews: "Verified-purchase buyer reviews",
-  community_mentions: "Gathered buyer reviews & community reports",
-  fraud_cases: "Fraud & abuse case records",
+  lab_test_records: "Independent lab reports",
+  batch_passport: "Published batch test records",
+  organization: "The vendor's own public page",
+  seller_analytics_daily: "How their store actually shipped",
+  marketplace_reviews: "Reviews from people who bought it",
+  community_mentions: "Buyer reviews and community posts",
+  fraud_cases: "Fraud and abuse case records",
 };
 
 function toneOf(status: string) {
@@ -54,12 +62,12 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
             <div key={d.key} className={`rounded-[18px] p-5 ${t.card}`}>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-extrabold">{PLAIN_DIMENSION_LABELS[d.key] ?? d.label}</h3>
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{d.status}</span>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[d.status] ?? d.status}</span>
               </div>
               <p className="mt-3 text-lg font-extrabold tracking-[-.02em]">{d.value}</p>
               <p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">{d.basis}</p>
               <button type="button" onClick={() => setOpen(d)} className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-[#2b31d8] transition hover:opacity-70">
-                What does &ldquo;{d.status}&rdquo; mean? →
+                What does &ldquo;{STATUS_WORD[d.status] ?? d.status}&rdquo; mean? →
               </button>
             </div>
           );
@@ -77,7 +85,7 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
                 <div className="flex items-start justify-between gap-4 border-b border-black/[.08] p-6">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">{PLAIN_DIMENSION_LABELS[open.key] ?? open.label}</p>
-                    <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{open.status}</span>
+                    <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[open.status] ?? open.status}</span>
                   </div>
                   <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="grid size-9 shrink-0 place-items-center rounded-full border border-black/[.1] bg-white text-black/50 transition hover:text-black"><X className="size-4" /></button>
                 </div>
@@ -85,10 +93,10 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
                   <p className="text-2xl font-semibold tracking-[-.03em]">{open.value}</p>
                   <p className="mt-4 text-sm leading-7 text-black/70">{open.basis}</p>
                   <div className="mt-6 rounded-2xl border border-black/[.08] bg-white p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">What &ldquo;{open.status}&rdquo; means here</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">What &ldquo;{STATUS_WORD[open.status] ?? open.status}&rdquo; means here</p>
                     <p className="mt-2 text-sm leading-6 text-black/70">{STATUS_MEANING[open.status] ?? ""}</p>
                   </div>
-                  <p className="mt-4 text-xs leading-5 text-[var(--muted)]">Source: {PROVENANCE_LABELS[open.provenance.sourceType] ?? open.provenance.sourceType}. Every answer stands on its own and cites where it came from — we never blend them into one score.</p>
+                  <p className="mt-4 text-xs leading-5 text-[var(--muted)]">Where this came from: {PROVENANCE_LABELS[open.provenance.sourceType] ?? open.provenance.sourceType}. Every answer stands on its own and says where it came from &mdash; we never blend them into one score.</p>
                 </div>
               </>
             );

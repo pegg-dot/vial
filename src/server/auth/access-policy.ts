@@ -34,6 +34,8 @@ const PUBLIC_API_EXACT = new Set([
   // here or the deny-by-default perimeter 401s them BEFORE the handler runs — which is exactly
   // what silently disabled continuous collection: Vercel Cron sends no session cookie.
   "/api/internal/cron/collect",
+  // Partner postbacks authenticate with a per-vendor HMAC inside the handler.
+  "/api/partner/conversion",
 ]);
 const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", "/api/public/"];
 

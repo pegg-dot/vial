@@ -67,8 +67,8 @@ export async function runIntelligenceSweep(actor = "system:curator") {
           signalType: "source-coverage-gap",
           entityType: "listing",
           entityId: listing.listing_id,
-          title: `${listing.vendor_name} ${listing.product_name} is not continuously monitored`,
-          summary: "The listing has no controlled source policy, so changes depend on manual observation.",
+          title: `We are not watching ${listing.vendor_name} ${listing.product_name} automatically yet`,
+          summary: "Nothing re-checks this listing on a schedule, so a price or batch change can go unnoticed until someone looks.",
           score: 82,
           confidence: 0.99,
           evidence: { listingSlug: listing.listing_slug },
@@ -82,8 +82,8 @@ export async function runIntelligenceSweep(actor = "system:curator") {
           signalType: "batch-document-gap",
           entityType: "listing",
           entityId: listing.listing_id,
-          title: `${listing.product_name} batch lacks a dated report`,
-          summary: `Batch ${listing.batch_code} is visible, but the public record does not connect it to a dated analytical document.`,
+          title: `${listing.product_name} shows a batch number but no lab report`,
+          summary: `Batch ${listing.batch_code} is on the page, but nothing dated ties it to an actual lab result.`,
           score: 86,
           confidence: 0.98,
           evidence: { batchCode: listing.batch_code, reportDate: listing.report_date },
@@ -97,8 +97,8 @@ export async function runIntelligenceSweep(actor = "system:curator") {
           signalType: "vendor-onboarding",
           entityType: "vendor",
           entityId: listing.vendor_id,
-          title: `${listing.vendor_name} can claim its market record`,
-          summary: "A public catalog record exists, but no verified operator controls corrections, direct feeds, or profile context.",
+          title: `${listing.vendor_name} has not claimed their page`,
+          summary: "We built this page from public sources. Nobody from the company has claimed it to correct anything or send us their own data.",
           score: 68,
           confidence: 0.99,
           evidence: { profileStatus: listing.vendor_profile_status },
@@ -113,8 +113,8 @@ export async function runIntelligenceSweep(actor = "system:curator") {
           signalType: "listing-evidence-refresh",
           entityType: "listing",
           entityId: listing.listing_id,
-          title: `${listing.vendor_name} ${listing.product_name} needs a fresh observation`,
-          summary: `The current public projection is ${Math.floor(observedAgeHours)} hours old.`,
+          title: `${listing.vendor_name} ${listing.product_name} needs a fresh look`,
+          summary: `What we show here was last checked ${Math.floor(observedAgeHours)} hours ago.`,
           score: Math.min(100, 55 + observedAgeHours / 4),
           confidence: 0.99,
           evidence: { observedAgeHours },
@@ -154,25 +154,25 @@ export async function runIntelligenceSweep(actor = "system:curator") {
       if (spread >= 20) await emit({
         signalKey: `price-dispersion:${compoundId}`, rootEventId: root.rootEventId, parentEventId: metricEvent.id,
         signalType: "price-dispersion", entityType: "compound", entityId: compoundId,
-        title: `${rows[0].compound_name} prices are fragmented`, summary: `The observed listing range spans ${spread.toFixed(1)}% around the median.`,
+        title: `${rows[0].compound_name} prices are all over the map`, summary: `The same thing sells for $${Math.round(Math.min(...prices))} to $${Math.round(Math.max(...prices))} right now — worth comparing before you buy.`,
         score: Math.min(100, 45 + spread), confidence: 0.98, evidence: { medianPrice: midpoint, priceSpreadPct: spread, listingCount: rows.length },
       }); else evaluated += 1;
       if (available <= 1) await emit({
         signalKey: `thin-availability:${compoundId}`, rootEventId: root.rootEventId, parentEventId: metricEvent.id,
         signalType: "thin-availability", entityType: "compound", entityId: compoundId,
-        title: `${rows[0].compound_name} has thin visible availability`, summary: `Only ${available} listing is currently visible as available.`,
+        title: `Hardly anyone is selling ${rows[0].compound_name}`, summary: available === 0 ? "Nothing we track is showing as in stock right now." : "Only one listing is showing as in stock right now.",
         score: 76, confidence: 0.95, evidence: { available, listingCount: rows.length },
       }); else evaluated += 1;
       if (coverage < 70) await emit({
         signalKey: `compound-evidence-gap:${compoundId}`, rootEventId: root.rootEventId, parentEventId: metricEvent.id,
         signalType: "compound-evidence-gap", entityType: "compound", entityId: compoundId,
-        title: `${rows[0].compound_name} has incomplete evidence coverage`, summary: `${coverage}% of observed listings expose a dated public report.`,
+        title: `Lab reports are patchy for ${rows[0].compound_name}`, summary: `Only ${coverage}% of the listings we track show a dated lab report. For the rest you are taking the seller's word for it.`,
         score: 100 - coverage, confidence: 0.97, evidence: { coverage, documented, listings: rows.length },
       }); else evaluated += 1;
       if (topIssuerShare >= 0.75 && rows.length >= 2) await emit({
         signalKey: `issuer-concentration:${compoundId}`, rootEventId: root.rootEventId, parentEventId: metricEvent.id,
         signalType: "issuer-concentration", entityType: "compound", entityId: compoundId,
-        title: `${rows[0].compound_name} evidence depends on one issuer`, summary: `${Math.round(topIssuerShare * 100)}% of observed listings name the same report issuer, increasing correlated evidence risk.`,
+        title: `Nearly all ${rows[0].compound_name} tests come from one lab`, summary: `${Math.round(topIssuerShare * 100)}% of the listings we track name the same lab. If that lab is wrong, they are all wrong together.`,
         score: Math.round(topIssuerShare * 100), confidence: 0.9, evidence: { topIssuerShare, issuers: Object.fromEntries(issuerCounts) },
       }); else evaluated += 1;
       const vendorShares = new Map<string, number>();
@@ -181,7 +181,7 @@ export async function runIntelligenceSweep(actor = "system:curator") {
       if (hhi >= 0.5 && rows.length >= 2) await emit({
         signalKey: `supply-concentration:${compoundId}`, rootEventId: root.rootEventId, parentEventId: metricEvent.id,
         signalType: "supply-concentration", entityType: "compound", entityId: compoundId,
-        title: `${rows[0].compound_name} listings are concentrated`, summary: `Observed listing concentration is ${(hhi * 100).toFixed(0)} on a 0–100 HHI scale, making source diversity strategically valuable.`,
+        title: `Most ${rows[0].compound_name} listings come from a handful of sellers`, summary: "A small number of sellers account for most of what we track here, so there is less to compare than it looks.",
         score: Math.round(hhi * 100), confidence: 0.94, evidence: { hhi, vendorShares: Object.fromEntries(vendorShares) },
       }); else evaluated += 1;
     }
@@ -192,7 +192,7 @@ export async function runIntelligenceSweep(actor = "system:curator") {
       if (coverage < 75) await emit({
         signalKey: `vendor-evidence-gap:${vendorId}`, rootEventId: root.rootEventId, parentEventId: root.id,
         signalType: "vendor-evidence-gap", entityType: "vendor", entityId: vendorId,
-        title: `${rows[0].vendor_name} has catalog evidence gaps`, summary: `${documented} of ${rows.length} observed listings expose a dated report.`,
+        title: `${rows[0].vendor_name} shows a lab report for only some of its listings`, summary: `${documented} of the ${rows.length} listings we track from them have a dated report.`,
         score: 100 - coverage, confidence: 0.96, evidence: { coverage, documented, listings: rows.length },
       }); else evaluated += 1;
     }
@@ -206,7 +206,7 @@ export async function runIntelligenceSweep(actor = "system:curator") {
       if (source.consecutive_failures > 0 || stale) await emit({
         signalKey: `source-health:${source.source_id}`, rootEventId: root.rootEventId, parentEventId: root.id,
         signalType: "source-health", entityType: "source", entityId: source.source_id,
-        title: `${source.label} needs refresh attention`, summary: source.consecutive_failures > 0 ? `${source.consecutive_failures} consecutive refresh failures are recorded.` : "No successful controlled refresh is recorded in the last 24 hours.",
+        title: `${source.label} is not refreshing`, summary: source.consecutive_failures > 0 ? `The last ${source.consecutive_failures} attempts to re-check this source failed.` : "Nothing has been re-checked successfully here in the last 24 hours.",
         score: Math.min(100, 58 + source.consecutive_failures * 12), confidence: 0.99, evidence: { failures: source.consecutive_failures, stale },
       }); else evaluated += 1;
     }

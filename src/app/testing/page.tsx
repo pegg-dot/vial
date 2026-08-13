@@ -32,7 +32,7 @@ export default async function Page() {
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <div className="ink-1 rounded-[14px] bg-white p-5"><p className="text-xs font-medium text-[var(--muted)]">Certificates</p><p className="mt-1 text-2xl font-extrabold tabular-nums">{s.total}</p></div>
         <div className="ink-1 rounded-[14px] bg-white p-5"><p className="text-xs font-medium text-[var(--muted)]">Blind-tested</p><p className="mt-1 text-2xl font-extrabold tabular-nums">{s.blind} <span className="text-sm font-medium text-[var(--muted)]">({pct(s.blind)}%)</span></p></div>
-        <div className="ink-1 rounded-[14px] bg-white p-5"><p className="text-xs font-medium text-[var(--muted)]">Batch passports</p><p className="mt-1 text-2xl font-extrabold tabular-nums">{s.passports}</p></div>
+        <div className="ink-1 rounded-[14px] bg-white p-5"><p className="text-xs font-medium text-[var(--muted)]">Batch test records</p><p className="mt-1 text-2xl font-extrabold tabular-nums">{s.passports}</p></div>
       </div>
       <p className="mt-5 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Most certificates in any grey-market corpus are vendor-selected &mdash; the seller chose the unit. A blind result carries more weight because no one could hand-pick the sample. We label which is which on every certificate rather than treating them as equal.</p>
     </div>

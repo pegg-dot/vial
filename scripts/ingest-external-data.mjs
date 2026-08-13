@@ -9,7 +9,17 @@ import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
 if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 const DATA = new URL("./data/", import.meta.url);
-const read = (n) => existsSync(new URL(n, DATA)) ? JSON.parse(readFileSync(new URL(n, DATA), "utf8")) : null;
+// The files that feed a DEPLOYED surface live under src/ so the serverless bundle contains them
+// (scripts/data/ is not bundled, which is why /news was empty in production). This script reads
+// them from their new home so the manual path and the continuous collector share one source.
+const BUNDLED = new URL("../src/server/data/", import.meta.url);
+const read = (n) => {
+  for (const base of [BUNDLED, DATA]) {
+    const url = new URL(n, base);
+    if (existsSync(url)) return JSON.parse(readFileSync(url, "utf8"));
+  }
+  return null;
+};
 const db = await getDatabase();
 
 const agg = read("aggregator-ratings.json");
