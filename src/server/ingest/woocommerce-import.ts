@@ -51,13 +51,31 @@ export function wooImage(p: WooProduct): string | undefined {
 }
 
 /** Fetch a WooCommerce vendor's catalog via the public Store API, paginating up to `maxPages`. */
+/**
+ * Raised when a storefront refuses us outright — a bot wall, a hard block, an unreachable host.
+ *
+ * This MUST be distinguishable from "we fetched the catalog and it was empty". Returning null for
+ * both made a blocked vendor look like a successful import of zero products: the collector recorded
+ * ok=true, never backed off, and the vendor's now-frozen prices kept rendering as current. That is
+ * the silently-broken-collector failure this product exists to catch in others.
+ */
+export class StorefrontUnreachableError extends Error {
+  constructor(readonly domain: string, readonly status: number | null) {
+    super(status ? `${domain} refused the catalog request (HTTP ${status})` : `${domain} could not be reached`);
+    this.name = "StorefrontUnreachableError";
+  }
+}
+
 export async function fetchWooProducts(domain: string, maxPages = 6): Promise<WooProduct[] | null> {
+  let lastStatus: number | null = null;
+  let reachedHost = false;
   for (const base of [`https://${domain}`, `https://www.${domain}`]) {
     const all: WooProduct[] = [];
     for (let page = 1; page <= maxPages; page++) {
       try {
         const res = await fetch(`${base}/wp-json/wc/store/v1/products?per_page=100&page=${page}`, { headers: { "user-agent": UA, accept: "application/json" }, redirect: "follow" });
-        if (!res.ok) break;
+        reachedHost = true;
+        if (!res.ok) { lastStatus = res.status; break; }
         const data = (await res.json()) as WooProduct[];
         if (!Array.isArray(data) || data.length === 0) break;
         all.push(...data);
@@ -65,6 +83,11 @@ export async function fetchWooProducts(domain: string, maxPages = 6): Promise<Wo
       } catch { break; }
     }
     if (all.length) return all;
+  }
+  // A refusal (403/401/429) or an unreachable host is a FAILURE, not an empty catalog. Only a
+  // genuine 2xx that returned no products falls through to null.
+  if (!reachedHost || (lastStatus !== null && lastStatus >= 400)) {
+    throw new StorefrontUnreachableError(domain, lastStatus);
   }
   return null;
 }

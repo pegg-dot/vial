@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Building2, Check, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
 import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
 import { vendorPriceIndex } from "@/lib/curation";
+import { daysSince } from "@/lib/format";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { vendorClaimLabel } from "@/lib/vendor-copy";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
@@ -90,6 +91,16 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   await persistVendorGrade(slug, grade, composed.summary).catch(() => {});
 
   const hasAlerts = (vendorStatus && vendorStatus.status !== "operating") || vendorFlags.length > 0 || enforcement.length > 0;
+
+  // If we can no longer read a storefront (a bot wall, a dead host), its prices freeze while still
+  // rendering as if current. Showing a stale price as live is the same dishonesty this product
+  // exists to catch, so say it plainly. Derived from the newest observation we actually hold.
+  const newestObservation = listings.reduce<string | null>((newest, l) => {
+    if (!l.observedAt) return newest;
+    return !newest || l.observedAt > newest ? l.observedAt : newest;
+  }, null);
+  const staleDays = daysSince(newestObservation);
+  const catalogStale = listings.length > 0 && staleDays != null && staleDays >= 3;
   const secondaryLabel = vendor.kind === "storefront" ? "Listings" : "Batch test records";
   const secondaryValue = vendor.kind === "storefront" ? vendor.productCount : vendor.passportCount;
 
@@ -208,6 +219,16 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       <VendorLinksPanel links={vendorLinks} vendorName={vendor.name} />
 
       {/* ── Catalog + history ───────────────────────────────────────────────────────── */}
+      {catalogStale && (
+        <div className="ink-1 hard mx-auto mt-8 flex max-w-[1320px] items-start gap-3 rounded-[16px] bg-[#fff4e0] p-5 text-sm font-medium leading-6 text-[#b26a00]">
+          <CircleDashed className="mt-0.5 size-4 shrink-0" />
+          <span>
+            <strong className="font-extrabold">These prices may be out of date.</strong> We last read this
+            vendor&rsquo;s store {staleDays} days ago and haven&rsquo;t been able to since &mdash; some storefronts
+            block automated checks. Treat the prices below as last-seen, not current, and confirm on their site.
+          </span>
+        </div>
+      )}
       <section id="catalog" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 py-16 sm:px-8 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
           <div>

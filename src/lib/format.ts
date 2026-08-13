@@ -179,3 +179,16 @@ export function relativeTime(value: string | Date | null | undefined, now: Date 
   }
   return null;
 }
+
+/**
+ * Whole days since an ISO timestamp, or null if there isn't one.
+ *
+ * The clock read lives here rather than in a component: a page computing `Date.now()` inline is
+ * flagged as impure render, and this value legitimately depends on request time.
+ */
+export function daysSince(value: string | Date | null | undefined, now: Date = new Date()): number | null {
+  if (!value) return null;
+  const then = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(then.getTime())) return null;
+  return Math.floor((now.getTime() - then.getTime()) / 86_400_000);
+}

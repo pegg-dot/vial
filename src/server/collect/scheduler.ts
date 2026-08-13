@@ -50,6 +50,9 @@ export const CADENCE_MINUTES: Record<CollectorKind, number> = {
 
 const MAX_BACKOFF_MINUTES = 7 * 24 * 60;
 const DISABLE_AFTER_FAILURES = 12;
+// A storefront that refuses us outright will keep refusing us. Retrying it a dozen times over a
+// week is pointless load on someone else's server; stop sooner and make it visible in the admin.
+const DISABLE_AFTER_REFUSALS = 3;
 
 function vendors(): KnownVendor[] {
   const raw = knownVendors as unknown;
@@ -108,7 +111,7 @@ function nextDelayMinutes(cadence: number, failures: number): number {
   return Math.min(cadence * Math.pow(2, failures), MAX_BACKOFF_MINUTES);
 }
 
-async function settle(db: SqlConnection, t: DueTarget, ok: boolean, items: number, error?: string) {
+async function settle(db: SqlConnection, t: DueTarget, ok: boolean, items: number, error?: string, disableAfter = DISABLE_AFTER_FAILURES) {
   const failures = ok ? 0 : t.consecutive_failures + 1;
   const delay = nextDelayMinutes(t.cadence_minutes, failures);
   await db.query(
@@ -118,7 +121,7 @@ async function settle(db: SqlConnection, t: DueTarget, ok: boolean, items: numbe
          enabled = CASE WHEN $5::int >= $6::int THEN FALSE ELSE enabled END,
          next_due_at = NOW() + ($7::text || ' minutes')::interval, updated_at=NOW()
      WHERE id=$1`,
-    [t.id, ok, items, error?.slice(0, 400) ?? null, failures, DISABLE_AFTER_FAILURES, String(delay)],
+    [t.id, ok, items, error?.slice(0, 400) ?? null, failures, disableAfter, String(delay)],
   );
   await recordCollectorRun(db, { collector: t.collector, target: t.target, items, ok });
 }
@@ -228,7 +231,8 @@ export async function runCollectionTick(
       if (ok && (t.collector === "catalog-shopify" || t.collector === "catalog-woo")) catalogChanged = true;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      await settle(db, t, false, 0, message);
+      const refused = error instanceof Error && error.name === "StorefrontUnreachableError";
+      await settle(db, t, false, 0, message, refused ? DISABLE_AFTER_REFUSALS : DISABLE_AFTER_FAILURES);
       ran.push({ collector: t.collector, target: t.target, items: 0, ok: false, error: message });
     }
   }

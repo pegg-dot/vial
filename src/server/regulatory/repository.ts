@@ -56,6 +56,58 @@ export async function listRegulatoryActions(connection?: SqlConnection, limit = 
   )).rows;
 }
 
+export type EnforcementFilter = "all" | "matched" | "severe";
+
+export interface EnforcementPage { items: RegulatoryFeedItem[]; total: number; matched: number; severe: number; }
+
+/**
+ * A page of the enforcement record.
+ *
+ * The openFDA feed brings hundreds of recalls, most naming companies we do not track. A buyer cares
+ * first about the ones that touch a vendor they might actually buy from, so matched records sort
+ * ahead of unmatched within each severity band — and the whole list is paged rather than silently
+ * truncated at 200, which was hiding two thirds of the record.
+ */
+export async function listEnforcementPage(
+  options: { filter?: EnforcementFilter; page?: number; perPage?: number; connection?: SqlConnection } = {},
+): Promise<EnforcementPage> {
+  const db = options.connection ?? (await getDatabase());
+  const filter = options.filter ?? "all";
+  const perPage = Math.min(100, Math.max(10, options.perPage ?? 50));
+  const page = Math.max(1, options.page ?? 1);
+  const where = filter === "matched" ? "WHERE ra.vendor_slug IS NOT NULL"
+    : filter === "severe" ? "WHERE ra.severity = 'severe'" : "";
+
+  const counts = (await db.query<QueryResultRow & Record<string, string | number>>(
+    `SELECT COUNT(*) total,
+            COUNT(*) FILTER (WHERE vendor_slug IS NOT NULL) matched,
+            COUNT(*) FILTER (WHERE severity='severe') severe
+     FROM regulatory_actions`,
+  )).rows[0]!;
+
+  const filtered = (await db.query<QueryResultRow & { n: string | number }>(
+    `SELECT COUNT(*) AS n FROM regulatory_actions ra ${where}`,
+  )).rows[0]!;
+
+  const items = (await db.query<RegulatoryFeedItem>(
+    `SELECT ${COLS.split(",").map((c) => `ra.${c}`).join(",")}, o.display_name vendor_name
+     FROM regulatory_actions ra LEFT JOIN organizations o ON o.slug=ra.vendor_slug
+     ${where}
+     ORDER BY CASE ra.severity WHEN 'severe' THEN 0 WHEN 'caution' THEN 1 ELSE 2 END,
+              CASE WHEN ra.vendor_slug IS NOT NULL THEN 0 ELSE 1 END,
+              ra.action_date DESC NULLS LAST
+     LIMIT $1 OFFSET $2`,
+    [perPage, (page - 1) * perPage],
+  )).rows;
+
+  return {
+    items,
+    total: Number(filtered.n),
+    matched: Number(counts.matched),
+    severe: Number(counts.severe),
+  };
+}
+
 export async function getRegulatoryStats(connection?: SqlConnection): Promise<{ total: number; severe: number; vendorsAffected: number; agencies: number }> {
   const db = connection ?? (await getDatabase());
   const r = (await db.query<QueryResultRow & Record<string, string | number>>(

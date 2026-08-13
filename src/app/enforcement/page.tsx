@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Gavel, ExternalLink, ShieldAlert, Landmark, Scale } from "lucide-react";
-import { listRegulatoryActions, getRegulatoryStats } from "@/server/regulatory/repository";
+import { listEnforcementPage, getRegulatoryStats, type EnforcementFilter } from "@/server/regulatory/repository";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Enforcement record", description: "Public FDA, DOJ, and FTC actions against peptide and research-chemical sellers — sourced, factual, never our accusation." };
@@ -9,8 +9,28 @@ export const metadata: Metadata = { title: "Enforcement record", description: "P
 const AGENCY: Record<string, string> = { FDA: "FDA", DOJ: "U.S. DOJ", FTC: "FTC", state: "State", other: "Regulator" };
 const TYPE: Record<string, string> = { warning_letter: "Warning letter", import_alert: "Import alert", doj_action: "Enforcement action", ftc_action: "FTC action", recall: "Recall", advisory: "Advisory" };
 
-export default async function Page() {
-  const [actions, stats] = await Promise.all([listRegulatoryActions(), getRegulatoryStats()]);
+const FILTERS: { key: EnforcementFilter; label: string }[] = [
+  { key: "matched", label: "Affects a vendor we track" },
+  { key: "severe", label: "Proven &amp; severe" },
+  { key: "all", label: "Everything on record" },
+];
+
+export default async function Page({ searchParams }: { searchParams: Promise<{ filter?: string; page?: string }> }) {
+  const sp = await searchParams;
+  // Default to the records that touch a vendor a buyer might actually use. The openFDA feed is
+  // mostly recalls naming companies we do not track — real, but not what someone is here for.
+  const filter: EnforcementFilter = sp.filter === "all" ? "all" : sp.filter === "severe" ? "severe" : "matched";
+  const page = Math.max(1, Number(sp.page ?? 1) || 1);
+  const perPage = 50;
+  const [feed, stats] = await Promise.all([
+    listEnforcementPage({ filter, page, perPage }),
+    getRegulatoryStats(),
+  ]);
+  const actions = feed.items;
+  const pages = Math.max(1, Math.ceil(feed.total / perPage));
+  const from = feed.total === 0 ? 0 : (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, feed.total);
+  const href = (f: EnforcementFilter, p: number) => `/enforcement?filter=${f}${p > 1 ? `&page=${p}` : ""}`;
   return <div>
     <section className="border-b-2 border-[#111214]"><div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24">
       <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#d3372c]">Enforcement record</p>
@@ -24,7 +44,19 @@ export default async function Page() {
       </div>
     </div></section>
     <section className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
-      <div className="space-y-3">{actions.map((a) => {
+      <div className="flex flex-wrap items-center gap-2">
+        {FILTERS.map((f) => {
+          const count = f.key === "matched" ? feed.matched : f.key === "severe" ? feed.severe : stats.total;
+          const active = f.key === filter;
+          return <Link key={f.key} href={href(f.key, 1)} className={`ink-1 press rounded-full px-4 py-2 text-sm font-bold ${active ? "bg-[#111214] text-white" : "bg-white"}`}>
+            {f.key === "matched" ? "Affects a vendor we track" : f.key === "severe" ? "Proven & severe" : "Everything on record"} <span className={active ? "text-white/60" : "text-[var(--muted)]"}>{count}</span>
+          </Link>;
+        })}
+      </div>
+      <p className="mt-4 text-sm font-medium text-[var(--muted)]">
+        {feed.total === 0 ? "Nothing on record for this filter." : <>Showing {from}&ndash;{to} of {feed.total}.</>}
+      </p>
+      <div className="mt-6 space-y-3">{actions.map((a) => {
         const severe = a.severity === "severe";
         return <div key={a.id} className={`ink-1 hard rounded-[18px] p-6 ${severe ? "bg-[#ffecea]" : "bg-white"}`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -44,6 +76,13 @@ export default async function Page() {
         <h2 className="mt-5 text-2xl font-extrabold">A record is a fact, not a verdict on the product.</h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">An FDA warning letter usually means a seller marketed unapproved drugs &mdash; it doesn&rsquo;t always mean the specific product you&rsquo;re looking at is impure. We show the record and the source so you can judge; we distinguish a proven criminal outcome from a mere charge, and a warning letter from a conviction. We never infer guilt VialGrade cannot source.</p>
       </div>
+      {pages > 1 && (
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          {page > 1 && <Link href={href(filter, page - 1)} className="ink-1 press rounded-full bg-white px-4 py-2 text-sm font-bold">&larr; Newer</Link>}
+          <span className="px-2 text-sm font-bold text-[var(--muted)]">Page {page} of {pages}</span>
+          {page < pages && <Link href={href(filter, page + 1)} className="ink-1 press rounded-full bg-white px-4 py-2 text-sm font-bold">Older &rarr;</Link>}
+        </div>
+      )}
     </section>
   </div>;
 }
