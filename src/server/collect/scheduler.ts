@@ -201,6 +201,15 @@ export async function runCollectionTick(
     seenKinds.add(t.collector);
     firstOfEachKind.push(t);
   }
+  // Cheapest kind first, measured by how many targets it has due.
+  //
+  // Reserving a slot per kind is not enough on its own: the reserved slots still ran in age order,
+  // so a catalog target — which now fetches per-variation data and can spend the entire tick budget
+  // by itself — went first and the single-target enforcement and news collectors were never
+  // reached. A collector with one target is by definition cheap; run it before the fleet.
+  const dueCountByKind = new Map<string, number>();
+  for (const t of allDue) dueCountByKind.set(t.collector, (dueCountByKind.get(t.collector) ?? 0) + 1);
+  firstOfEachKind.sort((a, b) => (dueCountByKind.get(a.collector) ?? 0) - (dueCountByKind.get(b.collector) ?? 0));
   const chosen = new Set(firstOfEachKind.map(t => t.id));
   const due = [
     ...firstOfEachKind.slice(0, maxTargets),

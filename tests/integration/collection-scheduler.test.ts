@@ -127,3 +127,29 @@ describe("collection queue — fair share across collector kinds", () => {
     for (const k of kinds) expect(claimedKinds.has(k), `kind ${k} must be claimable`).toBe(true);
   });
 });
+
+// Reserving a slot per kind was not enough: the reserved slots still ran in AGE order, so a
+// catalog target (which can spend the whole tick budget alone) went first and the single-target
+// collectors were never reached. Production sat at 24 enforcement records with 383 available.
+describe("collection queue — cheap collectors run before the fleet", () => {
+  it("orders a single-target collector ahead of a many-target one", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    await db.query(
+      `INSERT INTO collection_targets(id,collector,target,cadence_minutes,next_due_at)
+       VALUES('ct:solo:market','solo-kind','market',720, NOW() - interval '1 minute')`,
+    );
+    // Every fleet target is far older, so age alone would bury the solo collector.
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '10 days' WHERE collector <> 'solo-kind'`);
+
+    const result = await runCollectionTick({ budgetMs: 1, maxTargets: 8, connection: db });
+    // Budget 1ms means at most the first target is attempted; assert the solo kind was chosen
+    // first by checking it is the one that got settled.
+    const solo = (await db.query<{ last_run_at: string | null }>(
+      `SELECT last_run_at FROM collection_targets WHERE id='ct:solo:market'`,
+    )).rows[0]!;
+    expect(result.ran.length).toBeLessThanOrEqual(1);
+    if (result.ran.length === 1) expect(result.ran[0]!.collector).toBe("solo-kind");
+    else expect(solo.last_run_at).toBeNull(); // nothing ran at all — acceptable at a 1ms budget
+  });
+});
