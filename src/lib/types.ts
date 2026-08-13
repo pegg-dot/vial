@@ -115,6 +115,8 @@ export interface Product {
   // The vendor ADVERTISES third-party testing. Distinct from reportConfirmed: nothing is
   // confirmed, and this must never satisfy a confirmation gate.
   advertisesTesting?: boolean;
+  // Real observation timestamp, so "fresh" can sort on time instead of on a display string.
+  observedAt?: string;
   batchCode: string;
   batchLinked: boolean;
   sampleOrigin: string;

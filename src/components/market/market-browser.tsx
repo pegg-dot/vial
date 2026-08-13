@@ -53,7 +53,7 @@ export function MarketBrowser({ shelf, onShelfChange }: { shelf: string; onShelf
         case "price-low": return a.price - b.price;
         case "price-high": return b.price - a.price;
         case "rating": return b.rating - a.rating;
-        case "fresh": return b.lastChecked.localeCompare(a.lastChecked);
+        case "fresh": return (b.observedAt ?? "").localeCompare(a.observedAt ?? "");
         case "value": {
           const av = a.pricePerMg ?? Infinity, bv = b.pricePerMg ?? Infinity;
           return av - bv;

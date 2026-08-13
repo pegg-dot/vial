@@ -120,3 +120,33 @@ export function vendorStatusLabel(status: VendorStatus) {
       return "Independent profile";
   }
 }
+
+/**
+ * Human "how long ago" from a real timestamp.
+ *
+ * `listings.last_checked` is a stored literal that said "just now" on all 537 live listings while
+ * the vendor pages beside them read "Updated 2026-08-05". The timestamp to tell the truth from
+ * (`observed_at`) was already on the row — it just was not being used.
+ */
+export function relativeTime(value: string | Date | null | undefined, now: Date = new Date()): string | null {
+  if (!value) return null;
+  const then = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(then.getTime())) return null;
+  const seconds = Math.round((now.getTime() - then.getTime()) / 1000);
+  if (seconds < 0) return "just now";
+  if (seconds < 90) return "just now";
+  const units: [limit: number, secs: number, name: string][] = [
+    [60 * 60, 60, "minute"],
+    [60 * 60 * 24, 60 * 60, "hour"],
+    [60 * 60 * 24 * 30, 60 * 60 * 24, "day"],
+    [60 * 60 * 24 * 365, 60 * 60 * 24 * 30, "month"],
+    [Infinity, 60 * 60 * 24 * 365, "year"],
+  ];
+  for (const [limit, secs, name] of units) {
+    if (seconds < limit) {
+      const n = Math.max(1, Math.floor(seconds / secs));
+      return `${n} ${name}${n === 1 ? "" : "s"} ago`;
+    }
+  }
+  return null;
+}
