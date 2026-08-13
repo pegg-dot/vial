@@ -27,7 +27,7 @@ export default async function AdminPage() {
   if (!principal || principal.accountType !== "staff") redirect("/admin/login?next=%2Fadmin");
 
   const db = await getDatabase();
-  const [attribution, freshness, broken, counts] = await Promise.all([
+  const [attribution, freshness, broken, counts, collectors] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getDataFreshness(),
     getBrokenCollectors(),
@@ -39,6 +39,18 @@ export default async function AdminPage() {
         (SELECT COUNT(*) FROM organizations WHERE grade_letter IS NOT NULL) graded,
         (SELECT COUNT(*) FROM collection_targets WHERE enabled AND next_due_at <= NOW()) due`,
     ).then(r => r.rows[0]!),
+    // Per-collector state. Without this, a collector that never RUNS is indistinguishable from one
+    // that runs and finds nothing — which is exactly how enforcement sat at 24 records for hours.
+    db.query<{ collector: string; targets: string; due: string; last_run_at: string | null; last_ok: boolean | null; last_error: string | null; failures: string; next_due_at: string }>(
+      `SELECT collector, COUNT(*) AS targets,
+              COUNT(*) FILTER (WHERE enabled AND next_due_at <= NOW()) AS due,
+              MAX(last_run_at) AS last_run_at,
+              BOOL_AND(COALESCE(last_ok, TRUE)) AS last_ok,
+              MAX(last_error) AS last_error,
+              MAX(consecutive_failures) AS failures,
+              MIN(next_due_at) AS next_due_at
+       FROM collection_targets GROUP BY collector ORDER BY collector`,
+    ).then(r => r.rows),
   ]);
 
   const { totals, vendors } = attribution;
@@ -109,6 +121,37 @@ export default async function AdminPage() {
           sub={broken.length ? broken.map(b => b.target).slice(0, 3).join(", ") : "every source that yielded data still does"}
         />
       </div>
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Collectors</h2>
+      <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+        <table className="w-full min-w-[820px] text-left text-sm">
+          <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+            <tr>
+              <th className="px-5 py-3">Collector</th><th className="px-5 py-3">Targets</th>
+              <th className="px-5 py-3">Due</th><th className="px-5 py-3">Last run</th>
+              <th className="px-5 py-3">State</th><th className="px-5 py-3">Last error</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#111214]/10">
+            {collectors.map(c => {
+              const neverRan = !c.last_run_at;
+              const failing = c.last_ok === false || Number(c.failures) > 0;
+              return (
+                <tr key={c.collector} className={failing ? "bg-[#fff1f0]" : neverRan ? "bg-[#fff4e0]" : undefined}>
+                  <td className="px-5 py-3 font-bold">{c.collector}</td>
+                  <td className="px-5 py-3 tabular-nums">{c.targets}</td>
+                  <td className="px-5 py-3 tabular-nums">{c.due}</td>
+                  <td className="px-5 py-3 text-xs">{c.last_run_at ? new Date(c.last_run_at).toLocaleString() : "never"}</td>
+                  <td className="px-5 py-3 text-xs font-bold">
+                    {failing ? `failing (${c.failures})` : neverRan ? "never run" : "ok"}
+                  </td>
+                  <td className="px-5 py-3 text-xs text-[var(--muted)]">{c.last_error?.slice(0, 90) ?? "—"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
       <p className="mt-4 text-xs font-medium text-[var(--muted)]">
         Listings checked in the last 14 days: {freshness.listings.fresh} fresh · {freshness.listings.aging} aging · {freshness.listings.stale} stale.
         Lab tests: {freshness.coas.fresh} fresh · {freshness.coas.stale} stale.
