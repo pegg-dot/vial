@@ -1,35 +1,313 @@
 [
- {"slug":"bluum-peptides","name":"Bluum Peptides","domain":"bluumpeptides.com","productsJsonWorks":true,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Well-regarded newer vendor; every batch third-party tested (Janoshik / BioRegen) with published COAs and a 98%+ purity guarantee. Positive Trustpilot reviews citing fast shipping and quality."},
- {"slug":"ascension-peptides","name":"Ascension Peptides","domain":"ascensionpeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Among the most recommended vendors on r/Peptides in 2026 (Colorado, founded 2024). Trustpilot ~4.8 across 88+ reviews; legit third-party COAs (Janoshik) and low pricing."},
- {"slug":"eternal-peptides","name":"Eternal Peptides","domain":"eternalpeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"US-based vendor with rigorous third-party testing (Janoshik) covering purity, sterility, endotoxins and heavy metals. Generally well-regarded."},
- {"slug":"core-peptides","name":"Core Peptides","domain":"corepeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Long-standing Orlando vendor known for deep educational product pages and per-product COA/HPLC/Mass-Spec tabs. Broadly reputable."},
- {"slug":"biotech-peptides","name":"Biotech Peptides","domain":"biotechpeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Established San Diego vendor with an 87+ peptide catalog and a 30-day guarantee. Publishes COAs/mass-spec; generally solid, some note inconsistency."},
- {"slug":"swiss-chems","name":"Swiss Chems","domain":"swisschems.is","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Long-running value vendor (peptides/SARMs) with crypto discounts. Mixed reputation: adequate on core compounds but recurring complaints about shipping and COA specificity."},
- {"slug":"sports-technology-labs","name":"Sports Technology Labs","domain":"sportstechnologylabs.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Highly reputable US SARMs/peptides vendor; publishes third-party certificates with the lab's contact info per product. Consistently praised on Reddit for transparency."},
- {"slug":"simple-peptide","name":"Simple Peptide","domain":"simplepeptide.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Newer vendor advertising independent per-batch third-party testing. Growing positive reputation."},
- {"slug":"loti-labs","name":"Loti Labs","domain":"lotilabs.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Established vendor advertising independent third-party testing on every batch. Generally well-regarded for reliability."},
- {"slug":"limitless-life-nootropics","name":"Limitless Life Nootropics","domain":"limitlesslifenootropics.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Popular, widely-recommended vendor with a very wide catalog and batch-specific COA testing. Solid community reputation, competitive pricing."},
- {"slug":"purerawz","name":"PureRawz","domain":"purerawz.co","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Large-catalog vendor (peptides/SARMs/nootropics) accepting crypto/Zelle. Moderate-to-positive Reddit reputation, praised for promos and bulk pricing."},
- {"slug":"paradigm-peptides","name":"Paradigm Peptides","domain":"paradigmpeptides.com","productsJsonWorks":false,"redFlag":true,"publishesJanoshik":true,"reputationSummary":"AVOID — DOJ-confirmed fraud. Owner and an employee pled guilty (N.D. Indiana, Dec 2025) after federal investigators found products sold as SARMs actually contained testosterone, a controlled substance; sold as unapproved new drugs under the FDCA. High Trustpilot ratings predate and do not reflect the criminal case."},
- {"slug":"modern-aminos","name":"Modern Aminos","domain":"modernaminos.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Reputable US vendor known on Reddit for consistent third-party (Janoshik/MZ) COAs and reliable service."},
- {"slug":"behemoth-labz","name":"Behemoth Labz","domain":"behemothlabz.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":false,"reputationSummary":"Widely-used budget SARMs/peptides vendor. Mixed reputation: broad selection and cheap, but testing rigor is questioned relative to top-tier vendors."},
- {"slug":"umbrella-labs","name":"Umbrella Labs","domain":"umbrellalabs.is","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Long-standing, reputable US SARMs/peptides vendor with published third-party COAs. Generally well-regarded."},
- {"slug":"blue-sky-peptide","name":"Blue Sky Peptide","domain":"blueskypeptide.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Long-standing US vendor that displays per-product mass-spec and UV lab reports with dates and lab info. Reports appear legitimate; decent reputation."},
- {"slug":"chemyo","name":"Chemyo","domain":"chemyo.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"One of the most trusted SARMs vendors on Reddit, also offering select peptides; publishes third-party COAs. Strong long-term reputation."},
- {"slug":"nootropic-source","name":"Nootropic Source","domain":"nootropicsource.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":false,"reputationSummary":"Established nootropics vendor that also carries research peptides; publishes COAs. Solid long-standing reputation."},
- {"slug":"peptide-pros","name":"Peptide Pros","domain":"peptidepros.net","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":false,"reputationSummary":"Older budget-oriented US vendor. Functional reputation with mixed reviews; less transparent testing than top-tier vendors."},
- {"slug":"aavant-peptides","name":"Aavant Peptides","domain":"aavantpeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":false,"reputationSummary":"Newer vendor with thin community feedback. Some report satisfactory shipping; limited track record so far."},
- {"slug":"north-peptide","name":"North Peptide","domain":"northpeptide.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":false,"reputationSummary":"Newer vendor publishing buyer-education/anti-scam content and COAs. Limited independent community feedback to date."},
- {"slug":"chameleon-peptides","name":"Chameleon Peptides","domain":"chameleonpeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Newer transparency-focused vendor maintaining a public Janoshik COA / batch-verification ledger. Strong documentation posture; limited long-term track record."},
- {"slug":"felix-chemical-supply","name":"Felix Chemical Supply","domain":"felixchem.is","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"US-based vendor advertising third-party testing including endotoxin screening. Newer; generally positive early feedback."},
- {"slug":"ion-peptide","name":"Ion Peptide","domain":"ionpeptide.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Newer vendor with ~4.2/5 Trustpilot across 60+ reviews, live chat and same-day shipping; advertises independent COA testing."},
- {"slug":"ez-peptides","name":"EZ Peptides","domain":"ezpeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"Newer vendor ranked well on price + COA verification; carries 25+ peptides with full COA documentation."},
- {"slug":"vici-peptides","name":"Vici Peptides","domain":"vicipeptides.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":true,"reputationSummary":"US vendor advertising 99%+ purity via a 5-point third-party testing protocol. Positive Trustpilot reviews across regions."},
- {"slug":"cernum-biosciences","name":"Cernum Biosciences","domain":"cernumbiosciences.com","productsJsonWorks":false,"redFlag":false,"publishesJanoshik":false,"reputationSummary":"Newer vendor that publishes buyer-education content and provides COAs. Limited independent community feedback so far."},
- {"slug":"peptide-sciences","name":"Peptide Sciences","domain":"peptidesciences.com","productsJsonWorks":false,"redFlag":true,"publishesJanoshik":true,"reputationSummary":"SHUT DOWN March 6, 2026 amid DOJ pressure. Formerly the largest US vendor. Any site now selling under this brand is considered fraudulent. Do not buy."},
- {"slug":"amino-asylum","name":"Amino Asylum","domain":"aminoasylum.com","productsJsonWorks":false,"redFlag":true,"publishesJanoshik":false,"reputationSummary":"DEFUNCT. FDA-raided ~June 18, 2025 (inventory seized). Both domains now parked/dead. Do not buy."},
- {"slug":"science-bio","name":"Science.bio","domain":"science.bio","productsJsonWorks":false,"redFlag":true,"publishesJanoshik":false,"reputationSummary":"DEFUNCT. Homepage displays a permanent closure notice. No longer operating. Do not buy."},
- {"slug":"certified-peptides","name":"Certified Peptides","domain":"certifiedpep.com","productsJsonWorks":false,"redFlag":true,"publishesJanoshik":false,"reputationSummary":"RED FLAG. Dead page; Trustpilot review titled 'This is NOT Certified Peptides' warning of impersonation/scam. Avoid."},
- {"slug":"peptide-warehouse","name":"Peptide Warehouse","domain":"peptidewarehouse.com","productsJsonWorks":false,"redFlag":true,"publishesJanoshik":false,"reputationSummary":"DEFUNCT/PARKED. Domain redirects to a parking lander; flagged 'avoid'. Not an operating store. Do not buy."},
- {"slug":"american-research-labs","name":"American Research Labs","domain":"americanresearchlabs.com","productsJsonWorks":false,"redFlag":true,"publishesJanoshik":false,"reputationSummary":"RED FLAG. Serves a cloaked page rather than a normal storefront; flagged 'avoid'. Treat as untrustworthy."}
+  {
+    "slug": "bluum-peptides",
+    "name": "Bluum Peptides",
+    "domain": "bluumpeptides.com",
+    "productsJsonWorks": true,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Well-regarded newer vendor; every batch third-party tested (Janoshik / BioRegen) with published COAs and a 98%+ purity guarantee. Positive Trustpilot reviews citing fast shipping and quality."
+  },
+  {
+    "slug": "ascension-peptides",
+    "name": "Ascension Peptides",
+    "domain": "ascensionpeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Among the most recommended vendors on r/Peptides in 2026 (Colorado, founded 2024). Trustpilot ~4.8 across 88+ reviews; legit third-party COAs (Janoshik) and low pricing."
+  },
+  {
+    "slug": "eternal-peptides",
+    "name": "Eternal Peptides",
+    "domain": "eternalpeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "US-based vendor with rigorous third-party testing (Janoshik) covering purity, sterility, endotoxins and heavy metals. Generally well-regarded."
+  },
+  {
+    "slug": "core-peptides",
+    "name": "Core Peptides",
+    "domain": "corepeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Long-standing Orlando vendor known for deep educational product pages and per-product COA/HPLC/Mass-Spec tabs. Broadly reputable."
+  },
+  {
+    "slug": "biotech-peptides",
+    "name": "Biotech Peptides",
+    "domain": "biotechpeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Established San Diego vendor with an 87+ peptide catalog and a 30-day guarantee. Publishes COAs/mass-spec; generally solid, some note inconsistency."
+  },
+  {
+    "slug": "swiss-chems",
+    "name": "Swiss Chems",
+    "domain": "swisschems.is",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Long-running value vendor (peptides/SARMs) with crypto discounts. Mixed reputation: adequate on core compounds but recurring complaints about shipping and COA specificity.",
+    "wooWorks": true
+  },
+  {
+    "slug": "sports-technology-labs",
+    "name": "Sports Technology Labs",
+    "domain": "sportstechnologylabs.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Highly reputable US SARMs/peptides vendor; publishes third-party certificates with the lab's contact info per product. Consistently praised on Reddit for transparency.",
+    "wooWorks": true
+  },
+  {
+    "slug": "simple-peptide",
+    "name": "Simple Peptide",
+    "domain": "simplepeptide.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Newer vendor advertising independent per-batch third-party testing. Growing positive reputation.",
+    "wooWorks": true
+  },
+  {
+    "slug": "loti-labs",
+    "name": "Loti Labs",
+    "domain": "lotilabs.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Established vendor advertising independent third-party testing on every batch. Generally well-regarded for reliability."
+  },
+  {
+    "slug": "limitless-life-nootropics",
+    "name": "Limitless Life Nootropics",
+    "domain": "limitlesslifenootropics.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Popular, widely-recommended vendor with a very wide catalog and batch-specific COA testing. Solid community reputation, competitive pricing."
+  },
+  {
+    "slug": "purerawz",
+    "name": "PureRawz",
+    "domain": "purerawz.co",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Large-catalog vendor (peptides/SARMs/nootropics) accepting crypto/Zelle. Moderate-to-positive Reddit reputation, praised for promos and bulk pricing.",
+    "wooWorks": true
+  },
+  {
+    "slug": "paradigm-peptides",
+    "name": "Paradigm Peptides",
+    "domain": "paradigmpeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": true,
+    "publishesJanoshik": true,
+    "reputationSummary": "AVOID \u2014 DOJ-confirmed fraud. Owner and an employee pled guilty (N.D. Indiana, Dec 2025) after federal investigators found products sold as SARMs actually contained testosterone, a controlled substance; sold as unapproved new drugs under the FDCA. High Trustpilot ratings predate and do not reflect the criminal case."
+  },
+  {
+    "slug": "modern-aminos",
+    "name": "Modern Aminos",
+    "domain": "modernaminos.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Reputable US vendor known on Reddit for consistent third-party (Janoshik/MZ) COAs and reliable service.",
+    "wooWorks": true
+  },
+  {
+    "slug": "behemoth-labz",
+    "name": "Behemoth Labz",
+    "domain": "behemothlabz.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": false,
+    "reputationSummary": "Widely-used budget SARMs/peptides vendor. Mixed reputation: broad selection and cheap, but testing rigor is questioned relative to top-tier vendors.",
+    "wooWorks": true
+  },
+  {
+    "slug": "umbrella-labs",
+    "name": "Umbrella Labs",
+    "domain": "umbrellalabs.is",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Long-standing, reputable US SARMs/peptides vendor with published third-party COAs. Generally well-regarded.",
+    "wooWorks": true
+  },
+  {
+    "slug": "blue-sky-peptide",
+    "name": "Blue Sky Peptide",
+    "domain": "blueskypeptide.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Long-standing US vendor that displays per-product mass-spec and UV lab reports with dates and lab info. Reports appear legitimate; decent reputation."
+  },
+  {
+    "slug": "chemyo",
+    "name": "Chemyo",
+    "domain": "chemyo.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "One of the most trusted SARMs vendors on Reddit, also offering select peptides; publishes third-party COAs. Strong long-term reputation."
+  },
+  {
+    "slug": "nootropic-source",
+    "name": "Nootropic Source",
+    "domain": "nootropicsource.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": false,
+    "reputationSummary": "Established nootropics vendor that also carries research peptides; publishes COAs. Solid long-standing reputation.",
+    "wooWorks": true
+  },
+  {
+    "slug": "peptide-pros",
+    "name": "Peptide Pros",
+    "domain": "peptidepros.net",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": false,
+    "reputationSummary": "Older budget-oriented US vendor. Functional reputation with mixed reviews; less transparent testing than top-tier vendors.",
+    "wooWorks": true
+  },
+  {
+    "slug": "aavant-peptides",
+    "name": "Aavant Peptides",
+    "domain": "aavantpeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": false,
+    "reputationSummary": "Newer vendor with thin community feedback. Some report satisfactory shipping; limited track record so far."
+  },
+  {
+    "slug": "north-peptide",
+    "name": "North Peptide",
+    "domain": "northpeptide.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": false,
+    "reputationSummary": "Newer vendor publishing buyer-education/anti-scam content and COAs. Limited independent community feedback to date."
+  },
+  {
+    "slug": "chameleon-peptides",
+    "name": "Chameleon Peptides",
+    "domain": "chameleonpeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Newer transparency-focused vendor maintaining a public Janoshik COA / batch-verification ledger. Strong documentation posture; limited long-term track record.",
+    "wooWorks": true
+  },
+  {
+    "slug": "felix-chemical-supply",
+    "name": "Felix Chemical Supply",
+    "domain": "felixchem.is",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "US-based vendor advertising third-party testing including endotoxin screening. Newer; generally positive early feedback.",
+    "wooWorks": true
+  },
+  {
+    "slug": "ion-peptide",
+    "name": "Ion Peptide",
+    "domain": "ionpeptide.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Newer vendor with ~4.2/5 Trustpilot across 60+ reviews, live chat and same-day shipping; advertises independent COA testing."
+  },
+  {
+    "slug": "ez-peptides",
+    "name": "EZ Peptides",
+    "domain": "ezpeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "Newer vendor ranked well on price + COA verification; carries 25+ peptides with full COA documentation.",
+    "wooWorks": true
+  },
+  {
+    "slug": "vici-peptides",
+    "name": "Vici Peptides",
+    "domain": "vicipeptides.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": true,
+    "reputationSummary": "US vendor advertising 99%+ purity via a 5-point third-party testing protocol. Positive Trustpilot reviews across regions.",
+    "wooWorks": true
+  },
+  {
+    "slug": "cernum-biosciences",
+    "name": "Cernum Biosciences",
+    "domain": "cernumbiosciences.com",
+    "productsJsonWorks": false,
+    "redFlag": false,
+    "publishesJanoshik": false,
+    "reputationSummary": "Newer vendor that publishes buyer-education content and provides COAs. Limited independent community feedback so far.",
+    "wooWorks": true
+  },
+  {
+    "slug": "peptide-sciences",
+    "name": "Peptide Sciences",
+    "domain": "peptidesciences.com",
+    "productsJsonWorks": false,
+    "redFlag": true,
+    "publishesJanoshik": true,
+    "reputationSummary": "SHUT DOWN March 6, 2026 amid DOJ pressure. Formerly the largest US vendor. Any site now selling under this brand is considered fraudulent. Do not buy."
+  },
+  {
+    "slug": "amino-asylum",
+    "name": "Amino Asylum",
+    "domain": "aminoasylum.com",
+    "productsJsonWorks": false,
+    "redFlag": true,
+    "publishesJanoshik": false,
+    "reputationSummary": "DEFUNCT. FDA-raided ~June 18, 2025 (inventory seized). Both domains now parked/dead. Do not buy."
+  },
+  {
+    "slug": "science-bio",
+    "name": "Science.bio",
+    "domain": "science.bio",
+    "productsJsonWorks": false,
+    "redFlag": true,
+    "publishesJanoshik": false,
+    "reputationSummary": "DEFUNCT. Homepage displays a permanent closure notice. No longer operating. Do not buy."
+  },
+  {
+    "slug": "certified-peptides",
+    "name": "Certified Peptides",
+    "domain": "certifiedpep.com",
+    "productsJsonWorks": false,
+    "redFlag": true,
+    "publishesJanoshik": false,
+    "reputationSummary": "RED FLAG. Dead page; Trustpilot review titled 'This is NOT Certified Peptides' warning of impersonation/scam. Avoid."
+  },
+  {
+    "slug": "peptide-warehouse",
+    "name": "Peptide Warehouse",
+    "domain": "peptidewarehouse.com",
+    "productsJsonWorks": false,
+    "redFlag": true,
+    "publishesJanoshik": false,
+    "reputationSummary": "DEFUNCT/PARKED. Domain redirects to a parking lander; flagged 'avoid'. Not an operating store. Do not buy."
+  },
+  {
+    "slug": "american-research-labs",
+    "name": "American Research Labs",
+    "domain": "americanresearchlabs.com",
+    "productsJsonWorks": false,
+    "redFlag": true,
+    "publishesJanoshik": false,
+    "reputationSummary": "RED FLAG. Serves a cloaked page rather than a normal storefront; flagged 'avoid'. Treat as untrustworthy."
+  }
 ]

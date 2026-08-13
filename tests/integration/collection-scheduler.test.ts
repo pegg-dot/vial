@@ -1,0 +1,106 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { resetDatabaseForTests, getDatabase } from "@/server/db/client";
+import {
+  syncCollectionTargets, claimDueTargets, runCollectionTick, CADENCE_MINUTES,
+} from "@/server/collect/scheduler";
+
+beforeEach(async () => {
+  process.env.VIALGRADE_PGLITE_MEMORY = "true";
+  process.env.VIALGRADE_SEED_FIXTURES = "true";
+  process.env.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
+  delete (globalThis as { __vialEvidenceSeedPromise?: unknown }).__vialEvidenceSeedPromise;
+  delete (globalThis as { __vialSellerOpsSeedPromise?: unknown }).__vialSellerOpsSeedPromise;
+  await resetDatabaseForTests();
+});
+
+async function targetRow(id: string) {
+  const db = await getDatabase();
+  return (await db.query<{ enabled: boolean; consecutive_failures: number; next_due_at: string; last_ok: boolean | null; last_error: string | null }>(
+    `SELECT enabled,consecutive_failures,next_due_at,last_ok,last_error FROM collection_targets WHERE id=$1`, [id],
+  )).rows[0];
+}
+
+describe("continuous collection queue", () => {
+  it("builds a queue from the curated vendor list and is idempotent", async () => {
+    const db = await getDatabase();
+    const first = await syncCollectionTargets(db);
+    expect(first.targets).toBeGreaterThan(0);
+    const countAfterFirst = Number((await db.query<{ c: string | number }>(`SELECT COUNT(*) c FROM collection_targets`)).rows[0]!.c);
+
+    await syncCollectionTargets(db);
+    const countAfterSecond = Number((await db.query<{ c: string | number }>(`SELECT COUNT(*) c FROM collection_targets`)).rows[0]!.c);
+    expect(countAfterSecond).toBe(countAfterFirst);
+  });
+
+  it("gives each collector its own cadence rather than one global interval", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    const rows = (await db.query<{ collector: string; cadence_minutes: number }>(
+      `SELECT DISTINCT collector,cadence_minutes FROM collection_targets`,
+    )).rows;
+    expect(rows.length).toBeGreaterThan(1);
+    for (const r of rows) {
+      expect(r.cadence_minutes).toBe(CADENCE_MINUTES[r.collector as keyof typeof CADENCE_MINUTES]);
+    }
+  });
+
+  it("claims the most overdue targets first so nothing starves", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    const all = (await db.query<{ id: string }>(`SELECT id FROM collection_targets ORDER BY id LIMIT 3`)).rows;
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() + interval '1 day'`);
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '5 hours' WHERE id=$1`, [all[0]!.id]);
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '1 hour' WHERE id=$1`, [all[1]!.id]);
+
+    const due = await claimDueTargets(db, 10);
+    expect(due.map(d => d.id)).toEqual([all[0]!.id, all[1]!.id]);
+  });
+
+  // This runs unattended against third-party hosts. A vendor that blocks us, changes platform, or
+  // times out must never take the tick down or stall every other target behind it.
+  it("records a failing target and backs it off instead of throwing", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    // A synthetic target for a vendor that is not in the curated list — sync only upserts, never
+    // deletes, so this survives the sync at the top of the tick and exercises the failure path.
+    const victim = { id: "ct:catalog-woo:ghost-vendor" };
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() + interval '1 day'`);
+    await db.query(
+      `INSERT INTO collection_targets(id,collector,target,cadence_minutes,next_due_at)
+       VALUES($1,'catalog-woo','ghost-vendor',360, NOW() - interval '1 hour')`, [victim.id],
+    );
+
+    const result = await runCollectionTick({ budgetMs: 8_000, maxTargets: 2, connection: db });
+
+    expect(result.ran.some(r => !r.ok)).toBe(true);
+    const row = await targetRow(victim.id);
+    expect(row.last_ok).toBe(false);
+    expect(row.consecutive_failures).toBe(1);
+    expect(row.last_error).toBeTruthy();
+    // Backed off beyond its normal cadence rather than retried on the very next tick.
+    expect(new Date(row.next_due_at).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("stops cleanly when the time budget is spent rather than overrunning", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '1 hour'`);
+
+    const result = await runCollectionTick({ budgetMs: 0, maxTargets: 8, connection: db });
+    // A zero budget means it should not start any work at all.
+    expect(result.ran.length).toBe(0);
+    expect(result.budgetExhausted).toBe(true);
+  });
+
+  it("leaves an untouched target due so the next tick resumes it", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '1 hour'`);
+    const before = (await claimDueTargets(db, 100)).length;
+
+    await runCollectionTick({ budgetMs: 0, maxTargets: 8, connection: db });
+
+    const after = (await claimDueTargets(db, 100)).length;
+    expect(after).toBe(before);
+  });
+});
