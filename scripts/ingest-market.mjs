@@ -196,6 +196,13 @@ console.log(`\nVendor linkage graph: ${edges} link edges.`);
 console.log(`\nRecomputing compound stats…`);
 await recomputeCompoundStats(db);
 
+// Newly imported listings are invisible to site search until the derived index is rebuilt.
+console.log(`Rebuilding search index…`);
+const { rebuildSearchIndex, seedSearchSynonyms } = await import("../src/server/search/engine.ts");
+await seedSearchSynonyms(db);
+const indexed = await rebuildSearchIndex(db);
+console.log(`  ${typeof indexed === "number" ? indexed : "?"} documents indexed`);
+
 const live = await db.query(`SELECT (SELECT COUNT(*) FROM compounds WHERE origin='live') c,(SELECT COUNT(*) FROM organizations WHERE origin='live') v,(SELECT COUNT(*) FROM listings WHERE origin='live') l,(SELECT COUNT(*) FROM lab_test_records) t`);
 const s = live.rows[0];
 console.log(`\nLive catalog now: ${s.c} compounds · ${s.v} vendors · ${s.l} listings · ${s.t} lab tests`);

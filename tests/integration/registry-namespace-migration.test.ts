@@ -82,9 +82,15 @@ describe("registry namespace migration (vial: → vialgrade:)", () => {
 
     await migrateRegistryNamespace(db);
 
-    // A dangling redirects_to would silently 404 every citation of the merged record.
+    // Assert the RAW column. Going through getRegistryRecord hides a dangling pointer: its alias
+    // fallback resolves the stale `vial:` value via the former-id alias the migration just wrote,
+    // so the test passes even when the tombstone rewrite does nothing at all.
+    const raw = await db.query<{ redirects_to: string | null }>(
+      `SELECT redirects_to FROM registry_identifiers WHERE registry_id='vialgrade:vendor:tomb-co'`,
+    );
+    expect(raw.rows[0]!.redirects_to).toBe("vialgrade:vendor:merge-target");
+
     const record = await getRegistryRecord("vialgrade:vendor:tomb-co");
-    expect(record).toBeTruthy();
     expect(record!.registryId).toBe("vialgrade:vendor:merge-target");
   });
 
@@ -108,6 +114,35 @@ describe("registry namespace migration (vial: → vialgrade:)", () => {
     // And the spine still reads through the renamed column.
     const record = await getRegistryRecord("vialgrade:compound:bpc-157");
     expect(record).toBeTruthy();
+  });
+
+  // A prior partial run can leave keys moved but a pointer stale. The tombstone step used to sit
+  // behind an early return, so it was unreachable on exactly that database.
+  it("still repairs a stale redirect when no legacy keys remain", async () => {
+    const db = await getDatabase();
+    await db.query(
+      `INSERT INTO registry_identifiers(registry_id,entity_type,source_entity_type,source_entity_id,display_name,canonical_slug,provenance_url,status,redirects_to)
+       VALUES('vialgrade:vendor:half-done','vendor','organization','org:half-done','Half Done','half-done','/vendors/half-done','redirected','vial:vendor:merge-target')`,
+    );
+
+    await migrateRegistryNamespace(db);
+
+    const raw = await db.query<{ redirects_to: string | null }>(
+      `SELECT redirects_to FROM registry_identifiers WHERE registry_id='vialgrade:vendor:half-done'`,
+    );
+    expect(raw.rows[0]!.redirects_to).toBe("vialgrade:vendor:merge-target");
+  });
+
+  // Both namespaces present means a PK collision mid-transaction, which would abort the entire
+  // boot with no recovery. It must fail with a message a human can act on instead.
+  it("refuses to migrate a database holding both namespaces", async () => {
+    const db = await seedLegacyRow("vial:vendor:dupe-co", "dupe-co");
+    await db.query(
+      `INSERT INTO registry_identifiers(registry_id,entity_type,source_entity_type,source_entity_id,display_name,canonical_slug,provenance_url)
+       VALUES('vialgrade:vendor:dupe-co','vendor','organization','org:dupe-co-2','Dupe Co 2','dupe-co-2','/vendors/dupe-co-2')`,
+    );
+
+    await expect(migrateRegistryNamespace(db)).rejects.toThrow(/both namespaces|already exist/i);
   });
 
   it("leaves already-migrated identifiers untouched", async () => {

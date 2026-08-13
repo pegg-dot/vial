@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gradeFromVerdict } from "@/server/verify/grade";
-import type { ComposedVerdict } from "@/server/verify/trust-graph";
+import { composeVerdict as composeVerdictReal, type ComposedVerdict } from "@/server/verify/trust-graph";
 import type { Signal } from "@/server/verify/index";
 
 function composed(over: Partial<ComposedVerdict> & { factors?: Signal[] } = {}): ComposedVerdict {
@@ -150,17 +150,28 @@ describe("VialGrade dimensions", () => {
     expect(grade.dimensions.find(d => d.key === "reputation")!.state).toBe("conflicting");
   });
 
-  it("routes every trust-graph factor into exactly one dimension", () => {
-    const allLabels = [
-      "Government enforcement", "Independent testing", "Scam & red flags", "Conflicting evidence",
-      "Third-party trackers", "Domain age", "Storefront signal", "Research-use notice",
-      "Buyer reviews", "Community", "Operator network", "Site status", "COA integrity",
-    ];
-    const grade = gradeFromVerdict(
-      composed({ verdict: "caution", factors: allLabels.map(l => ({ ok: true, label: l, detail: "d" })) }),
-      { coaCount: 1 },
-    );
-    const routed = grade.dimensions.flatMap(d => d.factors.map(f => f.label));
-    expect(routed.sort()).toEqual(allLabels.sort());
+  // Derived from a REAL composeVerdict run, not a hand-copied list. A hand-copied list can never
+  // fail when a new seam is added to the trust graph — and an unrouted seam is silently dropped
+  // from every dimension, so a factor the verdict weighed vanishes from the breakdown.
+  it("routes every factor a real composeVerdict emits into exactly one dimension", () => {
+    // Inputs chosen to light up as many seams as possible in one composition.
+    const real = composeVerdictReal({
+      vendorName: "Seam Co", coaCount: 2, medianPurity: 97, blindCount: 1,
+      enforcement: [{ severity: "caution" }],
+      reputationDimensions: [
+        { key: "open_risk_flags", status: "disputed", value: "flagged" },
+        { key: "evidence_corroboration", status: "disputed", value: "conflict" },
+      ],
+      aggregators: [{ source: "tracker", score: 9, max_score: 10 }],
+      signals: { domain_age_note: "3 months old", research_disclaimer: false, notable_copy: "back online", payment_methods: ["crypto"] },
+      review: { sentiment: "mixed", reviewVolume: "heavy", confidence: "high" },
+      community: { classification: "vouch", positiveCount: 3, mentionCount: 4, negativeCount: 0 },
+      links: [], status: { status: "offline" }, flagCount: 1,
+    });
+    expect(real.factors.length).toBeGreaterThan(6);
+
+    const grade = gradeFromVerdict(real, { coaCount: 2 });
+    const routed = grade.dimensions.flatMap(d => d.factors.map(f => f.label)).sort();
+    expect(routed).toEqual(real.factors.map(f => f.label).sort());
   });
 });

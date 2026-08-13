@@ -57,6 +57,7 @@ export interface ListingCoaInput {
   compoundName?: string;
   reportIssuer?: string;
   reportConfirmed?: boolean;
+  advertisesTesting?: boolean;
   batchCode?: string;
 }
 
@@ -71,7 +72,12 @@ interface LabRow {
 }
 
 /** Whether a listing's advertised issuer names a real independent lab. */
-export function claimsRealTesting(reportIssuer?: string, reportConfirmed?: boolean): boolean {
+export function claimsRealTesting(reportIssuer?: string, reportConfirmed?: boolean, advertisesTesting?: boolean): boolean {
+  // Two ways a listing can CLAIM third-party testing: a confirmed issuer on the record, or the
+  // vendor's own advertised claim scraped from its storefront. Both mean "they say it was tested";
+  // neither means we verified it. `coaStatusFrom` still requires an independent record we hold
+  // before any of this becomes "verified".
+  if (advertisesTesting) return true;
   return Boolean(reportConfirmed) && REAL_LAB.test(reportIssuer ?? "");
 }
 
@@ -112,7 +118,7 @@ export function coaStatusFrom(args: {
 export async function crossCheckCoa(db: SqlConnection, input: ListingCoaInput): Promise<CoaCrossCheck> {
   const vendorLabel = input.vendorName ?? input.vendorSlug.replace(/-/g, " ");
   const compoundLabel = input.compoundName ?? input.compoundSlug.replace(/-/g, " ");
-  const claimsTesting = Boolean(input.reportConfirmed) && REAL_LAB.test(input.reportIssuer ?? "");
+  const claimsTesting = claimsRealTesting(input.reportIssuer, input.reportConfirmed, input.advertisesTesting);
 
   // All independent records for this COMPOUND (evidence the vendor can't edit). We derive both
   // the vendor-specific matches and the compound-wide aggregate from one read.

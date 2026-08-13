@@ -62,9 +62,22 @@ export async function migrateRegistryNamespace(db: SqlConnection): Promise<{ ren
     `SELECT registry_id FROM registry_identifiers WHERE registry_id LIKE $1 ORDER BY registry_id`,
     [`${LEGACY_ID_PREFIX}%`],
   )).rows;
-  if (legacy.length === 0) return { renamedColumns, rewritten: 0 };
 
-  await ensureCascadingAliasFk(db);
+  // A target key already occupied by a `vialgrade:` row would abort the whole boot transaction on
+  // a primary-key violation, with no way to recover. Fail with something a human can act on.
+  if (legacy.length > 0) {
+    const collisions = (await db.query<{ registry_id: string }>(
+      `SELECT registry_id FROM registry_identifiers WHERE registry_id = ANY($1)`,
+      [legacy.map(row => migratedId(row.registry_id))],
+    )).rows;
+    if (collisions.length > 0) {
+      throw new Error(
+        `registry namespace migration aborted: ${collisions.length} target identifier(s) already exist in the vialgrade namespace ` +
+        `(e.g. ${collisions[0]!.registry_id}). This database holds BOTH namespaces — reconcile the duplicates before migrating.`,
+      );
+    }
+    await ensureCascadingAliasFk(db);
+  }
 
   for (const { registry_id: legacyId } of legacy) {
     const nextId = migratedId(legacyId);
@@ -81,10 +94,12 @@ export async function migrateRegistryNamespace(db: SqlConnection): Promise<{ ren
     await db.query(`UPDATE registry_identifiers SET registry_id=$2,updated_at=NOW() WHERE registry_id=$1`, [legacyId, nextId]);
   }
 
-  // Redirect tombstones point at an identifier by value, not by foreign key, so they do
-  // not cascade — a missed one would 404 every citation of a merged record. Rewritten in
-  // JS, not with SQL string functions: a bound offset makes SUBSTRING return NULL, and
-  // `'vialgrade:' || NULL` is NULL, which silently erases the redirect instead of moving it.
+  // Redirect tombstones point at an identifier by value, not by foreign key, so they do not
+  // cascade — a missed one would 404 every citation of a merged record. This runs even when there
+  // were no legacy keys left to rewrite: a prior partial run can leave keys moved but pointers
+  // stale, and an early return here made this step unreachable on exactly that database.
+  // Rewritten in JS, not with SQL string functions: a bound offset makes SUBSTRING return NULL,
+  // and `'vialgrade:' || NULL` is NULL, which silently erases the redirect instead of moving it.
   const tombstones = (await db.query<{ registry_id: string; redirects_to: string }>(
     `SELECT registry_id,redirects_to FROM registry_identifiers WHERE redirects_to LIKE $1`,
     [`${LEGACY_ID_PREFIX}%`],

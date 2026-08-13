@@ -19,6 +19,7 @@ export interface TrustInput {
   compoundSlug: string;
   reportIssuer?: string;
   reportConfirmed?: boolean;
+  advertisesTesting?: boolean;
   batchCode?: string;
   price?: number;
   previousPrice?: number;
@@ -117,7 +118,7 @@ export async function computeListingTrustMap(db: SqlConnection, listings: TrustI
                   ?? null;
 
     const status = coaStatusFrom({
-      claimsTesting: claimsRealTesting(l.reportIssuer, l.reportConfirmed),
+      claimsTesting: claimsRealTesting(l.reportIssuer, l.reportConfirmed, l.advertisesTesting),
       batchCode: l.batchCode,
       byBatch: batchHit ? { vendor_slug: batchHit.vendor_slug, manufacturer: batchHit.manufacturer } : null,
       vendorSlug: l.vendorSlug,

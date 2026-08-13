@@ -112,6 +112,9 @@ export interface Product {
   reportDate: string;
   reportIssuer: string;
   reportConfirmed: boolean;
+  // The vendor ADVERTISES third-party testing. Distinct from reportConfirmed: nothing is
+  // confirmed, and this must never satisfy a confirmation gate.
+  advertisesTesting?: boolean;
   batchCode: string;
   batchLinked: boolean;
   sampleOrigin: string;

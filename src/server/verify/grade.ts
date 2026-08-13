@@ -14,7 +14,7 @@ export type DimensionKey = "testing" | "regulatory" | "reputation" | "operations
 // `clear` and `supported` are deliberately different answers. The trust graph records "we looked
 // and found no enforcement record" as an UNTAGGED positive, precisely so an absence never earns a
 // verified chip. Collapsing that into `supported` would show a gap as though it were evidence.
-export type DimensionState = "supported" | "clear" | "adverse" | "conflicting" | "absent";
+export type DimensionState = "supported" | "clear" | "adverse" | "conflicting" | "noted" | "absent";
 
 export interface GradeDimension {
   key: DimensionKey;
@@ -67,10 +67,16 @@ function isAdverse(signal: Signal): boolean {
   return signal.ok === false && signal.confidence != null;
 }
 
+// The trust graph emits `ok: null` for genuinely neutral observations too — "no research-use-only
+// disclaimer found", a middling tracker score. Painting those amber as "Conflicting" invents an
+// alarm out of a note. Only the seam that actually reports contradictory evidence is a conflict.
+const CONFLICT_LABELS = new Set(["Conflicting evidence"]);
+
 function stateOf(factors: Signal[]): DimensionState {
   if (factors.length === 0) return "absent";
   if (factors.some(isAdverse)) return "adverse";
-  if (factors.some(f => f.ok === null)) return "conflicting";
+  if (factors.some(f => f.ok === null && CONFLICT_LABELS.has(f.label))) return "conflicting";
+  if (factors.some(f => f.ok === null)) return "noted";
   if (factors.some(f => f.ok === true && f.confidence != null)) return "supported";
   if (factors.some(f => f.ok === true)) return "clear";
   return "absent";
@@ -98,6 +104,12 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
     verifiedCount: composed.verifiedCount,
   };
   const hasVerifiedNegative = composed.factors.some(f => f.ok === false && f.confidence === "verified");
+  // `inferred` is the trust graph's weakest tier: a regex read off a storefront, or a SINGLE
+  // unretried HTTP probe that calls a vendor "offline" on any timeout or 404. Publishing
+  // "D — avoid" about a real, named business on that alone is not defensible, so an adverse
+  // verdict with no evidence above `inferred` is reported as ungradeable instead.
+  const adverseTiers = composed.factors.filter(f => f.ok === false).map(f => f.confidence);
+  const adverseIsInferredOnly = adverseTiers.length > 0 && adverseTiers.every(t => t == null || t === "inferred");
   const tested = input.coaCount > 0;
 
   switch (composed.verdict) {
@@ -116,6 +128,15 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
 
     case "avoid":
     case "high-risk": {
+      if (adverseIsInferredOnly) {
+        return {
+          ...base,
+          letter: null,
+          band: "insufficient",
+          headline: "Not enough evidence to grade",
+          rationale: "The only findings against this vendor come from our own heuristics — a storefront read or a single unretried site probe. That is not a strong enough basis to publish a grade about a named business. The specific findings are listed below.",
+        };
+      }
       const letter: GradeLetter = hasVerifiedNegative ? "F" : "D";
       return {
         ...base,
@@ -124,7 +145,7 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         headline: `${letter} — avoid`,
         rationale: hasVerifiedNegative
           ? "An adverse finding is backed by a document, government record, or shared hard identifier — the strongest evidence tier we hold."
-          : "The adverse findings come from third-party accounts rather than records we can point at, so this is graded D rather than F.",
+          : "The adverse findings are third-party accounts (buyer or community reports) rather than records we can point at, so this is graded D rather than F.",
       };
     }
 
@@ -158,7 +179,9 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         band: "strong",
         headline: `${letter} — generally trusted`,
         rationale: coa === 0
-          ? "No red flags on record — but nothing here has been independently tested, so this is the ceiling without lab evidence."
+          ? composed.verifiedCount === 0
+            ? "No red flags on record — but nothing here is independently verified and nothing has been lab-tested. This rests on third-party accounts, which is the ceiling without hard evidence."
+            : "No red flags on record — but nothing here has been independently tested, so this is the ceiling without lab evidence."
           : `No red flags on record, and ${tests} on file. A grade reflects the evidence we hold, not the safety of any vial you receive.`,
       };
     }

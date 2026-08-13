@@ -35,7 +35,12 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   icons: {
-    icon: "/icon-192.png",
+    // SVG first so the tab icon stays crisp at every zoom and pixel density; the PNG is the
+    // fallback for browsers that still refuse an SVG favicon.
+    icon: [
+      { url: "/brand/vialgrade-icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/apple-touch-icon.png",
   },
 };

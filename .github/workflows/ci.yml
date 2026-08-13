@@ -37,12 +37,12 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: vial
-          POSTGRES_USER: vial
-          POSTGRES_PASSWORD: vial_ci
+          POSTGRES_DB: vialgrade
+          POSTGRES_USER: vialgrade
+          POSTGRES_PASSWORD: vialgrade_ci
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U vial -d vial"
+          --health-cmd "pg_isready -U vialgrade -d vialgrade"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
@@ -56,14 +56,14 @@ jobs:
       - name: Validate production environment
         run: npm run env:check
         env:
-          DATABASE_URL: postgres://vial:vial_ci@127.0.0.1:5432/vial
+          DATABASE_URL: postgres://vialgrade:vialgrade_ci@127.0.0.1:5432/vialgrade
           NEXT_PUBLIC_SITE_URL: https://vialgrade.example
           VIALGRADE_SESSION_SECRET: ci-session-secret-at-least-32-characters
           VIALGRADE_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters
       - name: Build against PostgreSQL contract
         run: npm run build
         env:
-          DATABASE_URL: postgres://vial:vial_ci@127.0.0.1:5432/vial
+          DATABASE_URL: postgres://vialgrade:vialgrade_ci@127.0.0.1:5432/vialgrade
           NEXT_PUBLIC_SITE_URL: https://vialgrade.example
           VIALGRADE_SESSION_SECRET: ci-session-secret-at-least-32-characters
           VIALGRADE_PRIVACY_HASH_SECRET: ci-privacy-secret-at-least-32-characters

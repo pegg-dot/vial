@@ -123,12 +123,19 @@ export async function resolveStorefrontCoaClaims(
 //
 // That gap is itself the product's subject. A listing whose vendor advertises third-party testing we
 // cannot confirm is meaningfully different from one that claims nothing, and the trust graph already
-// has the honest verdict for it: `unbacked` — "Testing unverified". This detects the claim so those
-// listings stop rendering as a silent "No lab test".
+// has the honest verdict for it: `unbacked` — "Testing unverified".
 //
-// It must stay conservative: the output becomes a published statement about a real business. It fires
-// only on an explicit assertion that an OUTSIDE party did the testing — never on in-house testing,
-// purity guarantees, or generic "lab grade" copy.
+// This output is a PUBLISHED STATEMENT ABOUT A REAL COMPANY, so it is deliberately hard to trigger.
+// An adversarial audit of the first version found it firing on a nav link, a sentence about animal
+// studies, a smear about a competitor's "fake Janoshik certificates", and an explicit denial ("we do
+// not pay for Janoshik reports"). Three rules fix that class:
+//
+//   1. Evaluate SEGMENTS, not the whole document. Flattened HTML has almost no sentence periods, so
+//      a character window silently spanned list items, headings and nav links.
+//   2. Require an ASSERTION ("tested by", "verified by", "conducted by"), not a label. "Independent
+//      Labs" in a nav is a menu item; "third-party tested" is a claim.
+//   3. A named lab is not a claim by itself. It must appear in a segment that asserts testing and is
+//      not negated, hypothetical, disparaging, in-house, or about literature/reviews.
 
 const LAB_NAMES: { pattern: RegExp; issuer: string }[] = [
   { pattern: /janoshik/i, issuer: "Janoshik" },
@@ -136,21 +143,45 @@ const LAB_NAMES: { pattern: RegExp; issuer: string }[] = [
   { pattern: /colmaric/i, issuer: "Colmaric" },
 ];
 
-// An outside party did the testing. "third-party tested", "independent lab testing", "tested by an
-// independent laboratory". Requires BOTH the outsider word and a testing word near it.
-const THIRD_PARTY_CLAIM = /\b(third[\s-]?party|independent(?:ly)?)\b[^.]{0,60}\b(test|tested|testing|assay|assayed|verified|analysis|analyzed|coa|certificate of analysis|lab|laborator)/i;
-const TESTING_BY_OUTSIDER = /\b(test|tested|testing|assay|assayed|verified|analy[sz]ed)\b[^.]{0,60}\b(third[\s-]?party|independent(?:ly)?)\b/i;
+// Somebody other than the vendor.
+const OUTSIDER = /\b(third[\s-]?party|independent(?:ly)?)\b/i;
+// An assertion that testing HAPPENED — not a noun label like "Testing FAQ" or "Independent Labs".
+const ASSERTION = /\b(tested|testing\s+is|verified|assayed|analy[sz]ed|screened|conducted|perform(?:s|ed))\b/i;
+// A named lab also counts when the segment cites its paperwork.
+const PAPERWORK = /\b(coa|certificate of analysis|certificates? of analysis)\b/i;
 
-// Kill switches — copy that mentions the words but is not an outside-testing claim.
-const IN_HOUSE = /\b(in[\s-]?house|our own|on[\s-]?site)\b[^.]{0,30}\b(lab|laborator|test)/i;
-const NEGATED = /\b(no|not|without|lacks?|never)\b[^.]{0,30}\b(third[\s-]?party|independent)\b/i;
+// Segment-scoped kill switches. Each is checked against the sentence carrying the claim, never the
+// whole page — document-scoped negation let one unrelated "no" suppress a genuine claim elsewhere.
+const NEGATED = /\b(no|not|never|without|none|don'?t|doesn'?t|cannot|can'?t|isn'?t|aren'?t|lacks?)\b/i;
+const HYPOTHETICAL = /\b(coming soon|will be|shall be|plan(?:s|ned)? to|upcoming|when available|once available|pending|soon)\b/i;
+const DISPARAGING = /\b(fake|counterfeit|fraudulent|forged|scam|unlike|beware|others?\s+claim)\b/i;
+// Scientific literature and marketing about the MOLECULE, not testing of this vendor's product.
+const LITERATURE = /\b(stud(?:y|ies)|literature|trials?|peer[\s-]?review|animal|clinical|in vitro|in vivo|research (?:has|have|show|suggest|indicat|demonstrat)|research library|research use)\b/i;
+// Social proof and corporate boilerplate that happen to use the same words.
+const SOCIAL = /\b(reviews?|buyers?|customers?|researchers?|testimonial|affiliat|partner(?:ed|ship)?|reseller)\b/i;
+const IN_HOUSE = /\b(in[\s-]?house|our own|on[\s-]?site|we\s+(?:do|perform|run|conduct))\b/i;
 
-function plainText(html: string): string {
+// Page chrome carries menu labels that read like claims out of context.
+const CHROME = /<(nav|header|footer|script|style|select|option)\b[^>]*>[\s\S]*?<\/\1>/gi;
+// Block-level boundaries. Inline tags (b, i, a, span, strong) are deliberately NOT split on — a
+// claim legitimately reads "third-party lab <i>tested</i> by <a>Janoshik</a>".
+const BLOCK = /<\/?(p|div|li|ul|ol|h[1-6]|br|tr|td|th|table|section|article|aside|blockquote|dl|dt|dd|form|figure)\b[^>]*>/gi;
+
+function segmentsOf(html: string): string[] {
   return html
+    .replace(CHROME, " ")
+    .replace(BLOCK, "\u0001")
     .replace(/&#45;/g, "-").replace(/&amp;/gi, "&").replace(/&nbsp;/gi, " ")
-    .replace(/&#8217;/g, "'").replace(/&#8211;/g, "-")
+    .replace(/&#8217;/g, "'").replace(/&#8211;/g, "-").replace(/&#8212;/g, "-")
     .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ");
+    .split(/[\u0001.!?;\u2014\u2013]|\n{2,}/)
+    .map(part => part.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
+function disqualified(segment: string): boolean {
+  return NEGATED.test(segment) || HYPOTHETICAL.test(segment) || DISPARAGING.test(segment)
+    || LITERATURE.test(segment) || SOCIAL.test(segment) || IN_HOUSE.test(segment);
 }
 
 export interface AdvertisedTesting {
@@ -161,20 +192,27 @@ export interface AdvertisedTesting {
  * Detects a storefront's claim that an INDEPENDENT party tested the product.
  *
  * Returns the named laboratory when one is identified, otherwise a generic "Third-party lab" for an
- * unnamed claim. Returns null when the copy makes no outside-testing claim — a gap must never be
- * upgraded into a claim the vendor did not make.
+ * unnamed claim. Returns null when the copy makes no such claim — a gap must never be upgraded into
+ * a claim the vendor did not make.
  */
 export function detectAdvertisedTesting(html: string | null | undefined): AdvertisedTesting | null {
   if (!html) return null;
-  const text = plainText(html);
-  if (NEGATED.test(text)) return null;
+  let generic: AdvertisedTesting | null = null;
 
-  // A named independent lab is the strongest form of the claim and stands on its own.
-  for (const { pattern, issuer } of LAB_NAMES) {
-    if (pattern.test(text)) return { issuer };
+  for (const segment of segmentsOf(html)) {
+    if (disqualified(segment)) continue;
+    const asserts = ASSERTION.test(segment);
+
+    // A named lab is the strongest form, but only inside a segment that actually asserts testing
+    // or cites the lab's paperwork. A bare mention is not a claim.
+    if (asserts || PAPERWORK.test(segment)) {
+      for (const { pattern, issuer } of LAB_NAMES) {
+        if (pattern.test(segment)) return { issuer };
+      }
+    }
+    // Unnamed claim: keep looking for a named lab elsewhere on the page before settling for it.
+    if (!generic && asserts && OUTSIDER.test(segment)) generic = { issuer: "Third-party lab" };
   }
 
-  if (IN_HOUSE.test(text)) return null;
-  if (THIRD_PARTY_CLAIM.test(text) || TESTING_BY_OUTSIDER.test(text)) return { issuer: "Third-party lab" };
-  return null;
+  return generic;
 }

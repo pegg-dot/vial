@@ -79,7 +79,7 @@ export interface ImportResult {
 }
 
 // One matched (vendor, compound, size) offer, ready to record as a listing.
-export interface Candidate { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string; coa?: { batchCode: string | null; issuer?: string } }
+export interface Candidate { compoundSlug: string; price: number; quantity: string; name: string; url: string; available: boolean; image?: string; coa?: { batchCode: string | null }; advertisedTesting?: { issuer: string } | null }
 
 const sizeSlug = (q: string) => q.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 12) || "std";
 const MAX_SIZES_PER_COMPOUND = 5;
@@ -125,7 +125,7 @@ export async function recordAllSizes(
         externalUrl: c.url, price: c.price,
         availability: c.available ? "In stock" : "Unavailable",
         sourceUrl: c.url, sourceLabel: `${input.vendorName} — ${c.name.slice(0, 80)}`,
-        imageUrl: c.image, coa: c.coa,
+        imageUrl: c.image, coa: c.coa, advertisedTesting: c.advertisedTesting,
       });
       imported.push({ slug: listingSlug, compound: compoundSlug, price: c.price });
     }
@@ -182,10 +182,8 @@ export async function importShopifyCatalog(
     // prose claim override it would reintroduce exactly the boilerplate-footer leak the wedge
     // keys by compound+URL to prevent.
     const citesAnyRef = (productRefs.get(product) ?? []).length > 0;
-    const advertised = resolved || citesAnyRef ? null : detectAdvertisedTesting(product.body_html);
-    const coa = resolved
-      ? { batchCode: resolved.batchCode }
-      : advertised ? { batchCode: null, issuer: advertised.issuer } : undefined;
+    const advertisedTesting = resolved || citesAnyRef ? null : detectAdvertisedTesting(product.body_html);
+    const coa = resolved ? { batchCode: resolved.batchCode } : undefined;
     // One candidate PER VARIANT (each real size the vendor sells), so a product whose title bundles
     // several sizes ("… 2mg/5mg vial") becomes one listing per size with its OWN price — instead of
     // collapsing to just the cheapest variant. recordAllSizes then dedupes by size and caps the count.
@@ -198,7 +196,7 @@ export async function importShopifyCatalog(
         compoundSlug, price,
         quantity: variantSize ?? sizeFromName(product.title),
         name: product.title, url: `https://${input.domain}/products/${product.handle}`,
-        available: Boolean(variant?.available), image: shopifyImage(product), coa,
+        available: Boolean(variant?.available), image: shopifyImage(product), coa, advertisedTesting,
       });
       any = true;
     }

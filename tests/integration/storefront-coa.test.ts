@@ -46,8 +46,8 @@ async function runImport(vendorSlug: string, products: ReturnType<typeof product
 
 async function listing(slug: string) {
   const db = await getDatabase();
-  return (await db.query<{ report_issuer: string; report_confirmed: boolean; batch_code: string }>(
-    `SELECT report_issuer, report_confirmed, batch_code FROM listings WHERE slug = $1`, [slug],
+  return (await db.query<{ report_issuer: string; report_confirmed: boolean; batch_code: string; advertises_testing: boolean; advertised_issuer: string | null }>(
+    `SELECT report_issuer, report_confirmed, batch_code, advertises_testing, advertised_issuer FROM listings WHERE slug = $1`, [slug],
   )).rows[0];
 }
 
@@ -91,13 +91,22 @@ describe("storefront-published COA linking — the coverage wedge", () => {
       body_html: "<p>Every lot is supported by an independent Janoshik COA. COAs available on our Lab Tests page.</p>",
     })]);
     const l = await listing("prosestore-bpc-157");
-    expect(l.report_issuer).toBe("Janoshik");
+    expect(l.advertises_testing).toBe(true);
+    expect(l.advertised_issuer).toBe("Janoshik");
+
+    // The claim must NOT be written as a confirmation. report_confirmed drives "Issuer confirmed:
+    // Yes" on the product page and a REQUIRED evidence check in the live-commerce activation gate;
+    // report_issuer is projected into the entity graph as a real laboratory. A marketing sentence
+    // must reach none of those.
+    expect(l.report_confirmed).toBeFalsy();
+    expect(l.report_issuer ?? "").toBe("");
 
     // ...and it resolves to UNBACKED, not verified — no independent record backs this vendor.
     const db = await getDatabase();
     const check = await crossCheckCoa(db, {
       vendorSlug: "prosestore", compoundSlug: "bpc-157",
-      reportIssuer: l.report_issuer, reportConfirmed: l.report_confirmed, batchCode: l.batch_code ?? undefined,
+      reportIssuer: l.report_issuer, reportConfirmed: l.report_confirmed,
+      advertisesTesting: l.advertises_testing, batchCode: l.batch_code ?? undefined,
     });
     expect(check.status).toBe("unbacked");
   });

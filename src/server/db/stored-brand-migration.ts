@@ -23,27 +23,51 @@ const PHRASES: [from: string, to: string][] = [
   ["VIAL records dated source", "VialGrade records dated source"],
 ];
 
+// The exact places VialGrade-authored prose lives. Enumerated rather than discovered:
+//
+//  - Discovering columns from information_schema meant 1,132 columns x 9 phrases = 10,188
+//    leading-wildcard scans inside the boot transaction, on EVERY database including fresh ones.
+//  - The per-column `try/catch { continue }` could not do what it claimed. Migrations run inside a
+//    single transaction, and Postgres aborts the whole transaction on any failed statement — so a
+//    swallowed error would make every later statement fail, including the schema_migrations
+//    inserts, rolling back the entire boot and caching a rejected promise in getDatabase().
+//
+// A new home for brand prose is a code change here, which is the right place for it to be visible.
+const TARGETS: [table: string, column: string][] = [
+  ["organizations", "description"],
+  ["compounds", "research_note"],
+  ["seller_integrations", "display_name"],
+  ["regulatory_actions", "summary"],
+  ["internal_notifications", "body"],
+  ["search_documents", "title"],
+  ["search_documents", "body"],
+];
+
 export async function migrateStoredBrand(db: SqlConnection): Promise<{ replacements: number }> {
-  const columns = (await db.query<{ table_name: string; column_name: string }>(
-    `SELECT table_name,column_name FROM information_schema.columns
-     WHERE data_type IN ('text','character varying') AND table_schema='public'`,
-  )).rows;
+  // Only touch tables that actually exist and are real tables — a missing one must not abort the
+  // transaction, and there is no safe way to recover from that inside it.
+  const present = new Set(
+    (await db.query<{ table_name: string; column_name: string }>(
+      `SELECT c.table_name, c.column_name
+       FROM information_schema.columns c
+       JOIN information_schema.tables t
+         ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+       WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+         AND c.data_type IN ('text','character varying')`,
+    )).rows.map(r => `${r.table_name}.${r.column_name}`),
+  );
 
   let replacements = 0;
-  for (const { table_name, column_name } of columns) {
+  for (const [table, column] of TARGETS) {
+    if (!present.has(`${table}.${column}`)) continue;
     for (const [from, to] of PHRASES) {
-      let matched: number;
-      try {
-        matched = Number((await db.query<{ c: string | number }>(
-          `SELECT COUNT(*) c FROM "${table_name}" WHERE "${column_name}" LIKE $1`,
-          [`%${from}%`],
-        )).rows[0]!.c);
-      } catch {
-        continue; // view or otherwise unselectable column
-      }
+      const matched = Number((await db.query<{ c: string | number }>(
+        `SELECT COUNT(*) c FROM "${table}" WHERE "${column}" LIKE $1`,
+        [`%${from}%`],
+      )).rows[0]!.c);
       if (matched === 0) continue;
       await db.query(
-        `UPDATE "${table_name}" SET "${column_name}" = REPLACE("${column_name}", $1, $2) WHERE "${column_name}" LIKE $3`,
+        `UPDATE "${table}" SET "${column}" = REPLACE("${column}", $1, $2) WHERE "${column}" LIKE $3`,
         [from, to, `%${from}%`],
       );
       replacements += matched;

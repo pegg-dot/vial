@@ -101,9 +101,8 @@ export async function importWooCommerceCatalog(
     // prose detection. No tracked Woo storefront publishes one today, but the guarantee must not
     // depend on that staying true.
     const body = `${product.description ?? ""} ${product.short_description ?? ""}`;
-    const advertised = extractJanoshikRefs(body).length > 0 ? null : detectAdvertisedTesting(body);
-    const coa = advertised ? { batchCode: null, issuer: advertised.issuer } : undefined;
-    if (!prev || price < prev.price) bySize.set(key, { compoundSlug, price, quantity, name: product.name, url: product.permalink || `https://${input.domain}`, available: Boolean(product.is_in_stock), image: wooImage(product), coa });
+    const advertisedTesting = extractJanoshikRefs(body).length > 0 ? null : detectAdvertisedTesting(body);
+    if (!prev || price < prev.price) bySize.set(key, { compoundSlug, price, quantity, name: product.name, url: product.permalink || `https://${input.domain}`, available: Boolean(product.is_in_stock), image: wooImage(product), advertisedTesting });
   }
   for (const rec of await recordAllSizes(db, input, [...bySize.values()])) result.imported.push(rec);
   return result;

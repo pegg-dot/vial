@@ -65,7 +65,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const coaCheck = await crossCheckCoa(db, {
     vendorSlug: product.vendorSlug, vendorName: vendor.name,
     compoundSlug: product.compoundSlug, compoundName: compound.name,
-    reportIssuer: product.reportIssuer, reportConfirmed: product.reportConfirmed, batchCode: product.batchCode,
+    reportIssuer: product.reportIssuer, reportConfirmed: product.reportConfirmed, advertisesTesting: product.advertisesTesting, batchCode: product.batchCode,
   });
   const priceMeta = await getListingPriceMeta(db, product.slug);
   const compoundLabTests = await getLabTestsForCompound(db, product.compoundSlug);

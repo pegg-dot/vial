@@ -37,3 +37,24 @@ export async function getSearchQualityDashboard(){const db=await getDatabase();c
  db.query<QueryResultRow & {entity_type:string;count:string|number}>(`SELECT entity_type,COUNT(*) count FROM search_documents GROUP BY entity_type ORDER BY count DESC`),
  db.query<QueryResultRow & {count:string|number}>(`SELECT COUNT(*) count FROM search_synonyms`),
  ]);const l=logs.rows[0],e=evals.rows[0];return {queries:Number(l?.queries??0),zeroResults:Number(l?.zero_results??0),avgLatency:Number(l?.avg_latency??0),evaluations:Number(e?.total??0),passed:Number(e?.passed??0),mrr:Number(e?.mrr??0),recallAtFive:Number(e?.recall??0),documents:docs.rows.map(r=>({type:r.entity_type,count:Number(r.count)})),synonyms:Number(synonyms.rows[0]?.count??0)};}
+
+/**
+ * Makes site search work on a database that was never fixture-seeded.
+ *
+ * The index and the synonym table are DERIVED from real records, but they were only ever built
+ * inside `seedMarketDataEngine`, which is gated behind fixture seeding — and fixtures are off in
+ * production. So production shipped with an empty index: every query on /search and /api/search
+ * returned zero results while the underlying pages were live and correct.
+ *
+ * Safe to call on every boot: synonyms upsert, and the index is rebuilt only when empty.
+ */
+export async function ensureSearchIndex(connection?: SqlConnection): Promise<{ built: boolean; documents: number }> {
+  const db = connection ?? await getDatabase();
+  await seedSearchSynonyms(db);
+  const existing = Number((await db.query<QueryResultRow & { count: string | number }>(
+    `SELECT COUNT(*) count FROM search_documents`,
+  )).rows[0]?.count ?? 0);
+  if (existing > 0) return { built: false, documents: existing };
+  const documents = await rebuildSearchIndex(db);
+  return { built: true, documents: typeof documents === "number" ? documents : 0 };
+}

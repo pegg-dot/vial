@@ -17,19 +17,24 @@ const STATE: Record<DimensionState, { label: string; icon: typeof ShieldCheck; t
   clear: { label: "Checked — nothing adverse", icon: Check, tone: "text-[#111214]/55" },
   adverse: { label: "Against", icon: X, tone: "text-[#d3372c]" },
   conflicting: { label: "Conflicting", icon: CircleAlert, tone: "text-[#b26a00]" },
+  // Neutral observation, not an alarm — styled like a note, not a warning.
+  noted: { label: "Noted", icon: CircleDashed, tone: "text-[#111214]/55" },
   absent: { label: "Nothing on record", icon: CircleSlash, tone: "text-[#111214]/35" },
 };
 
 function DimensionRow({ label, state, count }: { label: string; state: DimensionState; count: number }) {
   const s = STATE[state];
   const Icon = s.icon;
+  // "Nothing on record · 1" is a contradiction. An absent dimension may still hold a factor — the
+  // trust graph records "no lab tests on record" AS a factor — but there is nothing to count.
+  const showCount = state !== "absent" && count > 0;
   return (
     <div className="flex items-center justify-between gap-3 border-t-2 border-[#111214]/10 py-2.5 first:border-t-0">
       <span className="text-[13px] font-bold text-[#111214]/80">{label}</span>
       <span className={`inline-flex items-center gap-1.5 text-[12px] font-bold ${s.tone}`}>
         <Icon className="size-3.5" />
         {s.label}
-        {count > 0 && <span className="text-[#111214]/40">· {count}</span>}
+        {showCount && <span className="text-[#111214]/40">· {count}</span>}
       </span>
     </div>
   );

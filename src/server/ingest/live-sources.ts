@@ -94,6 +94,10 @@ export interface LiveListingInput {
    *  a confirmed Janoshik test VialGrade holds for this compound). Stamps the listing's testing claim so the
    *  hardened crossCheckCoa can decide the verdict; never itself a verdict. */
   coa?: { batchCode: string | null; issuer?: string };
+  // The vendor's own ADVERTISED testing claim, with no certificate behind it. Deliberately
+  // separate from `coa`: it must never set report_confirmed (an activation gate reads that) nor
+  // report_issuer (the entity graph mints a laboratory from it).
+  advertisedTesting?: { issuer: string } | null;
 }
 
 /**
@@ -298,6 +302,7 @@ export async function recordCatalogListing(
   // claim — not the batch — sets the issuer, since a Janoshik link without a printed batch still means
   // "the vendor advertises a confirmed independent test." Sticky on re-ingest that doesn't re-find it.
   const hasCoa = Boolean(input.coa);
+  const advertised = input.advertisedTesting ?? null;
   await db.query(
     `UPDATE listings
      SET price = $2, availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
@@ -306,9 +311,11 @@ export async function recordCatalogListing(
          report_issuer = CASE WHEN $6 THEN $8 ELSE report_issuer END,
          report_confirmed = CASE WHEN $6 THEN TRUE ELSE report_confirmed END,
          batch_code = COALESCE($7, batch_code),
+         advertises_testing = $9,
+         advertised_issuer = CASE WHEN $9 THEN $10 ELSE NULL END,
          observed_at = NOW(), updated_at = NOW()
      WHERE id = $1`,
-    [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null, hasCoa, input.coa?.batchCode ?? null, input.coa?.issuer ?? 'Janoshik'],
+    [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null, hasCoa, input.coa?.batchCode ?? null, input.coa?.issuer ?? 'Janoshik', Boolean(advertised), advertised?.issuer ?? null],
   );
   return { productId, listingId };
 }

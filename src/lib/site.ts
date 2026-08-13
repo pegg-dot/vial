@@ -4,6 +4,6 @@ export const siteConfig = {
   name: "VialGrade",
   title: "VialGrade — The peptide market, made legible",
   description:
-    "An evidence-first prototype for comparing peptide research listings, vendor histories, pricing, and public documentation.",
+    "Know what's really in the vial. Independent lab tests, prices, and reputation for every peptide vendor — aggregated from public sources and graded on the evidence.",
   url: siteUrl,
 } as const;
