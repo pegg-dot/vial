@@ -177,7 +177,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <p className="mt-3 text-[11px] leading-4 text-[var(--muted)]">
               {product.origin === "live"
-                ? "Real listing aggregated from the vendor's public page. Buying happens on their site, never on VialGrade — outbound links stay off until the affiliate step is approved."
+                // The research-use framing belongs HERE — at the moment someone leaves to buy —
+                // not in a modal on arrival. A gate on an information site establishes nothing and
+                // this is the point where it is actually relevant.
+                ? "Real listing aggregated from the vendor's public page. Buying happens on their site, never on VialGrade — we take no payment and hold no stock. These are sold for laboratory research use only, not for human consumption; the seller sets their own terms and age limits at checkout."
                 : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VialGrade."}
             </p>
           </div>
