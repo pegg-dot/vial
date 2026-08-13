@@ -12,16 +12,22 @@ export function formatCurrency(value: number) {
 // "$40 / 5mg" against "$55 / 10mg" — the single most useful comparison, and the one
 // a non-expert can't do in their head. Returns undefined when the quantity has no
 // parseable mg (tablets, water, kits, etc.).
-// Convert one stated <number><unit> pair to milligrams.
-//
-// Grams are a real unit in this market, not a hypothetical: bulk powders are sold as
-// "DIHEXA POWDER (1 GRAM)", "GLUTATHIONE POWDER (10 GRAMS)" and "NAD+ … Powder, 10 grams", and
-// reading only mg/mcg left every one of those with no cost-per-mg at all.
+// Every mass unit vendors actually print on a size. Beyond mg/mcg this covers two shapes that were
+// silently unreadable and cost real coverage: bulk powders sold in GRAMS ("DIHEXA POWDER (1 GRAM)",
+// "NAD+ … Powder, 10 grams") and the size attribute spelled out in words, which is how
+// umbrellalabs.is writes every one of its options ("10 Milligrams", "2 Milligrams").
+const MASS_UNIT = String.raw`(mg|mcg|µg|milligrams?|micrograms?|grams?|g)`;
+
+/** Build a size regex from a pattern using `{U}` where the mass unit goes. */
+function massRe(pattern: string, flags = "i"): RegExp {
+  return new RegExp(pattern.replace(/\{U\}/g, MASS_UNIT), flags);
+}
+
 function unitToMg(n: string, unit: string): number {
   const v = Number(n);
   const u = unit.toLowerCase();
-  if (u === "mcg" || u === "µg") return v / 1000;
-  if (u === "g" || u === "gram" || u === "grams") return v * 1000;
+  if (u === "mcg" || u === "µg" || u.startsWith("microgram")) return v / 1000;
+  if (u === "g" || u.startsWith("gram")) return v * 1000;
   return v;
 }
 
@@ -30,7 +36,7 @@ function unitToMg(n: string, unit: string): number {
 // which vendors print in the same spec tables that carry the real size.
 export function parseMg(quantity: string): number | undefined {
   if (!quantity) return undefined;
-  const m = quantity.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b(?!\s*\/\s*mol)/i);
+  const m = quantity.match(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\b(?!\s*\/\s*mol)`));
   return m ? unitToMg(m[1], m[2]) : undefined;
 }
 
@@ -44,12 +50,12 @@ export function parseMg(quantity: string): number | undefined {
 export function parseTotalMg(quantity: string | undefined, name = ""): number | undefined {
   const text = `${name} ${quantity ?? ""}`.replace(/\s+/g, " ").trim();
   if (!text) return undefined;
-  const strengths = [...text.matchAll(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b(?!\s*\/\s*mol)/gi)];
+  const strengths = [...text.matchAll(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\b(?!\s*\/\s*mol)`, "gi"))];
   const distinct = [...new Set(strengths.map((m) => unitToMg(m[1], m[2])))];
 
   // 1) An explicitly stated total ("… 120MG TOTAL BOTTLE", "TOTAL: 30 mg") wins outright.
-  const total = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*total\b/i)
-             || text.match(/\btotal[^0-9]{0,12}(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b/i);
+  const total = text.match(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\s*total\b`))
+             || text.match(massRe(String.raw`\btotal[^0-9]{0,12}(\d+(?:\.\d+)?)\s*{U}\b`));
   if (total) return unitToMg(total[1], total[2]);
 
   // 2) Liquids: total = concentration × volume. "25mg/ml @ 30ml" or "25mg × 30ml" = 750mg, NOT 25mg.
@@ -58,10 +64,10 @@ export function parseTotalMg(quantity: string | undefined, name = ""): number | 
   const vol = text.match(/(\d+(?:\.\d+)?)\s*m[lL]\b/);
   if (vol) {
     const v = Number(vol[1]);
-    const conc = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*(?:\/|per)\s*m[lL]\b/i)                 // "25 mg/ml", "1mg per mL"
-              || text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*(?:x|×)\s*\d+(?:\.\d+)?\s*m[lL]\b/i);   // "25mg × 30ml"
+    const conc = text.match(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\s*(?:\/|per)\s*m[lL]\b`))                 // "25 mg/ml", "1mg per mL"
+              || text.match(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\s*(?:x|×)\s*\d+(?:\.\d+)?\s*m[lL]\b`));   // "25mg × 30ml"
     if (conc && v > 0) return unitToMg(conc[1], conc[2]) * v;
-    const dissolved = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s+in\s+\d/i);                        // "5mg in 5ml" = 5mg total
+    const dissolved = text.match(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\s+in\s+\d`));                        // "5mg in 5ml" = 5mg total
     if (dissolved) return unitToMg(dissolved[1], dissolved[2]);
     if (strengths.length) return undefined;                                                                   // strength + volume but unclear → no guess
   }
@@ -79,8 +85,8 @@ export function parseTotalMg(quantity: string | undefined, name = ""): number | 
     // strength. Bare adjacency ("50mg capsule/60ct") counts only for capsule/tablet units: a bare
     // "100MG VIAL" is the whole listing, not one unit of a pack, and reading it as per-unit would
     // multiply a plain vial by a stray count.
-    const per = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s*(?:\/|per)\s*(?:capsules?|caps?|tablets?|tabs?|softgels?|servings?|vials?)\b/i)
-             || text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\s+(?:capsules?|caps?|tablets?|tabs?|softgels?)\b/i);
+    const per = text.match(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\s*(?:\/|per)\s*(?:capsules?|caps?|tablets?|tabs?|softgels?|servings?|vials?)\b`))
+             || text.match(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\s+(?:capsules?|caps?|tablets?|tabs?|softgels?)\b`));
     if (per && n >= 1) return unitToMg(per[1], per[2]) * n;
     if (distinct.length === 1 && n > 1) return distinct[0] * n;
     if (distinct.length > 1) return undefined;   // multi-strength pack (e.g. a two-compound combo) — ambiguous
@@ -91,7 +97,7 @@ export function parseTotalMg(quantity: string | undefined, name = ""): number | 
   //    total is handled above), so a size-range in a product title ("… 2mg/5mg vial") no longer
   //    blanks a listing whose own quantity says exactly which size it is.
   const qMg = parseMg(quantity ?? "");
-  const qSingle = qMg != null && [...(quantity ?? "").matchAll(/(\d+(?:\.\d+)?)\s*(mg|mcg|µg|grams?|g)\b/gi)].length === 1;
+  const qSingle = qMg != null && [...(quantity ?? "").matchAll(massRe(String.raw`(\d+(?:\.\d+)?)\s*{U}\b`, "gi"))].length === 1;
   const container = /\b(?:capsules?|tablets?|tabs?|softgels?)\b/i.test(text) || /\d\s*m[lL]\b/.test(text);
   if (qSingle && !container) return qMg;
 

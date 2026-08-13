@@ -245,11 +245,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="ink hard rounded-[18px] bg-white p-5">
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">Report record</p>
             <dl className="mt-5 space-y-4 text-sm">
-              <Detail label="Issuer" value={product.reportIssuer} />
+              <Detail label="Lab" value={product.reportIssuer} />
               <Detail label="Report date" value={product.reportDate} />
               <Detail label="Batch" value={product.batchCode} />
-              <Detail label="Sample origin" value={product.sampleOrigin} />
-              <Detail label="Issuer confirmed" value={product.reportConfirmed ? "Yes" : "No"} />
+              <Detail label="Who picked the sample" value={product.sampleOrigin} />
+              <Detail label="Lab confirmed it’s theirs" value={product.reportConfirmed ? "Yes" : "No"} />
             </dl>
           </div>
           ) : null}
@@ -257,8 +257,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {passport && <Link href={`/passports/${String(passport.slug)}`} className="ink hard press group block rounded-[18px] bg-[#f0edff] p-5">
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#5a4be0]">This batch has been tested</p>
             <p className="mt-3 text-lg font-extrabold">See the full lab record for this batch</p>
-            <p className="mt-2 text-xs font-medium leading-5 text-[#111214]/60">Sampling level {String(passport.sampling_level)} · {Math.round(Number(passport.evidence_confidence) * 100)}% evidence confidence. This describes the tested samples — not every vial in the batch.</p>
-            <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#5a4be0]">Open passport <ExternalLink className="size-4 transition group-hover:translate-x-1"/></span>
+            <p className="mt-2 text-xs font-medium leading-5 text-[#111214]/60">What was tested, who tested it, and what came back. It describes the vials that were tested &mdash; not every vial in the batch.</p>
+            <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#5a4be0]">Open the record <ExternalLink className="size-4 transition group-hover:translate-x-1"/></span>
           </Link>}
 
           <UsLegalNotice slug={product.compoundSlug} />

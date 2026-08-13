@@ -28,8 +28,12 @@ describe("deny-by-default route perimeter",()=>{
   it("enforces account-family boundaries and denies cross-origin mutations",()=>{
     const customerCookie=`${SESSION_COOKIE}=${cookie("customer",["customer"])}`;
     const sellerCookie=`${SESSION_COOKIE}=${cookie("seller",["seller_owner"])}`;
+    // /seller is retired — it no longer exists as a route, so the perimeter lets it through to a
+    // real 404 instead of redirecting. A live protected surface is asserted instead.
     const customerAtSeller=proxy(new NextRequest("http://localhost/seller",{headers:{cookie:customerCookie}}));
-    expect(customerAtSeller.status).toBe(307);
+    expect(customerAtSeller.status).toBe(200);
+    const customerAtAdmin=proxy(new NextRequest("http://localhost/admin",{headers:{cookie:customerCookie}}));
+    expect(customerAtAdmin.status).toBe(307);
     const sellerAtForYou=proxy(new NextRequest("http://localhost/for-you",{headers:{cookie:sellerCookie}}));
     expect(sellerAtForYou.status).toBe(307);
     const customerAtForYou=proxy(new NextRequest("http://localhost/for-you",{headers:{cookie:customerCookie}}));

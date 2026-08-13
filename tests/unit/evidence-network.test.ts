@@ -16,11 +16,21 @@ const envelope = {
 };
 
 describe("VIAL 6 laboratory security contracts", () => {
-  it("protects the full laboratory route family centrally", () => {
-    expect(accessDecision("/lab/reports", envelope)).toEqual({ protected: true, allowed: true, loginPath: "/login" });
-    expect(accessDecision("/lab/reports", { ...envelope, accountType: "customer", roles: ["customer"] })).toEqual({ protected: true, allowed: false, loginPath: "/login" });
+  // The /lab workspace was retired from the product (moved to src/retired/). It is deliberately no
+  // longer gated, because there is no route behind it — gating a non-existent path made it 307 to
+  // login, which tells a visitor something is still there. If /lab is ever un-retired, this test
+  // must go back to asserting it is protected.
+  it("leaves the retired laboratory routes ungated so they 404 rather than redirect", () => {
+    expect(accessDecision("/lab/reports", envelope).protected).toBe(false);
+    expect(accessDecision("/lab", null).protected).toBe(false);
+  });
+
+  it("keeps the public evidence surfaces public, and still gates the live private ones", () => {
     expect(accessDecision("/labs", null).protected).toBe(false);
     expect(accessDecision("/passports/hx-bpc-2607", null).protected).toBe(false);
+    // /admin is still a real, protected surface — retirement must not have loosened it.
+    expect(accessDecision("/admin", null).protected).toBe(true);
+    expect(accessDecision("/account", null).protected).toBe(true);
   });
 
   it("round-trips a laboratory session through the signed envelope", () => {
