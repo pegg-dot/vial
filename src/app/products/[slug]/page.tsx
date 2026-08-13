@@ -9,6 +9,7 @@ import { EvidenceBadge } from "@/components/evidence-badge";
 import { evidenceBadgeFor } from "@/lib/evidence-badge-derive";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { EvidenceMatrix } from "@/components/evidence-matrix";
+import { VialGradePill } from "@/components/vial-grade-card";
 import { deriveEvidenceDimensions } from "@/server/verify/evidence-dimensions";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { PriceSparkline } from "@/components/price-sparkline";
@@ -116,7 +117,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <DataOriginBadge origin={product.origin} />
               <span className="ink-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-black/60">{compound.category}</span>
             </div>
-            <Link href={`/vendors/${vendor.slug}`} className="mt-4 inline-flex w-fit items-center gap-1 text-sm font-bold text-[var(--muted)] hover:text-black">{vendor.name}</Link>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Link href={`/vendors/${vendor.slug}`} className="inline-flex w-fit items-center gap-1 text-sm font-bold text-[var(--muted)] hover:text-black">{vendor.name}</Link>
+              {/* The seller's grade, right next to their name. A buyer deciding on THIS listing is
+                  really deciding whether to trust THIS seller, and most arrive here from search or
+                  /market without ever opening the vendor report. */}
+              {vendor.grade && (
+                <Link href={`/vendors/${vendor.slug}`} className="press">
+                  <VialGradePill grade={vendor.grade} />
+                </Link>
+              )}
+            </div>
             <h1 className="mt-1 text-[clamp(1.55rem,3.2vw,2.4rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{product.name} <span className="text-black/35">{product.quantity}</span></h1>
             <p className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-[var(--muted)]">{compound.description}</p>
 

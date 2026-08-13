@@ -17,6 +17,7 @@ import { importWooCommerceCatalog } from "@/server/ingest/woocommerce-import";
 import { probeVendorStatus, recordVendorStatus } from "@/server/verify/vendor-status";
 import { recomputeCompoundStats } from "@/server/ingest/live-sources";
 import { rebuildSearchIndex } from "@/server/search/engine";
+import { recomputeAllVendorGrades } from "@/server/verify/grade-store";
 import type { CompoundRef } from "@/server/ingest/shopify-import";
 
 export type CollectorKind = "catalog-shopify" | "catalog-woo" | "vendor-status";
@@ -142,6 +143,7 @@ export interface TickResult {
   ran: { collector: string; target: string; items: number; ok: boolean; error?: string }[];
   budgetExhausted: boolean;
   reindexed: boolean;
+  regraded: number;
   durationMs: number;
 }
 
@@ -189,5 +191,9 @@ export async function runCollectionTick(
     reindexed = true;
   }
 
-  return { ran, budgetExhausted, reindexed, durationMs: Date.now() - started };
+  // Keep the materialized grade in step with the evidence that just changed. Stale-first ordering
+  // plus its own budget means this never crowds out collection — it just keeps chipping away.
+  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: 10_000, limit: 25 });
+
+  return { ran, budgetExhausted, reindexed, regraded: regrade.graded, durationMs: Date.now() - started };
 }

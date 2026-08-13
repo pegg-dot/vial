@@ -56,6 +56,12 @@ export interface Vendor {
   }>;
   origin: DataOrigin;
   kind: "storefront" | "manufacturer";
+  // The materialized VialGrade. Present on every surface so a buyer sees the same letter on a
+  // market card as on the vendor report. null = never graded yet.
+  grade?: {
+    letter: string | null; band: string; headline: string; rationale: string;
+    summary: string; weighed: number; verifiedCount: number; gradedAt: string | null;
+  } | null;
   // Real, computed-from-source evidence (not the stale denormalized columns).
   coaCount: number;         // independent third-party certificates on record
   medianPurity: number | null;

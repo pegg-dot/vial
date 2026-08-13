@@ -1,6 +1,10 @@
 import { Check, CircleAlert, CircleDashed, CircleSlash, ShieldCheck, X } from "lucide-react";
 import type { GradeBand, DimensionState, VialGradeResult } from "@/server/verify/grade";
 
+// The pill also renders from the MATERIALIZED grade on a vendor row, which is a plain object
+// rather than a full VialGradeResult — same fields, no dimensions.
+export type GradeLike = { letter: string | null; band: string; rationale?: string };
+
 // The headline grade. It is deliberately never shown alone: the letter, the reason it landed
 // there, and the per-dimension evidence ship as one block, so the reader can always audit the
 // number instead of trusting it. When the evidence is too thin, there is no letter at all.
@@ -82,20 +86,25 @@ export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summ
   );
 }
 
-// A compact grade pill for directory rows and cards, where the full decomposition does not fit.
-// It still refuses to render a letter the evidence does not support.
-export function VialGradePill({ grade }: { grade: VialGradeResult }) {
-  const b = BAND[grade.band];
+// The compact grade, for market cards and directory rows — the surfaces a buyer actually lands on.
+// It carries the seller's name because on a market card the question is "who am I buying from and
+// are they OK", and it still refuses to show a letter the evidence does not support.
+export function VialGradePill({ grade, vendorName }: { grade: GradeLike; vendorName?: string }) {
+  const b = BAND[(grade.band as GradeBand) ?? "insufficient"];
+  const ungraded = grade.letter === null || grade.letter === undefined;
   return (
     <span
-      className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.08em] ${b.wrap}`}
+      className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold ${b.wrap}`}
       style={{ color: b.accent }}
-      title={grade.rationale}
+      title={grade.rationale || undefined}
     >
-      <span className={`ink-1 grid size-5 place-items-center rounded-full text-white ${b.chip}`}>
-        <span className="text-[10px] font-extrabold leading-none">{grade.letter ?? "?"}</span>
+      <span className={`ink-1 grid size-5 shrink-0 place-items-center rounded-full text-white ${b.chip}`}>
+        <span className="text-[10px] font-extrabold leading-none">{ungraded ? "?" : grade.letter}</span>
       </span>
-      {grade.letter === null ? "Not graded" : "VialGrade"}
+      <span className="uppercase tracking-[.08em]">
+        {ungraded ? "Not enough data" : `Grade ${grade.letter}`}
+      </span>
+      {vendorName && <span className="max-w-[9rem] truncate font-semibold normal-case tracking-normal opacity-70">· {vendorName}</span>}
     </span>
   );
 }
