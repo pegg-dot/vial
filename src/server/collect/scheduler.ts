@@ -186,7 +186,26 @@ export async function runCollectionTick(
   let budgetExhausted = false;
   let catalogChanged = false;
 
-  const due = await claimDueTargets(db, options.maxTargets ?? 8);
+  // Fair share across collector KINDS, not just most-overdue.
+  //
+  // Pure most-overdue ordering starves small collectors: 40 per-vendor catalog targets will always
+  // out-age the single enforcement or news target, so those would wait hours behind a queue they
+  // can never get to the front of. Reserve a slot for each kind that has due work, then fill the
+  // rest by age.
+  const maxTargets = options.maxTargets ?? 8;
+  const allDue = await claimDueTargets(db, 200);
+  const firstOfEachKind: DueTarget[] = [];
+  const seenKinds = new Set<string>();
+  for (const t of allDue) {
+    if (seenKinds.has(t.collector)) continue;
+    seenKinds.add(t.collector);
+    firstOfEachKind.push(t);
+  }
+  const chosen = new Set(firstOfEachKind.map(t => t.id));
+  const due = [
+    ...firstOfEachKind.slice(0, maxTargets),
+    ...allDue.filter(t => !chosen.has(t.id)).slice(0, Math.max(0, maxTargets - firstOfEachKind.length)),
+  ];
   for (const t of due) {
     // Stop BEFORE starting work we cannot finish — a half-run target would settle as a failure
     // and back off for no reason.

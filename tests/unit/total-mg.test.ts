@@ -58,3 +58,65 @@ describe("parseTotalMg — total delivered milligrams", () => {
     expect(parseTotalMg("1mg", "Epitalon 1mg")).toBe(1);
   });
 });
+
+// The cases below are quoted verbatim from live listings and from the WooCommerce Store API
+// payloads those listings are built from. Each one was returning NO cost-per-mg (or, in the
+// capsule case, a 60×-wrong one) before the size units and separators here were read.
+describe("parseTotalMg — sizes vendors really publish", () => {
+  it("reads bulk powders sold in grams", () => {
+    expect(parseTotalMg("1 vial", "DIHEXA POWDER (1 GRAM)")).toBe(1000);
+    expect(parseTotalMg("1 vial", "GLUTATHIONE POWDER (10 GRAMS)")).toBe(10000);
+    expect(parseTotalMg("1 vial", "NAD+ (Nicotinamide Adenine Dinucleotide) &#8211; Powder, 10 grams")).toBe(10000);
+    expect(parseTotalMg("1 Gram", "MK-677 Powder")).toBe(1000);
+    expect(parseTotalMg("10 Grams", "5 Amino 1MQ")).toBe(10000);
+  });
+
+  it("reads a size attribute spelled out in words (umbrellalabs.is writes every option this way)", () => {
+    expect(parseTotalMg("10 Milligrams", "GLP-3R (LY-3437943) PEPTIDE VIAL")).toBe(10);
+    expect(parseTotalMg("2 Milligrams", "GLP-3R (LY-3437943) PEPTIDE VIAL")).toBe(2);
+    expect(parseTotalMg("500 Micrograms", "Tesofensine Powder")).toBe(0.5);
+  });
+
+  it("prefers the vendor's own stated TOTAL over a per-capsule strength", () => {
+    // Was 250 — the per-capsule figure — which priced a 15-gram bottle 60× too high per mg.
+    expect(parseTotalMg("250MG", "GLUTATHIONE POWDER (60 CAPSULES) (250MG/CAPSULE, 15 GRAMS TOTAL)")).toBe(15000);
+  });
+
+  it("multiplies a per-unit strength by a count written as 'ct' or with a hyphen", () => {
+    expect(parseTotalMg("50mg capsule/60ct/3000mg", "5 Amino 1MQ")).toBe(3000);              // purerawz.co
+    expect(parseTotalMg("300mcg per tablet/100ct/30mg", "Semax(ACTH (4-7) Pro-Gly-Pro)")).toBe(30);
+    expect(parseTotalMg("10mg · 10-vial kit", "Tesamorelin")).toBe(100);                     // chameleonpeptides.com
+    expect(parseTotalMg("10mg · Single vial", "Tesamorelin")).toBe(10);
+    expect(parseTotalMg("5mg/vial × 50 vials", "BPC 157 &#8211; 50 VIALS AT 30 PERCENT OFF")).toBe(250);
+  });
+
+  it("reads a concentration written as 'per mL', not only as 'mg/mL'", () => {
+    // The vendor's own arithmetic confirms this one: 545 mg/mL × 50 mL is the 27.25 g it states.
+    expect(parseTotalMg("50ml/545mg per ml/27.25g", "Carnitine MAX Injectable")).toBe(27250);
+    expect(parseTotalMg("100mcg+ per spray (10mL bottle @ 1mg per mL)", "N-Acetyl Selank Spray")).toBe(10);
+    expect(parseTotalMg("300mcg/spray = 30mg total", "Semax(ACTH (4-7) Pro-Gly-Pro)")).toBe(30);
+  });
+
+  it("still returns NOTHING when the size is genuinely ambiguous or absent", () => {
+    // A blend states two strengths and a combined total; which one a price buys is unknowable.
+    expect(parseTotalMg("5mg + 5mg (10mg)", "BPC-157 & TB-500 Blend")).toBeUndefined();
+    expect(parseTotalMg("GHK/KPV Blend 50MG/10MG", "GHK-Cu/KPV Blend")).toBeUndefined();
+    // A size RANGE with no single declared size.
+    expect(parseTotalMg("1 vial", "BPC-157 5mg/10mg")).toBeUndefined();
+    // A capsule bottle with a count but no per-capsule strength.
+    expect(parseTotalMg("100 Capsules", "Tesofensine")).toBeUndefined();
+    expect(parseTotalMg("1 vial", "SLU-PP-332 POWDER (60 CAPSULES)")).toBeUndefined();
+    // A concentration with no stated volume.
+    expect(parseTotalMg("300MCG/ML - Liquid", "SLU-PP-332")).toBeUndefined();
+    // Vendors publish no size at all for these; they must keep showing no cost-per-mg.
+    expect(parseTotalMg("1 vial", "GHRP-2")).toBeUndefined();
+    expect(parseTotalMg("1 vial", "IPAM (Indolepropionamide)")).toBeUndefined();
+    expect(parseTotalMg("1 vial", "RAD-140 + MK-677 + GW-501516 Value Pack")).toBeUndefined();
+  });
+
+  it("never mistakes a molecular weight for a size", () => {
+    // peptidepros.net prints "Molecular Weight 1419.556 g/mol" in the same spec block as the size.
+    expect(parseTotalMg("", "Molecular Weight 1419.556 g/mol")).toBeUndefined();
+    expect(parseTotalMg("", "Molecular Weight BPC 157 C 62 H 98 N 15 O 22 1419.556 g/mol")).toBeUndefined();
+  });
+});

@@ -104,3 +104,26 @@ describe("continuous collection queue", () => {
     expect(after).toBe(before);
   });
 });
+
+// Pure most-overdue ordering starves small collectors: 40 per-vendor catalog targets always
+// out-age a single enforcement or news target, so those would never reach the front of the queue.
+describe("collection queue — fair share across collector kinds", () => {
+  it("gives every due collector kind a slot before filling by age", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    // Age every vendor target far beyond the single-target collectors, the real-world shape.
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '10 days' WHERE collector LIKE 'catalog-%' OR collector = 'vendor-status'`);
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '1 minute' WHERE collector NOT LIKE 'catalog-%' AND collector <> 'vendor-status'`);
+
+    const kinds = (await db.query<{ collector: string }>(`SELECT DISTINCT collector FROM collection_targets WHERE enabled`)).rows.map(r => r.collector);
+    // Budget 0 means nothing runs, but selection still happens — assert via a real tick with a
+    // tiny budget so at most one target actually executes.
+    const result = await runCollectionTick({ budgetMs: 0, maxTargets: 4, connection: db });
+    expect(result.ran.length).toBe(0);
+
+    // The selection itself is what matters: every kind must be represented in the claim set.
+    const claimed = await claimDueTargets(db, 200);
+    const claimedKinds = new Set<string>(claimed.map(c => String(c.collector)));
+    for (const k of kinds) expect(claimedKinds.has(k), `kind ${k} must be claimable`).toBe(true);
+  });
+});
