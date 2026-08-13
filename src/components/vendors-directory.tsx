@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight, Factory, FlaskConical, Info, ShieldAlert, ShieldCheck, Store, TrendingDown, TrendingUp } from "lucide-react";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
+import { VialGradePill } from "@/components/vial-grade-card";
 import { PRIORITIES, rankVendors, type VendorDirectoryEntry } from "@/lib/vendor-ranking";
 import { vendorStatusLabel } from "@/lib/format";
 
@@ -90,6 +91,10 @@ function VendorRankCard({ entry, priority, rank }: { entry: VendorDirectoryEntry
             {v.origin === "live" && <DataOriginBadge origin="live" />}
             {v.kind === "manufacturer" && <span className="inline-flex items-center gap-1 rounded-full bg-[#39414e] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[.06em] text-white"><Factory className="size-2.5" /> Maker</span>}
             <RedFlag entry={entry} />
+            {/* This page's headline question is literally "which one won't scam me?" — withholding
+                the grade it has already computed made the reader reconcile a rank against a grade
+                they could not see. */}
+            {v.grade && <VialGradePill grade={v.grade} />}
           </div>
           <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--muted)]">{vendorStatusLabel(v.profileStatus)}{v.location ? ` · ${v.location}` : ""}</p>
         </div>

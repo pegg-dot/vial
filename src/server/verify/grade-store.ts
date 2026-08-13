@@ -72,7 +72,7 @@ export async function recomputeVendorGrade(slug: string, connection?: SqlConnect
   const composed = await composeVerdictForVendorSlug(slug);
   if (!composed) return null;
   const vendor = await getVendorBySlug(slug);
-  const grade = gradeFromVerdict(composed.composed, { coaCount: vendor?.coaCount ?? 0 });
+  const grade = gradeFromVerdict(composed.composed, { coaCount: vendor?.coaCount ?? 0, listingCount: vendor?.productCount ?? 0 });
   await writeGrade(db, slug, grade, composed.composed.summary);
   return grade;
 }

@@ -30,6 +30,10 @@ const PUBLIC_API_EXACT = new Set([
   "/api/search", "/api/openapi.json", "/api/v1/verify", "/api/v1/compare",
   "/api/v1/health", "/api/v1/catalog", "/api/v1/alerts",
   "/api/v1/commerce/provider/webhook", "/api/internal/cron/refresh",
+  // Cron routes authenticate themselves with CRON_SECRET inside the handler. They must be listed
+  // here or the deny-by-default perimeter 401s them BEFORE the handler runs — which is exactly
+  // what silently disabled continuous collection: Vercel Cron sends no session cookie.
+  "/api/internal/cron/collect",
 ]);
 const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", "/api/public/"];
 

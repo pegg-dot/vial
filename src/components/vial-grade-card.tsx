@@ -1,4 +1,4 @@
-import { Check, CircleAlert, CircleDashed, CircleSlash, ShieldCheck, X } from "lucide-react";
+import { Check, CircleAlert, CircleDashed, CircleSlash, Factory, ShieldCheck, X } from "lucide-react";
 import type { GradeBand, DimensionState, VialGradeResult } from "@/server/verify/grade";
 
 // The pill also renders from the MATERIALIZED grade on a vendor row, which is a plain object
@@ -13,6 +13,8 @@ const BAND: Record<GradeBand, { wrap: string; chip: string; accent: string; icon
   mixed: { wrap: "bg-[#fff4e0]", chip: "bg-[#b26a00]", accent: "#b26a00", icon: CircleAlert },
   adverse: { wrap: "bg-[#fff1f0]", chip: "bg-[#d3372c]", accent: "#d3372c", icon: X },
   insufficient: { wrap: "bg-[#f0edff]", chip: "bg-[#6d5dfc]", accent: "#6d5dfc", icon: CircleDashed },
+  // Neutral, never a rank — a maker is not a worse shop, it is not a shop.
+  reference: { wrap: "bg-[#f2f2ef]", chip: "bg-[#39414e]", accent: "#39414e", icon: Factory },
 };
 
 const STATE: Record<DimensionState, { label: string; icon: typeof ShieldCheck; tone: string }> = {
@@ -102,7 +104,7 @@ export function VialGradePill({ grade, vendorName }: { grade: GradeLike; vendorN
         <span className="text-[10px] font-extrabold leading-none">{ungraded ? "?" : grade.letter}</span>
       </span>
       <span className="uppercase tracking-[.08em]">
-        {ungraded ? "Not enough data" : `Grade ${grade.letter}`}
+        {grade.band === "reference" ? "Maker — not a shop" : ungraded ? "Not rated yet" : `Grade ${grade.letter}`}
       </span>
       {vendorName && <span className="max-w-[9rem] truncate font-semibold normal-case tracking-normal opacity-70">· {vendorName}</span>}
     </span>

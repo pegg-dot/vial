@@ -9,7 +9,10 @@ import type { Signal } from "./index";
 import type { ComposedVerdict } from "./trust-graph";
 
 export type GradeLetter = "A" | "A-" | "B+" | "B" | "C+" | "C" | "C-" | "D" | "F";
-export type GradeBand = "strong" | "mixed" | "adverse" | "insufficient";
+// `reference` is not a rank — it means "this is a maker we hold lab records for, not a shop you
+// can buy from". Grading those on the buyer scale put 57 zero-listing manufacturers above real US
+// storefronts in the directory whose headline question is "which one won't scam me?".
+export type GradeBand = "strong" | "mixed" | "adverse" | "insufficient" | "reference";
 export type DimensionKey = "testing" | "regulatory" | "reputation" | "operations";
 // `clear` and `supported` are deliberately different answers. The trust graph records "we looked
 // and found no enforcement record" as an UNTAGGED positive, precisely so an absence never earns a
@@ -96,7 +99,7 @@ function buildDimensions(factors: Signal[]): GradeDimension[] {
  * independently-verified evidence backs it. `coaCount` is passed separately because an
  * independent lab test is the one seam that can lift a vendor to the top of the scale.
  */
-export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: number }): VialGradeResult {
+export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: number; listingCount?: number }): VialGradeResult {
   const dimensions = buildDimensions(composed.factors);
   const base = {
     dimensions,
@@ -112,6 +115,23 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
   const adverseIsInferredOnly = adverseTiers.length > 0 && adverseTiers.every(t => t == null || t === "inferred");
   const tested = input.coaCount > 0;
 
+  // A vendor with nothing listed is a MAKER, not a storefront. The letter answers "should I buy
+  // from them", which is a question their record cannot answer — they sell nothing here. Rating
+  // them anyway inverted the whole scale: a Chinese raw-material supplier known only from a
+  // self-declared name on one certificate outranked storefronts with 40+ real listings.
+  if (input.listingCount === 0) {
+    const tests = `${input.coaCount} independent lab test${input.coaCount === 1 ? "" : "s"}`;
+    return {
+      ...base,
+      letter: null,
+      band: "reference",
+      headline: "Maker — not a shop",
+      rationale: input.coaCount > 0
+        ? `We hold ${tests} naming this maker, but they don't sell direct — nothing here is a storefront you can buy from, so there is nothing to rate. Their tests may back a listing sold by someone else.`
+        : "We hold a record of this maker but no lab tests and nothing listed for sale, so there is nothing to rate.",
+    };
+  }
+
   switch (composed.verdict) {
     case "unproven":
     case "info": {
@@ -120,9 +140,10 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         letter: null,
         band: "insufficient",
         headline: "Not enough evidence to grade",
+        // "Not rated" must not read as an accusation — it sits in the same slot an F would.
         rationale: tested
-          ? "We hold some records for this vendor, but not enough independent evidence to place it on the scale. Unknown is not the same as safe."
-          : "No independent lab tests and too little corroborated evidence to place this vendor on the scale. Unknown is not the same as safe.",
+          ? "This is not a warning. We track this vendor but have not found enough independent evidence to rate them yet. No news is not the same as good news — check the specific listing before you buy."
+          : "This is not a warning — it means we have not found independent lab tests for them yet. That is different from finding something bad. It also is not a clean bill of health: check the specific listing before you buy.",
       };
     }
 
@@ -134,7 +155,7 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
           letter: null,
           band: "insufficient",
           headline: "Not enough evidence to grade",
-          rationale: "The only findings against this vendor come from our own heuristics — a storefront read or a single unretried site probe. That is not a strong enough basis to publish a grade about a named business. The specific findings are listed below.",
+          rationale: "The only red flags here came from our own automated scan — reading their storefront, or one failed attempt to load their site. That is not solid enough to grade a real company on, so we are not going to. What we saw is listed below.",
         };
       }
       const letter: GradeLetter = hasVerifiedNegative ? "F" : "D";
@@ -144,8 +165,8 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         band: "adverse",
         headline: `${letter} — avoid`,
         rationale: hasVerifiedNegative
-          ? "An adverse finding is backed by a document, government record, or shared hard identifier — the strongest evidence tier we hold."
-          : "The adverse findings are third-party accounts (buyer or community reports) rather than records we can point at, so this is graded D rather than F.",
+          ? "There is an official record against this vendor — a government action, court filing, or a hard link to a flagged storefront. That is the strongest evidence we hold, and it caps the grade here."
+          : "Buyers and the community report problems, but we have no official record to point at. That is why this is a D rather than an F.",
       };
     }
 
@@ -157,10 +178,10 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         band: "mixed",
         headline: `${letter} — proceed with caution`,
         rationale: hasVerifiedNegative
-          ? "Something on the record cuts against this vendor and is backed by a document or hard identifier, which holds the grade at the bottom of the caution band."
+          ? "Something official counts against this vendor — a government record or a hard link to a flagged store. Real lab tests would not cancel that out, so the grade stops here."
           : tested
-            ? "There are real reasons for caution, offset by independent lab tests on record."
-            : "There are real reasons for caution and no independent lab tests to offset them.",
+            ? "There are real reasons to be careful with this vendor, but they do have independent lab tests on file, which counts for something."
+            : "There are real reasons to be careful with this vendor, and no independent lab tests to weigh against them.",
       };
     }
 

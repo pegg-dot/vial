@@ -23,6 +23,15 @@ function compoundKeys(c: CompoundRef): string[] {
  * Returns null for blends (two disjoint compounds), non-peptides, and no-match — we only
  * record listings we can confidently attribute to one compound.
  */
+// Abbreviations that collide with a DIFFERENT molecule sold in this market. A short alias is not
+// evidence when the title spells out another chemical: "INDOLEPROPIONAMIDE (IPAM)" is a nootropic,
+// not Ipamorelin, and "GnRH (Triptorelin)" is not Gonadorelin. Both were being listed — and priced
+// per-mg — under the wrong compound, which is the most dangerous kind of wrong this product can be.
+const COLLIDES: Record<string, string[]> = {
+  ipamorelin: ["indolepropionamide"],
+  gonadorelin: ["triptorelin"],
+};
+
 export function matchCompound(title: string, compounds: CompoundRef[]): string | null {
   const t = norm(title);
   if (!t) return null;
@@ -33,7 +42,9 @@ export function matchCompound(title: string, compounds: CompoundRef[]): string |
     for (const k of compoundKeys(c)) {
       if (t.includes(k) && k.length > best.length) best = k;
     }
-    if (best) hits.push({ slug: c.slug, key: best });
+    // A title that names a colliding molecule disqualifies this compound outright, however
+    // strong the alias hit looked.
+    if (best && !(COLLIDES[c.slug] ?? []).some(term => t.includes(norm(term)))) hits.push({ slug: c.slug, key: best });
   }
   if (hits.length === 0) return null;
   if (hits.length === 1) return hits[0].slug;

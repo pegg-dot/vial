@@ -7,6 +7,18 @@ import { formatCurrency, formatPricePerMg } from "@/lib/format";
 // The single most useful surface for a non-expert buyer: every vendor selling this
 // compound, ranked by real cost-per-milligram, with the independently-tested purity
 // beside it where we have one. Cheapest-and-tested rises to the top on its own.
+// "0.5mg" vs a 0.5mg total — when the declared per-unit size already IS the total, don't repeat it.
+function sameSize(quantity: string | undefined, totalMg: number): boolean {
+  const m = String(quantity ?? "").match(/([0-9.]+)\s*(mg|mcg|µg)/i);
+  if (!m) return false;
+  const asMg = Number(m[1]) / (/mcg|µg/i.test(m[2]) ? 1000 : 1);
+  return Math.abs(asMg - totalMg) < 0.001;
+}
+
+function formatMg(mg: number): string {
+  return mg >= 1 ? `${Number(mg.toFixed(2))}mg` : `${Math.round(mg * 1000)}mcg`;
+}
+
 export function PriceLeaderboard({ compoundName, listings, labTests }: { compoundName: string; listings: Product[]; labTests: LabTestRow[] }) {
   const ranked = listings.filter((p) => p.pricePerMg && p.pricePerMg > 0).sort((a, b) => a.pricePerMg! - b.pricePerMg!);
   if (ranked.length < 2) return null;
@@ -66,7 +78,18 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
                       {suspicious ? <TriangleAlert className="size-3.5 text-[#b26a00]" /> : isCheapest ? <Crown className="size-3.5 text-[#0e8f80]" /> : null}{p.vendorSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                     </Link>
                   </td>
-                  <td className="px-5 py-3 font-medium text-[var(--muted)]">{p.quantity}</td>
+                  {/* Show the size the PER-MG IS ACTUALLY BASED ON. `quantity` is the declared
+                      per-unit strength, so a 60-capsule bottle read "0.5mg" beside "$86" and
+                      "$2.87/mg" — arithmetic that cannot be reconciled on screen, which reads as
+                      the site being unable to divide. The math was right; the label was wrong. */}
+                  <td className="px-5 py-3 font-medium text-[var(--muted)]">
+                    {p.mg != null && p.mg > 0 ? (
+                      <>
+                        <span className="font-bold text-[#111214]">{formatMg(p.mg)} total</span>
+                        {!sameSize(p.quantity, p.mg) && <span className="block text-xs">{p.quantity} each</span>}
+                      </>
+                    ) : p.quantity}
+                  </td>
                   <td className="px-5 py-3 font-extrabold tabular-nums">{formatCurrency(p.price)}</td>
                   <td className="px-5 py-3"><span className={`ink-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums ${suspicious ? "bg-[#fff4e0] text-[#b26a00]" : isCheapest ? "bg-[#e6fbf4] text-[#0e8f80]" : "bg-[#f2f2ef] text-[#111214]/70"}`}>{formatPricePerMg(p.pricePerMg!)}{suspicious && <span className="font-bold"> · too cheap?</span>}</span></td>
                   <td className="px-5 py-3">

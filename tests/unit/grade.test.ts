@@ -175,3 +175,35 @@ describe("VialGrade dimensions", () => {
     expect(routed).toEqual(real.factors.map(f => f.label).sort());
   });
 });
+
+// 57 of 62 top grades belonged to vendors with nothing listed for sale — raw-material makers known
+// only from a self-declared name on one certificate. They outranked real storefronts in the
+// directory whose headline question is "which one won't scam me?". A letter answers "should I buy
+// from them", which is a question a maker's record cannot answer.
+describe("VialGrade — makers are not shops", () => {
+  it("refuses a buyer letter for a vendor with nothing listed", () => {
+    const factors = [verifiedOk("Independent testing"), verifiedOk("Government enforcement"), verifiedOk("Operator network")];
+    const grade = gradeFromVerdict(composed({ verdict: "trusted", factors }), { coaCount: 19, listingCount: 0 });
+    expect(grade.letter).toBeNull();
+    expect(grade.band).toBe("reference");
+    expect(grade.headline.toLowerCase()).toContain("maker");
+  });
+
+  it("says why, and credits the tests it does hold", () => {
+    const grade = gradeFromVerdict(composed({ verdict: "trusted" }), { coaCount: 19, listingCount: 0 });
+    expect(grade.rationale).toContain("19 independent lab tests");
+    expect(grade.rationale.toLowerCase()).toContain("nothing to rate");
+  });
+
+  it("still grades a real storefront normally", () => {
+    const grade = gradeFromVerdict(composed({ verdict: "trusted" }), { coaCount: 12, listingCount: 34 });
+    expect(grade.letter).toBe("A");
+    expect(grade.band).toBe("strong");
+  });
+
+  // Unknown listing count must not silently reclassify every vendor as a maker.
+  it("treats an unknown listing count as a storefront", () => {
+    const grade = gradeFromVerdict(composed({ verdict: "trusted" }), { coaCount: 12 });
+    expect(grade.letter).toBe("A");
+  });
+});

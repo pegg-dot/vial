@@ -85,7 +85,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   // pages read the MATERIALIZED copy on the vendor row instead (deriving it there would cost ~10
   // queries per card). They must never disagree, so this page writes its result back: this is the
   // definition of the grade, and everywhere else is a cache of it.
-  const grade = gradeFromVerdict(composed, { coaCount: vendor.coaCount });
+  const grade = gradeFromVerdict(composed, { coaCount: vendor.coaCount, listingCount: vendor.productCount });
   await persistVendorGrade(slug, grade, composed.summary).catch(() => {});
 
   const hasAlerts = (vendorStatus && vendorStatus.status !== "operating") || vendorFlags.length > 0 || enforcement.length > 0;
