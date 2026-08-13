@@ -8,6 +8,7 @@ import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { vendorClaimLabel } from "@/lib/vendor-copy";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 import { TierChip } from "@/components/signal-tier-chip";
+import { signalLabel } from "@/lib/signal-copy";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
@@ -165,7 +166,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               </span>
               <div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <p className="text-[13px] font-extrabold tracking-[-.01em]">{f.label}</p>
+                  <p className="text-[13px] font-extrabold tracking-[-.01em]">{signalLabel(f.label)}</p>
                   {f.confidence && <TierChip tier={f.confidence} />}
                 </div>
                 <p className="mt-0.5 text-[13px] font-medium leading-5 text-[var(--muted)]">{f.detail}</p>

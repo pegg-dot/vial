@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock3, ExternalLink, PackageCheck, Star, Truck } from "lucide-react";
 import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVendorBySlug } from "@/server/catalog/repository";
 import { formatCurrency } from "@/lib/format";
+import { displayProductName, displayProductTitle, displaySize } from "@/lib/product-title";
 import { vendorClaimLabelShort } from "@/lib/vendor-copy";
 import { siteUrl } from "@/lib/site";
 import { EvidenceBadge } from "@/components/evidence-badge";
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!product) return {};
   const vendor = await getVendorBySlug(product.vendorSlug);
   return {
-    title: `${product.name} ${product.quantity} from ${vendor?.name ?? "vendor"}`,
+    title: `${displayProductTitle(product.name, product.quantity)} from ${vendor?.name ?? "vendor"}`,
     description: `Compare the price, public documentation, batch linkage, and evidence limits for this ${product.origin === "live" ? "real" : "demo"} ${product.name} research listing.`,
   };
 }
@@ -82,7 +83,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: `${product.name} ${product.quantity}`,
+    name: displayProductTitle(product.name, product.quantity),
     description: `${product.origin === "live" ? `Research listing from ${vendor.name}, aggregated from their public product page.` : `Demo research listing from ${vendor.name}, shown for interface demonstration only.`}`,
     brand: { "@type": "Brand", name: vendor.name },
     sku: product.batchCode,
@@ -129,7 +130,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </Link>
               )}
             </div>
-            <h1 className="mt-1 text-[clamp(1.55rem,3.2vw,2.4rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{product.name} <span className="text-black/35">{product.quantity}</span></h1>
+            <h1 className="mt-1 text-[clamp(1.55rem,3.2vw,2.4rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{displayProductName(product.name)} <span className="text-black/35">{displaySize(product.name, product.quantity)}</span></h1>
             <p className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-[var(--muted)]">{compound.description}</p>
 
             {/* Buy box — price + market context + facts + action + vendor track record, grouped */}

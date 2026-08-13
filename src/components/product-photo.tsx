@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ProductVisual } from "./product-visual";
+import { displayProductTitle } from "@/lib/product-title";
 
 // Shows the vendor's real product photo (aggregated from their own product page) when we
 // have one for a Live listing; otherwise falls back to the generated vial illustration.
@@ -30,7 +31,7 @@ export function ProductPhoto({
       {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary vendor CDNs; next/image would need a per-host allowlist */}
       <img
         src={imageUrl}
-        alt={decorative ? "" : `${name} ${quantity} — the vendor's own product photo`}
+        alt={decorative ? "" : `${displayProductTitle(name, quantity)} — the vendor's own product photo`}
         aria-hidden={decorative || undefined}
         loading="lazy"
         referrerPolicy="no-referrer"

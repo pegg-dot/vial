@@ -97,7 +97,7 @@ const MAX_SIZES_PER_COMPOUND = 5;
 
 // Pull a size token from a product name (e.g. "BPC-157 10mg vial" → "10mg"), else "1 vial".
 export function sizeFromName(name: string): string {
-  const m = name.match(/\b(\d+(?:\.\d+)?)\s*(mg|mcg|iu|ml|g)\b/i);
+  const m = name.match(/\b(\d+(?:\.\d+)?)\s*(mg|mcg|iu|ml|grams?|g)\b/i);
   return m ? `${m[1]}${m[2].toLowerCase()}` : "1 vial";
 }
 

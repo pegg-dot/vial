@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { displayProductTitle } from "@/lib/product-title";
 
 export function ProductVisual({
   name,
@@ -23,7 +24,7 @@ export function ProductVisual({
     <div
       className={`product-visual relative isolate overflow-hidden ${compact ? "min-h-[210px]" : "min-h-[390px]"}`}
       style={style}
-      aria-label={decorative ? undefined : `Stylized vial illustration for ${name} ${quantity}`}
+      aria-label={decorative ? undefined : `Stylized vial illustration for ${displayProductTitle(name, quantity)}`}
       aria-hidden={decorative ? true : undefined}
       role={decorative ? undefined : "img"}
     >

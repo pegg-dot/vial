@@ -23,6 +23,12 @@ const PUBLIC_PAGE_EXACT = new Set([
 ]);
 const PUBLIC_PAGE_PREFIX = ["/compounds", "/vendors", "/products", "/legal", "/passports", "/labs"];
 
+// Surfaces retired from the product (moved to src/retired/). They no longer exist as routes, so
+// letting them through the perimeter means Next returns its own clean 404 — rather than a login
+// redirect, which tells a visitor something is still there and invites them to try to reach it.
+// Nothing is exposed by allowing these: there is no handler behind them.
+const RETIRED_PREFIX = ["/seller", "/lab", "/terminal", "/operations", "/updates", "/developers", "/sell"];
+
 // Public / externally-authenticated API routes. These carry their own guard
 // (public read, bearer token, or webhook signature) and must never be session-gated
 // by the perimeter, or legitimate no-session callers (cron, Stripe) would be blocked.
@@ -42,6 +48,8 @@ const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", 
 function isPublic(path: string): boolean {
   if (PUBLIC_PAGE_EXACT.has(path) || PUBLIC_API_EXACT.has(path)) return true;
   if (PUBLIC_PAGE_PREFIX.some((p) => path === p || path.startsWith(`${p}/`))) return true;
+  // `/labs` is real and public; `/lab` is retired. Exact-or-subpath match keeps them distinct.
+  if (RETIRED_PREFIX.some((p) => path === p || path.startsWith(`${p}/`))) return true;
   if (PUBLIC_API_PREFIX.some((p) => path.startsWith(p))) return true;
   return false;
 }

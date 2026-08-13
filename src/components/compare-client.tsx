@@ -5,6 +5,7 @@ import { Crown, Info, X } from "lucide-react";
 import { useMarketplace } from "./marketplace-state";
 import { ProductPhoto } from "./product-photo";
 import { formatCurrency } from "@/lib/format";
+import { displayProductName } from "@/lib/product-title";
 import { COMPARE_DIMS, GROUP_LABEL, differingKeys, type CompareEntry, type CompareCell, type DimGroup } from "@/lib/compare-model";
 
 const PRIORITIES = [
@@ -103,7 +104,7 @@ export function CompareClient() {
             <div key={e.slug} className="relative bg-white p-4">
               {!isExample && <button onClick={() => toggleCompare(e.slug)} aria-label={`Remove ${e.name}`} className="ink-1 absolute right-3 top-3 z-10 grid size-7 place-items-center rounded-full bg-white press"><X className="size-3.5" /></button>}
               <div className="ink-1 overflow-hidden rounded-[14px]"><ProductPhoto name={e.name} quantity={e.quantity} accent={["#12b3a6", "#8fffd6", "#fff"]} imageUrl={e.imageUrl} compact decorative /></div>
-              <Link href={`/products/${e.slug}`} className="mt-3 block text-[15px] font-extrabold leading-tight tracking-[-.02em] hover:underline">{e.name} <span className="text-black/45">{e.quantity}</span></Link>
+              <Link href={`/products/${e.slug}`} className="mt-3 block text-[15px] font-extrabold leading-tight tracking-[-.02em] hover:underline">{displayProductName(e.name)} <span className="text-black/45">{e.quantity}</span></Link>
               <Link href={`/vendors/${e.vendorSlug}`} className="mt-0.5 block truncate text-xs font-semibold text-[var(--muted)] hover:text-black">{e.vendorName}</Link>
               <p className="mt-2 text-xl font-extrabold tabular-nums tracking-[-.03em]">{formatCurrency(e.price)}</p>
             </div>

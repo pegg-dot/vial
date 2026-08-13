@@ -1,6 +1,7 @@
 "use client";
 
 import type { CatalogSnapshot, Product } from "@/lib/types";
+import { displayProductTitle } from "@/lib/product-title";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -190,7 +191,7 @@ function SearchOverlay({ catalog, onClose }: { catalog: CatalogSnapshot; onClose
       <div className="flex items-center gap-3 border-b-2 border-[#111214] px-5 py-4"><Search className="size-5 text-[var(--muted)]" aria-hidden="true"/><input autoFocus value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Search compounds, vendors, or listings" className="min-w-0 flex-1 bg-transparent text-[17px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--muted)]" aria-label="Search query"/><button onClick={onClose} className="ink-1 rounded-full bg-white p-2 text-[var(--muted)] transition hover:bg-black/[.04] hover:text-[#111214]" aria-label="Close search"><X className="size-4"/></button></div>
       <div className="max-h-[65vh] overflow-y-auto p-3">{resultCount===0?<div className="px-5 py-14 text-center"><p className="text-lg font-bold text-[#111214]">No matching records</p><p className="mt-2 text-sm font-medium text-[var(--muted)]">Try a compound name, vendor, or quantity.</p></div>:<div className="space-y-5 p-2">
         {results.compounds.length>0&&<SearchSection label="Compounds">{results.compounds.map(compound=><SearchLink key={compound.slug} href={`/compounds/${compound.slug}`} title={compound.name} meta={`${compound.listings} listings · ${compound.coaCount} lab tests`} mark={compound.shorthand} accent={compound.accent[0]} onSelect={onClose}/>)}</SearchSection>}
-        {results.products.length>0&&<SearchSection label="Listings">{results.products.map(product=>{const vendor=vendors.find(item=>item.slug===product.vendorSlug);return <SearchLink key={product.slug} href={`/products/${product.slug}`} title={`${product.name} ${product.quantity}`} meta={`${vendor?.name} · $${product.price} · ${product.evidenceLabel}`} mark={product.quantity} accent={product.accent[0]} onSelect={onClose}/>})}</SearchSection>}
+        {results.products.length>0&&<SearchSection label="Listings">{results.products.map(product=>{const vendor=vendors.find(item=>item.slug===product.vendorSlug);return <SearchLink key={product.slug} href={`/products/${product.slug}`} title={displayProductTitle(product.name,product.quantity)} meta={`${vendor?.name} · $${product.price} · ${product.evidenceLabel}`} mark={product.quantity} accent={product.accent[0]} onSelect={onClose}/>})}</SearchSection>}
         {results.vendors.length>0&&<SearchSection label="Vendors">{results.vendors.map(vendor=><SearchLink key={vendor.slug} href={`/vendors/${vendor.slug}`} title={vendor.name} meta={`${vendor.productCount} products · ${vendor.coaCount} lab tests`} mark={vendor.initials} accent={vendor.accent[0]} onSelect={onClose}/>)}</SearchSection>}
       </div>}</div>
       <div className="flex items-center justify-between border-t-2 border-[#111214] px-5 py-3 text-xs font-semibold text-[var(--muted)]"><span>{catalog.products.some((p) => p.origin === "demo") ? "Demo data unless marked Live" : "Live data from real public sources"}</span><span className="hidden sm:inline">Press Esc to close</span></div>
