@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 242" width="236" height="242" role="img" aria-label="VialGrade V mark">
+  <title>VialGrade V mark</title>
+  <!-- The bare V on a transparent ground, cropped to its own bounds. Use over any solid colour.
+       currentColor so it inherits ink from CSS; override with fill if placing standalone. -->
+  <path d="M0 0 L76 0 L118 118 L160 0 L236 0 L146 242 L90 242 Z" fill="currentColor"/>
+</svg>

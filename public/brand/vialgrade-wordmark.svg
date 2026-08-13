@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200" width="700" height="200" role="img" aria-label="VialGrade">
+  <title>VialGrade</title>
+  <defs>
+    <radialGradient id="wm-violet" cx="0.94" cy="0.06" r="0.72">
+      <stop offset="0%" stop-color="#6d5dfc" stop-opacity="0.78"/>
+      <stop offset="55%" stop-color="#3c3682" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#111214" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="wm-mint" cx="0.06" cy="0.94" r="0.72">
+      <stop offset="0%" stop-color="#8fffd6" stop-opacity="0.44"/>
+      <stop offset="55%" stop-color="#34544a" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#111214" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="wm-squircle">
+      <rect x="10" y="10" width="180" height="180" rx="44" ry="44"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#wm-squircle)">
+    <rect x="10" y="10" width="180" height="180" fill="#111214"/>
+    <rect x="10" y="10" width="180" height="180" fill="url(#wm-violet)"/>
+    <rect x="10" y="10" width="180" height="180" fill="url(#wm-mint)"/>
+  </g>
+  <path d="M56 58 L84.5 58 L100 102 L115.5 58 L144 58 L110.25 149 L89.75 149 Z" fill="#ffffff"/>
+
+  <!-- Live text with a system fallback stack, so it still renders without Inter installed —
+       though it will not be pixel-identical. For a guaranteed-identical result on someone
+       else's machine, send the PNG next to this file rather than the SVG. -->
+  <text x="228" y="128"
+        font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+        font-size="92" font-weight="900" letter-spacing="2" fill="#111214">VialGrade</text>
+</svg>

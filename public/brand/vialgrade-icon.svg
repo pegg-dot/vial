@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="VialGrade">
+  <title>VialGrade</title>
+  <defs>
+    <!-- Near-black base, with violet lifting the top-right and mint the bottom-left.
+         Same three signature colours as the product surface: #111214 / #6d5dfc / #8fffd6. -->
+    <linearGradient id="vg-base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111214"/>
+      <stop offset="100%" stop-color="#111214"/>
+    </linearGradient>
+    <radialGradient id="vg-violet" cx="0.94" cy="0.06" r="0.72">
+      <stop offset="0%" stop-color="#6d5dfc" stop-opacity="0.78"/>
+      <stop offset="55%" stop-color="#3c3682" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#111214" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vg-mint" cx="0.06" cy="0.94" r="0.72">
+      <stop offset="0%" stop-color="#8fffd6" stop-opacity="0.44"/>
+      <stop offset="55%" stop-color="#34544a" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#111214" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="vg-squircle">
+      <rect x="16" y="16" width="480" height="480" rx="116" ry="116"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#vg-squircle)">
+    <rect x="16" y="16" width="480" height="480" fill="url(#vg-base)"/>
+    <rect x="16" y="16" width="480" height="480" fill="url(#vg-violet)"/>
+    <rect x="16" y="16" width="480" height="480" fill="url(#vg-mint)"/>
+  </g>
+
+  <!-- The V. Chunky, flat, no outline — it has to stay legible at 16px in a browser tab. -->
+  <path d="M138 144 L214 144 L256 262 L298 144 L374 144 L284 386 L228 386 Z" fill="#ffffff"/>
+</svg>

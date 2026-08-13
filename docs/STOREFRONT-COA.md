@@ -1,5 +1,27 @@
 # Storefront-published COA linking — the coverage wedge
 
+> **⚠️ MEASURED 2026-08-12: the premise below is FALSE for the tracked catalog.**
+>
+> This document was written on the assumption that "most storefronts publish their own Janoshik
+> COA — usually a `verify.janoshik.com/tests/<id>` link — right on the product page." A probe of
+> **all 20 live WooCommerce storefronts found ZERO such links** (`scripts/` probe, 2026-08-12).
+> The wedge was also only ever wired into the **Shopify** importer, which covers 1 of 15 tracked
+> vendors. It therefore could not move coverage, and extending it to WooCommerce would have gained
+> nothing.
+>
+> What vendors actually publish is the **claim** — "every lot supported by an independent Janoshik
+> COA", with certificates on a separate page and no per-product link. `detectAdvertisedTesting`
+> (bottom of `src/server/ingest/storefront-coa.ts`) records that claim so those listings resolve to
+> the honest **"Testing unverified"** (`unbacked`) instead of a silent "No lab test".
+>
+> Effect, measured on live data: silent no-claim **89.6% → 63.7%**; 139 listings (25.9%) now
+> labelled. Verified evidence correctly **unchanged at 10.2%** — the change surfaces the
+> marketing/proof gap, it does not inflate coverage.
+>
+> **The wedge below is still live and still correct** — it remains the authority whenever a page
+> *does* cite a verify link, and a cited link always overrides the prose detector. Keep it: a
+> storefront that starts publishing links tomorrow gets real evidence for free.
+
 **Why this exists.** VialGrade holds a vendor-specific independent test for only ~11% of listings, because the
 companies that get Janoshik-tested (manufacturers) and the storefronts that sell (the ~15 catalogs we
 scrape) are largely different sets, and the scraped listings carried no batch or testing data. But most

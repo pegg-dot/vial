@@ -1,9 +1,20 @@
 # VialGrade — Vision, Architecture & Handoff (START HERE)
 
 **Read this top to bottom before touching anything.** The code is complete through v10.0 and
-backed up at `github.com/pegg-dot/vial`. What is **not** done is the *product*: the data is 100%
-fake, the UX speaks in architecture jargon instead of human, and the target user was never nailed
-down. This doc is the single source of truth for continuing that work.
+backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth for the vision.
+
+> **Status, 2026-08-12.** The three problems this document was written to solve are now largely
+> solved, and the paragraph that used to sit here ("the data is 100% fake") is no longer true —
+> leaving it would mislead the next reader:
+> - **Data is real.** 89 live vendors, 279 independent COAs, 537 listings, 28 review records,
+>   aggregated from real public sources. Records are **demo unless marked Live**.
+> - **Deployed.** Live on Vercel project `vial`, Neon Postgres, domain `vialgrade.com`
+>   (DNS pending). `/api/health/ready` reports schema 33.
+> - **Renamed** VIAL → VialGrade, with a headline letter grade (`src/server/verify/grade.ts`).
+>
+> What remains genuinely open: **listing evidence coverage is 10.2%** — only ~1 in 10 listings
+> carries a vendor-specific independent lab record. That, not the codebase, is the product gap.
+> See `docs/STOREFRONT-COA.md` for why the obvious fix does not work.
 
 ---
 
