@@ -42,6 +42,8 @@ const PUBLIC_API_EXACT = new Set([
   "/api/internal/cron/collect",
   // Partner postbacks authenticate with a per-vendor HMAC inside the handler.
   "/api/partner/conversion",
+  // Anonymous page-view beacon. No auth by design; it stores no identity.
+  "/api/track/view",
 ]);
 const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", "/api/public/"];
 

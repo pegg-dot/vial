@@ -4,6 +4,7 @@ import { ArrowUpRight, Database, FlaskConical, Link2, MousePointerClick, Users }
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { getAttributionOverview } from "@/server/outbound/partner-report";
 import { getDataFreshness, getBrokenCollectors } from "@/server/health/data-health";
+import { getVisitorSummary } from "@/server/analytics/visitors";
 import { getDatabase } from "@/server/db/client";
 
 export const dynamic = "force-dynamic";
@@ -27,8 +28,9 @@ export default async function AdminPage() {
   if (!principal || principal.accountType !== "staff") redirect("/admin/login?next=%2Fadmin");
 
   const db = await getDatabase();
-  const [attribution, freshness, broken, counts, collectors] = await Promise.all([
+  const [attribution, visitors, freshness, broken, counts, collectors] = await Promise.all([
     getAttributionOverview({ days: 30 }),
+    getVisitorSummary({ days: 30 }),
     getDataFreshness(),
     getBrokenCollectors(),
     db.query<{ vendors: string; listings: string; coas: string; graded: string; due: string }>(
@@ -71,6 +73,52 @@ export default async function AdminPage() {
         <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="Confirmed orders" sub={totals.conversions === 0 ? "needs a partner postback or coupon" : "reported back by a partner"} />
         <Stat icon={Database} value={money(totals.revenueCents)} label="Revenue we drove" sub={totals.revenueCents === 0 ? "zero until a deal is live" : undefined} />
       </div>
+
+      {/* Inbound. Outbound alone cannot tell you whether traffic is growing or whether a source
+          converts — and the arrivals-to-buyers ratio is the strongest line in the vendor pitch. */}
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Who is arriving</h2>
+      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+        No cookies and no accounts — people are counted with a hash that resets daily, so the same
+        visitor is never followed across days. Click-through counts only same-day, so it under-reports.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={Users} value={visitors.people.toLocaleString()} label="People" sub={`${visitors.visits.toLocaleString()} page views`} />
+        <Stat icon={MousePointerClick} value={visitors.clickedOut.toLocaleString()} label="Went on to a vendor" />
+        <Stat
+          icon={ArrowUpRight}
+          value={`${Math.round(visitors.clickThroughRate * 100)}%`}
+          label="Arrivals who became buyers"
+          sub={visitors.people === 0 ? "no traffic yet" : "the number that sells a deal"}
+        />
+        <Stat icon={Link2} value={String(visitors.topSources.length)} label="Traffic sources" sub={visitors.topSources[0]?.source ?? "none yet"} />
+      </div>
+
+      {visitors.topSources.length > 0 && (
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="ink hard rounded-[18px] bg-white p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Where they come from</p>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {visitors.topSources.map(s2 => (
+                <li key={s2.source} className="flex justify-between gap-4">
+                  <span className="truncate font-bold">{s2.source}</span>
+                  <span className="tabular-nums text-[var(--muted)]">{s2.people}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="ink hard rounded-[18px] bg-white p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Most-read pages</p>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {visitors.topPages.slice(0, 8).map(p2 => (
+                <li key={p2.path} className="flex justify-between gap-4">
+                  <span className="truncate font-mono text-[12px]">{p2.path}</span>
+                  <span className="tabular-nums text-[var(--muted)]">{p2.visits}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {/* The pipeline: who we already send buyers to, ranked — i.e. who to approach first. */}
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Who to approach first</h2>

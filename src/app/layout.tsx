@@ -3,6 +3,7 @@ import { DisclosureBanner } from "@/components/disclosure-banner";
 import { MarketplaceProvider } from "@/components/marketplace-state";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { TrackView } from "@/components/track-view";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 import { siteConfig } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
@@ -64,6 +65,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="en">
       <body className="min-h-screen bg-[var(--background)] pb-20 text-[var(--foreground)] antialiased md:pb-0">
         <MarketplaceProvider catalog={catalog} initialWatchlist={watchlist} initialCompare={comparison?.listingSlugs ?? []} authenticated={Boolean(principal)}>
+          <TrackView />
           <DisclosureBanner hasDemo={hasDemo} />
           <SiteHeader authenticated={Boolean(principal)} />
           <main>{children}</main>
