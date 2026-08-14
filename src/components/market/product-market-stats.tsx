@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { type MarketStats, MIN_PERMG_PEERS } from "@/lib/curation";
 import { formatCurrency, formatPricePerMg } from "@/lib/format";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
@@ -76,7 +77,8 @@ export function ProductMarketStats({
           )}
           <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">
             {count > 1 ? `Compared by cost-per-mg against ${count} vendor listing${count === 2 ? "" : "s"} of this compound whose size we can read.` : "The only sized listing we track for this compound so far."}
-            {" "}Real / active mg divides cost-per-mg by measured purity. {PURITY_PROVENANCE_SHORT}
+            {" "}Real / active mg divides cost-per-mg by measured purity. {PURITY_PROVENANCE_SHORT}{" "}
+            <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link>
           </p>
         </>
       )}

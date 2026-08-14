@@ -53,27 +53,27 @@ export async function getPartnerReport(
             COUNT(converted_at) conversions,
             COALESCE(SUM(order_value_cents),0) revenue
      FROM outbound_clicks
-     WHERE vendor_slug=$1 AND created_at > NOW() - $2::interval`,
+     WHERE vendor_slug=$1 AND NOT is_bot AND created_at > NOW() - $2::interval`,
     [vendorSlug, window],
   )).rows[0]!;
 
   const topCompounds = (await db.query<QueryResultRow & { compound_slug: string; n: string | number }>(
     `SELECT compound_slug, COUNT(*) AS n FROM outbound_clicks
-     WHERE vendor_slug=$1 AND compound_slug IS NOT NULL AND created_at > NOW() - $2::interval
+     WHERE vendor_slug=$1 AND NOT is_bot AND compound_slug IS NOT NULL AND created_at > NOW() - $2::interval
      GROUP BY 1 ORDER BY 2 DESC LIMIT 8`,
     [vendorSlug, window],
   )).rows.map(r => ({ compound: r.compound_slug, clicks: Number(r.n) }));
 
   const daily = (await db.query<QueryResultRow & { day: string; n: string | number }>(
     `SELECT TO_CHAR(created_at,'YYYY-MM-DD') AS day, COUNT(*) AS n FROM outbound_clicks
-     WHERE vendor_slug=$1 AND created_at > NOW() - $2::interval
+     WHERE vendor_slug=$1 AND NOT is_bot AND created_at > NOW() - $2::interval
      GROUP BY 1 ORDER BY 1`,
     [vendorSlug, window],
   )).rows.map(r => ({ day: r.day, clicks: Number(r.n) }));
 
   const devices = (await db.query<QueryResultRow & { device: string | null; n: string | number }>(
     `SELECT COALESCE(device,'unknown') AS device, COUNT(*) AS n FROM outbound_clicks
-     WHERE vendor_slug=$1 AND created_at > NOW() - $2::interval
+     WHERE vendor_slug=$1 AND NOT is_bot AND created_at > NOW() - $2::interval
      GROUP BY 1 ORDER BY 2 DESC`,
     [vendorSlug, window],
   )).rows.map(r => ({ device: r.device ?? "unknown", clicks: Number(r.n) }));
@@ -121,7 +121,7 @@ export async function getAttributionOverview(
     `SELECT COUNT(*) clicks, COUNT(DISTINCT visitor_hash) people,
             COUNT(DISTINCT vendor_slug) vendors, COUNT(converted_at) conversions,
             COALESCE(SUM(order_value_cents),0) revenue
-     FROM outbound_clicks WHERE created_at > NOW() - $1::interval`, [window],
+     FROM outbound_clicks WHERE NOT is_bot AND created_at > NOW() - $1::interval`, [window],
   )).rows[0]!;
 
   const vendors = (await db.query<QueryResultRow & Record<string, string | number | null>>(
@@ -132,7 +132,7 @@ export async function getAttributionOverview(
      FROM outbound_clicks c
      LEFT JOIN organizations o ON o.slug = c.vendor_slug
      LEFT JOIN partner_programs pp ON pp.vendor_slug = c.vendor_slug
-     WHERE c.vendor_slug IS NOT NULL AND c.created_at > NOW() - $1::interval
+     WHERE c.vendor_slug IS NOT NULL AND NOT c.is_bot AND c.created_at > NOW() - $1::interval
      GROUP BY c.vendor_slug, o.display_name, pp.status
      ORDER BY clicks DESC`, [window],
   )).rows.map(r => ({

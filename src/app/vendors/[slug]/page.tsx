@@ -161,7 +161,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             />
             <HeroStat icon={Star} value={vendor.reviewCount > 0 ? String(vendor.reviewCount) : "—"} label="Buyer reviews on file" />
           </div>
-          {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-white/55">{PURITY_PROVENANCE_SHORT}</p>}
+          {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-white/55">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#8fa2ff] underline underline-offset-2">Purity vs grade</Link></p>}
         </div>
       </section>
 

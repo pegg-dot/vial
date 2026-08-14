@@ -3,6 +3,7 @@ import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { deviceOf, visitorHash } from "@/server/outbound/attribution";
+import { isBotUserAgent } from "./is-bot";
 
 /** Coarse page type, so the funnel can be read without parsing paths in SQL. */
 export function pageKind(path: string): string {
@@ -34,8 +35,8 @@ export async function recordPageView(
 ): Promise<void> {
   const db = connection ?? await getDatabase();
   await db.query(
-    `INSERT INTO page_views(id, path, page_kind, referrer_host, visitor_hash, device)
-     VALUES($1,$2,$3,$4,$5,$6)`,
+    `INSERT INTO page_views(id, path, page_kind, referrer_host, visitor_hash, device, is_bot)
+     VALUES($1,$2,$3,$4,$5,$6,$7)`,
     [
       newId("pv"),
       input.path.slice(0, 300),
@@ -43,6 +44,7 @@ export async function recordPageView(
       referrerHost(input.referrer, input.selfHost),
       visitorHash(input.ip ?? null, input.userAgent ?? null),
       deviceOf(input.userAgent ?? null),
+      isBotUserAgent(input.userAgent ?? null),
     ],
   );
 }
@@ -73,36 +75,36 @@ export async function getVisitorSummary(
 
   const totals = (await db.query<QueryResultRow & { visits: string | number; people: string | number }>(
     `SELECT COUNT(*) AS visits, COUNT(DISTINCT visitor_hash) AS people
-     FROM page_views WHERE created_at > NOW() - $1::interval`, [window],
+     FROM page_views WHERE NOT is_bot AND created_at > NOW() - $1::interval`, [window],
   )).rows[0]!;
 
   const converted = (await db.query<QueryResultRow & { n: string | number }>(
     `SELECT COUNT(DISTINCT pv.visitor_hash) AS n
      FROM page_views pv
-     JOIN outbound_clicks oc ON oc.visitor_hash = pv.visitor_hash
-     WHERE pv.created_at > NOW() - $1::interval`, [window],
+     JOIN outbound_clicks oc ON oc.visitor_hash = pv.visitor_hash AND NOT oc.is_bot
+     WHERE NOT pv.is_bot AND pv.created_at > NOW() - $1::interval`, [window],
   )).rows[0]!;
 
   const topSources = (await db.query<QueryResultRow & { source: string | null; n: string | number }>(
     `SELECT COALESCE(referrer_host,'direct') AS source, COUNT(DISTINCT visitor_hash) AS n
-     FROM page_views WHERE created_at > NOW() - $1::interval
+     FROM page_views WHERE NOT is_bot AND created_at > NOW() - $1::interval
      GROUP BY 1 ORDER BY 2 DESC LIMIT 10`, [window],
   )).rows.map(r => ({ source: r.source ?? "direct", people: Number(r.n) }));
 
   const topPages = (await db.query<QueryResultRow & { path: string; n: string | number }>(
-    `SELECT path, COUNT(*) AS n FROM page_views WHERE created_at > NOW() - $1::interval
+    `SELECT path, COUNT(*) AS n FROM page_views WHERE NOT is_bot AND created_at > NOW() - $1::interval
      GROUP BY 1 ORDER BY 2 DESC LIMIT 12`, [window],
   )).rows.map(r => ({ path: r.path, visits: Number(r.n) }));
 
   const byKind = (await db.query<QueryResultRow & { page_kind: string | null; n: string | number }>(
     `SELECT COALESCE(page_kind,'other') AS page_kind, COUNT(*) AS n
-     FROM page_views WHERE created_at > NOW() - $1::interval
+     FROM page_views WHERE NOT is_bot AND created_at > NOW() - $1::interval
      GROUP BY 1 ORDER BY 2 DESC`, [window],
   )).rows.map(r => ({ kind: r.page_kind ?? "other", visits: Number(r.n) }));
 
   const daily = (await db.query<QueryResultRow & { day: string; n: string | number }>(
     `SELECT TO_CHAR(created_at,'YYYY-MM-DD') AS day, COUNT(DISTINCT visitor_hash) AS n
-     FROM page_views WHERE created_at > NOW() - $1::interval
+     FROM page_views WHERE NOT is_bot AND created_at > NOW() - $1::interval
      GROUP BY 1 ORDER BY 1`, [window],
   )).rows.map(r => ({ day: r.day, people: Number(r.n) }));
 

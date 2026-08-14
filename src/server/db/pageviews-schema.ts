@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS page_views (
   referrer_host TEXT,
   visitor_hash TEXT,
   device TEXT,
+  is_bot BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at DESC);

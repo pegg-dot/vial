@@ -3,6 +3,7 @@ import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { buildOutboundUrl } from "./affiliate";
 import { deviceOf, newClickRef, tagDestination, visitorHash } from "./attribution";
+import { isBotUserAgent } from "@/server/analytics/is-bot";
 
 export interface OutboundResolution { destination: string; vendorSlug: string | null; compoundSlug: string | null; affiliateApplied: boolean; clickRef: string }
 
@@ -40,14 +41,17 @@ export async function resolveAndRecordClick(
 
   await db.query(
     `INSERT INTO outbound_clicks(id, listing_slug, vendor_slug, compound_slug, destination_host,
-       affiliate_applied, click_ref, visitor_hash, landing_path, device)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+       affiliate_applied, click_ref, visitor_hash, landing_path, device, is_bot)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
     [
       newId("click"), listingSlug, row.vendor_slug, row.compound_slug, host, affiliateApplied,
       clickRef,
       visitorHash(visitor?.ip ?? null, visitor?.userAgent ?? null),
       visitor?.landingPath ?? null,
       deviceOf(visitor?.userAgent ?? null),
+      // Recorded, not discarded: the handoff still happens and the row is still evidence the link
+      // works. It is simply excluded from anything we would say to a vendor.
+      isBotUserAgent(visitor?.userAgent ?? null),
     ],
   );
   return { destination, vendorSlug: row.vendor_slug, compoundSlug: row.compound_slug, affiliateApplied, clickRef };

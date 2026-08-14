@@ -62,36 +62,36 @@ export default async function AdminPage() {
       <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Admin</p>
       <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Traffic you can prove you sent</h1>
       <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Last 30 days of outbound handoffs. Every link carries <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[12px]">utm_source=vialgrade</code>,
-        so each vendor below can confirm these numbers in their own analytics without taking our word for it.
+        Last 30 days. Read it in order: people <strong>arrive</strong>, some <strong>click through</strong> to a
+        vendor, and a few of those <strong>buy</strong>. Automated traffic — search crawlers, link previews, our own
+        checks — is excluded everywhere, so these are people. Every link carries{" "}
+        <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[12px]">utm_source=vialgrade</code>, so a
+        vendor can confirm the numbers in their own analytics without taking our word for it.
       </p>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="Buyers sent out" sub="clicks through to a vendor" />
-        <Stat icon={Users} value={totals.people.toLocaleString()} label="Distinct people" sub="privacy-safe daily count" />
-        <Stat icon={Link2} value={String(totals.vendors)} label="Vendors receiving traffic" />
-        <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="Confirmed orders" sub={totals.conversions === 0 ? "needs a partner postback or coupon" : "reported back by a partner"} />
-        <Stat icon={Database} value={money(totals.revenueCents)} label="Revenue we drove" sub={totals.revenueCents === 0 ? "zero until a deal is live" : undefined} />
+        <Stat icon={Users} value={visitors.people.toLocaleString()} label="1. People who arrived" sub={`${visitors.visits.toLocaleString()} pages read`} />
+        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="2. Clicks to a vendor" sub={`from ${totals.people.toLocaleString()} ${totals.people === 1 ? "person" : "people"}`} />
+        <Stat icon={Link2} value={String(totals.vendors)} label="3. Vendors receiving them" />
+        <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="4. Confirmed orders" sub={totals.conversions === 0 ? "zero until a vendor sends orders back" : "reported back by a partner"} />
+        <Stat icon={Database} value={money(totals.revenueCents)} label="5. Revenue we drove" sub={totals.revenueCents === 0 ? "zero until a deal is live" : undefined} />
       </div>
 
       {/* Inbound. Outbound alone cannot tell you whether traffic is growing or whether a source
           converts — and the arrivals-to-buyers ratio is the strongest line in the vendor pitch. */}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Who is arriving</h2>
-      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        No cookies and no accounts — people are counted with a hash that resets daily, so the same
-        visitor is never followed across days. Click-through counts only same-day, so it under-reports.
-      </p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={Users} value={visitors.people.toLocaleString()} label="People" sub={`${visitors.visits.toLocaleString()} page views`} />
-        <Stat icon={MousePointerClick} value={visitors.clickedOut.toLocaleString()} label="Went on to a vendor" />
-        <Stat
-          icon={ArrowUpRight}
-          value={`${Math.round(visitors.clickThroughRate * 100)}%`}
-          label="Arrivals who became buyers"
-          sub={visitors.people === 0 ? "no traffic yet" : "the number that sells a deal"}
-        />
-        <Stat icon={Link2} value={String(visitors.topSources.length)} label="Traffic sources" sub={visitors.topSources[0]?.source ?? "none yet"} />
+      <div className="ink hard mt-4 rounded-[18px] bg-[#e6fbf4] p-5">
+        <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#0e8f80]">The number that sells a deal</p>
+        <p className="mt-2 text-3xl font-extrabold tracking-[-.03em]">
+          {Math.round(visitors.clickThroughRate * 100)}% of arrivals clicked through to a vendor
+        </p>
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#0e8f80]">
+          {visitors.people === 0
+            ? "No human traffic yet, so there is nothing to rate. This fills in as real visitors arrive."
+            : `${visitors.clickedOut} of ${visitors.people} people went on to a seller. No cookies and no accounts — people are counted with a hash that resets daily, and the match only counts same-day, so the real figure is at least this.`}
+        </p>
       </div>
+
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Where they came from</h2>
 
       {visitors.topSources.length > 0 && (
         <div className="mt-4 grid gap-3 lg:grid-cols-2">

@@ -104,7 +104,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />
           <Stat icon={BookOpen} label="Known aliases" value={String(compound.aliases.length + 1)} />
         </div>
-        {compound.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT}</p>}
+        {compound.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link></p>}
       </section>
 
       {edu ? (

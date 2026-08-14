@@ -4,6 +4,9 @@ import { resolveAndRecordClick } from "@/server/outbound/clicks";
 import { getPartnerReport, getAttributionOverview } from "@/server/outbound/partner-report";
 import { upsertLiveCompound, upsertLiveListing, upsertLiveVendor } from "@/server/ingest/live-sources";
 
+// Clicks without a browser agent are recorded as automated and excluded from vendor-facing figures.
+const BROWSER = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
 beforeEach(async () => {
   process.env.VIALGRADE_PGLITE_MEMORY = "true";
   process.env.VIALGRADE_SEED_FIXTURES = "true";
@@ -34,7 +37,7 @@ async function seedClickable(slug = "attr-vendor") {
 describe("attribution — click to partner report", () => {
   it("tags the destination so the vendor can verify us in their own analytics", async () => {
     const db = await seedClickable();
-    const r = await resolveAndRecordClick("attr-listing", db, { ip: "9.9.9.9", userAgent: "Mozilla/5.0 (iPhone)" });
+    const r = await resolveAndRecordClick("attr-listing", db, { ip: "9.9.9.9", userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1" });
     expect(r).toBeTruthy();
     const url = new URL(r!.destination);
     expect(url.searchParams.get("utm_source")).toBe("vialgrade");
@@ -43,7 +46,7 @@ describe("attribution — click to partner report", () => {
 
   it("records the click with a privacy-safe visitor hash and no raw address", async () => {
     const db = await seedClickable();
-    await resolveAndRecordClick("attr-listing", db, { ip: "9.9.9.9", userAgent: "Mozilla/5.0 (iPhone)" });
+    await resolveAndRecordClick("attr-listing", db, { ip: "9.9.9.9", userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1" });
     const row = (await db.query<{ visitor_hash: string; device: string; click_ref: string }>(
       `SELECT visitor_hash, device, click_ref FROM outbound_clicks WHERE listing_slug='attr-listing'`,
     )).rows[0]!;
@@ -56,8 +59,8 @@ describe("attribution — click to partner report", () => {
   // "People" not "hits" — the number you can defensibly say out loud to a vendor.
   it("counts distinct people, not raw clicks", async () => {
     const db = await seedClickable();
-    for (let i = 0; i < 3; i++) await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: "UA" });
-    await resolveAndRecordClick("attr-listing", db, { ip: "2.2.2.2", userAgent: "UA" });
+    for (let i = 0; i < 3; i++) await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: BROWSER });
+    await resolveAndRecordClick("attr-listing", db, { ip: "2.2.2.2", userAgent: BROWSER });
 
     const report = await getPartnerReport("attr-vendor", { connection: db });
     expect(report!.clicks).toBe(4);
@@ -66,7 +69,7 @@ describe("attribution — click to partner report", () => {
 
   it("reports zero revenue until a partner actually confirms an order", async () => {
     const db = await seedClickable();
-    await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: "UA" });
+    await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: BROWSER });
     const report = await getPartnerReport("attr-vendor", { connection: db });
     expect(report!.conversions).toBe(0);
     expect(report!.revenueCents).toBe(0);
@@ -75,7 +78,7 @@ describe("attribution — click to partner report", () => {
 
   it("attributes a confirmed order to the exact click", async () => {
     const db = await seedClickable();
-    const r = await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: "UA" });
+    const r = await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: BROWSER });
     await db.query(
       `UPDATE outbound_clicks SET converted_at=NOW(), order_value_cents=12900, conversion_source='postback' WHERE click_ref=$1`,
       [r!.clickRef],
@@ -87,7 +90,7 @@ describe("attribution — click to partner report", () => {
 
   it("ranks vendors by traffic in the overview", async () => {
     const db = await seedClickable();
-    await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: "UA" });
+    await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: BROWSER });
     const overview = await getAttributionOverview({ connection: db });
     expect(overview.totals.clicks).toBeGreaterThan(0);
     expect(overview.vendors[0]!.vendorSlug).toBe("attr-vendor");
@@ -95,7 +98,7 @@ describe("attribution — click to partner report", () => {
 
   it("tells the vendor exactly where to check our claim", async () => {
     const db = await seedClickable();
-    await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: "UA" });
+    await resolveAndRecordClick("attr-listing", db, { ip: "1.1.1.1", userAgent: BROWSER });
     const report = await getPartnerReport("attr-vendor", { connection: db });
     expect(report!.verification.utmSource).toBe("vialgrade");
     expect(report!.verification.where.join(" ")).toMatch(/Shopify|Google Analytics/);

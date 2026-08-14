@@ -25,9 +25,11 @@ ALTER TABLE outbound_clicks ADD COLUMN IF NOT EXISTS converted_at TIMESTAMPTZ;
 ALTER TABLE outbound_clicks ADD COLUMN IF NOT EXISTS order_value_cents INTEGER;
 ALTER TABLE outbound_clicks ADD COLUMN IF NOT EXISTS order_currency TEXT;
 ALTER TABLE outbound_clicks ADD COLUMN IF NOT EXISTS conversion_source TEXT;
+ALTER TABLE outbound_clicks ADD COLUMN IF NOT EXISTS is_bot BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_outbound_clicks_ref ON outbound_clicks(click_ref);
 CREATE INDEX IF NOT EXISTS idx_outbound_clicks_converted ON outbound_clicks(vendor_slug, converted_at);
 CREATE INDEX IF NOT EXISTS idx_outbound_clicks_visitor ON outbound_clicks(visitor_hash, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_outbound_clicks_human ON outbound_clicks(is_bot, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS partner_programs (
   vendor_slug TEXT PRIMARY KEY,

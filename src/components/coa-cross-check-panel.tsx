@@ -48,7 +48,7 @@ export function CoaCrossCheckPanel({ check }: { check: CoaCrossCheck }) {
           <ExternalLink className="ml-auto size-3.5 shrink-0" />
         </Link>
       ) : null}
-      <p className="mt-4 text-[10px] leading-4 text-black/40">Cross-checks the vendor&rsquo;s testing claim against independent lab records. {PURITY_PROVENANCE} Never a statement that a product is safe, sterile, or correctly dosed.</p>
+      <p className="mt-4 text-[10px] leading-4 text-black/40">Cross-checks the vendor&rsquo;s testing claim against independent lab records. {PURITY_PROVENANCE} Never a statement that a product is safe, sterile, or correctly dosed. <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">What &ldquo;grade&rdquo; actually means</Link></p>
     </div>
   );
 }
