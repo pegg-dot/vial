@@ -77,10 +77,10 @@
   {
     "slug": "cjc-1295",
     "fdaApproved": false,
-    "regulatoryStatus": "Not FDA-approved; sold for research use only",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only. FDA placed CJC-1295 in category 2 (significant safety risks) for pharmacy compounding, citing immunogenicity risk by some routes and peptide-related impurities; the nomination was later withdrawn, so it now sits on no FDA bulks list.",
     "sourceUrls": [
-      "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=CJC-1295",
-      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
+      "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=CJC-1295"
     ]
   },
   {
@@ -105,8 +105,9 @@
   {
     "slug": "epitalon",
     "fdaApproved": false,
-    "regulatoryStatus": "Not FDA-approved; sold for research use only (a related pineal extract, Epithalamin, has been used in Russia; not approved in the US/EU)",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only. FDA placed epitalon in category 2 (significant safety risks) for compounding over immunogenicity and peptide-impurity concerns and said it had identified no adequate human data; the nomination was later withdrawn. A related pineal extract, Epithalamin, has been used in Russia; neither is approved in the US or EU.",
     "sourceUrls": [
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
       "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=epitalon",
       "https://clinicaltrials.gov/search?intr=epitalon"
     ]
@@ -209,10 +210,10 @@
   {
     "slug": "ipamorelin",
     "fdaApproved": false,
-    "regulatoryStatus": "Not FDA-approved; sold for research use only (clinical development was discontinued)",
+    "regulatoryStatus": "Not FDA-approved. Ipamorelin acetate is currently in FDA's category 2 — significant safety risks — for outsourcing-facility (503B) compounding, added 29 September 2023, citing immunogenicity risk by some routes and peptide-related impurities. Its separate 503A nomination was withdrawn. Clinical development as a drug was discontinued.",
     "sourceUrls": [
-      "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=ipamorelin",
-      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
+      "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=ipamorelin"
     ]
   },
   {
@@ -229,8 +230,9 @@
   {
     "slug": "kpv",
     "fdaApproved": false,
-    "regulatoryStatus": "Not FDA-approved; sold for research use only",
+    "regulatoryStatus": "Not FDA-approved; sold for research use only. FDA placed KPV in category 2 (significant safety risks) for compounding, stating plainly that it had identified no human exposure data for KPV by any route of administration; the nomination was later withdrawn.",
     "sourceUrls": [
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
       "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=KPV",
       "https://clinicaltrials.gov/search?intr=KPV"
     ]
@@ -257,8 +259,9 @@
   {
     "slug": "ll-37",
     "fdaApproved": false,
-    "regulatoryStatus": "Endogenous human cathelicidin peptide; synthetic LL-37 not FDA-approved; investigational only",
+    "regulatoryStatus": "An endogenous human cathelicidin peptide; synthetic LL-37 is not FDA-approved and remains investigational. FDA placed cathelicidin LL-37 in category 2 (significant safety risks) for compounding, citing immunogenicity risk by some routes and peptide-related impurities; the nomination was later withdrawn.",
     "sourceUrls": [
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
       "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=LL-37",
       "https://clinicaltrials.gov/search?intr=LL-37"
     ]
@@ -296,8 +299,9 @@
   {
     "slug": "melanotan-2",
     "fdaApproved": false,
-    "regulatoryStatus": "Not approved by FDA or EMA; an unlicensed drug sold illegally online as an injectable/nasal tanning and libido agent",
+    "regulatoryStatus": "Not approved by the FDA or the EMA, and sold illegally online as an injectable or nasal tanning and libido agent. FDA placed Melanotan II in category 2 (significant safety risks) for compounding, citing immunogenicity risk by some routes and published case reports; the nomination was later withdrawn.",
     "sourceUrls": [
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
       "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=melanotan",
       "https://clinicaltrials.gov/search?intr=melanotan"
     ]
@@ -325,8 +329,9 @@
   {
     "slug": "mots-c",
     "fdaApproved": false,
-    "regulatoryStatus": "Not FDA-approved; sold for research use only (no approved human indication)",
+    "regulatoryStatus": "Not FDA-approved and has no approved human indication. FDA placed MOTs-C in category 2 (significant safety risks) for compounding, citing significant immunogenicity risk by some routes and peptide-impurity concerns; the nomination was later withdrawn.",
     "sourceUrls": [
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
       "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=MOTS-c",
       "https://clinicaltrials.gov/search?intr=MOTS-c"
     ]
@@ -407,8 +412,9 @@
   {
     "slug": "selank",
     "fdaApproved": false,
-    "regulatoryStatus": "Not FDA/EMA-approved; registered and used clinically in Russia as an anxiolytic (a synthetic analog of the peptide tuftsin)",
+    "regulatoryStatus": "Not FDA- or EMA-approved; registered and used clinically in Russia as an anxiolytic, a synthetic analog of the peptide tuftsin. FDA placed selank acetate in category 2 (significant safety risks) for compounding, citing immunogenicity and peptide-impurity concerns and a lack of safety data; the nomination was later withdrawn.",
     "sourceUrls": [
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
       "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=selank",
       "https://clinicaltrials.gov/search?intr=selank"
     ]
@@ -426,8 +432,9 @@
   {
     "slug": "semax",
     "fdaApproved": false,
-    "regulatoryStatus": "Not FDA/EMA-approved; registered and used clinically in Russia as a nootropic/neuroprotective agent (a synthetic ACTH(4-10) analog)",
+    "regulatoryStatus": "Not FDA- or EMA-approved; registered and used clinically in Russia as a nootropic, a synthetic ACTH(4-10) analog. FDA placed semax (heptapeptide) in category 2 (significant safety risks) for compounding, citing immunogenicity risk by some routes and peptide-related impurities; the nomination was later withdrawn.",
     "sourceUrls": [
+      "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
       "https://dailymed.nlm.nih.gov/dailymed/search.cfm?labeltype=all&query=semax",
       "https://clinicaltrials.gov/search?intr=semax"
     ]
