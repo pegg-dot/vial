@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
+import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3 } from "lucide-react";
 import { ArtMolecule, ArtDroplet } from "@/components/vial-art";
@@ -39,11 +41,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+
+// The public half of this page — listings, lab tests, literature, regulatory status, passports.
+// Identical for every visitor, so it is loaded once and cached under the shared "catalog" tag that
+// the collect cron invalidates on write. getCurrentPrincipal() stays outside: it reads a cookie,
+// and caching anything derived from it would leak one visitor's session state to another.
+const loadCompoundPublicData = unstable_cache(
+  async (slug: string) => {
+    const [listings, labTests, research, regulatory, allPassports] = await Promise.all([getProductsByCompoundSlug(slug), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassportsForCompound(slug, 12)]);
+    return { listings, labTests, research, regulatory, allPassports };
+  },
+  ["compound-page"],
+  { tags: [CATALOG_CACHE_TAG], revalidate: 21600 },
+);
+
 export default async function CompoundPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
-  const [listings, principal, labTests, research, regulatory, allPassports] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassportsForCompound(slug, 12)]);
+  const [publicData, principal] = await Promise.all([loadCompoundPublicData(slug), getCurrentPrincipal()]);
+  const { listings, labTests, research, regulatory, allPassports } = publicData;
   const passports = allPassports as unknown as PassportRow[];
   const edu = educationFor(slug);
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
+import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock3, ExternalLink, PackageCheck, Star, Truck } from "lucide-react";
 import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVendorBySlug } from "@/server/catalog/repository";
@@ -50,11 +52,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+
+// Public half: the vendor record and the batch passport. Same for everyone, cached under the
+// shared "catalog" tag the collect cron invalidates. principal stays out — it reads a cookie.
+const loadProductPublicData = unstable_cache(
+  async (vendorSlug: string, batchCode: string) => {
+    const [vendor, passport] = await Promise.all([getVendorBySlug(vendorSlug), getPublicPassportForBatchCode(batchCode)]);
+    return { vendor, passport };
+  },
+  ["product-page"],
+  { tags: [CATALOG_CACHE_TAG], revalidate: 21600 },
+);
+
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) notFound();
-  const [vendor, principal, passport] = await Promise.all([getVendorBySlug(product.vendorSlug), getCurrentPrincipal(), getPublicPassportForBatchCode(product.batchCode)]);
+  const [publicData, principal] = await Promise.all([loadProductPublicData(product.vendorSlug, product.batchCode), getCurrentPrincipal()]);
+  const { vendor, passport } = publicData;
   const compound = await getCompoundBySlug(product.compoundSlug);
   if (!vendor || !compound) notFound();
 

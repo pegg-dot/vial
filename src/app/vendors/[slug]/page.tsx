@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
+import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
 import { ArrowLeft, Building2, Check, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
 import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
@@ -52,11 +54,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: vendor.name, description: `What VialGrade knows about ${vendor.name}: verdict, independent lab tests, reputation, and market history.` };
 }
 
+
+// Everything on this page that is the SAME for every visitor, loaded once and cached.
+//
+// This page fired FOURTEEN database queries per request and was force-dynamic, so a crawler hit on
+// each of ~83 vendor pages ran all of them again. None of this data is per-user: it is the vendor's
+// listings, lab tests, reputation and flags. It is cached under the shared "catalog" tag, which the
+// collect cron invalidates the moment it writes new data, so freshness is unchanged.
+//
+// getCurrentPrincipal() is deliberately NOT in here — it reads a cookie, and caching anything
+// derived from a cookie would serve one visitor's session state to another.
+const loadVendorPublicData = unstable_cache(
+  async (slug: string) => {
+    const [listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers] = await Promise.all([getProductsByVendorSlug(slug), getCatalogSnapshot(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db)), getDatabase().then((db) => getVendorAggregatorRatings(slug, db)), getDatabase().then((db) => getVendorSignals(slug, db)), getDatabase().then((db) => getVendorOffers(slug, db))]);
+    return { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers };
+  },
+  ["vendor-page"],
+  { tags: [CATALOG_CACHE_TAG], revalidate: 21600 },
+);
+
 export default async function VendorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
-  const [listings, catalog, principal, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers] = await Promise.all([getProductsByVendorSlug(slug), getCatalogSnapshot(), getCurrentPrincipal(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db)), getDatabase().then((db) => getVendorAggregatorRatings(slug, db)), getDatabase().then((db) => getVendorSignals(slug, db)), getDatabase().then((db) => getVendorOffers(slug, db))]);
+  const [publicData, principal] = await Promise.all([loadVendorPublicData(slug), getCurrentPrincipal()]);
+  const { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers } = publicData;
   // How this vendor's per-mg pricing sits against the market (the "are they a good deal?" stat).
   const priceIndex = vendorPriceIndex(listings, catalog.products);
   // Best value first — same market-consistent ordering as the rest of the app.
