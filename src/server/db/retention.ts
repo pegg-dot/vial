@@ -1,0 +1,80 @@
+// How long operational history is kept.
+//
+// Before this existed, the codebase had exactly ONE retention rule — operational metric snapshots,
+// 30 days — and every other history table grew forever. Every collector run appended a row that
+// nothing ever removed. That is fine for a week and not fine for a year: the tables that grow
+// without bound are also the tables that get scanned, so unbounded history quietly becomes
+// unbounded read volume, which is what a managed Postgres bills for.
+//
+// WHAT IS DELIBERATELY NOT PURGED, and must stay that way:
+//
+//   source_snapshots / diffs   The project rule is to preserve immutable snapshots and diffs. They
+//                              are the provenance behind every published claim; losing them means a
+//                              claim can no longer be traced to what was actually fetched.
+//   outbound_clicks            This IS the attribution evidence — the record that VialGrade sent a
+//                              vendor real buyers. Deleting it deletes the business case, and a
+//                              vendor asking "prove it" a year from now is the entire point.
+//   price_observations         One row per listing per day, and the price history is a product
+//                              surface, not telemetry.
+//   compounds / listings / vendors  Updated in place, never appended, so they do not grow.
+//
+// Everything below is operational exhaust: useful recently, worthless old.
+import type { SqlConnection } from "./client";
+
+// The timestamp column differs per table — page_views uses created_at, collector_runs uses ran_at,
+// the snapshot tables use observed_at. Naming it per rule is not pedantry: a hardcoded `created_at`
+// deletes NOTHING on three of these five tables while still reporting success, which is precisely
+// the kind of silent no-op that lets a "fixed" retention policy quietly never run.
+interface Rule { table: string; column: string; days: number; where?: string; why: string }
+
+const RULES: Rule[] = [
+  {
+    table: "page_views", column: "created_at", days: 30, where: "is_bot",
+    why: "Crawler hits are never read by any surface — the funnel filters them out — so they are pure storage and scan cost.",
+  },
+  {
+    table: "page_views", column: "created_at", days: 400, where: "NOT is_bot",
+    why: "Real visits stay well over a year so year-over-year comparisons remain possible; the funnel itself only reads 30 days.",
+  },
+  {
+    table: "collector_runs", column: "ran_at", days: 60,
+    why: "Only used to show recent collector health. A run from two months ago answers no question anyone asks.",
+  },
+  {
+    table: "source_reliability_snapshots", column: "observed_at", days: 90,
+    why: "Recomputed from scratch on every quality pass, so old rows are superseded by construction.",
+  },
+  {
+    table: "operational_metric_snapshots", column: "observed_at", days: 30,
+    why: "Pre-existing rule, kept here so every retention decision is visible in one place.",
+  },
+];
+
+export interface RetentionResult { table: string; deleted: number; days: number }
+
+/**
+ * Delete operational history past its useful life. Safe to run repeatedly; each pass only removes
+ * what is already past the window. Never throws — retention failing must not fail the caller.
+ */
+export async function applyRetention(db: SqlConnection): Promise<RetentionResult[]> {
+  const results: RetentionResult[] = [];
+  for (const rule of RULES) {
+    try {
+      const predicate = rule.where ? ` AND ${rule.where}` : "";
+      const result = await db.query(
+        `DELETE FROM ${rule.table} WHERE ${rule.column} < NOW() - $1::interval${predicate}`,
+        [`${rule.days} days`],
+      );
+      results.push({ table: rule.table, deleted: result.rowCount ?? 0, days: rule.days });
+    } catch (error) {
+      // A missing table or column must not break the caller — retention is housekeeping.
+      console.error(`[retention] skipped ${rule.table}:`, error);
+    }
+  }
+  return results;
+}
+
+/** The rules, for display on an admin surface so the policy is legible rather than buried. */
+export function retentionPolicy(): Rule[] {
+  return RULES;
+}

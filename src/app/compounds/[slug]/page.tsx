@@ -17,7 +17,7 @@ import { FollowButton } from "@/components/follow-button";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { PassportCarousel, type PassportRow } from "@/components/passport-carousel";
-import { listPublicPassports } from "@/server/evidence-network/repository";
+import { listPublicPassportsForCompound } from "@/server/evidence-network/repository";
 import { PriceLeaderboard } from "@/components/price-leaderboard";
 import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 import { getDatabase } from "@/server/db/client";
@@ -43,8 +43,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
-  const [listings, principal, labTests, research, regulatory, allPassports] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassports()]);
-  const passports = (allPassports as Array<Record<string, unknown>>).filter((p) => p.compound_slug === slug || p.compound_slug_join === slug).slice(0, 12) as unknown as PassportRow[];
+  const [listings, principal, labTests, research, regulatory, allPassports] = await Promise.all([getProductsByCompoundSlug(slug), getCurrentPrincipal(), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassportsForCompound(slug, 12)]);
+  const passports = allPassports as unknown as PassportRow[];
   const edu = educationFor(slug);
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
   // (so we only ever link to compounds we actually track) and carry its cheapest listing price.

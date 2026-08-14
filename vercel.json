@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/internal/cron/refresh",
-      "schedule": "17 * * * *"
+      "schedule": "30 5 * * *"
     },
     {
       "path": "/api/internal/cron/collect",
-      "schedule": "*/15 * * * *"
+      "schedule": "30 4 * * *"
     }
   ]
 }

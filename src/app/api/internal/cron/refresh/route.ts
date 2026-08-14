@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runIntelligenceSweep } from "@/server/intelligence/scanner";
 import { runRefreshSweep } from "@/server/refresh/scheduler";
+import { getDatabase } from "@/server/db/client";
+import { applyRetention } from "@/server/db/retention";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -23,5 +25,9 @@ export async function GET(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const refresh = await runRefreshSweep(20);
   const intelligence = await runIntelligenceSweep("system:cron");
-  return NextResponse.json({ refresh, intelligence, completedAt: new Date().toISOString() });
+  // Housekeeping runs with the daily sweep. Operational history used to grow forever — one row per
+  // collector run, per page view, per reliability pass, none of it ever removed — which turns into
+  // read volume the database bills for. applyRetention never throws, so it cannot fail the sweep.
+  const retention = await applyRetention(await getDatabase());
+  return NextResponse.json({ refresh, intelligence, retention, completedAt: new Date().toISOString() });
 }
