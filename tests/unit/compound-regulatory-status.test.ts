@@ -40,9 +40,16 @@ describe("curated compound regulatory status", () => {
     // Where an approved drug exists it is never the online vial — SCENESSE is an implant a
     // clinician places; Forzinity treats Barth syndrome. Every approved record must say so, or the
     // page reads as "this product is FDA-approved", which is the false claim the site exists to catch.
+    // Asserted as a property rather than a list of accepted sentences: the copy must REFER to the
+    // material sold here, and must DENY that it is the approved drug. Pinning exact phrasing would
+    // repeat the mistake this whole change exists to undo.
+    const namesTheSoldMaterial = /\b(?:sold (?:online|here|as)|research[- ](?:grade|material|chemical)|sold for research|online)\b/i;
+    const deniesItIsTheDrug = /\b(?:is not|are not|not that product|falls outside|never that)\b/i;
     for (const r of records.filter((r) => r.fdaApproved)) {
-      expect(r.regulatoryStatus, `${r.slug} claims approval without distinguishing the sold material`)
-        .toMatch(/is not (?:that|an approved) product|not the approved product|falls outside any approved product/i);
+      expect(r.regulatoryStatus, `${r.slug} claims approval without naming the material actually sold`)
+        .toMatch(namesTheSoldMaterial);
+      expect(r.regulatoryStatus, `${r.slug} names the sold material but never denies it is the approved drug`)
+        .toMatch(deniesItIsTheDrug);
     }
   });
 
