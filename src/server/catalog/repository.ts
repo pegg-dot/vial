@@ -62,9 +62,20 @@ export async function getCatalogSnapshot():Promise<CatalogSnapshot>{
   if (process.env.NODE_ENV !== "production") return computeCatalogSnapshot();
   return cachedCatalogSnapshot();
 }
-export async function getCompoundBySlug(slug:string){ return (await queryCompounds()).find(x=>x.slug===slug); }
-export async function getVendorBySlug(slug:string){ return (await queryVendors()).find(x=>x.slug===slug); }
-export async function getProductBySlug(slug:string){ return (await queryProducts()).find(x=>x.slug===slug); }
+// Single-entity lookups, served from the CACHED snapshot rather than re-reading the table.
+//
+// These each used to run their full query and then .find() one row out of it in JavaScript, and
+// none of them were cached or even per-request deduped. One product page view therefore executed
+// roughly three full listings reads (generateMetadata calls getProductBySlug and getVendorBySlug,
+// then the page body calls getProductBySlug again plus getProductsByCompoundSlug), two full vendor
+// reads and a full compound read — for a single page, uncached, on every hit.
+//
+// Caching the page panels earlier fixed only half the problem; this was the other half. The
+// snapshot they now read is already cached under CATALOG_CACHE_TAG and invalidated by the collect
+// cron, so freshness is identical and the reads collapse to one shared cached load.
+export async function getCompoundBySlug(slug:string){ return (await getCatalogSnapshot()).compounds.find(x=>x.slug===slug); }
+export async function getVendorBySlug(slug:string){ return (await getCatalogSnapshot()).vendors.find(x=>x.slug===slug); }
+export async function getProductBySlug(slug:string){ return (await getCatalogSnapshot()).products.find(x=>x.slug===slug); }
 export async function getProductsByCompoundSlug(slug:string){ return (await queryProducts()).filter(x=>x.compoundSlug===slug); }
 export async function getProductsByVendorSlug(slug:string){ return (await queryProducts()).filter(x=>x.vendorSlug===slug); }
 export async function getRecentAgentRuns(limit=20):Promise<AgentRun[]> {

@@ -95,21 +95,36 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-  // Track the live DB so client surfaces stay in step with server-rendered pages.
+  // Track the live catalog so client surfaces stay in step with server-rendered pages.
+  //
+  // This polled every 120s AND on every tab focus, with cache:"no-store", pulling the WHOLE catalog
+  // each time. One tab left open for a working day made ~720 full-catalog requests, and every one
+  // was a full read of the database behind it. That is a client-side version of the same problem
+  // that exhausted the database quota.
+  //
+  // The catalog changes once a day, when the collect cron runs. A 15-minute poll is already far
+  // more often than the data can possibly change. The focus-triggered refresh is kept because
+  // returning to a stale tab is exactly when a refresh is worth something, but it now only fires if
+  // the data is actually old rather than on every alt-tab.
   useEffect(() => {
     let alive = true;
+    let lastFetched = Date.now();
+    const REFRESH_MS = 900_000; // 15 min; the underlying data moves once a day
     const refresh = async () => {
       if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
       try {
-        const r = await fetch("/api/v1/catalog", { cache: "no-store" });
+        const r = await fetch("/api/v1/catalog");
         if (!r.ok) return;
         const j = await r.json();
+        lastFetched = Date.now();
         if (alive && j?.data?.products) setFetchedCatalog(j.data as CatalogSnapshot);
       } catch { /* keep the last-good catalog */ }
     };
-    const onVis = () => { if (document.visibilityState === "visible") void refresh(); };
+    const onVis = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastFetched > REFRESH_MS) void refresh();
+    };
     document.addEventListener("visibilitychange", onVis);
-    const id = window.setInterval(() => void refresh(), 120_000);
+    const id = window.setInterval(() => void refresh(), REFRESH_MS);
     return () => { alive = false; document.removeEventListener("visibilitychange", onVis); window.clearInterval(id); };
   }, []);
 

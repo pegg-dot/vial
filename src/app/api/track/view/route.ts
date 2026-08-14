@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recordPageView } from "@/server/analytics/visitors";
+import { isBotUserAgent } from "@/server/analytics/is-bot";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,12 @@ export async function POST(request: NextRequest) {
     const path = String(body.path ?? "").slice(0, 300);
     // Only record real in-app paths; never a full URL, never anything with a query string.
     if (!path.startsWith("/") || path.includes("://")) return new NextResponse(null, { status: 204 });
+
+    // Drop crawler views BEFORE touching the database rather than storing them with is_bot=true.
+    // Every surface that reads page_views already filters `NOT is_bot`, so these rows were written,
+    // indexed, retained and scanned without a single query ever returning one — a database write
+    // per crawler hit, for data nothing reads. The counting rule is unchanged; only the storage is.
+    if (isBotUserAgent(request.headers.get("user-agent"))) return new NextResponse(null, { status: 204 });
 
     await recordPageView({
       path: path.split("?")[0]!,
