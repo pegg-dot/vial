@@ -4,6 +4,7 @@ import { VialBuddy, ArtShieldCheck, ArtCoa } from "@/components/vial-art";
 import { getVendorDirectory } from "@/server/vendors/directory";
 import { getCertificatesOnRecord } from "@/server/public-repository";
 import { VendorsDirectory } from "@/components/vendors-directory";
+import { DataUnavailable } from "@/components/home-data-unavailable";
 
 export const metadata: Metadata = { title: "Vendor directory", description: "Rank peptide vendors by what matters to you — reliability, price, purity, testing, or reputation — from real evidence.", alternates: { canonical: "/vendors" } };
 export const dynamic = "force-dynamic";
@@ -12,10 +13,12 @@ export const dynamic = "force-dynamic";
 const STEEL = "#39414e";
 
 export default async function VendorsPage() {
-  const entries = await getVendorDirectory();
+  // Guard BEFORE deriving anything — the counts below read `entries` directly.
+  const entries = await getVendorDirectory().catch((error) => { console.error("[vendors] directory unavailable:", error); return null; });
+  const totalCoa = await getCertificatesOnRecord().catch(() => null);   // site-wide corpus, not the vendor-matched subset
+  if (!entries || totalCoa === null) return <DataUnavailable surface="the vendor directory" />;
   const storefronts = entries.filter((e) => e.vendor.kind !== "manufacturer").length;
   const manufacturers = entries.filter((e) => e.vendor.kind === "manufacturer").length;
-  const totalCoa = await getCertificatesOnRecord();   // site-wide corpus, not the vendor-matched subset
 
   return <>
     <section className="relative isolate overflow-hidden border-b-2 border-[#111214] text-white" style={{ background: STEEL }}>

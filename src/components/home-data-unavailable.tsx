@@ -13,7 +13,7 @@ import { AlertTriangle } from "lucide-react";
  * The pages that need no live data stay open and are linked here, because they are also the ones
  * worth reading first: how the grading works, and what a grade does not mean.
  */
-export function HomeDataUnavailable() {
+export function DataUnavailable({ surface = "the catalogue" }: { surface?: string }) {
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-[900px] items-center px-5 py-20 sm:px-8">
       <div className="ink hard w-full rounded-[18px] bg-white p-8 sm:p-12">
@@ -21,7 +21,7 @@ export function HomeDataUnavailable() {
           <AlertTriangle className="size-3.5" /> Live data unavailable
         </span>
         <h1 className="mt-5 text-[clamp(1.9rem,4vw,2.8rem)] font-extrabold leading-[1.02] tracking-[-.04em]">
-          We can&rsquo;t reach the catalogue right now.
+          We can&rsquo;t reach {surface} right now.
         </h1>
         <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">
           Rather than show you numbers we can&rsquo;t stand behind, we&rsquo;d rather show you
@@ -45,4 +45,9 @@ export function HomeDataUnavailable() {
       </div>
     </section>
   );
+}
+
+/** The homepage variant, kept as a named export so the homepage reads clearly at its call site. */
+export function HomeDataUnavailable() {
+  return <DataUnavailable surface="the catalogue" />;
 }
