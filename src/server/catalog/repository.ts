@@ -1,4 +1,5 @@
 import type { QueryResultRow } from "pg";
+import { unstable_cache } from "next/cache";
 import type { AgentRun, CatalogSnapshot, Compound, DataOrigin, Product, Vendor } from "@/lib/types";
 import { parseTotalMg } from "@/lib/format";
 import { compoundMedianPerMg } from "@/lib/curation";
@@ -31,13 +32,36 @@ async function queryVendors(){ const db=await getDatabase(); return (await db.qu
   (SELECT MAX(t.tested_at) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.is_independent) latest_tested
   FROM organizations o WHERE o.organization_type='vendor' ORDER BY o.display_name`)).rows.map(toVendor); }
 async function queryProducts(){ const db=await getDatabase(); const products=(await db.query<ProductRow>(`SELECT l.*,p.name,p.declared_quantity,p.declared_form,c.slug AS compound_slug,o.slug AS vendor_slug FROM listings l JOIN products p ON p.id=l.product_id JOIN compounds c ON c.id=p.compound_id JOIN organizations o ON o.id=p.vendor_id WHERE p.status='active' ORDER BY l.featured DESC,l.price ASC,p.name ASC`)).rows.map(toProduct); const trust=await computeListingTrustMap(db,products); for(const product of products) product.trust=trust.get(product.slug); return products; }
-export async function getCatalogSnapshot():Promise<CatalogSnapshot>{ const [compounds,vendors,products]=await Promise.all([queryCompounds(),queryVendors(),queryProducts()]);
+async function computeCatalogSnapshot():Promise<CatalogSnapshot>{ const [compounds,vendors,products]=await Promise.all([queryCompounds(),queryVendors(),queryProducts()]);
   // Live per-compound median $/mg, computed from the SAME parseTotalMg the cards use — not sticker
   // price. compoundMedianPerMg only counts readable sizes and returns null below the peer floor.
   const perMg=new Map<string,number[]>();
   for(const p of products){ if(p.pricePerMg&&p.pricePerMg>0){ const a=perMg.get(p.compoundSlug); if(a) a.push(p.pricePerMg); else perMg.set(p.compoundSlug,[p.pricePerMg]); } }
   for(const c of compounds){ c.medianPricePerMg=compoundMedianPerMg(perMg.get(c.slug)??[]); }
   return {compounds,vendors,products,generatedAt:new Date().toISOString()}; }
+
+// The whole catalog — every compound, vendor and listing — read out of the database.
+//
+// THE ROOT LAYOUT CALLS THIS, so before it was cached every request to every page on the site
+// (~830 public pages) pulled ~550 rows, whether the visitor needed them or not. A crawler sweep
+// therefore re-read the entire catalog once per page. That, and not user traffic, is what exhausted
+// a database transfer quota on a site with no users.
+//
+// The catalog now changes once a day, when the collect cron runs, so serving it from cache costs
+// nothing in freshness. The cron calls revalidateTag(CATALOG_CACHE_TAG) after it writes, so new
+// data appears immediately rather than waiting out the window.
+//
+// Development bypasses the cache entirely: local data changes come from scripts, and a stale
+// catalog that ignores them for hours is a debugging trap.
+export const CATALOG_CACHE_TAG = "catalog";
+const cachedCatalogSnapshot = unstable_cache(computeCatalogSnapshot, ["catalog-snapshot"], {
+  tags: [CATALOG_CACHE_TAG],
+  revalidate: 21600, // 6h ceiling; the cron tag-invalidates well before this in practice
+});
+export async function getCatalogSnapshot():Promise<CatalogSnapshot>{
+  if (process.env.NODE_ENV !== "production") return computeCatalogSnapshot();
+  return cachedCatalogSnapshot();
+}
 export async function getCompoundBySlug(slug:string){ return (await queryCompounds()).find(x=>x.slug===slug); }
 export async function getVendorBySlug(slug:string){ return (await queryVendors()).find(x=>x.slug===slug); }
 export async function getProductBySlug(slug:string){ return (await queryProducts()).find(x=>x.slug===slug); }
