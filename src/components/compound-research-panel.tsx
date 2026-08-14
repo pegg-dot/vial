@@ -13,9 +13,43 @@ const STUDY: Record<string, { label: string; cls: string; rank: number }> = {
   "in-vitro": { label: "In-vitro", cls: "bg-black/[.06] text-black/55", rank: 5 },
 };
 
-export function CompoundResearchPanel({ findings, regulatoryStatus, evidenceSummary, compoundName }: { findings: CompoundResearch[]; regulatoryStatus: string | null; evidenceSummary: string | null; compoundName: string }) {
+/**
+ * How the regulatory card is painted.
+ *
+ * This used to be decided by regexing the prose — /FDA-approved/i AND NOT /Not FDA/i — which meant
+ * the sentence "Not AN FDA-approved drug" slipped past the negation and painted GHK-Cu, an
+ * unapproved substance, with the green approved badge on its live page. The badge is now read from
+ * a stored boolean that each record declares explicitly, so wording can never decide it.
+ *
+ * There is deliberately NO green "approved" state. Where an approved drug does exist, the material
+ * sold through this site is never that drug: afamelanotide is approved as SCENESSE, an implant a
+ * clinician places under the skin for a rare porphyria — not an online injectable vial; elamipretide
+ * is approved as Forzinity for Barth syndrome. Painting those pages green would tell a buyer that
+ * what they are about to purchase is FDA-approved, which is false and is exactly the claim this
+ * site exists to check. So the third state says an approved drug EXISTS and that this is not it.
+ */
+const REGULATORY_CARD = {
+  approvedDrugExists: {
+    bg: "bg-[#eaf3ff]", fg: "text-[#2b31d8]",
+    label: "An approved drug exists — this is not it",
+  },
+  noApprovedDrug: {
+    bg: "bg-[#fff6e6]", fg: "text-[#b26a00]",
+    label: "No FDA-approved drug",
+  },
+  unknown: {
+    bg: "bg-[#fff6e6]", fg: "text-[#b26a00]",
+    label: "Approval status not established",
+  },
+} as const;
+
+export function CompoundResearchPanel({ findings, regulatoryStatus, evidenceSummary, compoundName, fdaApprovedDrugExists }: { findings: CompoundResearch[]; regulatoryStatus: string | null; evidenceSummary: string | null; compoundName: string; fdaApprovedDrugExists?: boolean | null }) {
   if (findings.length === 0 && !regulatoryStatus && !evidenceSummary) return null;
-  const approved = /FDA-approved/i.test(regulatoryStatus ?? "") && !/Not FDA/i.test(regulatoryStatus ?? "");
+  const card = REGULATORY_CARD[
+    fdaApprovedDrugExists === true ? "approvedDrugExists"
+      : fdaApprovedDrugExists === false ? "noApprovedDrug"
+      : "unknown"
+  ];
   return (
     <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
       <div className="mb-7">
@@ -25,11 +59,12 @@ export function CompoundResearchPanel({ findings, regulatoryStatus, evidenceSumm
       </div>
 
       {regulatoryStatus && (
-        <div className={`ink hard mb-4 flex items-start gap-3 rounded-[18px] p-5 ${approved ? "bg-[#e6fbf6]" : "bg-[#fff6e6]"}`}>
-          <Scale className={`mt-0.5 size-5 shrink-0 ${approved ? "text-[#0e8f80]" : "text-[#b26a00]"}`} />
+        <div className={`ink hard mb-4 flex items-start gap-3 rounded-[18px] p-5 ${card.bg}`}>
+          <Scale className={`mt-0.5 size-5 shrink-0 ${card.fg}`} />
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Regulatory status</p>
-            <p className="mt-1 text-sm font-semibold leading-6 text-black/80">{regulatoryStatus}</p>
+            <p className={`mt-1 text-[13px] font-bold ${card.fg}`}>{card.label}</p>
+            <p className="mt-1.5 text-sm font-semibold leading-6 text-black/80">{regulatoryStatus}</p>
           </div>
         </div>
       )}

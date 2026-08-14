@@ -121,7 +121,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         <InnovatorNote slug={slug} compoundName={compound.name} />
       </section>
 
-      <CompoundResearchPanel findings={research} regulatoryStatus={regulatory?.regulatory_status ?? null} evidenceSummary={regulatory?.evidence_summary ?? null} compoundName={compound.name} />
+      <CompoundResearchPanel findings={research} regulatoryStatus={regulatory?.regulatory_status ?? null} evidenceSummary={regulatory?.evidence_summary ?? null} compoundName={compound.name} fdaApprovedDrugExists={regulatory?.fda_approved_drug_exists ?? null} />
 
       <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
 

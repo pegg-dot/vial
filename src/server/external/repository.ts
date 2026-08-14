@@ -79,16 +79,16 @@ export async function recordCompoundResearch(db: SqlConnection, r: { compoundSlu
     [newId("research"), r.compoundSlug, r.claim, r.studyType ?? null, r.safetyNote ?? null, r.sourceUrl, r.sourceTitle ?? null],
   );
 }
-export async function setCompoundRegulatory(db: SqlConnection, compoundSlug: string, regulatoryStatus: string | null, evidenceSummary: string | null): Promise<void> {
-  await db.query(`UPDATE compounds SET regulatory_status=COALESCE($2, regulatory_status), evidence_summary=COALESCE($3, evidence_summary), updated_at=NOW() WHERE slug=$1`, [compoundSlug, regulatoryStatus, evidenceSummary]);
+export async function setCompoundRegulatory(db: SqlConnection, compoundSlug: string, regulatoryStatus: string | null, evidenceSummary: string | null, fdaApprovedDrugExists: boolean | null = null): Promise<void> {
+  await db.query(`UPDATE compounds SET regulatory_status=COALESCE($2, regulatory_status), evidence_summary=COALESCE($3, evidence_summary), fda_approved_drug_exists=COALESCE($4, fda_approved_drug_exists), updated_at=NOW() WHERE slug=$1`, [compoundSlug, regulatoryStatus, evidenceSummary, fdaApprovedDrugExists]);
 }
 export async function getCompoundResearch(compoundSlug: string, connection?: SqlConnection): Promise<CompoundResearch[]> {
   const db = connection ?? (await getDatabase());
   return (await db.query<CompoundResearch>(`SELECT compound_slug, claim, study_type, safety_note, source_url, source_title FROM compound_research WHERE compound_slug=$1 ORDER BY CASE study_type WHEN 'human-rct' THEN 0 WHEN 'meta-analysis' THEN 1 WHEN 'human-trial' THEN 2 WHEN 'review' THEN 3 WHEN 'animal' THEN 4 ELSE 5 END`, [compoundSlug])).rows;
 }
-export async function getCompoundRegulatory(compoundSlug: string, connection?: SqlConnection): Promise<{ regulatory_status: string | null; evidence_summary: string | null } | null> {
+export async function getCompoundRegulatory(compoundSlug: string, connection?: SqlConnection): Promise<{ regulatory_status: string | null; evidence_summary: string | null; fda_approved_drug_exists: boolean | null } | null> {
   const db = connection ?? (await getDatabase());
-  return (await db.query<{ regulatory_status: string | null; evidence_summary: string | null }>(`SELECT regulatory_status, evidence_summary FROM compounds WHERE slug=$1`, [compoundSlug])).rows[0] ?? null;
+  return (await db.query<{ regulatory_status: string | null; evidence_summary: string | null; fda_approved_drug_exists: boolean | null }>(`SELECT regulatory_status, evidence_summary, fda_approved_drug_exists FROM compounds WHERE slug=$1`, [compoundSlug])).rows[0] ?? null;
 }
 
 // ── Cross-vendor / market-wide reads (for the news feed) ─────────────────────────────────────────

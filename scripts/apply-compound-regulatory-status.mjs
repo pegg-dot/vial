@@ -11,12 +11,14 @@
 // Run with the dev server STOPPED — file-backed PGlite is single-writer — or against a managed
 // DATABASE_URL.
 //
-// WHY THE `fdaApproved` FLAG IS CHECKED HERE: `CompoundResearchPanel` decides whether to paint the
-// regulatory card green ("approved") or amber ("caution") by running a regex over this very text —
-// /FDA-approved/i AND NOT /Not FDA/i. That means a sentence like "no FDA-approved product contains
-// it" would render as an APPROVAL to a buyer. Every record therefore declares the badge it intends,
-// and this script refuses to write if the rendered badge would disagree. A wrong badge on a
-// substance someone may inject is the failure mode worth a hard stop.
+// WHY `fdaApproved` IS WRITTEN, NOT INFERRED: `CompoundResearchPanel` used to decide the regulatory
+// badge by running a regex over this very text — /FDA-approved/i AND NOT /Not FDA/i — so the
+// sentence "Not AN FDA-approved drug" slipped past the negation and painted GHK-Cu, an unapproved
+// substance, as approved on its live page. The panel now reads a stored boolean instead, and this
+// script is what stores it. Wording can no longer decide a badge someone may act on.
+//
+// The flag means an approved DRUG exists containing the molecule — never that the material sold
+// here is that drug. The panel renders it accordingly and has no green "approved" state at all.
 process.env.VIALGRADE_SEED_FIXTURES ||= "false";
 import { readFileSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
@@ -29,8 +31,11 @@ const DRY_RUN = process.argv.includes("--dry-run");
 const SOURCE = new URL("../src/server/data/compound-regulatory-status.json", import.meta.url);
 const records = JSON.parse(readFileSync(SOURCE, "utf8"));
 
-/** Mirror of the badge rule in src/components/compound-research-panel.tsx. Keep in sync. */
-const rendersAsApproved = (text) => /FDA-approved/i.test(text) && !/Not FDA/i.test(text);
+// Prose and flag must still agree — not because the badge depends on the prose any more, but
+// because a record whose sentence says "not approved" while its flag says approved is a research
+// error, and this is the last place to catch it before it reaches a page.
+const proseReadsApproved = (text) =>
+  /FDA-approved/i.test(text) && !/\b(?:not|no|never|nor|isn't|aren't|without)\b[^.;]{0,24}FDA-approved/i.test(text);
 
 const problems = [];
 const seen = new Set();
@@ -43,8 +48,8 @@ for (const r of records) {
   if (typeof r.fdaApproved !== "boolean") problems.push(`${where}: fdaApproved must be a boolean`);
   if (!Array.isArray(r.sourceUrls) || r.sourceUrls.length === 0) problems.push(`${where}: at least one source URL is required`);
   for (const u of r.sourceUrls ?? []) if (!/^https:\/\//.test(u)) problems.push(`${where}: source URL must be https — ${u}`);
-  if (typeof r.regulatoryStatus === "string" && typeof r.fdaApproved === "boolean" && rendersAsApproved(r.regulatoryStatus) !== r.fdaApproved) {
-    problems.push(`${where}: copy renders as ${rendersAsApproved(r.regulatoryStatus) ? "APPROVED" : "not approved"} but fdaApproved=${r.fdaApproved} — rewrite the sentence`);
+  if (typeof r.regulatoryStatus === "string" && typeof r.fdaApproved === "boolean" && proseReadsApproved(r.regulatoryStatus) !== r.fdaApproved) {
+    problems.push(`${where}: prose reads as ${proseReadsApproved(r.regulatoryStatus) ? "APPROVED" : "not approved"} but fdaApproved=${r.fdaApproved} — one of the two is wrong`);
   }
 }
 if (problems.length) {
@@ -69,9 +74,10 @@ console.log(`${records.length} curated record(s) to apply${DRY_RUN ? " (dry run 
 
 let written = 0, unchanged = 0;
 for (const r of records) {
-  const current = (await db.query(`SELECT regulatory_status FROM compounds WHERE slug=$1`, [r.slug])).rows[0]?.regulatory_status ?? null;
-  if (current === r.regulatoryStatus) { unchanged += 1; console.log(`  =  ${r.slug.padEnd(24)} already current`); continue; }
-  if (!DRY_RUN) await setCompoundRegulatory(db, r.slug, r.regulatoryStatus, null);
+  const row = (await db.query(`SELECT regulatory_status, fda_approved_drug_exists FROM compounds WHERE slug=$1`, [r.slug])).rows[0];
+  const current = row?.regulatory_status ?? null;
+  if (current === r.regulatoryStatus && row?.fda_approved_drug_exists === r.fdaApproved) { unchanged += 1; console.log(`  =  ${r.slug.padEnd(24)} already current`); continue; }
+  if (!DRY_RUN) await setCompoundRegulatory(db, r.slug, r.regulatoryStatus, null, r.fdaApproved);
   written += 1;
   console.log(`  ${current ? "~" : "+"}  ${r.slug.padEnd(24)} ${r.regulatoryStatus.slice(0, 88)}${r.regulatoryStatus.length > 88 ? "…" : ""}`);
 }

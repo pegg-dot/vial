@@ -44,7 +44,7 @@
   },
   {
     "compoundSlug": "ghk-cu",
-    "regulatoryStatus": "Not an FDA-approved drug; used as a topical cosmetic ingredient; injectable/systemic use not approved",
+    "regulatoryStatus": "Not FDA-approved as a drug; used as a topical cosmetic ingredient. FDA lists GHK-Cu for non-injectable routes in category 1 of the section 503A compounding nominations — under evaluation, not approved — while the injectable form was placed in category 2 for significant safety risks and its nomination withdrawn.",
     "evidenceSummary": "GHK-Cu has a long biochemical and animal research record plus small topical cosmetic studies and is generally considered safe applied to skin, but robust human wound-healing RCTs are only now underway and injectable use is unproven.",
     "findings": [
       { "claim": "A peer-reviewed review documents that the copper-binding tripeptide GHK, whose plasma levels decline with age, stimulates collagen and glycosaminoglycan synthesis, modulates metalloproteinases, and supports wound healing and skin remodeling in laboratory and animal models.", "studyType": "review", "safetyNote": "Most mechanistic data are in-vitro/animal; long-term systemic safety in humans is not established.", "sourceUrl": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4508379/", "sourceTitle": "GHK Peptide as a Natural Modulator of Multiple Cellular Pathways in Skin Regeneration (BioMed Research International, 2015)" },

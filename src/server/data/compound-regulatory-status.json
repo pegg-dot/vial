@@ -1,0 +1,173 @@
+[
+{ "slug":"5-amino-1mq", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved, and no marketing approval by any other regulator was identified; a preclinical research chemical (an NNMT inhibitor) with no registered human trials on ClinicalTrials.gov, sold as research-use-only material.",
+  "sourceUrls":["https://pubchem.ncbi.nlm.nih.gov/compound/950107","https://clinicaltrials.gov/search?intr=5-Amino-1MQ"] },
+
+{ "slug":"adipotide", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and not approved by any regulator identified. Its only registered human study was a first-in-human Phase 1 trial in metastatic prostate cancer, which was terminated at the investigator's request after enrolling four patients; no development has been registered since.",
+  "sourceUrls":["https://clinicaltrials.gov/study/NCT01262664","https://pubchem.ncbi.nlm.nih.gov/compound/163360068"] },
+
+{ "slug":"aod-9604", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved: its developer's Phase 2b obesity trial in 536 patients missed its primary endpoint and development was abandoned in 2007. FDA placed AOD-9604 in category 2 (significant safety risks) for compounding and in 2024 concluded the evidence weighs against adding it; the nomination was then withdrawn. WADA names AOD-9604 explicitly as a growth-hormone fragment (S2.2.3), prohibited at all times.",
+  "sourceUrls":["https://www.fda.gov/media/183584/download","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"ara-290", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved; cibinetide (ARA-290) is an investigational erythropoietin-derived peptide that has only reached small Phase 2 trials. FDA lists it in category 3 of the section 503A compounding nominations — nominated without adequate supporting information.",
+  "sourceUrls":["https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://clinicaltrials.gov/search?intr=Cibinetide"] },
+
+{ "slug":"argireline", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved as a drug: acetyl hexapeptide-8 is used as a topical cosmetic ingredient, and US law requires no FDA approval for cosmetic ingredients other than color additives. It is listed in the EU cosmetic-ingredient database without any Annex restriction; no injectable or systemic use of it is authorized anywhere.",
+  "sourceUrls":["https://www.fda.gov/cosmetics/cosmetics-laws-regulations/it-cosmetic-drug-or-both-or-it-soap","https://ec.europa.eu/growth/tools-databases/cosing/details/54135","https://www.cir-safety.org/sites/default/files/acetyl032021FR.pdf"] },
+
+{ "slug":"cagrilintide", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved; an investigational long-acting amylin analog in Phase 3 development, studied largely in combination with semaglutide. FDA states plainly that cagrilintide cannot lawfully be used in compounding and has not been found safe and effective for any condition.",
+  "sourceUrls":["https://www.fda.gov/drugs/drug-alerts-and-statements/fdas-concerns-unapproved-glp-1-drugs-used-weight-loss","https://clinicaltrials.gov/search?intr=Cagrilintide"] },
+
+{ "slug":"cerebrolysin", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and holds no EU-wide marketing authorization from the EMA; a porcine brain-derived peptide preparation authorized nationally in individual countries (Austria has licensed it since 1996) and still trialed there for stroke.",
+  "sourceUrls":["https://medikamente.basg.gv.at/documents/1-21380__DOTC_FACH_INFO.pdf","https://clinicaltrials.gov/search?intr=Cerebrolysin","https://pubmed.ncbi.nlm.nih.gov/41018475/"] },
+
+{ "slug":"dihexa", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. FDA placed dihexa acetate in category 2 (significant safety risks) for pharmacy compounding, stating it had identified no human exposure data for any route of administration; the nomination was later withdrawn, so it appears on no FDA bulks list.",
+  "sourceUrls":["https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://pubchem.ncbi.nlm.nih.gov/compound/129010512"] },
+
+{ "slug":"dsip", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. FDA placed emideltide — its formal name for DSIP — in category 2 (significant safety risks) for pharmacy compounding, citing an absence of safety information; the nomination was later withdrawn. FDA reviewed it again in July 2026 and concluded the evidence weighs against adding it to the compounding list.",
+  "sourceUrls":["https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.fda.gov/media/193344/download","https://pubchem.ncbi.nlm.nih.gov/compound/68816"] },
+
+{ "slug":"follistatin-344", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and has no approved indication anywhere identified; the only completed trials of the FS344 sequence were early-phase gene-therapy studies in muscular dystrophy, not studies of an injectable peptide. WADA prohibits follistatin at all times as a myostatin-binding protein (S4.3).",
+  "sourceUrls":["https://clinicaltrials.gov/study/NCT01519349","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"ghrp-2", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. Japan is the one country that has approved it: pralmorelin is marketed there by Kaken as a single-dose diagnostic for growth-hormone deficiency, not as a treatment. FDA placed injectable and nasal GHRP-2 in category 2 (significant safety risks) for outsourcing-facility compounding in September 2023 and lists it in category 3 under section 503A; WADA prohibits it at all times (S2.2.4).",
+  "sourceUrls":["https://www.pmda.go.jp/PmdaSearch/iyakuDetail/200022_7223407D2023_1_01","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"ghrp-6", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. FDA placed GHRP-6 in category 2 (significant safety risks) for outsourcing-facility compounding in September 2023, citing effects on cortisol and insulin sensitivity, and lists it in category 3 under section 503A. WADA prohibits it at all times as a GH-releasing peptide (S2.2.4).",
+  "sourceUrls":["https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"ghk-cu", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved as a drug; used as a topical cosmetic ingredient. FDA lists GHK-Cu for non-injectable routes in category 1 of the section 503A compounding nominations — under evaluation, not approved — while the injectable form was placed in category 2 for significant safety risks and its nomination withdrawn.",
+  "sourceUrls":["https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"] },
+
+{ "slug":"glutathione", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved as a systemic or injectable drug; the only Drugs@FDA products containing a glutathione component are ophthalmic irrigating solutions. FDA lists it in category 1 of the section 503A compounding nominations — under evaluation, not approved — and has warned that compounded IV glutathione caused rapid adverse reactions traced to a supplement-grade ingredient.",
+  "sourceUrls":["https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://www.fda.gov/drugs/human-drug-compounding/fda-highlights-concerns-using-dietary-ingredient-glutathione-compound-sterile-injectables","https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=018469"] },
+
+{ "slug":"gonadorelin", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved for people today — Factrel (1982) and Lutrepulse (1989) are both listed as discontinued in Drugs@FDA, and the only current US approvals are veterinary products for cattle. In June 2026 FDA warned a seller that its 'Gonadorelin' is an unapproved new drug; WADA prohibits gonadorelin in males at all times (S2.2.1).",
+  "sourceUrls":["https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=018123","https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=019687","https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/wholesale-peptide-729447-06172026","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"hexarelin", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and no approval by any other regulator was identified; sold as research-use-only material. WADA prohibits hexarelin (examorelin) at all times as a GH-releasing peptide (S2.2.4).",
+  "sourceUrls":["https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf","https://pubchem.ncbi.nlm.nih.gov/compound/6918297"] },
+
+{ "slug":"hgh-fragment-176-191", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and has no approved human indication; sold as research-use-only material. WADA names hGH 176-191 explicitly as a prohibited growth-hormone fragment (S2.2.3), banned in sport at all times.",
+  "sourceUrls":["https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"humanin", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and has no approved indication anywhere identified; a mitochondria-derived peptide that has never been given to anyone in a registered clinical trial — the studies naming it measure it as a biomarker rather than administer it.",
+  "sourceUrls":["https://clinicaltrials.gov/search?intr=Humanin","https://pubchem.ncbi.nlm.nih.gov/compound/16131438"] },
+
+{ "slug":"igf-1-lr3", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved; an engineered IGF-1 analog sold as research-use-only material. Recombinant human IGF-1 itself is approved as Increlex (mecasermin, 2005) for severe primary IGF-1 deficiency, but LR3 is a different, unapproved molecule. WADA prohibits IGF-1 and its analogs at all times (S2.3).",
+  "sourceUrls":["https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=021839","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"kisspeptin-10", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved — FDA states there is no approved product containing kisspeptin-10 in any country. FDA placed it in category 2 (significant safety risks) for section 503A compounding in September 2023, and its advisory committee voted 11-0 against adding it to the compounding list. WADA prohibits kisspeptin and its agonist analogs in males at all times (S2.2.1).",
+  "sourceUrls":["https://www.fda.gov/media/182089/download","https://www.fda.gov/media/185412/download","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"larazotide", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved; an investigational oral peptide for celiac disease. Its Phase 3 trial (NCT03569007) was terminated by the sponsor in 2022, and no marketing application has been approved anywhere.",
+  "sourceUrls":["https://clinicaltrials.gov/study/NCT03569007","https://pubchem.ncbi.nlm.nih.gov/compound/9810532"] },
+
+{ "slug":"liraglutide", "fdaApproved":true,
+  "regulatoryStatus":"FDA-approved as Victoza (2010) for type 2 diabetes and Saxenda (2014) for chronic weight management, with generic liraglutide approved since; the EMA has authorized both. These are prescription injectables — research-grade liraglutide sold online is not an approved product.",
+  "sourceUrls":["https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=022341","https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=206321","https://www.ema.europa.eu/en/medicines/human/EPAR/saxenda"] },
+
+{ "slug":"matrixyl", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved as a drug: palmitoyl pentapeptide-4 is used as a topical cosmetic ingredient, and US law requires no FDA approval for cosmetic ingredients other than color additives. It is listed in the EU cosmetic-ingredient database without any Annex restriction; no injectable or systemic use of it is authorized anywhere.",
+  "sourceUrls":["https://www.fda.gov/cosmetics/cosmetics-laws-regulations/it-cosmetic-drug-or-both-or-it-soap","https://ec.europa.eu/growth/tools-databases/cosing/details/56913","https://www.cir-safety.org/sites/default/files/FR_Pentapeptides_092024.pdf"] },
+
+{ "slug":"mazdutide", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. China's NMPA approved mazdutide in June 2025 for chronic weight management, adding a type 2 diabetes indication in September 2025; it holds no US or EU marketing authorization. FDA has warned a US seller that offering it online makes it an unapproved new drug.",
+  "sourceUrls":["https://pubmed.ncbi.nlm.nih.gov/41028652/","https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/summit-research-peptides-695607-12102024","https://clinicaltrials.gov/search?intr=Mazdutide"] },
+
+{ "slug":"melanotan-1", "fdaApproved":true,
+  "regulatoryStatus":"Afamelanotide is FDA-approved as SCENESSE (October 2019) and EMA-authorized since December 2014 under exceptional circumstances, but only as a controlled-release implant placed under the skin by a healthcare professional, to reduce phototoxicity in adults with erythropoietic protoporphyria. The injectable 'Melanotan I' sold online is not that product.",
+  "sourceUrls":["https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=210797","https://www.accessdata.fda.gov/drugsatfda_docs/appletter/2019/210797Orig1s000ltr.pdf","https://www.ema.europa.eu/en/medicines/human/EPAR/scenesse"] },
+
+{ "slug":"mgf", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved; FDA lists mechano growth factor (MGF) in category 3 of the section 503A compounding nominations — nominated without adequate supporting information. WADA prohibits mechano growth factors at all times as growth factors (S2.3).",
+  "sourceUrls":["https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"mk-677", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. FDA placed ibutamoren mesylate in category 2 (significant safety risks) for compounding, citing a trial stopped early over a congestive-heart-failure signal, and its advisory committee voted 13-1 against adding it to the compounding list in 2024. FDA also excludes ibutamoren from the dietary-supplement definition; WADA prohibits it at all times as a growth-hormone secretagogue (S2.2.4).",
+  "sourceUrls":["https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.fda.gov/media/185412/download","https://www.fda.gov/food/dietary-supplements/dietary-supplement-ingredient-directory","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"oxytocin", "fdaApproved":true,
+  "regulatoryStatus":"FDA-approved only as an injection (Pitocin, 1980, plus generics) for initiating or reinforcing labor under direct medical supervision; the Syntocinon nasal spray is listed as discontinued in Drugs@FDA. Oxytocin sold online for other purposes falls outside any approved product.",
+  "sourceUrls":["https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=018261","https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=012285"] },
+
+{ "slug":"p21", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and no approval by any other regulator was identified; an experimental neuro-active peptide with no registered human trials on ClinicalTrials.gov, sold as research-use-only material.",
+  "sourceUrls":["https://clinicaltrials.gov/search?intr=P021","https://pubchem.ncbi.nlm.nih.gov/compound/56599151"] },
+
+{ "slug":"peg-mgf", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. FDA placed pegylated mechano growth factor in category 2 (significant safety risks) for compounding, stating it had identified no human exposure data for any route; the nomination was later withdrawn. WADA prohibits mechano growth factors at all times (S2.3).",
+  "sourceUrls":["https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"pentadeca-arginate", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved: no FDA record of a drug or bulk substance under this name was identified, it appears on no FDA bulks list, and ClinicalTrials.gov lists no studies of it. It is sold as a variant of BPC-157 — a substance FDA evaluated separately in 2026 and proposed not to add to the section 503A compounding list, and which WADA names explicitly in class S0 (non-approved substances).",
+  "sourceUrls":["https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.fda.gov/media/193342/download","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"pinealon", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and no approval by any other regulator was identified; a synthetic tripeptide 'bioregulator' with no registered human trials on ClinicalTrials.gov, sold as research-use-only material.",
+  "sourceUrls":["https://pubchem.ncbi.nlm.nih.gov/compound/10273502","https://clinicaltrials.gov/search?intr=Pinealon"] },
+
+{ "slug":"sermorelin", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved today, though it once was: Geref was approved in 1990 and 1997, discontinued by its sponsor in 2008, and FDA formally withdrew both approvals effective June 2009 — not for safety or effectiveness reasons. Sermorelin now reaches buyers only through compounding and research channels; WADA prohibits it at all times as a GHRH analog (S2.2.4).",
+  "sourceUrls":["https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=019863","https://www.govinfo.gov/content/pkg/FR-2009-05-19/html/E9-11628.htm","https://www.federalregister.gov/d/2013-04827","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"slu-pp-332", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and no approval by any other regulator was identified; a preclinical ERR-agonist 'exercise mimetic' studied in rodents, with no registered human trials on ClinicalTrials.gov.",
+  "sourceUrls":["https://pubchem.ncbi.nlm.nih.gov/compound/5338394","https://clinicaltrials.gov/search?intr=SLU-PP-332"] },
+
+{ "slug":"snap-8", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved as a drug: acetyl octapeptide-3 is used as a topical cosmetic ingredient, and US law requires no FDA approval for cosmetic ingredients other than color additives. It is listed in the EU cosmetic-ingredient database without any Annex restriction; no injectable or systemic use of it is authorized anywhere.",
+  "sourceUrls":["https://www.fda.gov/cosmetics/cosmetics-laws-regulations/it-cosmetic-drug-or-both-or-it-soap","https://ec.europa.eu/growth/tools-databases/cosing/details/82188"] },
+
+{ "slug":"ss-31", "fdaApproved":true,
+  "regulatoryStatus":"FDA-approved as Forzinity (elamipretide, September 2025) under accelerated approval — the first treatment for Barth syndrome, in patients weighing at least 30 kg. That rare mitochondrial disease is the only authorized use; 'SS-31' sold as research material is not the approved product.",
+  "sourceUrls":["https://www.fda.gov/news-events/press-announcements/fda-grants-accelerated-approval-first-treatment-barth-syndrome","https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo=215244"] },
+
+{ "slug":"survodutide", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved; an investigational dual glucagon/GLP-1 receptor agonist in Phase 3 trials for obesity and metabolic liver disease, with no marketing authorization identified anywhere.",
+  "sourceUrls":["https://clinicaltrials.gov/search?intr=Survodutide","https://pubchem.ncbi.nlm.nih.gov/compound/171378821"] },
+
+{ "slug":"tesofensine", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved and not approved by any regulator identified; an investigational triple monoamine-reuptake inhibitor whose developer has stated its Mexican marketing application was not approved. WADA prohibits tesofensine in competition as a stimulant (S6).",
+  "sourceUrls":["https://view.news.eu.nasdaq.com/view?id=be36b92994eb8060da5d740e263ac785f&lang=en","https://saniona.com/pipeline/tesofensine/","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"thymalin", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved: in February 2024 FDA warned a US seller that its 'Thymalin' is an unapproved new drug and misbranded, rejecting the 'research use only' labeling. It is a thymus-extract preparation registered as a medicine in Russia but in neither the US nor the EU, and no clinical trials of it appear on ClinicalTrials.gov.",
+  "sourceUrls":["https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/us-chem-labs-669074-02072024","https://grls.rosminzdrav.ru/GRLS.aspx","https://clinicaltrials.gov/search?intr=Thymalin"] },
+
+{ "slug":"thymosin-alpha-1", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved — FDA states it has approved no drug product containing thymosin alpha-1, and that Ta1 is not approved in the US, Japan, or Europe outside Italy. It is sold in some other countries as Zadaxin; FDA placed Ta1 in category 2 (significant safety risks) for compounding before the nomination was withdrawn.",
+  "sourceUrls":["https://www.fda.gov/media/183892/download","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"] },
+
+{ "slug":"thymosin-beta-4", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved. FDA placed the thymosin beta-4 fragment sold as TB-500 in category 2 (significant safety risks) for compounding, stating it had identified no human exposure data; the nomination was later withdrawn. WADA prohibits thymosin-beta-4 and its derivatives at all times (S2.3).",
+  "sourceUrls":["https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks","https://www.wada-ama.org/sites/default/files/2025-09/2026list_en_final_clean_september_2025.pdf"] },
+
+{ "slug":"thymulin", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved; FDA lists thymulin acetate in category 3 of the section 503A compounding nominations — nominated without adequate supporting information — and no registered clinical trials of it appear on ClinicalTrials.gov.",
+  "sourceUrls":["https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://clinicaltrials.gov/search?intr=Thymulin"] },
+
+{ "slug":"vip", "fdaApproved":false,
+  "regulatoryStatus":"Not FDA-approved: two US emergency-use requests for aviptadil in COVID-19 respiratory failure were declined, and FDA lists vasoactive intestinal peptide in category 1 of the section 503A compounding nominations, meaning it is under evaluation rather than approved. A combination of aviptadil with phentolamine (Invicorp) is authorized in the UK for erectile dysfunction.",
+  "sourceUrls":["https://www.fda.gov/downloads/Drugs/GuidanceComplianceRegulatoryInformation/PharmacyCompounding/UCM467373.pdf","https://scottishmedicines.org.uk/media/3091/aviptadil_phentolamine_mesilate_invicorp_final_nov_2017_for_website.pdf","https://clinicaltrials.gov/search?intr=Aviptadil"] }
+]
