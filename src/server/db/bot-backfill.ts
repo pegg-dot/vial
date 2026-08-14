@@ -14,6 +14,11 @@ export async function backfillBotFlags(db: SqlConnection): Promise<{ clicks: num
   for (const statement of `${attributionSchemaSql}\n${pageviewsSchemaSql}`.split(";").map(s => s.trim()).filter(Boolean)) {
     await db.query(`${statement};`);
   }
+  // CREATE TABLE IF NOT EXISTS is a NO-OP on a table that already exists, so a column added inside
+  // that statement is never created on a live database — which took production down with
+  // 'column "is_bot" does not exist'. New columns on an existing table need an explicit ALTER.
+  await db.query(`ALTER TABLE page_views ADD COLUMN IF NOT EXISTS is_bot BOOLEAN NOT NULL DEFAULT FALSE`);
+  await db.query(`ALTER TABLE outbound_clicks ADD COLUMN IF NOT EXISTS is_bot BOOLEAN NOT NULL DEFAULT FALSE`);
   const clicks = await db.query(
     `UPDATE outbound_clicks SET is_bot = TRUE WHERE visitor_hash IS NULL AND NOT is_bot`,
   );
