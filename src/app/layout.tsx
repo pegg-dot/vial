@@ -58,8 +58,28 @@ export const viewport: Viewport = {
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [catalog, principal] = await Promise.all([getCatalogSnapshot(), getCurrentPrincipal()]);
-  const [watchlist, comparison] = principal ? await Promise.all([getWatchlistSlugs(principal.id), getDefaultComparison(principal.id)]) : [[], null];
+  // The layout must NEVER throw. It wraps every route, including pages that need no data at all —
+  // /about, /grades, every /legal page — and an error thrown here escapes error.tsx entirely
+  // (a boundary does not wrap the layout above it), so it lands on global-error.tsx and takes the
+  // WHOLE SITE down. That is exactly what a database outage did: robots.txt kept serving 200
+  // because it is prerendered, while every real page returned a server exception.
+  //
+  // So a failure degrades to an empty catalog instead. Static pages then render normally and only
+  // the catalog-dependent chrome goes quiet. Losing the search overlay for a few minutes is a far
+  // smaller failure than losing the entire site.
+  const [catalog, principal] = await Promise.all([
+    getCatalogSnapshot().catch((error) => {
+      console.error("[layout] catalog unavailable, degrading:", error);
+      return { compounds: [], vendors: [], products: [], generatedAt: new Date().toISOString() };
+    }),
+    getCurrentPrincipal().catch(() => null),
+  ]);
+  const [watchlist, comparison] = principal
+    ? await Promise.all([
+        getWatchlistSlugs(principal.id).catch(() => []),
+        getDefaultComparison(principal.id).catch(() => null),
+      ])
+    : [[], null];
   // Whether this deployment actually holds any seeded demo records — drives the provenance copy so
   // an all-Live deployment never implies its data might be demo.
   const hasDemo = catalog.products.some((p) => p.origin === "demo") || catalog.vendors.some((v) => v.origin === "demo") || catalog.compounds.some((c) => c.origin === "demo");
