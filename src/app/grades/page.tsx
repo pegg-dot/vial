@@ -96,6 +96,12 @@ const SOURCES = [
     supports: "What GMP actually covers, subpart by subpart: personnel, buildings and facilities, equipment, incoming components, production controls, packaging, holding, laboratory controls, and records.",
   },
   {
+    title: "Full-text search of the Code of Federal Regulations for “pharmaceutical grade”",
+    publisher: "Electronic Code of Federal Regulations (search API)",
+    url: "https://www.ecfr.gov/api/search/v1/counts/hierarchy?query=%22pharmaceutical+grade%22",
+    supports: "That the phrase appears nowhere in Title 21 (Food and Drugs). It returns 14 results across the whole CFR, all of them under Title 40, the EPA’s air programs.",
+  },
+  {
     title: "Bulk Drug Substances Used in Compounding Under Section 503A of the FD&C Act",
     publisher: "U.S. Food and Drug Administration (page current as of 14 May 2026)",
     url: "https://www.fda.gov/drugs/human-drug-compounding/bulk-drug-substances-used-compounding-under-section-503a-fdc-act",
@@ -123,13 +129,25 @@ const SOURCES = [
     title: "Warning letter to Gram Peptides, 31 March 2026 (MARCS-CMS 721806)",
     publisher: "U.S. Food and Drug Administration",
     url: "https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/gram-peptides-721806-03312026",
-    supports: "The FDA stating that a “Research Use Only” label did not change what the products were, where the seller’s own marketing showed they were intended as drugs for people.",
+    supports: "The FDA stating that a “Research Use Only” label did not change what the products were, where the seller’s own marketing showed they were intended as drugs for people. The FDA cautions that a warning letter reflects the situation at the time it was issued and the status may have changed since — check the letter for a closeout.",
   },
   {
     title: "Drug Establishments Current Registration Site (DECRS)",
     publisher: "U.S. Food and Drug Administration",
     url: "https://www.fda.gov/drugs/drug-approvals-and-databases/drug-establishments-current-registration-site-decrs",
-    supports: "The public, daily-updated register of drug establishments — where anyone can check whether a named facility is registered with the FDA.",
+    supports: "The public, daily-updated register of drug establishments — where anyone can check whether a named facility is registered with the FDA. The FDA notes on the same page that this register does not include compounding outsourcing facilities, which is why the next source exists.",
+  },
+  {
+    title: "Registered Outsourcing Facilities",
+    publisher: "U.S. Food and Drug Administration (list updated 10 August 2026)",
+    url: "https://www.fda.gov/drugs/human-drug-compounding/registered-outsourcing-facilities",
+    supports: "The separate list of 503B facilities, with each one’s last inspection date, whether a Form 483 was issued, and whether a recall was conducted — including the many rows reading “Not yet inspected.”",
+  },
+  {
+    title: "False Claims of Accreditation",
+    publisher: "A2LA (accreditation body for testing laboratories)",
+    url: "https://portal.a2la.org/search/falseclaims.cfm",
+    supports: "A published, dated list of companies claiming A2LA accreditation without holding it — including a product whose promoted test report used the A2LA symbol without authorization.",
   },
 ];
 
@@ -323,18 +341,31 @@ export default function GradesPage() {
       <section className="mx-auto max-w-[1120px] px-5 py-16 sm:px-8 sm:py-24">
         <div className="max-w-3xl">
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Check it yourself</p>
-          <h2 className="mt-3 text-[clamp(1.8rem,3.8vw,2.6rem)] font-extrabold tracking-[-.04em]">Three lookups, free, no account</h2>
+          <h2 className="mt-3 text-[clamp(1.8rem,3.8vw,2.6rem)] font-extrabold tracking-[-.04em]">Five lookups, free, no account</h2>
+          <p className="mt-4 text-sm font-medium leading-6 text-[var(--muted)]">
+            None of these will tell you a product is safe. They will tell you whether a specific claim is true, which is a different and more useful thing.
+          </p>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Lookup
             href="https://www.fda.gov/drugs/drug-approvals-and-databases/drug-establishments-current-registration-site-decrs"
             title="Is that facility registered?"
-            detail="The FDA publishes its register of drug establishments and updates it every business day. If a vendor names the facility that made something, you can look it up. Being listed tells you the establishment is registered with the FDA — that, and nothing more."
+            detail="The FDA publishes its register of drug establishments and updates it every business day. If a vendor names the facility that made something, look it up. Being listed tells you the establishment is registered — that, and nothing more."
+          />
+          <Lookup
+            href="https://www.fda.gov/drugs/human-drug-compounding/registered-outsourcing-facilities"
+            title="Is that pharmacy a 503B?"
+            detail="A separate FDA list, because the register above deliberately leaves outsourcing facilities out. It shows each one’s last inspection — and a lot of rows say “Not yet inspected.” Registering is something a facility elects to do; it is not a pass mark."
           />
           <Lookup
             href="https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"
             title="Has the FDA flagged this compound?"
             detail="The category 2 page lists what the FDA has flagged for compounding, with the specific concern written out for each substance. It is readable without a science degree."
+          />
+          <Lookup
+            href="https://portal.a2la.org/search/falseclaims.cfm"
+            title="Is that accreditation real?"
+            detail="A2LA, one of the bodies that accredits testing labs, publishes a running list of companies caught claiming its accreditation without holding it — including a supplement brand whose test report carried the A2LA symbol without permission."
           />
           <Lookup
             internal

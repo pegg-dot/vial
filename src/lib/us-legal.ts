@@ -34,10 +34,17 @@ const INVESTIGATIONAL: Record<string, string> = {
   cagrilintide: "an investigational amylin analog still in trials",
 };
 
-// Compounds the FDA has singled out. BPC-157 was placed in Category 2 of the 503A bulk list
-// (2023–2024), flagging significant safety concerns and effectively barring pharmacy compounding.
+// Compounds the FDA has singled out.
+//
+// ⚠️ Verified against fda.gov 2026-08-14. BPC-157 was added to Category 2 in 2023, but its
+// nomination was later WITHDRAWN BY THE NOMINATOR — it now sits in the FDA's "nominated but
+// withdrawn" table, not in Category 2. The practical conclusion is unchanged (it is not on the
+// 503A list, so a licensed pharmacy still cannot compound it) but the mechanism is different, and
+// stating the wrong mechanism about a real regulatory action is the kind of error this product
+// exists to catch. FDA's advisory committee met 23-24 July 2026 on whether several of these should
+// go ON the 503A list, so this has a shelf life — re-verify before relying on it.
 const FDA_FLAGGED: Record<string, string> = {
-  "bpc-157": "The FDA placed BPC-157 in the 503A “do not compound” category (Category 2) over safety concerns — even licensed pharmacies can't compound it.",
+  "bpc-157": "BPC-157 is not on the FDA's 503A list of substances pharmacies may compound with, so even a licensed compounding pharmacy can't legally make it. The FDA flagged it in 2023 over safety concerns (immunogenicity risk by some routes); that nomination was later withdrawn, and an FDA advisory committee reviewed it again in July 2026.",
 };
 
 // Compounds broadly prohibited in drug-tested sport (WADA / USADA). Not exhaustive.
@@ -53,7 +60,7 @@ const RESEARCH_ONLY_DETAIL =
 export function usLegalFor(slug: string): UsLegalStatus {
   const flags: string[] = [];
   if (WADA_BANNED.has(slug)) flags.push("Banned in drug-tested sport (WADA/USADA)");
-  if (FDA_FLAGGED[slug]) flags.push("FDA do-not-compound list");
+  if (FDA_FLAGGED[slug]) flags.push("FDA safety flag — no pharmacy may compound it");
 
   if (PRESCRIPTION[slug]) {
     return {
@@ -86,7 +93,7 @@ export const US_REGULATION_FACTS: { title: string; body: string }[] = [
   { title: "Generally legal to buy — but not to use as a drug", body: "Most research peptides are not DEA-scheduled controlled substances, so purchasing them as research chemicals is typically not itself a drug crime in the US. Selling or marketing an unapproved substance for human use, however, violates the federal Food, Drug & Cosmetic Act. The research-use label is how vendors stay on the legal side of that." },
   { title: "Not dietary supplements", body: "Synthetic peptides like BPC-157 are not lawful dietary ingredients. The FDA has stated they fall outside the supplement definition, so any “supplement” framing you see is not legally valid." },
   { title: "Some are prescription drugs — a different category entirely", body: "Semaglutide, tirzepatide, liraglutide, tesamorelin, sermorelin, gonadorelin and others are FDA-approved prescription medications. Buying a “research” version bypasses the prescription and the approved supply chain, and the FDA has warned about and acted against unapproved and compounded copies — most aggressively for the GLP-1 weight-loss drugs after they came off the shortage list." },
-  { title: "The FDA do-not-compound flag", body: "In 2023 the FDA placed BPC-157 (among others) into Category 2 of its 503A bulk-compounding list, citing significant safety concerns — which effectively bars even licensed compounding pharmacies from making it. Research-chemical BPC-157 exists entirely outside that oversight." },
+  { title: "Not something a pharmacy can legally compound", body: "A licensed compounding pharmacy may only use bulk substances on the FDA's 503A list. BPC-157 and most research peptides are not on it. The FDA flagged several of them in 2023 over safety concerns; those nominations were later withdrawn, and an FDA advisory committee revisited seven peptides in July 2026 — so the picture can change. Either way, research-chemical peptides sit entirely outside that oversight." },
   { title: "Import can be seized", body: "The FDA can detain or refuse importation of unapproved drugs, and personal importation of unapproved drugs is generally not permitted. Orders from overseas vendors carry a real customs-seizure risk." },
   { title: "State law varies and is changing", body: "Peptide-specific rules differ by state and are evolving. Some states regulate research chemicals more tightly than others; check your own state's current law." },
   { title: "Banned in drug-tested sport", body: "Many of these — growth-hormone secretagogues, GHRPs, TB-500, IGF-1, GLP-1 drugs and more — are prohibited by WADA and USADA. Competing athletes face sanctions independent of any purchase legality." },

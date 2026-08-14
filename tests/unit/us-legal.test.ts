@@ -16,8 +16,12 @@ describe("US legal status", () => {
   it("surfaces the FDA do-not-compound flag for BPC-157", () => {
     const s = usLegalFor("bpc-157");
     expect(s.category).toBe("research-only");
-    expect(s.flags).toContain("FDA do-not-compound list");
-    expect(s.detail).toMatch(/do.not.compound/i);
+    expect(s.flags).toContain("FDA safety flag — no pharmacy may compound it");
+    // Guards the FACT, not the phrasing. BPC-157 sits in the FDA's "nominated but withdrawn"
+    // table, NOT category 2 — we shipped the wrong mechanism once, and this is what caught it.
+    expect(s.detail).toMatch(/not on the FDA's 503A list/i);
+    expect(s.detail).toMatch(/withdrawn/i);
+    expect(s.detail).not.toMatch(/category 2/i);
   });
   it("marks WADA-banned compounds", () => {
     expect(usLegalFor("cjc-1295").flags.some((f) => /WADA/i.test(f))).toBe(true);
