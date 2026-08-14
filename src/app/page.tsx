@@ -12,6 +12,7 @@ import { HomeVendorCarousel } from "@/components/home-vendor-carousel";
 import { HomeBigNumber } from "@/components/home/big-number";
 import { HomeCompoundsShowcase } from "@/components/home/compounds-showcase";
 import { HomeFinalCta } from "@/components/home/final-cta";
+import { HomeDataUnavailable } from "@/components/home-data-unavailable";
 
 // Title and description are inherited from the root layout, which already states them for the
 // site. Only the canonical is page-specific: without it, every tracking-parameter variant of the
@@ -21,8 +22,21 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { compounds, products, vendors } = await getCatalogSnapshot();
-  const labTests = await getCertificatesOnRecord();   // the corpus, not the compound-matched subset
+  // Degrade rather than throw. An unguarded read here 500s the homepage even though the layout
+  // above it now survives — which is exactly what happened during the database outage: every other
+  // page came back and / stayed down.
+  //
+  // But an empty catalog must NOT render as "0 vendors, 0 lab tests". Those are the site's headline
+  // credibility numbers, and publishing a zero we cannot stand behind is worse than publishing
+  // nothing — it is the same failure this product exists to catch in other people's marketing. So
+  // an outage is rendered as an honest notice, not as a real-looking result.
+  const catalog = await getCatalogSnapshot().catch((error) => {
+    console.error("[home] catalog unavailable:", error);
+    return null;
+  });
+  const labTests = await getCertificatesOnRecord().catch(() => null);
+  if (!catalog || !labTests) return <HomeDataUnavailable />;
+  const { compounds, products, vendors } = catalog;
   // Curated shortlists — no more 83-wide walls.
   const topVendors = [...vendors]
     .sort((a, b) => b.coaCount - a.coaCount || b.productCount - a.productCount || b.passportCount - a.passportCount)
