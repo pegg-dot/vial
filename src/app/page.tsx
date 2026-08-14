@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
@@ -12,6 +13,11 @@ import { HomeBigNumber } from "@/components/home/big-number";
 import { HomeCompoundsShowcase } from "@/components/home/compounds-showcase";
 import { HomeFinalCta } from "@/components/home/final-cta";
 
+// Title and description are inherited from the root layout, which already states them for the
+// site. Only the canonical is page-specific: without it, every tracking-parameter variant of the
+// home page ("/?utm_source=…", "/?ref=…") is a separate indexable URL competing with the real one.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
@@ -25,19 +31,11 @@ export default async function HomePage() {
     .sort((a, b) => b.listings - a.listings || b.coaCount - a.coaCount)
     .slice(0, 6);
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "VialGrade",
-    url: "https://vialgrade.example",
-    description: "Know what's really in the vial. Every peptide vendor's lab tests, prices, and reputation, fact-checked in one place.",
-    potentialAction: { "@type": "SearchAction", target: "https://vialgrade.example/market?q={search_term_string}", "query-input": "required name=search_term_string" },
-  };
-
+  // The WebSite node (and its SearchAction) now lives in the root layout. The copy that used to
+  // sit here hardcoded the "vialgrade.example" placeholder host rather than the deployed origin,
+  // and aimed its SearchAction at /market, which does not read a `q` parameter at all.
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
-
       <HomeTicker />
       <HomeHero />
       <HomeManifesto />

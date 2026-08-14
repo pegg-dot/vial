@@ -3,6 +3,7 @@ import { CompareClient } from "@/components/compare-client";
 import { ComparisonWorkspaceTools } from "@/components/comparison-workspace-tools";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/compare" },
   title: "Compare listings",
   description: "Compare peptide research listings across pricing, evidence, batch linkage, and seller context.",
 };

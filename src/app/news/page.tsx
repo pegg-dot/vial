@@ -8,6 +8,7 @@ import { ArtCoa, ArtShieldCheck } from "@/components/vial-art";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/news" },
   title: "Market news & enforcement",
   description: "Sourced news, regulatory actions, and court records shaping the research-peptide market. Every item links to its source and is labeled by how reliable that source is.",
 };

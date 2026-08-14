@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowDown, ArrowUpRight, Check, CircleAlert, CircleDashed, Database, Fingerprint, Scale, ShieldCheck } from "lucide-react";
 import { ArtCoa, ArtShieldCheck, VialBuddy } from "@/components/vial-art";
+import { JsonLd } from "@/components/json-ld";
+import { articleSchema } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "How we check",
   description: "How VialGrade decides what counts as proof: lab reports, batch matching, who picked the sample, and what we refuse to guess about.",
+  alternates: { canonical: "/how-we-check" },
 };
 
 // The rungs used to be labelled with their internal codes (D0, D1, S1–S4). Nobody buying a peptide
@@ -31,6 +34,16 @@ const reportQuestions = [
 export default function HowWeCheckPage() {
   return (
     <>
+      {/* Article, not FAQPage. The "one report answers six questions" block looks like a FAQ, but
+          each item's body restates the question rather than answering it — marking that up as an
+          acceptedAnswer would be exactly the structured-data-to-page mismatch search engines
+          penalize. The page as a whole is an editorial explainer, which is what Article says. */}
+      <JsonLd data={articleSchema({
+        url: "/how-we-check",
+        headline: "Trust is a chain of evidence, not a green check",
+        description: "How VialGrade decides what counts as proof: the evidence ladder, the six questions one lab report can be asked, and the claims we refuse to make.",
+      })} />
+
       {/* Signature: near-black — the credibility backbone, under the hood. */}
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#111214] text-white">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

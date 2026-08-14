@@ -5,6 +5,7 @@ import { ArtShieldCheck, VialBuddy, ArtDroplet } from "@/components/vial-art";
 import reference from "../../../scripts/data/reference-manufacturers.json";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/reference-standard" },
   title: "The reference standard — pharmaceutical-grade peptide manufacturing",
   description: "Who actually makes peptides under regulated cGMP conditions, and how that differs from the grey market. Context for judging any research-peptide source.",
 };

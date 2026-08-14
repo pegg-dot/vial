@@ -8,7 +8,7 @@ import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVend
 import { formatCurrency } from "@/lib/format";
 import { displayProductName, displayProductTitle, displaySize } from "@/lib/product-title";
 import { vendorClaimLabelShort } from "@/lib/vendor-copy";
-import { siteUrl } from "@/lib/site";
+import { JsonLd } from "@/components/json-ld";
 import { EvidenceBadge } from "@/components/evidence-badge";
 import { evidenceBadgeFor } from "@/lib/evidence-badge-derive";
 import { DataOriginBadge } from "@/components/data-origin-badge";
@@ -49,6 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${displayProductTitle(product.name, product.quantity)} from ${vendor?.name ?? "vendor"}`,
     description: `Compare the price, public documentation, batch linkage, and evidence limits for this ${product.origin === "live" ? "real" : "demo"} ${product.name} research listing.`,
+    alternates: { canonical: `/products/${slug}` },
   };
 }
 
@@ -95,29 +96,38 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const priceEnd = product.priceHistory.at(-1) ?? product.price;
   const priceChange = ((priceEnd - priceStart) / priceStart) * 100;
 
-  const structuredData = {
+  // Structured data for a listing we AGGREGATE. Three constraints shape it:
+  //
+  //  - Demo listings emit nothing. A demo record is a seeded fictional product at a fictional
+  //    price; publishing it as a Product with an Offer would push invented commerce into search
+  //    results, no matter how carefully the description says "demo".
+  //  - The seller is the vendor, and the offer URL is the VENDOR'S product page. It previously
+  //    pointed at this page, which states that VialGrade sells the vial. VialGrade sells nothing
+  //    and never touches payment — the offer belongs to whoever can actually fulfil it.
+  //  - No aggregateRating unless the reviews behind it are real, which for this field means a
+  //    Live record. A seeded demo rating is fabricated review data.
+  const structuredData = product.origin === "live" ? {
     "@context": "https://schema.org",
     "@type": "Product",
     name: displayProductTitle(product.name, product.quantity),
-    description: `${product.origin === "live" ? `Research listing from ${vendor.name}, aggregated from their public product page.` : `Demo research listing from ${vendor.name}, shown for interface demonstration only.`}`,
+    description: `Research listing from ${vendor.name}, aggregated from their public product page.`,
     brand: { "@type": "Brand", name: vendor.name },
     sku: product.batchCode,
-    // Only advertise a rating when real reviews exist — never emit ratingValue 0 for a
-    // real vendor (search engines render it as a 0-star product).
     ...(product.reviewCount > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.reviewCount } } : {}),
     offers: {
       "@type": "Offer",
       priceCurrency: "USD",
       price: product.price,
       availability: product.availability === "In stock" ? "https://schema.org/InStock" : "https://schema.org/LimitedAvailability",
-      url: `${siteUrl}/products/${product.slug}`,
+      seller: { "@type": "Organization", name: vendor.name },
+      ...(product.externalUrl ? { url: product.externalUrl } : {}),
     },
-  };
+  } : null;
 
   return (
     <>
       {principal && <DecisionRecorder eventType="listing_viewed" subjectType="listing" subjectId={product.slug} metadata={{ compoundSlug: product.compoundSlug, vendorSlug: product.vendorSlug }} />}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
+      {structuredData && <JsonLd data={structuredData} />}
       <section className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8 sm:py-8">
         <Link href="/market" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black">
           <ArrowLeft className="size-4" /> Back to market

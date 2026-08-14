@@ -1,10 +1,33 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, ShieldAlert, ShieldQuestion, ExternalLink, FlaskConical, EyeOff, MapPin, Globe, AlertTriangle } from "lucide-react";
 import { getLabDetail } from "@/server/labs/repository";
-import type { LabIndependence } from "@/server/labs/registry";
+import { LAB_REGISTRY, type LabIndependence } from "@/server/labs/registry";
 
 export const dynamic = "force-dynamic";
+
+// Whether a lab is independent is the single most consequential fact on the page, so it belongs in
+// the description rather than a generic "lab profile" line — someone searching a lab name is
+// usually trying to find out exactly that. Read from the static registry rather than getLabDetail
+// so resolving metadata costs no extra database queries on top of the ones the page already runs.
+const INDEPENDENCE_SUMMARY: Record<LabIndependence, string> = {
+  independent: "Confirmed independent of the vendors it tests",
+  "independence-unverified": "A real lab, but its independence from vendors is unconfirmed",
+  unverified: "Not confirmed to be a real, independent laboratory",
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const profile = LAB_REGISTRY.find((lab) => lab.slug === slug);
+  if (!profile) return {};
+  const where = profile.country ? ` Based in ${profile.country}.` : "";
+  return {
+    title: `${profile.displayName} — testing laboratory`,
+    description: `${INDEPENDENCE_SUMMARY[profile.independence]}.${where} What it tests, its accreditation status, and the certificates VialGrade holds from it. Naming a lab is not an endorsement.`,
+    alternates: { canonical: `/labs/${slug}` },
+  };
+}
 
 const INDEP: Record<LabIndependence, { label: string; cls: string; Icon: typeof ShieldCheck; blurb: string }> = {
   independent: { label: "Confirmed independent lab", cls: "text-[#0e8f80] bg-[#e6fbf4]", Icon: ShieldCheck, blurb: "We confirmed this is a real, third-party laboratory that is independent of the vendors whose products it tests. Its certificates count as independent corroboration." },

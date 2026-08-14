@@ -5,7 +5,7 @@ import { getVendorDirectory } from "@/server/vendors/directory";
 import { getCertificatesOnRecord } from "@/server/public-repository";
 import { VendorsDirectory } from "@/components/vendors-directory";
 
-export const metadata: Metadata = { title: "Vendor directory", description: "Rank peptide vendors by what matters to you — reliability, price, purity, testing, or reputation — from real evidence." };
+export const metadata: Metadata = { title: "Vendor directory", description: "Rank peptide vendors by what matters to you — reliability, price, purity, testing, or reputation — from real evidence.", alternates: { canonical: "/vendors" } };
 export const dynamic = "force-dynamic";
 
 // Vendors signature = cool steel/slate — the "records vault." Hardened cards, shield/record stickers.

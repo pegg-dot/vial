@@ -5,6 +5,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { TrackView } from "@/components/track-view";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
+import { JsonLd } from "@/components/json-ld";
+import { organizationSchema, webSiteSchema } from "@/lib/structured-data";
 import { siteConfig } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { getCurrentPrincipal } from "@/server/auth/principal";
@@ -64,6 +66,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en">
       <body className="min-h-screen bg-[var(--background)] pb-20 text-[var(--foreground)] antialiased md:pb-0">
+        {/* Site-wide identity. Lives in the layout so every page carries the publisher and site
+            nodes that per-page schema references by @id, instead of each page redeclaring them. */}
+        <JsonLd data={[organizationSchema(), webSiteSchema()]} />
         <MarketplaceProvider catalog={catalog} initialWatchlist={watchlist} initialCompare={comparison?.listingSlugs ?? []} authenticated={Boolean(principal)}>
           <TrackView />
           <DisclosureBanner hasDemo={hasDemo} />

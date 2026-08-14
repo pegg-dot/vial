@@ -3,7 +3,7 @@ import Link from "next/link";
 import { EyeOff, FlaskConical, PackageSearch, Users } from "lucide-react";
 import { getSamplingStats } from "@/server/public-repository";
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Independent testing", description: "Who selected the sample — blind vs vendor-submitted — across the certificates VialGrade aggregates." };
+export const metadata: Metadata = { title: "Independent testing", description: "Who selected the sample — blind vs vendor-submitted — across the certificates VialGrade aggregates.", alternates: { canonical: "/testing" } };
 
 export default async function Page() {
   const s = await getSamplingStats();

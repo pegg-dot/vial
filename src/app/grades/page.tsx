@@ -3,16 +3,23 @@ import Link from "next/link";
 import { ArrowUpRight, Building2, CircleAlert, CircleDashed, ExternalLink, FileText, FlaskConical, Landmark, ScrollText, Scale, ShieldQuestion } from "lucide-react";
 import { ArtCoa, ArtShieldCheck, VialBuddy } from "@/components/vial-art";
 import { PURITY_IS_NOT_GRADE } from "@/lib/provenance-copy";
+import { JsonLd } from "@/components/json-ld";
+import { articleSchema } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "Purity vs grade",
   description: "“99% pure” and “pharmaceutical grade” are two different claims, and vendors blur them on purpose. What research-use-only, pharmaceutical grade, and GMP actually mean — and the one question that tells you which you are being sold.",
+  alternates: { canonical: "/grades" },
 };
 
 // Everything on this page that states a rule was read off a primary source and is listed in SOURCES
 // below. The date is shown to the reader because the compounding rules in particular move: the FDA
 // advisory committee met on this exact subject three weeks before this page was written.
 const CHECKED_ON = "14 August 2026";
+// The same date, machine-readable, for the Article's dateModified. Kept as a literal beside the
+// displayed string rather than derived from it so the rendered wording can never shift under a
+// locale change; update both together.
+const CHECKED_ON_ISO = "2026-08-14";
 
 // The three words a buyer meets, in the order they escalate. Each one gets the same treatment:
 // what it actually is, what it is NOT, and the thing you can say out loud to test it.
@@ -154,6 +161,19 @@ const SOURCES = [
 export default function GradesPage() {
   return (
     <>
+      {/* An explainer with a stated fact-check date and a visible source list, so Article with a
+          citation array describes it honestly. Not FAQPage: the "questions" on this page are
+          questions to put to a VENDOR, and the text under each is what a good or evasive reply
+          looks like — not this page answering itself. The citations are the same primary sources
+          rendered at the bottom, so the markup claims nothing the reader cannot check. */}
+      <JsonLd data={articleSchema({
+        url: "/grades",
+        headline: "“99.4% pure” is not a grade",
+        description: "A purity number and a manufacturing standard are two different claims. What research-use-only, pharmaceutical grade, and GMP actually mean, and the question that separates them.",
+        dateModified: CHECKED_ON_ISO,
+        citations: SOURCES.map((source) => source.url),
+      })} />
+
       {/* Signature: near-black with the consumer royal-blue at its light-on-dark weight. */}
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#111214] text-white">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

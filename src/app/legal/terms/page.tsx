@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
-export const metadata:Metadata={title:"Terms of use"};
+export const metadata:Metadata={title:"Terms of use",alternates:{canonical:"/legal/terms"}};
 export default function Page(){return <LegalPage eyebrow="Legal" title="Terms of use" updated="Updated July 2026" sections={[
 ["Information-only service","VialGrade is a market-intelligence service. Nothing displayed is an offer to sell, medical advice, laboratory certification, or a representation that a physical product is safe, lawful, authentic, or fit for any purpose."],
 ["Record provenance","Live records are aggregated from real public third-party sources (vendor pages, lab feeds) and are provided for information only; any seeded demo records are clearly labeled. A listing is never an endorsement, a safety claim, or a recommendation to buy or use any product."],

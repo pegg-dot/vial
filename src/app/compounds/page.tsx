@@ -6,7 +6,7 @@ import { getCertificatesOnRecord } from "@/server/public-repository";
 import { SHELVES } from "@/lib/market-taxonomy";
 import { CompoundsExperience } from "@/components/market/compounds-experience";
 
-export const metadata: Metadata = { title: "Compound directory", description: "Browse canonical compound records, market coverage, and evidence context." };
+export const metadata: Metadata = { title: "Compound directory", description: "Browse canonical compound records, market coverage, and evidence context.", alternates: { canonical: "/compounds" } };
 export const dynamic = "force-dynamic";
 
 // Map a legacy goal-tag key (?goal=) onto a shelf key so old links keep working.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getPublicSignals } from "@/server/intelligence/repository";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/signals" },
   title: "Market signals",
   description: "What is moving in the peptide market right now: price swings, thin stock, and listings that lost their lab reports.",
 };

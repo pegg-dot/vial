@@ -28,6 +28,8 @@ import { listFollows } from "@/server/consumer-intelligence/repository";
 import { getCompoundResearch, getCompoundRegulatory } from "@/server/external/repository";
 import { CompoundResearchPanel } from "@/components/compound-research-panel";
 import { InnovatorNote } from "@/components/innovator-note";
+import { JsonLd } from "@/components/json-ld";
+import { compoundSchema } from "@/lib/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${compound.name} market`,
     description: `Compare ${compound.name} research listings, price history, and documentation coverage.`,
+    alternates: { canonical: `/compounds/${slug}` },
   };
 }
 
@@ -77,6 +80,12 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
   return (
     <>
+      {/* A reference entry in the compound directory — name, aliases, description, all visible
+          above. Deliberately DefinedTerm and not schema.org/Drug: Drug is a medical entity, and
+          asserting one for a grey-market research peptide would claim a standing no evidence on
+          this page supports. */}
+      <JsonLd data={compoundSchema({ slug, name: compound.name, description: compound.description, aliases: compound.aliases, category: compound.category })} />
+
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#f0edff]">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <ArtMolecule className="gum-float absolute right-[40%] top-[8%] hidden w-16 drop-shadow-[4px_4px_0_#111214] xl:block" a="#6d5dfc" b="#8fffd6" c="#fff" />

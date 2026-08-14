@@ -4,6 +4,7 @@ import { VialValueBand } from "@/components/market/vial-value-band";
 import { ArtTag, VialBuddy, ArtDroplet } from "@/components/vial-art";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/market" },
   title: "Market",
   description: "Browse and compare normalized peptide research listings with evidence and source context.",
 };

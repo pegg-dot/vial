@@ -43,6 +43,8 @@ import { AggregatorRatingsPanel } from "@/components/aggregator-ratings-panel";
 import { VendorSignalsPanel } from "@/components/vendor-signals-panel";
 import { VendorOffersPanel } from "@/components/vendor-offers-panel";
 import { SectionHead, JumpNav } from "@/components/vendor-report-chrome";
+import { JsonLd } from "@/components/json-ld";
+import { vendorSchema } from "@/lib/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +53,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) return {};
-  return { title: vendor.name, description: `What VialGrade knows about ${vendor.name}: verdict, independent lab tests, reputation, and market history.` };
+  return {
+    title: vendor.name,
+    description: `What VialGrade knows about ${vendor.name}: verdict, independent lab tests, reputation, and market history.`,
+    alternates: { canonical: `/vendors/${slug}` },
+  };
 }
 
 
@@ -140,6 +146,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
   return (
     <>
+      {/* The vendor as an organization. No aggregateRating and no review: the VialGrade letter is
+          our own derived verdict over evidence seams, not customers rating a seller, and shipping
+          it as a star rating would both invent review data and read as an endorsement. */}
+      <JsonLd data={vendorSchema({ slug, name: vendor.name, description: vendor.description, location: vendor.location, founded: vendor.founded })} />
+
       {/* ── Report header: steel signature, verdict-forward ─────────────────────────── */}
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] text-white" style={{ background: STEEL }}>
         <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-14">

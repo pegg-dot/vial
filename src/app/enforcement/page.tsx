@@ -4,7 +4,7 @@ import { Gavel, ExternalLink, ShieldAlert, Landmark, Scale } from "lucide-react"
 import { listEnforcementPage, getRegulatoryStats, type EnforcementFilter } from "@/server/regulatory/repository";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Enforcement record", description: "Public FDA, DOJ, and FTC actions against peptide and research-chemical sellers — sourced, factual, never our accusation." };
+export const metadata: Metadata = { title: "Enforcement record", description: "Public FDA, DOJ, and FTC actions against peptide and research-chemical sellers — sourced, factual, never our accusation.", alternates: { canonical: "/enforcement" } };
 
 const AGENCY: Record<string, string> = { FDA: "FDA", DOJ: "U.S. DOJ", FTC: "FTC", state: "State", other: "Regulator" };
 const TYPE: Record<string, string> = { warning_letter: "Warning letter", import_alert: "Import alert", doj_action: "Enforcement action", ftc_action: "FTC action", recall: "Recall", advisory: "Advisory" };

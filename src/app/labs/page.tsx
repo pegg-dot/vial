@@ -5,7 +5,7 @@ import { getLabsOverview } from "@/server/labs/repository";
 import type { LabIndependence } from "@/server/labs/registry";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Testing laboratories", description: "The real third-party labs behind the certificates — who they are, whether they're independent and accredited, and what they've tested. Sourced, hedged, never an endorsement." };
+export const metadata: Metadata = { title: "Testing laboratories", description: "The real third-party labs behind the certificates — who they are, whether they're independent and accredited, and what they've tested. Sourced, hedged, never an endorsement.", alternates: { canonical: "/labs" } };
 
 const INDEP: Record<LabIndependence, { label: string; cls: string; Icon: typeof ShieldCheck }> = {
   independent: { label: "Independent lab", cls: "text-[#0e8f80] bg-[#e6fbf4]", Icon: ShieldCheck },

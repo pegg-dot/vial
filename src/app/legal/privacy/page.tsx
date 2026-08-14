@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
-export const metadata:Metadata={title:"Privacy notice"};
+export const metadata:Metadata={title:"Privacy notice",alternates:{canonical:"/legal/privacy"}};
 export default function Page(){return <LegalPage eyebrow="Legal" title="Privacy notice" updated="Updated July 2026" sections={[
 ["What we store","VialGrade stores browser-local watchlists and preferences. It does not collect payment information, health information, product-use histories, or identity documents."],
 ["Operational records","Staff workflow demonstrations may store source snapshots, tool receipts, review decisions, and publication events in the configured database. Catalog records are aggregated from public third-party sources and marked Live; any seeded demo records are clearly labeled."],

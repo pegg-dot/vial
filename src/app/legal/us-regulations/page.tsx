@@ -4,6 +4,7 @@ import { AlertTriangle, Scale, Pill, FlaskConical, Landmark } from "lucide-react
 import { US_REGULATION_FACTS } from "@/lib/us-legal";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/legal/us-regulations" },
   title: "How research peptides are regulated in the US",
   description: "A plain-English overview of US law around research peptides — FDA status, what's legal to buy, prescription drugs, import risk, and state law. Informational, not legal advice.",
 };
