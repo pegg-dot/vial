@@ -17,13 +17,20 @@ function sourceLabel(s: string): { text: string; href?: string } {
 
 // What real buyers report — gathered from the open web and weighted the way the community weights
 // trust: specific failure reports and independent lab results over cheap praise.
-export function VendorReviewsPanel({ review }: { review: VendorReview }) {
+const VOLUME_PLAIN: Record<string, string> = { none: "no reports", sparse: "a thin set of reports", moderate: "a moderate set of reports", heavy: "a large set of reports" };
+
+export function VendorReviewsPanel({ review, vendorName }: { review: VendorReview; vendorName: string }) {
   const s = SENTIMENT[review.sentiment] ?? SENTIMENT.unknown;
   return (
     <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-20">
       <div className="mb-7">
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">What buyers say</p>
-        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Reputation, gathered from the open web</h2>
+        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">What do buyers report about {vendorName}?</h2>
+        {/* The answer sits next to the question, not four elements down inside the card — a reader
+            (or an answer engine) quoting this section should get the finding, not the framing. */}
+        <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
+          {s.label} across {VOLUME_PLAIN[review.reviewVolume] ?? "the reports"} we could gather from public sources, held at {review.confidence} confidence.
+        </p>
       </div>
       <div className={`ink hard rounded-[20px] ${s.bg} p-6 sm:p-7`}>
         <div className="flex flex-wrap items-center gap-2">

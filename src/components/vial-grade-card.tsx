@@ -74,7 +74,11 @@ export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summ
           <span className="sr-only">{letterLabel}</span>
         </span>
         <div className="min-w-0">
-          <h2 className="text-2xl font-extrabold leading-tight tracking-[-.03em]">{grade.headline}</h2>
+          {/* Deliberately NOT a heading. "B — generally trusted" as an <h2> is a page heading that
+              asserts a vendor is trustworthy; the same words as a sentence, under a heading that
+              asks the question instead, say exactly as much without the page structure vouching
+              for it. The verdict section below owns the heading. */}
+          <p className="text-2xl font-extrabold leading-tight tracking-[-.03em]">{grade.headline}</p>
           <p className="mt-1.5 text-[15px] font-medium leading-6 text-[#111214]/75">{summary}</p>
         </div>
       </div>

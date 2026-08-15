@@ -18,7 +18,9 @@ export function EnforcementBanner({ actions, vendorName }: { actions: Regulatory
         <span className={`grid size-10 shrink-0 place-items-center rounded-2xl text-white ${severe ? "bg-[#d3372c]" : "bg-[#b26a00]"}`}>{severe ? <ShieldAlert className="size-5" /> : <Gavel className="size-5" />}</span>
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.12em] opacity-80">Regulatory &amp; enforcement record</p>
-          <h2 className="mt-0.5 text-xl font-semibold tracking-[-.02em]">{severe ? "On a government enforcement record" : `${actions.length} public regulatory record${actions.length === 1 ? "" : "s"}`}</h2>
+          {/* h3: this banner sits inside the vendor page's "what is flagged right now" section, which
+              owns the h2. Level is structural, not stylistic — the size is unchanged. */}
+          <h3 className="mt-0.5 text-xl font-semibold tracking-[-.02em]">{severe ? "On a government enforcement record" : `${actions.length} public regulatory record${actions.length === 1 ? "" : "s"}`}</h3>
         </div>
       </div>
       <p className="mt-3 text-sm leading-6 opacity-85">These are official public records naming {vendorName} (or an operator VialGrade matched to it). We report the action and link the source; we do not add an accusation of our own.</p>

@@ -12,7 +12,8 @@ export function VendorFlagsBanner({ flags, vendorName }: { flags: CoaFlag[]; ven
         <span className={`grid size-9 place-items-center rounded-xl ${high ? "bg-white text-[#d3372c]" : "bg-white text-[#b26a00]"}`}><ShieldAlert className="size-4" /></span>
         <div>
           <p className={`text-[11px] font-semibold uppercase tracking-[.16em] ${high ? "text-[#d3372c]" : "text-[#b26a00]"}`}>Certificate integrity warning</p>
-          <h2 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s posted lab certificates don&rsquo;t hold up</h2>
+          {/* h3: nested under the vendor page's alert-group h2. */}
+          <h3 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s posted lab certificates don&rsquo;t hold up</h3>
         </div>
       </div>
       <ul className="mt-4 space-y-3">

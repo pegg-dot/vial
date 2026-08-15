@@ -11,8 +11,8 @@ export function AggregatorRatingsPanel({ ratings, vendorName }: { ratings: Aggre
     <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-16">
       <div className="mb-7">
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Third-party aggregators</p>
-        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">What other trackers say</h2>
-        <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Scores published by independent peptide-testing aggregators for {vendorName}. These are their opinions, not ours — we show them side by side and link to each source so you can check the basis yourself.</p>
+        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">What do other trackers say about {vendorName}?</h2>
+        <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">{ratings.length} independent peptide-testing aggregator{ratings.length === 1 ? " has" : "s have"} published a rating for {vendorName}. These are their opinions, not ours — we show them side by side and link to each source so you can check the basis yourself.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {ratings.map((r) => {

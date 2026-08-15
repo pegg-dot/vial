@@ -19,7 +19,8 @@ export function VendorStatusBanner({ status, vendorName }: { status: VendorStatu
         <span className={`grid size-9 place-items-center rounded-xl ${a.chip}`}><Icon className="size-4" /></span>
         <div>
           <p className={`text-[11px] font-semibold uppercase tracking-[.16em] ${status.status === "redirected" ? "text-[#b26a00]" : "text-[#d3372c]"}`}>Vendor status · possible exit scam</p>
-          <h2 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s storefront isn&rsquo;t operating normally</h2>
+          {/* h3: nested under the vendor page's alert-group h2. */}
+          <h3 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s storefront isn&rsquo;t operating normally</h3>
         </div>
       </div>
       <p className="mt-3 text-sm leading-6 text-black/70"><span className="font-semibold">{a.label}.</span> {status.detail}</p>

@@ -15,7 +15,12 @@ export function VendorLinksPanel({ links, vendorName: name }: { links: VendorLin
     <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-20">
       <div className="mb-7">
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Who owns it</p>
-        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Who&rsquo;s really behind this storefront</h2>
+        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Who&rsquo;s really behind {name}?</h2>
+        <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
+          {strong.length > 0
+            ? `${name} shares hard identifiers with ${strong.length} other storefront${strong.length === 1 ? "" : "s"} we track — very likely the same operator behind more than one "independent" shop.`
+            : `We found no hard identifier tying ${name} to any other storefront we track.`}
+        </p>
       </div>
 
       {strong.length > 0 ? (

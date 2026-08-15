@@ -12,7 +12,7 @@ const FLAG_DOT: Record<string, string> = { negative: "bg-[#d3372c]", positive: "
 
 // What r/Peptides actually says about this vendor — the community-reputation layer. A signal,
 // never a verdict: silence isn't safety and a vouch isn't proof of what's in the vial.
-export function CommunitySignalCard({ signal }: { signal: StoredCommunitySignal }) {
+export function CommunitySignalCard({ signal, vendorName }: { signal: StoredCommunitySignal; vendorName: string }) {
   const s = SENTIMENT[signal.sentiment] ?? SENTIMENT.unknown;
   const posts = Array.isArray(signal.top_posts) ? signal.top_posts : [];
   const updated = signal.fetched_at ? new Date(signal.fetched_at).toLocaleDateString() : null;
@@ -21,10 +21,16 @@ export function CommunitySignalCard({ signal }: { signal: StoredCommunitySignal 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">Community</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">What r/Peptides says</h2>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">What does r/Peptides say about {vendorName}?</h2>
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide ${s.chip}`}><MessagesSquare className="size-3" /> {s.label}</span>
       </div>
+      {/* The finding, immediately under the question it answers. */}
+      <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
+        {signal.mention_count === 0
+          ? "No r/Peptides thread mentioning this vendor surfaced in our search."
+          : `${signal.mention_count} mention${signal.mention_count === 1 ? "" : "s"} surfaced — ${signal.negative_count} scam or quality complaint${signal.negative_count === 1 ? "" : "s"}, ${signal.positive_count} vouch${signal.positive_count === 1 ? "" : "es"}.`}
+      </p>
       <div className="mt-6 rounded-[18px] ink bg-white p-6 hard sm:p-7">
         <div className="flex flex-wrap gap-6 border-b border-[#111214]/10 pb-5">
           <Stat value={String(signal.mention_count)} label="Mentions found" />
