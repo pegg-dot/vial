@@ -29,12 +29,34 @@ export function newClickRef(): string {
  * person across days. The privacy secret never leaves the server.
  */
 export function visitorHash(ip: string | null, userAgent: string | null, day = new Date()): string {
-  const secret = process.env.VIALGRADE_PRIVACY_HASH_SECRET ?? "";
+  const secret = privacySecret();
   const stamp = day.toISOString().slice(0, 10);
   return createHash("sha256")
     .update(`${secret}:${stamp}:${ip ?? ""}:${userAgent ?? ""}`)
     .digest("hex")
     .slice(0, 32);
+}
+
+/**
+ * The salt that makes a visitor hash unguessable.
+ *
+ * This used to be `process.env.VIALGRADE_PRIVACY_HASH_SECRET ?? ""`. With an empty secret the hash
+ * collapses to sha256(date : ip : user-agent) — every input publicly known — so the entire IPv4
+ * space can be enumerated in minutes and each "anonymous" hash resolved back to an address. The
+ * pseudonymous analytics would silently become recoverable personal data, and the privacy notice
+ * that promises otherwise would be false. That is a legal exposure created by a missing variable.
+ *
+ * Failing loudly in production is the only safe behaviour, and it matches how the session layer in
+ * auth/request-context.ts already treats the same secret. Outside production a fixed development
+ * value keeps local work and tests running.
+ */
+function privacySecret(): string {
+  const configured = process.env.VIALGRADE_PRIVACY_HASH_SECRET?.trim();
+  if (configured && configured.length >= 32) return configured;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("VIALGRADE_PRIVACY_HASH_SECRET must be set to at least 32 characters in production — without it visitor hashes are reversible.");
+  }
+  return "vial-local-privacy-hash-secret-at-least-32-characters";
 }
 
 export function deviceOf(userAgent: string | null): string {

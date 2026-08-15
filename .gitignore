@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but the TEMPLATE must be tracked. `.env*` was swallowing it, so the example file lived only on
+# one machine, drifted to the pre-rename VIAL_* prefix while the code moved to VIALGRADE_*, and no
+# reviewer could ever see the drift because the file was not in the repository. It holds no secrets
+# by construction — every value is blank or a placeholder.
+!.env.example
 
 # vercel
 .vercel
