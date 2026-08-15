@@ -5,7 +5,9 @@ import { JsonLd } from "@/components/json-ld";
 import { faqSchema } from "@/lib/structured-data";
 export const metadata:Metadata={title:"Help center",description:"Learn how to search, compare, interpret evidence, and use VialGrade responsibly.",alternates:{canonical:"/help"}};
 const faqs=[
-["Does VialGrade sell products?","No. VialGrade is where you research the purchase — when you're ready to buy, we link you to the vendor's own site. VialGrade never handles payment or product. (Outbound vendor links switch on once the affiliate step is approved.)"],
+["Does VialGrade sell products?","No. VialGrade is where you research the purchase — when you're ready to buy, the buy button hands you to the vendor's own site and you buy there. VialGrade never handles payment, product, or your order."],
+["Does VialGrade make money from the links?","Not today — no vendor pays us anything, and there is no affiliate arrangement in place. Some vendor links may earn a commission in future, in which case it says so next to the link before you click. A commission can't move a grade, a price, a warning, or a listing's position: the evidence pipeline that produces them never sees commercial terms."],
+["Can I dispute a grade or a flag about my company?","Yes. Email us with the URL and what you say is wrong, and a person re-reviews it against the underlying evidence — see /legal/contact. If we got it wrong we correct it and date the correction. If it stands, you get the reason and the evidence behind it."],
 ["What does issuer confirmed mean?","The lab named on a report confirmed it really issued it — the paper is genuine. It doesn't prove the vial you'd receive matches the tested sample."],
 ["Why is there no safety score?","Because identity, dose, sterility, and batch matching are different questions. One blended score would hide whichever answer is missing — so we show each answer separately, including unknown."],
 ["Are the vendors and labs real?","Yes. Records come from real public sources — vendor product pages and the Janoshik lab-report feed — and are marked Live. A listing is never an endorsement either way."],

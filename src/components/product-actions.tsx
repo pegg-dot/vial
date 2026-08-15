@@ -4,6 +4,16 @@ import { ArrowUpRight, Bookmark, GitCompareArrows, ShieldCheck } from "lucide-re
 import { useState } from "react";
 import { useMarketplace } from "./marketplace-state";
 
+// Standing affiliate disclosure. It renders next to the outbound link, always, uncollapsed — the FTC
+// endorsement guides (16 CFR 255.5) want it where the click happens, not in a policy page or behind
+// a "read more". It says "may earn" because no deal is live today (AFFILIATE_RULES is empty in
+// server/outbound/affiliate.ts) and that file is built to start earning with no UI change: the
+// disclosure has to be already standing when it flips, not added afterwards.
+//
+// tests/unit/affiliate-disclosure.test.ts fails if this string leaves this file while any affiliate
+// rule exists. Change the wording there and here together.
+const AFFILIATE_DISCLOSURE = "Some vendor links may earn VialGrade a commission. It never changes a grade, a price, or where a listing ranks.";
+
 export function ProductActions({ slug, vendorName, origin = "demo", externalUrl }: { slug: string; vendorName: string; origin?: "demo" | "live"; externalUrl?: string }) {
   const { isWatched, isCompared, toggleWatchlist, toggleCompare } = useMarketplace();
   const [notice, setNotice] = useState<string | null>(null);
@@ -34,7 +44,10 @@ export function ProductActions({ slug, vendorName, origin = "demo", externalUrl 
         </button>
       )}
       {live && (
-        <p className="mt-2 text-center text-xs font-medium text-[var(--muted)]">Hands you to {destinationHost} — VialGrade doesn&rsquo;t sell or take payment</p>
+        <div className="mt-2 text-center text-xs font-medium leading-5 text-[var(--muted)]">
+          <p>Hands you to {destinationHost} — VialGrade doesn&rsquo;t sell or take payment</p>
+          <p className="mt-1">{AFFILIATE_DISCLOSURE}</p>
+        </div>
       )}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <button
