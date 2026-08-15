@@ -4,6 +4,8 @@ import { ArrowUpRight, ExternalLink, Newspaper } from "lucide-react";
 import { getDatabase } from "@/server/db/client";
 import { listNews } from "@/server/external/repository";
 import { ArtCoa, ArtShieldCheck } from "@/components/vial-art";
+import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +25,11 @@ const SOURCE_META: Record<string, { label: string; cls: string; note: string }> 
 };
 
 export default async function NewsPage() {
-  const db = await getDatabase();
-  const items = await listNews(db, 80);
+  const items = await getDatabase().then((db) => listNews(db, 80)).catch((error) => {
+    reportError({ kind: "news-unavailable", message: "The news feed could not be read.", context: { error: String(error) } });
+    return null;
+  });
+  if (!items) return <DataUnavailable surface="the news feed" />;
 
   return (
     <>

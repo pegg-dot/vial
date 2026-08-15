@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EyeOff, FlaskConical, PackageSearch, Users } from "lucide-react";
 import { getSamplingStats } from "@/server/public-repository";
+import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Independent testing", description: "Who selected the sample — blind vs vendor-submitted — across the certificates VialGrade aggregates.", alternates: { canonical: "/testing" } };
 
 export default async function Page() {
-  const s = await getSamplingStats();
+  const s = await getSamplingStats().catch((error) => {
+    reportError({ kind: "testing-unavailable", message: "The sampling statistics could not be read.", context: { error: String(error) } });
+    return null;
+  });
+  if (!s) return <DataUnavailable surface="the testing overview" />;
   const pct = (n: number) => (s.total > 0 ? Math.round((n / s.total) * 100) : 0);
   const models: [string, typeof FlaskConical, string, string, string | null][] = [
     ["S1", FlaskConical, "Vendor selected", "The vendor controls which unit reaches the laboratory.", `${s.vendorSelected} on record · ${pct(s.vendorSelected)}%`],

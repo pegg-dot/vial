@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BadgeCheck, FlaskConical, MapPin, ShieldCheck, ShieldAlert, ShieldQuestion } from "lucide-react";
 import { getLabsOverview } from "@/server/labs/repository";
 import type { LabIndependence } from "@/server/labs/registry";
+import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Testing laboratories", description: "The real third-party labs behind the certificates — who they are, whether they're independent and accredited, and what they've tested. Sourced, hedged, never an endorsement.", alternates: { canonical: "/labs" } };
@@ -19,7 +21,11 @@ function accreditationLabel(a: { iso17025: boolean | null; scopeCoversPeptides: 
 }
 
 export default async function Page() {
-  const labs = await getLabsOverview();
+  const labs = await getLabsOverview().catch((error) => {
+    reportError({ kind: "labs-unavailable", message: "The laboratory overview could not be read.", context: { error: String(error) } });
+    return null;
+  });
+  if (!labs) return <DataUnavailable surface="the laboratory directory" />;
   return <div>
     <section className="border-b-2 border-[#111214]/10"><div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24">
       <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#0e8f80]">The testing laboratories</p>

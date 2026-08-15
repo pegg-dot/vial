@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Gavel, ExternalLink, ShieldAlert, Landmark, Scale } from "lucide-react";
 import { listEnforcementPage, getRegulatoryStats, type EnforcementFilter } from "@/server/regulatory/repository";
+import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Enforcement record", description: "Public FDA, DOJ, and FTC actions against peptide and research-chemical sellers — sourced, factual, never our accusation.", alternates: { canonical: "/enforcement" } };
@@ -22,10 +24,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
   const filter: EnforcementFilter = sp.filter === "all" ? "all" : sp.filter === "severe" ? "severe" : "matched";
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
   const perPage = 50;
-  const [feed, stats] = await Promise.all([
+  const loaded = await Promise.all([
     listEnforcementPage({ filter, page, perPage }),
     getRegulatoryStats(),
-  ]);
+  ]).catch((error) => {
+    reportError({ kind: "enforcement-unavailable", message: "The enforcement record could not be read.", context: { error: String(error) } });
+    return null;
+  });
+  if (!loaded) return <DataUnavailable surface="the enforcement record" />;
+  const [feed, stats] = loaded;
   const actions = feed.items;
   const pages = Math.max(1, Math.ceil(feed.total / perPage));
   const from = feed.total === 0 ? 0 : (page - 1) * perPage + 1;

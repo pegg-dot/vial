@@ -1,9 +1,16 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
-export const dynamic = "force-dynamic";
+// Regenerated at most hourly rather than on every crawler request. This is fetched by exactly the
+// automated clients we least want recomputing the whole catalog, and it changes once a day at most.
+export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { compounds, products, vendors } = await getCatalogSnapshot();
+  // A sitemap that 500s is worse than a partial one: crawlers cannot discover ANY page, and
+  // sustained errors on this file are how a site falls out of an index. So a database failure
+  // degrades to the static routes — which are exactly the ones that still render during an outage —
+  // instead of taking the whole file down with it.
+  const catalog = await getCatalogSnapshot().catch(() => null);
+  const { compounds, products, vendors } = catalog ?? { compounds: [], vendors: [], products: [] };
   const now = new Date();
   const pages = [
     ["", "weekly", 1], ["/market","daily",.9], ["/search","daily",.85], ["/compounds","weekly",.8], ["/vendors","weekly",.8],
