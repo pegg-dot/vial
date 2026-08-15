@@ -6,6 +6,7 @@ import { getCertificatesOnRecord } from "@/server/public-repository";
 import { SHELVES } from "@/lib/market-taxonomy";
 import { CompoundsExperience } from "@/components/market/compounds-experience";
 import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = { title: "Compound directory", description: "Browse canonical compound records, market coverage, and evidence context.", alternates: { canonical: "/compounds" } };
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
   const { goal, shelf } = await searchParams;
   // Degrade rather than throw, and never to zeros — "0 compounds tracked" is a claim we cannot
   // stand behind. See home-data-unavailable.tsx for why an honest blank beats a confident wrong.
-  const catalog = await getCatalogSnapshot().catch((error) => { console.error("[compounds] catalog unavailable:", error); return null; });
+  const catalog = await getCatalogSnapshot().catch((error) => { reportError({ kind: "compounds-unavailable", message: "The compound directory could not be read.", context: { error: String(error) } }); return null; });
   const totalCoa = await getCertificatesOnRecord().catch(() => null);
   if (!catalog || totalCoa === null) return <DataUnavailable surface="the compound directory" />;
   const { compounds, products } = catalog;

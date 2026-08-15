@@ -13,6 +13,7 @@ import { HomeBigNumber } from "@/components/home/big-number";
 import { HomeCompoundsShowcase } from "@/components/home/compounds-showcase";
 import { HomeFinalCta } from "@/components/home/final-cta";
 import { HomeDataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 
 // Title and description are inherited from the root layout, which already states them for the
 // site. Only the canonical is page-specific: without it, every tracking-parameter variant of the
@@ -31,7 +32,7 @@ export default async function HomePage() {
   // nothing — it is the same failure this product exists to catch in other people's marketing. So
   // an outage is rendered as an honest notice, not as a real-looking result.
   const catalog = await getCatalogSnapshot().catch((error) => {
-    console.error("[home] catalog unavailable:", error);
+    reportError({ kind: "home-catalog-unavailable", severity: "critical", message: "The homepage could not read the catalog and is showing the data-unavailable notice.", context: { error: String(error) } });
     return null;
   });
   const labTests = await getCertificatesOnRecord().catch(() => null);

@@ -8,6 +8,18 @@ import { useEffect } from "react";
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("[app error]", error);
+    // Report to the server so a broken page reaches the owner instead of dying in the visitor's
+    // console. keepalive lets it survive the navigation away that often follows an error.
+    void fetch("/api/internal/client-error", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        message: error.message,
+        digest: error.digest,
+        path: typeof window !== "undefined" ? window.location.pathname : undefined,
+      }),
+    }).catch(() => { /* never let reporting an error raise one */ });
   }, [error]);
 
   return (

@@ -5,6 +5,7 @@ import { getVendorDirectory } from "@/server/vendors/directory";
 import { getCertificatesOnRecord } from "@/server/public-repository";
 import { VendorsDirectory } from "@/components/vendors-directory";
 import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = { title: "Vendor directory", description: "Rank peptide vendors by what matters to you — reliability, price, purity, testing, or reputation — from real evidence.", alternates: { canonical: "/vendors" } };
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ const STEEL = "#39414e";
 
 export default async function VendorsPage() {
   // Guard BEFORE deriving anything — the counts below read `entries` directly.
-  const entries = await getVendorDirectory().catch((error) => { console.error("[vendors] directory unavailable:", error); return null; });
+  const entries = await getVendorDirectory().catch((error) => { reportError({ kind: "vendors-unavailable", message: "The vendor directory could not be read.", context: { error: String(error) } }); return null; });
   const totalCoa = await getCertificatesOnRecord().catch(() => null);   // site-wide corpus, not the vendor-matched subset
   if (!entries || totalCoa === null) return <DataUnavailable surface="the vendor directory" />;
   const storefronts = entries.filter((e) => e.vendor.kind !== "manufacturer").length;

@@ -14,6 +14,7 @@ import { getWatchlistSlugs } from "@/server/account/repository";
 import { getDefaultComparison } from "@/server/consumer-intelligence/repository";
 import { MobileRetentionNav } from "@/components/mobile-retention-nav";
 import "./globals.css";
+import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -69,7 +70,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // smaller failure than losing the entire site.
   const [catalog, principal] = await Promise.all([
     getCatalogSnapshot().catch((error) => {
-      console.error("[layout] catalog unavailable, degrading:", error);
+      reportError({ kind: "catalog-unavailable", severity: "critical", message: "The root layout could not read the catalog. Every page is now serving a degraded shell. Usually the database is unreachable.", context: { error: String(error) } });
       return { compounds: [], vendors: [], products: [], generatedAt: new Date().toISOString() };
     }),
     getCurrentPrincipal().catch(() => null),
