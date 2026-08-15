@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
-import { CONTACT_EMAIL, GOVERNING_LAW, LEGAL_EMAIL, LEGAL_ENTITY, VENUE } from "@/lib/contact";
+import { CONTACT_EMAIL, GOVERNING_LAW, HAS_GOVERNING_LAW, LEGAL_EMAIL, LEGAL_ENTITY, VENUE } from "@/lib/contact";
 
 export const metadata: Metadata = { title: "Terms of use", alternates: { canonical: "/legal/terms" } };
 
@@ -23,7 +23,10 @@ export default function Page() {
 
 ["Limitation of liability","To the fullest extent the law allows, VialGrade is not liable for indirect, incidental, special, consequential, or punitive damages, or for lost profits, lost data, or harm arising from a decision you made using this site — including a purchase from a vendor, since that transaction is between you and that vendor. Total liability for any claim relating to VialGrade is limited to US$100, which is more than you have paid us, because the site is free. Some jurisdictions do not allow these exclusions; where that is so, they apply only as far as that jurisdiction permits, and nothing here excludes liability for fraud or for anything else that cannot lawfully be excluded."],
 
-["Governing law and venue",`These terms are governed by the laws of ${GOVERNING_LAW}, without regard to its conflict-of-laws rules. Disputes are heard in ${VENUE}, and you and ${LEGAL_ENTITY} each consent to that venue. Nothing here removes a consumer-protection right that the law of your home jurisdiction gives you and does not allow you to waive.`],
+// Omitted entirely when no jurisdiction is set. A visible "[to be added]" in a legal document
+// undermines every other line on the page, and guessing a jurisdiction is worse than saying
+// nothing — with no clause, ordinary law applies, which is the normal position for a small site.
+...(HAS_GOVERNING_LAW ? [["Governing law and venue",`These terms are governed by the laws of ${GOVERNING_LAW}, without regard to its conflict-of-laws rules. Disputes are heard in ${VENUE}, and you and ${LEGAL_ENTITY} each consent to that venue. Nothing here removes a consumer-protection right that the law of your home jurisdiction gives you and does not allow you to waive.`] as [string, string]] : []),
 
 ["Who operates VialGrade",`VialGrade is operated by ${LEGAL_ENTITY}. General contact: ${CONTACT_EMAIL}.`],
 
