@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { secretMatches } from "@/server/auth/secret-compare";
 import { runIntelligenceSweep } from "@/server/intelligence/scanner";
 import { runRefreshSweep } from "@/server/refresh/scheduler";
 import { getDatabase } from "@/server/db/client";
@@ -18,7 +19,7 @@ function authorized(request: NextRequest) {
     }
     return true;
   }
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+  return secretMatches(request.headers.get("authorization"), `Bearer ${secret}`);
 }
 
 export async function GET(request: NextRequest) {

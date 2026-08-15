@@ -27,7 +27,16 @@ const PUBLIC_PAGE_PREFIX = ["/compounds", "/vendors", "/products", "/legal", "/p
 // letting them through the perimeter means Next returns its own clean 404 — rather than a login
 // redirect, which tells a visitor something is still there and invites them to try to reach it.
 // Nothing is exposed by allowing these: there is no handler behind them.
-const RETIRED_PREFIX = ["/seller", "/lab", "/terminal", "/operations", "/updates", "/developers", "/sell"];
+//
+// `/seller` and `/lab` are deliberately NOT in this list even though they are also retired. Both
+// have role gates further down in `accessDecision`, and `isPublic` is consulted first — so listing
+// them here made those gates unreachable dead code. That costs nothing while the routes are absent,
+// but it is a trap armed for whoever restores one: the day a `src/app/seller/**` page reappears it
+// would be served to anonymous visitors, with a role check sitting right there in this file looking
+// like it was doing the work. A retired route that shares a prefix with a live gate must fail
+// closed. The only thing given up is the clean 404 — an anonymous visitor to a nonexistent
+// `/seller` now sees the login page instead.
+const RETIRED_PREFIX = ["/terminal", "/operations", "/updates", "/developers", "/sell"];
 
 // Public / externally-authenticated API routes. These carry their own guard
 // (public read, bearer token, or webhook signature) and must never be session-gated
@@ -44,13 +53,17 @@ const PUBLIC_API_EXACT = new Set([
   "/api/partner/conversion",
   // Anonymous page-view beacon. No auth by design; it stores no identity.
   "/api/track/view",
+  // Browser error boundaries report here. It must be reachable without a session, because the
+  // errors most worth hearing about are the ones that break the page before anyone can log in.
+  // The handler treats every caller as hostile: fixed alert kind, capped body, truncated fields.
+  "/api/internal/client-error",
 ]);
 const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", "/api/public/"];
 
 function isPublic(path: string): boolean {
   if (PUBLIC_PAGE_EXACT.has(path) || PUBLIC_API_EXACT.has(path)) return true;
   if (PUBLIC_PAGE_PREFIX.some((p) => path === p || path.startsWith(`${p}/`))) return true;
-  // `/labs` is real and public; `/lab` is retired. Exact-or-subpath match keeps them distinct.
+  // Exact-or-subpath match, so a retired prefix never swallows a longer live one.
   if (RETIRED_PREFIX.some((p) => path === p || path.startsWith(`${p}/`))) return true;
   if (PUBLIC_API_PREFIX.some((p) => path.startsWith(p))) return true;
   return false;

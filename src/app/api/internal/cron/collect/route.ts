@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { secretMatches } from "@/server/auth/secret-compare";
 import { runCollectionTick } from "@/server/collect/scheduler";
 import { isLiveIngestApproved } from "@/server/ingest/live-sources";
 import { revalidateTag } from "next/cache";
@@ -19,7 +20,7 @@ function authorized(request: NextRequest) {
     return true;
   }
   // Vercel Cron signs its own invocations with this header; a manual curl can use it too.
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+  return secretMatches(request.headers.get("authorization"), `Bearer ${secret}`);
 }
 
 export async function GET(request: NextRequest) {

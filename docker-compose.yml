@@ -24,7 +24,11 @@ services:
       VIALGRADE_SESSION_SECRET: local-compose-session-secret-change-before-use-0001
       VIALGRADE_PRIVACY_HASH_SECRET: local-compose-privacy-secret-change-before-use-0002
       VIALGRADE_SEED_FIXTURES: "true"
-      VIALGRADE_SEED_DEMO_ACCOUNTS: "true"
+      # VIALGRADE_SEED_DEMO_ACCOUNTS is deliberately absent. It used to be "true" here alongside
+      # NODE_ENV: production, and the seed gate was an OR, so this file seeded an administrator
+      # account whose password is published in README.md into a real Postgres volume. The gate in
+      # server/auth/foundation-seed.ts now refuses regardless; not setting the flag means this file
+      # also stops asking. Demo *fixtures* (catalog data) are still seeded — they are not logins.
       # Without a scheduler, live prices never refresh and /signals never populates.
       CRON_SECRET: local-compose-cron-secret-change-before-use-0003
     ports: ["3000:3000"]

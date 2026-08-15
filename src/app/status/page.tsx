@@ -1,7 +1,114 @@
 import type { Metadata } from "next";
-import { CheckCircle2, Database, RadioTower, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Database, RadioTower, ShieldCheck, XCircle } from "lucide-react";
 import { getRefreshMetrics } from "@/server/refresh/repository";
 import { getIntelligenceMetrics } from "@/server/intelligence/repository";
-export const metadata:Metadata={title:"System status",alternates:{canonical:"/status"}};export const dynamic="force-dynamic";
-export default async function StatusPage(){const [refresh,intel]=await Promise.all([getRefreshMetrics(),getIntelligenceMetrics()]);return <div className="mx-auto max-w-[1000px] px-5 py-16 sm:px-8 sm:py-24"><div className="ink hard-mint rounded-[20px] bg-[#111214] p-7 text-white sm:p-10"><div className="flex items-center gap-3"><CheckCircle2 className="size-5 text-[#8fffd6]"/><p className="text-sm font-bold">All systems operational</p></div><h1 className="mt-8 text-5xl font-extrabold tracking-[-.065em] sm:text-7xl">System status</h1><p className="mt-5 max-w-2xl text-sm leading-6 text-white/55">Whether the parts of VialGrade that gather and serve this data are working right now.</p></div><div className="mt-6 grid gap-4 sm:grid-cols-3"><Card icon={Database} title="Catalog" value="Working" detail="Prices, vendors and lab tests are being served"/><Card icon={RadioTower} title="Refresh engine" value={`${refresh.enabled} enabled`} detail={`${refresh.queued} queued · ${refresh.stale} stale`}/><Card icon={ShieldCheck} title="Intelligence graph" value={`${intel.traces} traces`} detail={`${intel.alerts} alerts · ${intel.open} open signals`}/></div><div className="ink-1 hard mt-8 rounded-[18px] bg-white p-6"><h2 className="text-xl font-extrabold tracking-[-.03em]">What this page covers</h2><p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">This page is about our own site, not about whether a vendor&rsquo;s website is up. Approved sources are fetched live over the internet.</p></div></div>}
-function Card({icon:Icon,title,value,detail}:{icon:React.ComponentType<{className?:string}>;title:string;value:string;detail:string}){return <div className="ink-1 hard rounded-[18px] bg-white p-5"><Icon className="size-4 text-[#0e8f80]"/><p className="mt-6 text-sm font-bold">{title}</p><p className="mt-2 text-2xl font-extrabold tracking-[-.045em]">{value}</p><p className="mt-1 text-xs text-[var(--muted)]">{detail}</p></div>}
+import { checkReadiness } from "@/server/health/readiness";
+
+export const metadata: Metadata = { title: "System status", alternates: { canonical: "/status" } };
+export const dynamic = "force-dynamic";
+
+/**
+ * The status page used to be incapable of reporting an outage.
+ *
+ * It hardcoded "All systems operational" and "Catalog: Working" — and then queried the database for
+ * the other two cards. So during a real database outage it did both wrong things at once: it threw a
+ * 500 (because the query failed) while the markup it was trying to render asserted that everything
+ * was fine. The one page whose entire job is to tell you the truth during an incident was the page
+ * that could only ever claim there wasn't one.
+ *
+ * Two changes. First, the headline is derived from the same readiness probe `/api/health/ready`
+ * serves, so the page and the health endpoint cannot disagree. Second, every read here is allowed to
+ * fail into a rendered state rather than an exception — following the pattern the homepage and the
+ * catalog pages were given (`components/home-data-unavailable.tsx`), except that this page does not
+ * hide behind a generic notice: an outage is the content it exists to publish, so it names it.
+ *
+ * A subsystem that cannot be read reports "Not reporting" and never a number. "0 queued" during an
+ * outage is a lie with the confident shape of a measurement.
+ */
+export default async function StatusPage() {
+  // checkReadiness never throws — an unreachable database is a result, not an exception.
+  const readiness = await checkReadiness();
+  const online = readiness.database === "reachable";
+  const [refresh, intel] = online
+    ? await Promise.all([
+        getRefreshMetrics().catch((error) => { console.error("[status] refresh metrics unavailable:", error); return null; }),
+        getIntelligenceMetrics().catch((error) => { console.error("[status] intelligence metrics unavailable:", error); return null; }),
+      ])
+    : [null, null];
+
+  const banner =
+    readiness.status === "not_ready"
+      ? { Icon: XCircle, tone: "#ff9d94", shadow: "hard", text: "Major outage — the database is unreachable" }
+      : readiness.status === "degraded"
+        ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — database schema is at ${readiness.schema.actual}, expected ${readiness.schema.expected}` }
+        : refresh && intel
+          ? { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" }
+          : { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — one or more subsystems are not reporting" };
+
+  return (
+    <div className="mx-auto max-w-[1000px] px-5 py-16 sm:px-8 sm:py-24">
+      <div className={`ink ${banner.shadow} rounded-[20px] bg-[#111214] p-7 text-white sm:p-10`}>
+        <div className="flex items-center gap-3">
+          <banner.Icon className="size-5 shrink-0" style={{ color: banner.tone }} />
+          <p className="text-sm font-bold">{banner.text}</p>
+        </div>
+        <h1 className="mt-8 text-5xl font-extrabold tracking-[-.065em] sm:text-7xl">System status</h1>
+        <p className="mt-5 max-w-2xl text-sm leading-6 text-white/55">
+          Whether the parts of VialGrade that gather and serve this data are working right now.
+        </p>
+        <p className="mt-4 text-xs font-medium text-white/40">
+          Checked {new Date(readiness.time).toUTCString()} · readiness probe answered in {readiness.latencyMs}ms
+        </p>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <Card
+          icon={Database}
+          title="Catalog"
+          value={online ? "Working" : "Unavailable"}
+          detail={online ? "Prices, vendors and lab tests are being served" : "The catalogue cannot be read right now"}
+          ok={online}
+        />
+        <Card
+          icon={RadioTower}
+          title="Refresh engine"
+          value={refresh ? `${refresh.enabled} enabled` : "Not reporting"}
+          detail={refresh ? `${refresh.queued} queued · ${refresh.stale} stale` : "No figures available while this subsystem is unreadable"}
+          ok={Boolean(refresh)}
+        />
+        <Card
+          icon={ShieldCheck}
+          title="Intelligence graph"
+          value={intel ? `${intel.traces} traces` : "Not reporting"}
+          detail={intel ? `${intel.alerts} alerts · ${intel.open} open signals` : "No figures available while this subsystem is unreadable"}
+          ok={Boolean(intel)}
+        />
+      </div>
+
+      <div className="ink-1 hard mt-8 rounded-[18px] bg-white p-6">
+        <h2 className="text-xl font-extrabold tracking-[-.03em]">What this page covers</h2>
+        <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">
+          This page is about our own site, not about whether a vendor&rsquo;s website is up. Approved
+          sources are fetched live over the internet.
+        </p>
+        <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">
+          The headline above is derived from the same readiness check served at{" "}
+          <code className="font-mono text-[13px]">/api/health/ready</code> — it is not a fixed message.
+          When a subsystem cannot be read this page says so and shows no number for it, rather than
+          reporting a zero it cannot stand behind.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Card({ icon: Icon, title, value, detail, ok }: { icon: React.ComponentType<{ className?: string }>; title: string; value: string; detail: string; ok: boolean }) {
+  return (
+    <div className="ink-1 hard rounded-[18px] bg-white p-5">
+      <Icon className={ok ? "size-4 text-[#0e8f80]" : "size-4 text-[#b26a00]"} />
+      <p className="mt-6 text-sm font-bold">{title}</p>
+      <p className={ok ? "mt-2 text-2xl font-extrabold tracking-[-.045em]" : "mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#b26a00]"}>{value}</p>
+      <p className="mt-1 text-xs text-[var(--muted)]">{detail}</p>
+    </div>
+  );
+}

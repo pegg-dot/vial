@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { CURRENT_SCHEMA_VERSION } from "@/server/db/migrations";
-import { getDatabase } from "@/server/db/client";
+import { checkReadiness } from "@/server/health/readiness";
 export const dynamic="force-dynamic";
-export async function GET(){const started=Date.now();try{const db=await getDatabase();const result=await db.query<{version:number}>(`SELECT COALESCE(MAX(version),0)::int AS version FROM schema_migrations`);const version=Number(result.rows[0]?.version??0);const ready=version===CURRENT_SCHEMA_VERSION;return NextResponse.json({status:ready?"ready":"degraded",database:"reachable",schema:{expected:CURRENT_SCHEMA_VERSION,actual:version},latencyMs:Date.now()-started,time:new Date().toISOString()},{status:ready?200:503,headers:{"Cache-Control":"no-store"}})}catch(error){return NextResponse.json({status:"not_ready",database:"unreachable",latencyMs:Date.now()-started,error:error instanceof Error?error.message:"Unknown database error",time:new Date().toISOString()},{status:503,headers:{"Cache-Control":"no-store"}})}}
+// The body carries no driver detail: `checkReadiness` logs the raw error server-side and returns a
+// fixed vocabulary ("reachable"/"unreachable"). This endpoint is unauthenticated by design, so a
+// leaked "connect ECONNREFUSED 10.0.0.4:5432 (role vialgrade)" would hand a scanner the topology.
+export async function GET(){const readiness=await checkReadiness();return NextResponse.json(readiness,{status:readiness.status==="ready"?200:503,headers:{"Cache-Control":"no-store"}})}

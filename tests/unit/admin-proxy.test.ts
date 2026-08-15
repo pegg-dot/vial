@@ -28,10 +28,14 @@ describe("deny-by-default route perimeter",()=>{
   it("enforces account-family boundaries and denies cross-origin mutations",()=>{
     const customerCookie=`${SESSION_COOKIE}=${cookie("customer",["customer"])}`;
     const sellerCookie=`${SESSION_COOKIE}=${cookie("seller",["seller_owner"])}`;
-    // /seller is retired — it no longer exists as a route, so the perimeter lets it through to a
-    // real 404 instead of redirecting. A live protected surface is asserted instead.
+    // /seller is retired, but it is still role-gated: listing it as a retired-and-public prefix made
+    // the seller role check in accessDecision unreachable, which would have served a restored
+    // /seller page to anyone. The clean 404 is given up on purpose — a customer is bounced to login.
     const customerAtSeller=proxy(new NextRequest("http://localhost/seller",{headers:{cookie:customerCookie}}));
-    expect(customerAtSeller.status).toBe(200);
+    expect(customerAtSeller.status).toBe(307);
+    expect(customerAtSeller.headers.get("location")).toContain("/login?next=%2Fseller");
+    const sellerAtSeller=proxy(new NextRequest("http://localhost/seller",{headers:{cookie:sellerCookie}}));
+    expect(sellerAtSeller.headers.get("x-middleware-next")).toBe("1");
     const customerAtAdmin=proxy(new NextRequest("http://localhost/admin",{headers:{cookie:customerCookie}}));
     expect(customerAtAdmin.status).toBe(307);
     const sellerAtForYou=proxy(new NextRequest("http://localhost/for-you",{headers:{cookie:sellerCookie}}));

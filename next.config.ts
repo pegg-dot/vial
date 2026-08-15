@@ -16,10 +16,17 @@ const contentSecurityPolicy = [
   // https image so the real COAs render inline. Images can't execute, so this is safe.
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `script-src 'self' 'unsafe-inline' https://js.stripe.com${isProduction ? "" : " 'unsafe-eval'"}`,
+  // No Stripe origins. VialGrade takes no payment: /cart and /checkout are permanent redirects to
+  // /market, and the only component that would load js.stripe.com (components/stripe-payment-panel)
+  // is reachable only from components/checkout-client, which no route imports. Granting script and
+  // frame execution to a third-party origin that nothing on the site loads is pure attack surface —
+  // it is the hole a future injected <script src="https://js.stripe.com/..."> would fit through, and
+  // an allowance nobody would think to audit because it looks like it belongs to a payment flow.
+  // The server-side `stripe` package is unaffected: server calls never pass through CSP.
+  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://api.stripe.com https://r.stripe.com https://q.stripe.com",
-  "frame-src https://js.stripe.com https://hooks.stripe.com",
+  "connect-src 'self'",
+  "frame-src 'none'",
   "worker-src 'self' blob:",
   isProduction && servesOverHttps ? "upgrade-insecure-requests" : "",
 ].filter(Boolean).join("; ");
@@ -29,9 +36,16 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: 'camera=(), microphone=(), geolocation=(), payment=(self "https://js.stripe.com")' },
+  // payment=() — the site has no checkout, so nothing should be able to invoke the Payment Request
+  // API from this origin, including anything injected into it.
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  // Vercel sets HSTS on *.vercel.app, but that is Vercel asserting it for its own domain — a custom
+  // apex has to assert its own or the first request of every session stays downgradeable. Gated on
+  // the canonical URL being https: a browser ignores HSTS received over plain http anyway, so
+  // sending it from the local/e2e server would be noise claiming to be a control.
+  ...(servesOverHttps ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] : []),
 ];
 
 const config: NextConfig = {
