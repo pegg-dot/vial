@@ -1,0 +1,68 @@
+import { siteUrl } from "@/lib/site";
+import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { reportError } from "@/server/observability/alerts";
+
+export const dynamic = "force-dynamic";
+
+// The sitemap, as a route handler rather than Next's `sitemap.ts` convention, for one reason:
+// CONTROL OVER CACHING OF A DEGRADED RESULT.
+//
+// The convention file cannot set response headers, so `revalidate = 3600` cached whatever it
+// produced — including the stripped-down version generated while the database was unreachable. When
+// the database came back the site served real data everywhere, while /sitemap.xml kept returning a
+// 26-hour-old cached response listing 20 URLs instead of ~830, with x-vercel-cache: HIT. Google
+// would have seen a site that had apparently deleted its entire catalogue.
+//
+// The rule this encodes: NEVER CACHE A FAILURE. A good response is cached for an hour, because it
+// is fetched by exactly the automated clients we least want recomputing the catalog. A degraded one
+// is marked no-store so it expires the instant the data returns.
+//
+// It still degrades rather than 500s — a sitemap that errors means crawlers discover nothing at
+// all, and sustained errors on this file are how a site falls out of an index.
+
+const STATIC_PAGES = [
+  ["", "weekly", 1.0], ["/market", "daily", 0.9], ["/search", "daily", 0.85],
+  ["/compounds", "weekly", 0.8], ["/vendors", "weekly", 0.8], ["/research", "weekly", 0.75],
+  ["/passports", "daily", 0.8], ["/labs", "weekly", 0.75], ["/testing", "weekly", 0.7],
+  ["/compare", "weekly", 0.6], ["/how-we-check", "monthly", 0.7], ["/grades", "monthly", 0.7],
+  ["/reference-standard", "monthly", 0.6], ["/signals", "daily", 0.65], ["/verify", "monthly", 0.7],
+  ["/enforcement", "daily", 0.7], ["/news", "daily", 0.65], ["/about", "monthly", 0.5],
+  ["/help", "monthly", 0.5], ["/status", "daily", 0.4],
+  ["/legal/privacy", "yearly", 0.2], ["/legal/terms", "yearly", 0.2],
+  ["/legal/disclaimer", "yearly", 0.3], ["/legal/us-regulations", "yearly", 0.3],
+  ["/legal/contact", "yearly", 0.3],
+] as const;
+
+const xmlEscape = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+function urlEntry(path: string, changefreq: string, priority: number, lastmod: string) {
+  return `<url><loc>${xmlEscape(siteUrl + path)}</loc><lastmod>${lastmod}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+}
+
+export async function GET() {
+  const catalog = await getCatalogSnapshot().catch((error) => {
+    reportError({ kind: "sitemap-degraded", message: "The sitemap could not read the catalog and is serving static routes only. It will NOT be cached in this state.", context: { error: String(error) } });
+    return null;
+  });
+  const lastmod = new Date().toISOString().slice(0, 10);
+
+  const entries = [
+    ...STATIC_PAGES.map(([path, freq, pri]) => urlEntry(path, freq, pri, lastmod)),
+    ...(catalog?.products ?? []).map((p) => urlEntry(`/products/${p.slug}`, "daily", 0.8, lastmod)),
+    ...(catalog?.compounds ?? []).map((c) => urlEntry(`/compounds/${c.slug}`, "weekly", 0.75, lastmod)),
+    ...(catalog?.vendors ?? []).map((v) => urlEntry(`/vendors/${v.slug}`, "weekly", 0.7, lastmod)),
+  ];
+
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`,
+    {
+      headers: {
+        "content-type": "application/xml; charset=utf-8",
+        // The whole point: a complete sitemap caches, a degraded one never does.
+        "cache-control": catalog
+          ? "public, s-maxage=3600, stale-while-revalidate=86400"
+          : "no-store, must-revalidate",
+      },
+    },
+  );
+}

@@ -4,6 +4,7 @@ import { runIntelligenceSweep } from "@/server/intelligence/scanner";
 import { runRefreshSweep } from "@/server/refresh/scheduler";
 import { getDatabase } from "@/server/db/client";
 import { applyRetention } from "@/server/db/retention";
+import { reviewCostSignals } from "@/server/observability/cost-signals";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -29,6 +30,11 @@ export async function GET(request: NextRequest) {
   // Housekeeping runs with the daily sweep. Operational history used to grow forever — one row per
   // collector run, per page view, per reliability pass, none of it ever removed — which turns into
   // read volume the database bills for. applyRetention never throws, so it cannot fail the sweep.
-  const retention = await applyRetention(await getDatabase());
-  return NextResponse.json({ refresh, intelligence, retention, completedAt: new Date().toISOString() });
+  const db = await getDatabase();
+  const retention = await applyRetention(db);
+  // Checks whether the expensive paths ran more often than caching should allow. This is the
+  // early warning the last quota blowout did not have: the cache breaking is silent, and the only
+  // symptom before was the database dying two weeks later.
+  const cost = await reviewCostSignals(db).catch(() => []);
+  return NextResponse.json({ refresh, intelligence, retention, cost, completedAt: new Date().toISOString() });
 }

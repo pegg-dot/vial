@@ -1,5 +1,6 @@
 import type { QueryResultRow } from "pg";
 import { unstable_cache } from "next/cache";
+import { countCostSignal } from "@/server/observability/cost-signals";
 import type { AgentRun, CatalogSnapshot, Compound, DataOrigin, Product, Vendor } from "@/lib/types";
 import { parseTotalMg } from "@/lib/format";
 import { compoundMedianPerMg } from "@/lib/curation";
@@ -38,6 +39,10 @@ async function computeCatalogSnapshot():Promise<CatalogSnapshot>{ const [compoun
   const perMg=new Map<string,number[]>();
   for(const p of products){ if(p.pricePerMg&&p.pricePerMg>0){ const a=perMg.get(p.compoundSlug); if(a) a.push(p.pricePerMg); else perMg.set(p.compoundSlug,[p.pricePerMg]); } }
   for(const c of compounds){ c.medianPricePerMg=compoundMedianPerMg(perMg.get(c.slug)??[]); }
+  // Counted because this is the expensive path the cache exists to avoid. A healthy day is single
+  // digits; thousands means something is bypassing the cache, which is exactly how the database
+  // quota was exhausted. Fire-and-forget so the count never delays the request.
+  void countCostSignal("catalog-compute");
   return {compounds,vendors,products,generatedAt:new Date().toISOString()}; }
 
 // The whole catalog — every compound, vendor and listing — read out of the database.
