@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { MarketExperience } from "@/components/market/market-experience";
+import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 import { VialValueBand } from "@/components/market/vial-value-band";
 import { ArtTag, VialBuddy, ArtDroplet } from "@/components/vial-art";
 
@@ -9,8 +12,20 @@ export const metadata: Metadata = {
   description: "Browse and compare normalized peptide research listings with evidence and source context.",
 };
 
+export const dynamic = "force-dynamic";
+
 // Market signature = bone base + a mint "live" pulse (the market moves), price-tag stickers.
-export default function MarketPage() {
+//
+// The market reads whole listings — price histories for the sparklines, evidence levels and trust
+// verdicts for the ranking and the cards — so it loads the full catalog HERE and hands it down.
+// It used to inherit that from the root layout, which meant every other page on the site paid for
+// it too. Degrade rather than throw, and never to zeros: an empty market rendered as "0 listings"
+// is a claim we cannot stand behind.
+export default async function MarketPage() {
+  const catalog = await getCatalogSnapshot().catch((error) => {
+    reportError({ kind: "market-unavailable", message: "The market could not read the catalog.", context: { error: String(error) } });
+    return null;
+  });
   return (
     <>
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#eafff7]">
@@ -33,7 +48,7 @@ export default function MarketPage() {
       </section>
 
       <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12">
-        <MarketExperience />
+        {catalog ? <MarketExperience catalog={catalog} /> : <DataUnavailable surface="the market" />}
       </section>
     </>
   );

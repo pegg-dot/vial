@@ -1,6 +1,6 @@
 "use client";
 
-import type { CatalogSnapshot, Product } from "@/lib/types";
+import type { CatalogLite, ProductLite } from "@/lib/catalog-lite";
 import { displayProductTitle } from "@/lib/product-title";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
@@ -8,7 +8,10 @@ import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 interface MarketplaceContextValue {
-  catalog: CatalogSnapshot;
+  // Deliberately the LITE projection, not the full snapshot: this value rides in the HTML of
+  // every page on the site. If a surface needs whole records it takes them as a prop from its
+  // own server component (see /market, /compounds, /watchlist) rather than widening this.
+  catalog: CatalogLite;
   watchlist: string[];
   compare: string[];
   isWatched: (slug: string) => boolean;
@@ -34,14 +37,14 @@ function readStoredList(key: string) {
   }
 }
 
-export function MarketplaceProvider({ children, catalog: catalogProp, initialWatchlist = [], initialCompare = [], authenticated = false }: { children: React.ReactNode; catalog: CatalogSnapshot; initialWatchlist?: string[]; initialCompare?: string[]; authenticated?: boolean }) {
+export function MarketplaceProvider({ children, catalog: catalogProp, initialWatchlist = [], initialCompare = [], authenticated = false }: { children: React.ReactNode; catalog: CatalogLite; initialWatchlist?: string[]; initialCompare?: string[]; authenticated?: boolean }) {
   // The provider (and its catalog prop) is captured once at hard load and frozen across soft
   // navigations, so every client surface — market grid, search, cards, compare dock — would
   // drift from the freshly server-rendered detail pages and the compare table whenever the
   // catalog changes mid-session. Re-pull the live snapshot on focus + a slow interval, and use
   // whichever of the fetched snapshot or the server prop is newer (by generatedAt) — so a fresh
   // server prop from router.refresh wins immediately, with no setState-in-effect re-seed.
-  const [fetchedCatalog, setFetchedCatalog] = useState<CatalogSnapshot | null>(null);
+  const [fetchedCatalog, setFetchedCatalog] = useState<CatalogLite | null>(null);
   const catalog = fetchedCatalog && fetchedCatalog.generatedAt > catalogProp.generatedAt ? fetchedCatalog : catalogProp;
   const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
   const [compare, setCompare] = useState<string[]>(initialCompare);
@@ -113,11 +116,14 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
     const refresh = async () => {
       if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
       try {
-        const r = await fetch("/api/v1/catalog");
+        // ?shape=lite: the poller only ever feeds the search overlay, the compare dock and the
+        // market card, so pulling whole listings here would re-import the megabyte this projection
+        // exists to remove — four times an hour, per open tab, forever.
+        const r = await fetch("/api/v1/catalog?shape=lite");
         if (!r.ok) return;
         const j = await r.json();
         lastFetched = Date.now();
-        if (alive && j?.data?.products) setFetchedCatalog(j.data as CatalogSnapshot);
+        if (alive && j?.data?.products) setFetchedCatalog(j.data as CatalogLite);
       } catch { /* keep the last-good catalog */ }
     };
     const onVis = () => {
@@ -177,7 +183,7 @@ export function useMarketplace() {
   return context;
 }
 
-function SearchOverlay({ catalog, onClose }: { catalog: CatalogSnapshot; onClose: () => void }) {
+function SearchOverlay({ catalog, onClose }: { catalog: CatalogLite; onClose: () => void }) {
   const { compounds, products, vendors } = catalog;
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
@@ -215,4 +221,4 @@ function SearchOverlay({ catalog, onClose }: { catalog: CatalogSnapshot; onClose
 }
 function SearchSection({label,children}:{label:string;children:React.ReactNode}){return <div><p className="px-3 pb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--muted)]">{label}</p><div className="space-y-1">{children}</div></div>}
 function SearchLink({href,title,meta,mark,accent,onSelect}:{href:string;title:string;meta:string;mark:string;accent:string;onSelect:()=>void}){return <Link href={href} onClick={onSelect} className="group flex items-center gap-3 rounded-[12px] px-3 py-3 transition hover:bg-black/[.05]"><div className="ink grid size-11 shrink-0 place-items-center rounded-[10px] text-[10px] font-extrabold tracking-tight text-white" style={{background:accent}}>{mark}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold tracking-[-0.01em] text-[#111214]">{title}</p><p className="mt-0.5 truncate text-xs font-medium text-[var(--muted)]">{meta}</p></div><span className="translate-x-0 text-sm text-[var(--muted)] transition group-hover:translate-x-0.5 group-hover:text-[#111214]">↗</span></Link>}
-function CompareDock({products,selected,onClear}:{products:Product[];selected:string[];onClear:()=>void}){if(selected.length===0)return null;const selectedProducts=selected.map(slug=>products.find(product=>product.slug===slug)).filter((product):product is Product=>Boolean(product));return <div className="fixed inset-x-0 bottom-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-3xl"><div className="flex items-center gap-3 rounded-[18px] ink bg-[#111214] p-2.5 text-white hard-violet"><div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden pl-1">{selectedProducts.map(product=><div key={product.slug} className="flex min-w-0 items-center gap-2 rounded-[10px] bg-white/[.08] px-2.5 py-2"><span className="size-2 shrink-0 rounded-full" style={{background:product.accent[0]}}/><span className="truncate text-xs font-medium">{product.name} {product.quantity}</span></div>)}<span className="hidden shrink-0 text-xs font-medium text-white/50 md:block">{selected.length}/4 selected</span></div><button onClick={onClear} className="rounded-[10px] px-3 py-2 text-xs font-bold text-white/60 transition hover:bg-white/10 hover:text-white">Clear</button><Link href="/compare" className="ink-1 rounded-[10px] bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-white/90">Compare</Link></div></div>}
+function CompareDock({products,selected,onClear}:{products:ProductLite[];selected:string[];onClear:()=>void}){if(selected.length===0)return null;const selectedProducts=selected.map(slug=>products.find(product=>product.slug===slug)).filter((product):product is ProductLite=>Boolean(product));return <div className="fixed inset-x-0 bottom-4 z-50 mx-auto w-[calc(100%-2rem)] max-w-3xl"><div className="flex items-center gap-3 rounded-[18px] ink bg-[#111214] p-2.5 text-white hard-violet"><div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden pl-1">{selectedProducts.map(product=><div key={product.slug} className="flex min-w-0 items-center gap-2 rounded-[10px] bg-white/[.08] px-2.5 py-2"><span className="size-2 shrink-0 rounded-full" style={{background:product.accent[0]}}/><span className="truncate text-xs font-medium">{product.name} {product.quantity}</span></div>)}<span className="hidden shrink-0 text-xs font-medium text-white/50 md:block">{selected.length}/4 selected</span></div><button onClick={onClear} className="rounded-[10px] px-3 py-2 text-xs font-bold text-white/60 transition hover:bg-white/10 hover:text-white">Clear</button><Link href="/compare" className="ink-1 rounded-[10px] bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-white/90">Compare</Link></div></div>}

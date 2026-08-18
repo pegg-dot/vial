@@ -51,7 +51,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
     </section>
 
     <div className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
-      <CompoundsExperience initialShelf={initialShelf} />
+      <CompoundsExperience catalog={catalog} initialShelf={initialShelf} />
     </div>
   </>;
 }

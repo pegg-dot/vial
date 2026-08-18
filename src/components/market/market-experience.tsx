@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useRef, useState } from "react";
-import type { Compound } from "@/lib/types";
-import { useMarketplace } from "@/components/marketplace-state";
+import type { CatalogSnapshot, Compound } from "@/lib/types";
 import { ProductCard } from "@/components/product-card";
 import { trending, mostVerified, bestValue, newest } from "@/lib/curation";
 import { STACKS, resolveStack, type ResolvedStack } from "@/lib/stacks";
@@ -14,8 +13,13 @@ import { QuickViewModal } from "./quick-view-modal";
 
 // The market storefront: category rail → curated rows (each tile carries its row's own
 // ranking metric) → stacks → the faceted browse grid, with quick-view over compound rows.
-export function MarketExperience() {
-  const { catalog } = useMarketplace();
+//
+// The catalog arrives as a prop from the /market server component, NOT from useMarketplace().
+// This surface reads whole listings — price histories for the sparklines, evidence levels for the
+// ranking, trust verdicts for the cards — and the provider now carries only the lite projection
+// the site-wide chrome needs. Taking it as a prop keeps those bytes on the one page that renders
+// them instead of on all ~830.
+export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
   const { compounds, products } = catalog;
   const [qv, setQv] = useState<{ items: Compound[]; index: number | null }>({ items: [], index: null });
   const [browseShelf, setBrowseShelf] = useState<string>("all");
@@ -94,7 +98,7 @@ export function MarketExperience() {
           <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">Browse everything</h2>
           <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Filter the whole market by category, verification, price, and availability.</p>
         </div>
-        <MarketBrowser shelf={browseShelf} onShelfChange={setBrowseShelf} />
+        <MarketBrowser catalog={catalog} shelf={browseShelf} onShelfChange={setBrowseShelf} />
       </div>
 
       <QuickViewModal

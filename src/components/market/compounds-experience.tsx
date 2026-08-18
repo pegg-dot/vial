@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { LayoutGrid, Table2 } from "lucide-react";
-import type { Compound } from "@/lib/types";
-import { useMarketplace } from "@/components/marketplace-state";
+import type { CatalogSnapshot, Compound } from "@/lib/types";
 import { trending } from "@/lib/curation";
 import { groupByShelf } from "@/lib/market-taxonomy";
 import { STACKS, resolveStack, type ResolvedStack } from "@/lib/stacks";
@@ -14,8 +13,10 @@ import { QuickViewModal } from "./quick-view-modal";
 
 // The compound directory — VialGrade's "terminal". A ranked market table (default) or
 // category shelves, plus a trending strip and stacks, all with quick-view.
-export function CompoundsExperience({ initialShelf = null }: { initialShelf?: string | null }) {
-  const { catalog } = useMarketplace();
+// The catalog arrives as a prop from the /compounds server component rather than from
+// useMarketplace(): the market table and quick-view read whole records (price histories, purity,
+// research notes), and the provider carries only the lite projection the site chrome needs.
+export function CompoundsExperience({ catalog, initialShelf = null }: { catalog: CatalogSnapshot; initialShelf?: string | null }) {
   const { compounds, products } = catalog;
   const [view, setView] = useState<"terminal" | "shelves">(initialShelf ? "shelves" : "terminal");
   const [qv, setQv] = useState<{ items: Compound[]; index: number | null }>({ items: [], index: null });

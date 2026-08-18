@@ -30,6 +30,7 @@ export function GET() {
       "/api/v1/catalog": {
         get: {
           summary: "Published catalog projection",
+          parameters: [{ name: "shape", in: "query", schema: { type: "string", enum: ["full", "lite"] }, description: "full (default) returns whole records; lite returns only the fields the site chrome renders — identifiers, names, price, evidence label, accent, origin, and the vendor grade letter/band/rationale" }],
           responses: { "200": { description: "Current normalized catalog snapshot" } },
         },
       },

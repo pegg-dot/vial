@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/json-ld";
 import { organizationSchema, webSiteSchema } from "@/lib/structured-data";
 import { siteConfig } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { emptyCatalogLite, toCatalogLite } from "@/lib/catalog-lite";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { getWatchlistSlugs } from "@/server/account/repository";
 import { getDefaultComparison } from "@/server/consumer-intelligence/repository";
@@ -68,10 +69,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // So a failure degrades to an empty catalog instead. Static pages then render normally and only
   // the catalog-dependent chrome goes quiet. Losing the search overlay for a few minutes is a far
   // smaller failure than losing the entire site.
+  //
+  // It also ships only the LITE projection. The layout is the one place on the site whose props
+  // land in EVERY page's HTML, so the full snapshot here meant /about — static prose that renders
+  // no catalog data whatsoever — carried ~580 listings with their price histories, evidence
+  // dimensions and trust objects, plus every vendor history feed and compound research note. Over
+  // a megabyte per view, per crawler hit, to render nothing. src/lib/catalog-lite.ts holds the
+  // exact field set the site-wide chrome reads; pages that need whole records (/market,
+  // /compounds, /watchlist) load them in their own server component.
   const [catalog, principal] = await Promise.all([
-    getCatalogSnapshot().catch((error) => {
+    getCatalogSnapshot().then(toCatalogLite).catch((error) => {
       reportError({ kind: "catalog-unavailable", severity: "critical", message: "The root layout could not read the catalog. Every page is now serving a degraded shell. Usually the database is unreachable.", context: { error: String(error) } });
-      return { compounds: [], vendors: [], products: [], generatedAt: new Date().toISOString() };
+      return emptyCatalogLite(new Date().toISOString());
     }),
     getCurrentPrincipal().catch(() => null),
   ]);

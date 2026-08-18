@@ -3,6 +3,7 @@
 import { Bell, Bookmark, CircleAlert, Clock3, GitBranch } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { Product } from "@/lib/types";
 import { useMarketplace } from "./marketplace-state";
 import { ProductCard } from "./product-card";
 
@@ -19,9 +20,12 @@ interface ListingAlert {
   data: Record<string, unknown>;
 }
 
-export function WatchlistClient() {
-  const { catalog, watchlist, authenticated } = useMarketplace();
-  const saved = useMemo(() => catalog.products.filter((product) => watchlist.includes(product.slug)), [catalog.products, watchlist]);
+// `products` comes from the /watchlist server component, not from useMarketplace(): the saved
+// grid renders full market cards. A guest's watchlist lives in localStorage, so the server cannot
+// know which listings to send and must send them all — but only to this page, not to every page.
+export function WatchlistClient({ products }: { products: Product[] }) {
+  const { watchlist, authenticated } = useMarketplace();
+  const saved = useMemo(() => products.filter((product) => watchlist.includes(product.slug)), [products, watchlist]);
   const [alerts, setAlerts] = useState<ListingAlert[]>([]);
 
   useEffect(() => {
@@ -34,7 +38,7 @@ export function WatchlistClient() {
     return () => controller.abort();
   }, [watchlist]);
 
-  if (saved.length === 0) return <div><div className="ink-1 rounded-[20px] border-dashed bg-white px-6 py-20 text-center"><span className="ink mx-auto grid size-14 place-items-center rounded-[14px] bg-[#111214] text-white"><Bookmark className="size-5" /></span><h2 className="mt-6 text-2xl font-extrabold tracking-[-0.04em] text-[#111214]">Your watchlist is empty</h2><p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-[var(--muted)]">Save listings to follow reviewed price, documentation, batch, and availability changes in one place.</p><Link href="/market" className="ink hard-sm press mt-6 inline-flex rounded-full bg-[#111214] px-5 py-3 text-sm font-bold text-white">Browse market</Link>{!authenticated && <p className="mx-auto mt-5 max-w-md text-xs font-medium leading-5 text-[var(--muted)]"><Link href="/register?next=/watchlist" className="font-bold text-[#111214] underline underline-offset-2">Create a free account</Link> to sync your saves across devices and get alerted when something changes.</p>}</div><div className="mt-12"><div className="mb-6 flex items-center gap-3"><Bell className="size-5" /><h3 className="text-xl font-extrabold tracking-[-0.03em] text-[#111214]">Suggested to watch</h3></div><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{catalog.products.filter((product) => product.featured).slice(0,3).map((product) => <ProductCard key={product.slug} product={product} />)}</div></div></div>;
+  if (saved.length === 0) return <div><div className="ink-1 rounded-[20px] border-dashed bg-white px-6 py-20 text-center"><span className="ink mx-auto grid size-14 place-items-center rounded-[14px] bg-[#111214] text-white"><Bookmark className="size-5" /></span><h2 className="mt-6 text-2xl font-extrabold tracking-[-0.04em] text-[#111214]">Your watchlist is empty</h2><p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-[var(--muted)]">Save listings to follow reviewed price, documentation, batch, and availability changes in one place.</p><Link href="/market" className="ink hard-sm press mt-6 inline-flex rounded-full bg-[#111214] px-5 py-3 text-sm font-bold text-white">Browse market</Link>{!authenticated && <p className="mx-auto mt-5 max-w-md text-xs font-medium leading-5 text-[var(--muted)]"><Link href="/register?next=/watchlist" className="font-bold text-[#111214] underline underline-offset-2">Create a free account</Link> to sync your saves across devices and get alerted when something changes.</p>}</div><div className="mt-12"><div className="mb-6 flex items-center gap-3"><Bell className="size-5" /><h3 className="text-xl font-extrabold tracking-[-0.03em] text-[#111214]">Suggested to watch</h3></div><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{products.filter((product) => product.featured).slice(0,3).map((product) => <ProductCard key={product.slug} product={product} />)}</div></div></div>;
 
   return <div>
     <section className="ink hard-blue rounded-[20px] bg-[#111214] p-5 text-white sm:p-7">

@@ -1,8 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
-import type { EvidenceLevel } from "@/lib/types";
+import type { CatalogSnapshot, EvidenceLevel } from "@/lib/types";
 import { ProductCard } from "@/components/product-card";
-import { useMarketplace } from "@/components/marketplace-state";
 import { shelfForCompound } from "@/lib/market-taxonomy";
 import { compoundTrustTier } from "@/lib/curation";
 import { MarketFilterBar, type MarketFilters } from "./market-filter-bar";
@@ -18,8 +17,7 @@ const withoutShelf = (f: MarketFilters): LocalFilters => ({ query: f.query, tier
 // The exhaustive, faceted "browse everything" grid — the bottom of the market page.
 // Filters listings by shelf, verification tier, price, availability, and search; sorts by
 // evidence, real value ($/mg), price, rating, or freshness.
-export function MarketBrowser({ shelf, onShelfChange }: { shelf: string; onShelfChange: (shelf: string) => void }) {
-  const { catalog } = useMarketplace();
+export function MarketBrowser({ catalog, shelf, onShelfChange }: { catalog: CatalogSnapshot; shelf: string; onShelfChange: (shelf: string) => void }) {
   const { compounds, products, vendors } = catalog;
 
   // Shelf is controlled by the parent (shared with the category rail) so the rail highlight

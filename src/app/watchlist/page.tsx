@@ -1,13 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { WatchlistClient } from "@/components/watchlist-client";
+import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { DataUnavailable } from "@/components/home-data-unavailable";
+import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = {
   title: "Saved listings",
   description: "Save peptide listings and monitor price, lab test, and availability changes.",
 };
 
-export default function WatchlistPage() {
+export const dynamic = "force-dynamic";
+
+// The saved grid renders full market cards, so this page loads the whole catalog itself rather
+// than inheriting it from the root layout — which used to put it on every page on the site. A
+// guest's watchlist lives in localStorage, so the server genuinely cannot narrow the set here.
+export default async function WatchlistPage() {
+  const catalog = await getCatalogSnapshot().catch((error) => {
+    reportError({ kind: "watchlist-unavailable", message: "The saved-listings page could not read the catalog.", context: { error: String(error) } });
+    return null;
+  });
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
       <div className="mb-10 max-w-3xl">
@@ -21,7 +33,7 @@ export default function WatchlistPage() {
           <Link href="/saved-searches" className="ink-1 press rounded-full bg-white px-4 py-2 text-sm font-bold text-[#111214] transition hover:bg-black/[.03]">Searches</Link>
         </nav>
       </div>
-      <WatchlistClient />
+      {catalog ? <WatchlistClient products={catalog.products} /> : <DataUnavailable surface="your saved listings" />}
     </section>
   );
 }
