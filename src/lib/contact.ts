@@ -31,17 +31,24 @@ export const LEGAL_EMAIL = "admin@vialgrade.com";
 export const LEGAL_ENTITY = "VialGrade";
 
 /**
- * Whose law governs the terms, e.g. a US state.
+ * Whose law governs the terms.
  *
- * STILL UNSET, and deliberately so: guessing a jurisdiction is worse than omitting one. The terms
- * page detects this empty value and omits the governing-law clause entirely rather than printing a
- * placeholder — a missing clause is normal for a small site and simply falls back to ordinary law,
- * whereas a visible "[to be added]" in a legal document undermines every other line on the page.
+ * Set by the owner. Note the clause in /legal/terms deliberately keeps a carve-out preserving any
+ * consumer-protection right the reader's OWN jurisdiction grants and does not allow them to waive —
+ * the site is readable from anywhere, and a Florida choice-of-law clause cannot strip a reader in
+ * another state or country of rights their local law gives them. Claiming otherwise would be both
+ * unenforceable and the kind of overreach this site criticises in vendor marketing.
  */
-export const GOVERNING_LAW = "";
+export const GOVERNING_LAW = "the State of Florida";
 
-/** Where disputes are heard. Omitted with GOVERNING_LAW when unset, for the same reason. */
-export const VENUE = "";
+/**
+ * Where disputes are heard.
+ *
+ * Stated at state level rather than naming a county, because the county is not known and an
+ * incorrect one is worse than a general one — a venue clause naming the wrong court invites a
+ * challenge to the whole clause.
+ */
+export const VENUE = "the state and federal courts located in Florida";
 
 /**
  * Who hosts the site and stores the database, named for the privacy notice.
