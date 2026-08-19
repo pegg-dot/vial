@@ -247,8 +247,19 @@ export async function runCollectionTick(
   }
 
   // Keep the materialized grade in step with the evidence that just changed. Stale-first ordering
-  // plus its own budget means this never crowds out collection — it just keeps chipping away.
-  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: 10_000, limit: 25 });
+  // means the longest-unrated vendor is always next.
+  //
+  // Sized to cover the WHOLE vendor list in a single run, deliberately. At 25 per run this was
+  // tuned for a collector that ran every 15 minutes — 96 runs a day, so the full list refreshed in
+  // under an hour. The cron is now daily, which silently turned the same numbers into a four-day
+  // lag: a grade correction would sit unpublished for days while directory cards kept serving the
+  // old verdict. That is unacceptable for the case that exposed it, where the stale grade was
+  // hiding a vendor's DOJ enforcement record behind a neutral chip.
+  //
+  // The budget still bounds it. maxDuration on this route is 120s and collection has already run
+  // by this point, so 45s is headroom, not a gamble — and stale-first ordering means an exhausted
+  // budget simply resumes where it stopped tomorrow.
+  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: 45_000, limit: 200 });
 
   return { ran, budgetExhausted, reindexed, regraded: regrade.graded, durationMs: Date.now() - started };
 }

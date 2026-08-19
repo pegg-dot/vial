@@ -206,4 +206,65 @@ describe("VialGrade — makers are not shops", () => {
     const grade = gradeFromVerdict(composed({ verdict: "trusted" }), { coaCount: 12 });
     expect(grade.letter).toBe("A");
   });
+
+  // ── The zero-listing shortcut must never swallow a warning ──────────────────────────────────
+  //
+  // Paradigm Peptides holds a DOJ action with a recorded guilty plea AND an FDA warning letter.
+  // Because it had no captured listings, the shortcut returned before the verdict switch and it
+  // rendered the same neutral "Maker — not a shop" chip as an anonymous contract manufacturer on
+  // every directory row and listing card. A site that exists to warn people suppressed a criminal
+  // record because the vendor happened to have nothing listed.
+  it("keeps an adverse verdict when the vendor has no listings", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "avoid", factors: [verifiedBad("Government enforcement")] }),
+      { coaCount: 0, listingCount: 0 },
+    );
+    expect(grade.band).toBe("adverse");
+    expect(grade.letter).toBe("F");
+    expect(grade.headline).not.toBe("Maker — not a shop");
+    // The nuance the shortcut used to carry is kept, not lost.
+    expect(grade.rationale).toMatch(/nothing listed for sale/i);
+  });
+
+  it("keeps a caution verdict when the vendor has no listings", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "caution", factors: [reportedBad("Scam & red flags")] }),
+      { coaCount: 0, listingCount: 0 },
+    );
+    expect(grade.band).toBe("mixed");
+    expect(grade.headline).toMatch(/proceed with caution/i);
+  });
+
+  it("still treats a clean zero-listing maker as a reference record", () => {
+    // The original fix must survive: a clean maker with no listings is NOT graded on the buyer
+    // scale, because rating them inverted the whole directory.
+    const grade = gradeFromVerdict(composed({ verdict: "trusted" }), { coaCount: 3, listingCount: 0 });
+    expect(grade.band).toBe("reference");
+    expect(grade.letter).toBeNull();
+  });
+
+  // ── Never assert a known storefront "doesn't sell direct" ───────────────────────────────────
+  //
+  // `vendor_kind` is curated. Where it says storefront, the system KNOWS the vendor sells direct —
+  // yet 18 rows, Chemyo and Core Peptides among them, published a rationale flatly stating they do
+  // not. Zero captured listings is a fact about our coverage, not about their business.
+  it("does not tell visitors a known storefront sells nothing", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "trusted" }),
+      { coaCount: 2, listingCount: 0, vendorKind: "storefront" },
+    );
+    expect(grade.rationale).not.toMatch(/don't sell direct/i);
+    expect(grade.rationale).toMatch(/not captured any current listings/i);
+    expect(grade.headline).toBe("No listings on record");
+  });
+
+  it("still calls a genuine manufacturer a maker", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "trusted" }),
+      { coaCount: 2, listingCount: 0, vendorKind: "manufacturer" },
+    );
+    expect(grade.headline).toBe("Maker — not a shop");
+    expect(grade.rationale).toMatch(/don't sell direct/i);
+  });
+
 });

@@ -99,7 +99,7 @@ function buildDimensions(factors: Signal[]): GradeDimension[] {
  * independently-verified evidence backs it. `coaCount` is passed separately because an
  * independent lab test is the one seam that can lift a vendor to the top of the scale.
  */
-export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: number; listingCount?: number }): VialGradeResult {
+export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: number; listingCount?: number; vendorKind?: string | null }): VialGradeResult {
   const dimensions = buildDimensions(composed.factors);
   const base = {
     dimensions,
@@ -115,22 +115,52 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
   const adverseIsInferredOnly = adverseTiers.length > 0 && adverseTiers.every(t => t == null || t === "inferred");
   const tested = input.coaCount > 0;
 
-  // A vendor with nothing listed is a MAKER, not a storefront. The letter answers "should I buy
-  // from them", which is a question their record cannot answer — they sell nothing here. Rating
+  // A vendor with nothing listed is usually a MAKER, not a storefront. The letter answers "should I
+  // buy from them", which is a question their record cannot answer — they sell nothing here. Rating
   // them anyway inverted the whole scale: a Chinese raw-material supplier known only from a
   // self-declared name on one certificate outranked storefronts with 40+ real listings.
-  if (input.listingCount === 0) {
+  //
+  // ⚠️ BUT THIS SHORTCUT MUST NEVER SWALLOW A WARNING. As first written it returned before the
+  // verdict switch, so an adverse conclusion the trust graph had already reached was discarded:
+  // Paradigm Peptides — a DOJ action with a recorded guilty plea, plus an FDA warning letter —
+  // rendered the same neutral "Maker — not a shop" chip as an anonymous contract manufacturer on
+  // every listing card and directory row. The detail page showed the enforcement banner; the
+  // summary surfaces everyone actually browses did not. Suppressing a criminal record because a
+  // vendor has no listings inverts the purpose of the site.
+  //
+  // So the shortcut now applies only when there is nothing adverse to say. An `avoid`, `high-risk`
+  // or `caution` verdict falls through to the switch and keeps its letter and its adverse band.
+  const adverseVerdict = composed.verdict === "avoid" || composed.verdict === "high-risk" || composed.verdict === "caution";
+  const nothingListed = input.listingCount === 0;
+
+  if (nothingListed && !adverseVerdict) {
     const tests = `${input.coaCount} independent lab test${input.coaCount === 1 ? "" : "s"}`;
+    // A second bug lived in this wording. `vendor_kind` is curated: when it says `storefront`, the
+    // system KNOWS the vendor sells direct, and 18 rows — Chemyo and Core Peptides among them —
+    // carried a rationale flatly asserting "they don't sell direct". That is a false statement of
+    // fact about a real business, published by a site whose product is checking such statements.
+    // Zero listings there means we captured none, which is a fact about US, not about them.
+    const isKnownStorefront = input.vendorKind === "storefront";
     return {
       ...base,
       letter: null,
       band: "reference",
-      headline: "Maker — not a shop",
-      rationale: input.coaCount > 0
-        ? `We hold ${tests} naming this maker, but they don't sell direct — nothing here is a storefront you can buy from, so there is nothing to rate. Their tests may back a listing sold by someone else.`
-        : "We hold a record of this maker but no lab tests and nothing listed for sale, so there is nothing to rate.",
+      headline: isKnownStorefront ? "No listings on record" : "Maker — not a shop",
+      rationale: isKnownStorefront
+        ? (input.coaCount > 0
+            ? `This is a storefront, but we have not captured any current listings for it, so there is nothing here to rate. We do hold ${tests} naming them.`
+            : "This is a storefront, but we have not captured any current listings or lab tests for it yet, so there is nothing here to rate.")
+        : (input.coaCount > 0
+            ? `We hold ${tests} naming this maker, but they don't sell direct — nothing here is a storefront you can buy from, so there is nothing to rate. Their tests may back a listing sold by someone else.`
+            : "We hold a record of this maker but no lab tests and nothing listed for sale, so there is nothing to rate."),
     };
   }
+
+  // Appended to an adverse rationale when the vendor has nothing listed, so the warning keeps the
+  // context the shortcut used to carry instead of losing it.
+  const notListedNote = nothingListed
+    ? " We hold nothing listed for sale from them here, so this is a warning about the operator rather than about a specific listing."
+    : "";
 
   switch (composed.verdict) {
     case "unproven":
@@ -165,8 +195,8 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         band: "adverse",
         headline: `${letter} — avoid`,
         rationale: hasVerifiedNegative
-          ? "There is an official record against this vendor — a government action, court filing, or a hard link to a flagged storefront. That is the strongest evidence we hold, and it caps the grade here."
-          : "Buyers and the community report problems, but we have no official record to point at. That is why this is a D rather than an F.",
+          ? `There is an official record against this vendor — a government action, court filing, or a hard link to a flagged storefront. That is the strongest evidence we hold, and it caps the grade here.${notListedNote}`
+          : `Buyers and the community report problems, but we have no official record to point at. That is why this is a D rather than an F.${notListedNote}`,
       };
     }
 
@@ -178,10 +208,10 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         band: "mixed",
         headline: `${letter} — proceed with caution`,
         rationale: hasVerifiedNegative
-          ? "Something official counts against this vendor — a government record or a hard link to a flagged store. Real lab tests would not cancel that out, so the grade stops here."
+          ? `Something official counts against this vendor — a government record or a hard link to a flagged store. Real lab tests would not cancel that out, so the grade stops here.${notListedNote}`
           : tested
-            ? "There are real reasons to be careful with this vendor, but they do have independent lab tests on file, which counts for something."
-            : "There are real reasons to be careful with this vendor, and no independent lab tests to weigh against them.",
+            ? `There are real reasons to be careful with this vendor, but they do have independent lab tests on file, which counts for something.${notListedNote}`
+            : `There are real reasons to be careful with this vendor, and no independent lab tests to weigh against them.${notListedNote}`,
       };
     }
 
