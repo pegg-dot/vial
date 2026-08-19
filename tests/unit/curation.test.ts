@@ -29,9 +29,12 @@ describe("curation", () => {
     const out = bestValue([p("hi", 5), p("lo", 2), p("none", undefined)]);
     expect(out.map((x) => x.slug)).toEqual(["lo", "hi"]);
   });
-  it("compoundPriceRange returns the min listing price for the compound", () => {
-    const p = (compoundSlug: string, price: number) => ({ compoundSlug, price } as never);
-    expect(compoundPriceRange("bpc-157", [p("bpc-157", 40), p("bpc-157", 55), p("tb-500", 10)])).toEqual({ from: 40, count: 2 });
+  it("compoundPriceRange returns the min price, and counts listings and vendors apart", () => {
+    // The fixture deliberately gives one vendor two listings: conflating the two counts is what
+    // made the ticker card advertise 39 vendors for BPC-157 when 14 sell it.
+    const p = (compoundSlug: string, price: number, vendorSlug: string) => ({ compoundSlug, price, vendorSlug } as never);
+    expect(compoundPriceRange("bpc-157", [p("bpc-157", 40, "acme"), p("bpc-157", 55, "acme"), p("tb-500", 10, "zenith")]))
+      .toEqual({ from: 40, count: 2, vendors: 1 });
   });
   it("median handles odd and even sets and ignores non-positive", () => {
     expect(median([40, 50, 60])).toBe(50);
