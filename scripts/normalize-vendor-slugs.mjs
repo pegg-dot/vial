@@ -1,62 +1,85 @@
-// One-time, idempotent, in-place merge of near-duplicate COA-derived vendors.
+// Reconcile duplicate vendor profiles — one business, one row. DRY RUN BY DEFAULT.
 //
-// The COA "client" field spells the same reseller two ways ("Zztai Peptide" vs "Zztai Peptide Ltd",
-// "admin-rayshine-peptide" vs "rayshine-peptide"), splitting one vendor's independent lab history
-// across ghost duplicate profiles. This re-points every row from the duplicate slug onto the
-// canonical one and deletes the orphan org, so each vendor shows ALL its COAs. The root cause is
-// fixed in cleanVendorString (future ingests are already canonical); this heals what's stored.
+// The COA "client" field spells the same reseller several ways ("HHM Peptide Ltd" on one
+// certificate, the canonicalised "HHM Peptide" on the next ingest generation; "admin@rayshine-
+// peptide" instead of "Rayshine Peptide"). Every spelling minted its own organization, which both
+// splits one vendor's independent lab history across ghost profiles and inflates the vendor count
+// the site publishes as a headline figure. cleanVendorString() fixed the mint; this heals the store.
 //
-//   node --import tsx scripts/normalize-vendor-slugs.mjs
-// Run with the dev server STOPPED (file-backed PGlite is single-writer).
+//   node --import tsx scripts/normalize-vendor-slugs.mjs            # report only, writes nothing
+//   node --import tsx scripts/normalize-vendor-slugs.mjs --apply    # perform the merge
+//
+// Run with the dev server STOPPED (file-backed PGlite is single-writer). Against production, set
+// DATABASE_URL. The merge runs in ONE transaction and aborts if the before/after evidence census
+// does not balance, so a partial merge cannot be left behind.
 import { getDatabase } from "../src/server/db/client.ts";
-import { canonicalizeVendorSlug, canonicalizeVendorName } from "../src/server/ingest/coa-vendors.ts";
+import { planVendorMerges, applyVendorMerges } from "../src/server/vendors/merge.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
+import { rebuildSearchIndex } from "../src/server/search/engine.ts";
+import { projectMarketDataRegistry } from "../src/server/registry/repository.ts";
+import { recomputeAllVendorGrades } from "../src/server/verify/grade-store.ts";
 
+const apply = process.argv.includes("--apply");
 const db = await getDatabase();
+const plan = await planVendorMerges(db);
 
-// Live vendors + their COA counts, grouped by canonical slug.
-const orgs = (await db.query(
-  `SELECT o.slug, o.display_name, COUNT(t.id)::int coas
-   FROM organizations o LEFT JOIN lab_test_records t ON t.vendor_slug=o.slug
-   WHERE o.origin='live' AND o.organization_type='vendor'
-   GROUP BY o.slug, o.display_name`,
-)).rows;
-const clusters = new Map();
-for (const o of orgs) {
-  const c = canonicalizeVendorSlug(o.slug);
-  if (!clusters.has(c)) clusters.set(c, []);
-  clusters.get(c).push(o);
+console.log(`\nVENDOR HEADLINE COUNT: ${plan.vendorCountBefore} → ${plan.vendorCountAfter}\n`);
+
+if (plan.malformedNames.length) {
+  console.log("Display names that are not company names:");
+  for (const n of plan.malformedNames) console.log(`  ${n.slug.padEnd(30)} "${n.displayName}"  (${n.reason})`);
+  console.log("");
 }
 
-// Tables that hold many rows per vendor — safe to bulk re-point.
-const MANY = ["lab_test_records", "price_observations", "community_mentions", "vendor_fingerprints"];
-// Tables with at most one row per vendor — re-point only if the target has none, else drop the dupe.
-const ONE = ["vendor_status", "vendor_reviews", "vendor_flags"];
-
-let merged = 0;
-for (const [canonical, members] of clusters) {
-  if (members.length < 2) continue;
-  members.sort((a, b) => b.coas - a.coas); // most COAs first
-  // Ensure a canonical-slug org exists: rename the richest member if needed.
-  let target = members.find((m) => m.slug === canonical);
-  if (!target) {
-    target = members[0];
-    await db.query(`UPDATE organizations SET slug=$1, display_name=$2 WHERE slug=$3`, [canonical, canonicalizeVendorName(target.display_name), target.slug]);
-    target = { ...target, slug: canonical };
-  }
-  const sources = members.filter((m) => m.slug !== canonical);
-  for (const s of sources) {
-    for (const tbl of MANY) await db.query(`UPDATE ${tbl} SET vendor_slug=$1 WHERE vendor_slug=$2`, [canonical, s.slug]);
-    for (const tbl of ONE) {
-      const has = (await db.query(`SELECT 1 FROM ${tbl} WHERE vendor_slug=$1 LIMIT 1`, [canonical])).rows.length > 0;
-      if (has) await db.query(`DELETE FROM ${tbl} WHERE vendor_slug=$1`, [s.slug]);
-      else await db.query(`UPDATE ${tbl} SET vendor_slug=$1 WHERE vendor_slug=$2`, [canonical, s.slug]);
-    }
-    await db.query(`DELETE FROM organizations WHERE slug=$1`, [s.slug]);
-    console.log(`  merged ${s.slug} (${s.coas} coas) → ${canonical}`);
-    merged++;
+if (!plan.clusters.length) console.log("No duplicate vendors — every profile is already canonical.\n");
+for (const c of plan.clusters) {
+  console.log(`Cluster "${c.canonical}"`);
+  if (c.rename) console.log(`  RENAME  ${c.rename.from} → ${c.rename.to}`);
+  console.log(`  KEEP    ${c.survivor.slug.padEnd(28)} ${c.survivor.evidenceRows} evidence rows`);
+  for (const a of c.absorbed) {
+    console.log(`  ABSORB  ${a.slug.padEnd(28)} ${a.evidenceRows} evidence rows  "${a.displayName}"`);
+    for (const [k, v] of Object.entries(a.census)) console.log(`            ${k} = ${v}`);
   }
 }
-console.log(merged ? `\nMerged ${merged} duplicate vendor(s). Rebuilding linkage graph…` : "No duplicate vendors found — already canonical.");
-if (merged) await computeAndStoreLinkages(db);
+
+if (plan.residue.length) {
+  console.log("\nIdentity records left behind by an earlier, incomplete merge:");
+  for (const r of plan.residue) console.log(`  ${r.kind.padEnd(20)} ${r.id}  →  ${r.danglingRef} (${r.resolvesTo ? `resolves to ${r.resolvesTo}` : "UNRESOLVED — reported only"})`);
+}
+
+if (!apply) {
+  const result = await applyVendorMerges(db, plan, { apply: false });
+  console.log(`\nDRY RUN — nothing was written. ${result.merges.length} merge(s), ${result.renames.length} rename(s), ${result.residueRepaired.length} identity record(s) would be repaired.`);
+  console.log("Re-run with --apply to perform it.\n");
+  process.exit(0);
+}
+
+const result = await db.transaction(async (tx) => {
+  const r = await applyVendorMerges(tx, plan, { apply: true });
+  const unbalanced = r.merges.filter((m) => !m.balanced);
+  if (unbalanced.length) throw new Error(`Evidence census did not balance for: ${unbalanced.map((m) => m.cluster).join(", ")} — rolled back.`);
+  return r;
+});
+
+console.log("\nAPPLIED.");
+for (const m of result.merges) {
+  const before = Object.values(m.before).reduce((a, b) => a + b, 0);
+  const after = Object.values(m.after).reduce((a, b) => a + b, 0);
+  const collapsed = m.collapsed.reduce((a, c) => a + c.rows, 0);
+  console.log(`  ${m.cluster.padEnd(24)} evidence ${before} → ${after}${collapsed ? ` (+${collapsed} duplicate row(s) collapsed: ${m.collapsed.map((c) => `${c.table}.${c.column}×${c.rows}`).join(", ")})` : ""}  balanced=${m.balanced}`);
+}
+for (const r of result.residueRepaired) console.log(`  repaired ${r.kind} ${r.id}`);
+for (const r of result.residueSkipped) console.log(`  SKIPPED  ${r.kind} ${r.id} — could not be resolved to a live vendor; left untouched`);
+
+// Fixing the rows does not heal what was derived FROM them: the linkage graph, the search index,
+// the public registry projection and the stored letter grades all still describe the pre-merge
+// world until they are rebuilt.
+console.log("\nRebuilding derived layers…");
+const links = await computeAndStoreLinkages(db);
+const search = await rebuildSearchIndex(db);
+const registry = await projectMarketDataRegistry(db);
+const grades = await recomputeAllVendorGrades({ connection: db });
+console.log(`  vendor_links ${links.edges} edges · search ${search.count} documents · registry ${registry.count} identifiers · grades ${grades.graded} recomputed`);
+console.log(`\nVENDOR HEADLINE COUNT: ${result.vendorCountBefore} → ${result.vendorCountAfter}`);
+console.log("The catalog snapshot is cached per deploy — call revalidateTag(CATALOG_CACHE_TAG) or redeploy for the new count to appear.\n");
 process.exit(0);

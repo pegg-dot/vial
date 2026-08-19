@@ -24,8 +24,13 @@ async function queryCompounds(){ const db=await getDatabase(); return (await db.
   (SELECT COUNT(*) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.compound_id=c.id AND p.status='active') real_listings,
   (SELECT array_agg(l.price) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.compound_id=c.id AND p.status='active' AND l.price>0) real_prices
   FROM compounds c ORDER BY c.canonical_name`)).rows.map(toCompound); }
+// `real_listings` is the number every vendor surface renders (card tile, product page, home rail),
+// and it is the same quantity organizations.product_count stores. It alone among the catalog
+// subqueries was missing `p.status='active'`, so a retired product stayed counted here while it was
+// gone from every other query — and would have disagreed with the stored column and with the
+// reputation panel's denominator the moment a listing was retired.
 async function queryVendors(){ const db=await getDatabase(); return (await db.query<VendorRow>(`SELECT o.*,
-  (SELECT COUNT(*) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.vendor_id=o.id) real_listings,
+  (SELECT COUNT(*) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.vendor_id=o.id AND p.status='active') real_listings,
   (SELECT COUNT(*) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.is_independent) real_coas,
   (SELECT array_agg(t.purity_pct) FROM lab_test_records t WHERE t.vendor_slug=o.slug AND t.purity_pct IS NOT NULL AND t.is_independent) real_purities,
   (SELECT COUNT(*) FROM batch_passports bp WHERE bp.vendor_id=o.id AND bp.status='published') real_passports,

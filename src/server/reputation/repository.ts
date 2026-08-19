@@ -86,10 +86,20 @@ export async function buildVendorReputation(db: SqlConnection, org: { id: string
   // "Lab tests current?" now reflects the vendor's real independent certificates and how recent the
   // newest one is — not a listing-only documentation share that reads 0 for a vendor with no store.
   const docCurrent = Number(org.documentation_current);
+  // documentation_current is an absolute COUNT, not a percentage. The cascade that writes it counts
+  // rows ("N of the M listings we track from them have a dated report") and this dimension's own
+  // basis line says the same thing — but the value was rendered `${docCurrent}%`. It only ever
+  // looked right because the six seeded demo vendors were hand-authored with percentage-shaped
+  // numbers (94, 88, 76...). The first publication cascade that touched lattice-research would have
+  // turned "94%" into "2%". Say the count, with the denominator that makes it mean something.
+  const listedTotal = Number(org.product_count);
+  const documentedValue = listedTotal > 0
+    ? `${docCurrent} of ${listedTotal} listing${listedTotal === 1 ? "" : "s"} show a dated lab report`
+    : `${docCurrent} listing${docCurrent === 1 ? "" : "s"} show a dated lab report`;
   dimensions.push(coaCount > 0
     ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${coaCount} lab test${coaCount === 1 ? "" : "s"} on file${coa?.latest ? ` · newest tested ${coa.latest}` : ""}`, numericValue: coaCount, basis: "The independent lab tests we hold for this vendor, newest first.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } }
     : docCurrent > 0
-    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: `${docCurrent}%`, numericValue: docCurrent, basis: "How many of their listings show a dated lab report.", provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` }, series: await documentationSeries(db, org.id) }
+    ? { key: "documentation_currency", label: "Documentation currency", status: "established", value: documentedValue, numericValue: docCurrent, basis: "How many of their listings show a dated lab report.", provenance: { sourceType: "organization", sourceId: org.id, url: `/vendors/${org.slug}` }, series: await documentationSeries(db, org.id) }
     : { key: "documentation_currency", label: "Documentation currency", status: "unknown", value: "No lab tests on record yet", basis: "We haven't found an independent lab test for this vendor yet.", provenance: { sourceType: "lab_test_records", url: `/vendors/${org.slug}` } });
 
   // Independent evidence corroboration — independent lab tests (COAs) and published batch

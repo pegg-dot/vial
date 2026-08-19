@@ -1,5 +1,6 @@
 import type { SqlConnection } from "./client";
 import { compounds, products, vendors } from "@/lib/data";
+import { recomputeVendorStats } from "./vendor-stats-repair";
 
 interface FixtureVersion {
   version: number;
@@ -258,4 +259,11 @@ export async function seedDatabase(database: SqlConnection) {
       );
     }
   }
+
+  // The two derived vendor columns are HAND-AUTHORED in src/lib/data.ts (northstar-research is
+  // written as productCount 4 / documentationCurrent 88 while its seeded catalog is 3 listings,
+  // all 3 documented). Authored constants are precisely how these columns drifted in the first
+  // place, so the seed finishes by deriving them from the rows it just inserted. Demo vendors then
+  // obey the same invariant as live ones, and nothing renders a fictional "88%".
+  await recomputeVendorStats(database);
 }

@@ -16,6 +16,7 @@ import { importShopifyCatalog } from "@/server/ingest/shopify-import";
 import { importWooCommerceCatalog } from "@/server/ingest/woocommerce-import";
 import { probeVendorStatus, recordVendorStatus } from "@/server/verify/vendor-status";
 import { recomputeCompoundStats } from "@/server/ingest/live-sources";
+import { recomputeVendorStats } from "@/server/db/vendor-stats-repair";
 import { rebuildSearchIndex } from "@/server/search/engine";
 import { recomputeAllVendorGrades } from "@/server/verify/grade-store";
 import type { CompoundRef } from "@/server/ingest/shopify-import";
@@ -242,6 +243,11 @@ export async function runCollectionTick(
   let reindexed = false;
   if (catalogChanged && Date.now() - started < budgetMs + 15_000) {
     await recomputeCompoundStats(db);
+    // Vendor stats are derived the same way and drift for the same reason: an import writes
+    // listings without going through the publication cascade, which is the only other writer of
+    // organizations.product_count / documentation_current. This MUST precede the index rebuild —
+    // rebuildSearchIndex reads those two columns straight into popularity_score / quality_score.
+    await recomputeVendorStats(db);
     await rebuildSearchIndex(db);
     reindexed = true;
   }
