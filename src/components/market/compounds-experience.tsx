@@ -22,6 +22,24 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
   const [qv, setQv] = useState<{ items: Compound[]; index: number | null }>({ items: [], index: null });
 
   const trend = useMemo(() => trending(compounds, 10), [compounds]);
+
+  // How many DISTINCT vendors sell each compound.
+  //
+  // These cards previously rendered `c.listings` under the label "vendors", which is a different
+  // relationship entirely: BPC-157 has 39 listings but only 14 vendors selling it, so the card
+  // claimed nearly three times the real number. On a site whose whole premise is that other
+  // people's numbers do not survive checking, publishing one that does not survive checking is the
+  // worst kind of bug. Counted from the listings themselves so it cannot drift from them.
+  const vendorsPerCompound = useMemo(() => {
+    const seen = new Map<string, Set<string>>();
+    for (const p of products) {
+      const set = seen.get(p.compoundSlug);
+      if (set) set.add(p.vendorSlug);
+      else seen.set(p.compoundSlug, new Set([p.vendorSlug]));
+    }
+    return seen;
+  }, [products]);
+  const vendorCount = (slug: string) => String(vendorsPerCompound.get(slug)?.size ?? 0);
   const groups = useMemo(() => groupByShelf(compounds), [compounds]);
   const stacks = useMemo(
     () => STACKS.map((s) => resolveStack(s, compounds)).filter((r): r is ResolvedStack => r !== null),
@@ -44,7 +62,7 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
         <CollectionRow eyebrow="Most looked-up" title="Trending compounds" blurb="The compounds buyers are researching most right now.">
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[280px] shrink-0 snap-start">
-              <CompoundTickerCard compound={c} products={products} metric={{ label: "vendors", value: String(c.listings) }} onQuickView={() => openRow(trend, i)} />
+              <CompoundTickerCard compound={c} products={products} metric={{ label: "vendors", value: vendorCount(c.slug) }} onQuickView={() => openRow(trend, i)} />
             </div>
           ))}
         </CollectionRow>
