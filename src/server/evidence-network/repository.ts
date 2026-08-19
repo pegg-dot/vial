@@ -410,9 +410,6 @@ export async function listSitemapPassportSlugs(connection?: SqlConnection): Prom
   )).rows.map((r) => r.slug);
 }
 
-export async function listSitemapLaboratorySlugs(connection?: SqlConnection): Promise<string[]> {
-  const db = connection ?? (await getDatabase());
-  return (await db.query<{ slug: string }>(
-    `SELECT slug FROM laboratory_profiles ORDER BY display_name`,
-  )).rows.map((r) => r.slug);
-}
+// NOTE: there is deliberately no laboratory equivalent here. /labs renders the static LAB_REGISTRY
+// in server/labs/registry.ts, not the laboratory_profiles table, so the sitemap reads that instead.
+// A query against the table returns zero rows and looks like a working fix.

@@ -1,6 +1,11 @@
 import { siteUrl } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
-import { listSitemapPassportSlugs, listSitemapLaboratorySlugs } from "@/server/evidence-network/repository";
+import { listSitemapPassportSlugs } from "@/server/evidence-network/repository";
+// Laboratories come from a static registry in code, NOT the laboratory_profiles table — /labs
+// renders LAB_REGISTRY. Querying the table returned zero rows and the catch hid it, so every lab
+// page stayed missing from the sitemap while the fix looked applied. Reading the registry is also
+// free: no database call at all.
+import { LAB_REGISTRY } from "@/server/labs/registry";
 import { reportError } from "@/server/observability/alerts";
 
 export const dynamic = "force-dynamic";
@@ -48,10 +53,8 @@ export async function GET() {
   // Passport and laboratory pages exist and serve, but were absent from the sitemap entirely, so
   // search engines had no way to reach the certificate records this site is built around. Failing
   // to read them degrades to omitting them rather than taking the whole sitemap down.
-  const [passportSlugs, labSlugs] = await Promise.all([
-    listSitemapPassportSlugs().catch(() => [] as string[]),
-    listSitemapLaboratorySlugs().catch(() => [] as string[]),
-  ]);
+  const passportSlugs = await listSitemapPassportSlugs().catch(() => [] as string[]);
+  const labSlugs = LAB_REGISTRY.map((lab) => lab.slug);
   const lastmod = new Date().toISOString().slice(0, 10);
 
   const entries = [
