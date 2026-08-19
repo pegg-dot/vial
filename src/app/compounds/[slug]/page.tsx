@@ -113,7 +113,17 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Observed median price</p>
-                  <p className="mt-1.5 text-5xl font-extrabold tracking-[-.055em]">{formatCurrency(compound.medianPrice)}</p>
+                  {/* A compound with no listings has no observed price. Rendering the stored 0.00
+                      unguarded published "$0.00" as though it were a real market observation on
+                      liraglutide and pentadeca-arginate — a missing value dressed as a number,
+                      which is the exact failure this site exists to catch. The market table and the
+                      sidebar in this same file already guard it; the hero did not. */}
+                  <p className="mt-1.5 text-5xl font-extrabold tracking-[-.055em]">
+                    {compound.medianPrice > 0 ? formatCurrency(compound.medianPrice) : "—"}
+                  </p>
+                  {compound.medianPrice > 0 ? null : (
+                    <p className="mt-1 text-xs font-semibold text-[var(--muted)]">No listings on record, so there is no observed price.</p>
+                  )}
                 </div>
                 <span className={`ink-1 rounded-full px-2.5 py-1 text-xs font-extrabold ${compound.priceChange < 0 ? "bg-[#e6fbf6] text-[#0e8f80]" : "bg-[#ffecea] text-[#d3372c]"}`}>{compound.priceChange > 0 ? "+" : ""}{compound.priceChange}%</span>
               </div>
