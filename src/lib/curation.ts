@@ -18,9 +18,22 @@ export function compoundTrustTier(c: Pick<Compound, "coaCount" | "medianPurity" 
   return { tier: "none", label: "No tests on record", reasons: ["No lab evidence on record"] };
 }
 
-export function compoundPriceRange(compoundSlug: string, products: Product[]): { from: number | null; count: number } {
-  const prices = products.filter((p) => p.compoundSlug === compoundSlug && p.price > 0).map((p) => p.price);
-  return { from: prices.length ? Math.min(...prices) : null, count: prices.length };
+/**
+ * Cheapest price for a compound, plus how many priced LISTINGS and how many distinct VENDORS.
+ *
+ * `count` and `vendors` are different relationships and were being conflated: the ticker card
+ * rendered `count` — priced listings — beneath the word "vendors", so BPC-157 advertised 39 sellers
+ * when 14 vendors sell it. Both numbers are returned explicitly now, and named for what they
+ * actually are, so a caller has to choose rather than assume.
+ */
+export function compoundPriceRange(compoundSlug: string, products: Product[]): { from: number | null; count: number; vendors: number } {
+  const matches = products.filter((p) => p.compoundSlug === compoundSlug && p.price > 0);
+  const prices = matches.map((p) => p.price);
+  return {
+    from: prices.length ? Math.min(...prices) : null,
+    count: prices.length,
+    vendors: new Set(matches.map((p) => p.vendorSlug)).size,
+  };
 }
 
 function trendScore(c: Pick<Compound, "slug" | "listings" | "coaCount" | "priceChange">): number {
