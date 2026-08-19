@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   applicationName: "VialGrade",
+  // Proves ownership of the domain to Google Search Console, which is how the ~1,000 URLs in the
+  // sitemap get discovered deliberately instead of by chance. Not a secret — it only asserts
+  // control of this site — and it must stay put: removing it un-verifies the property and silently
+  // cuts off the only place indexing and search performance can be seen.
+  verification: { google: "Diid1gTzaORBswpj2aFdIgXw3p2UAAsZPSb1qsKrip8" },
   keywords: ["peptide market", "research products", "vendor comparison", "batch evidence", "market intelligence"],
   openGraph: {
     type: "website",
