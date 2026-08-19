@@ -1,5 +1,6 @@
 import { siteUrl } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
+import { listSitemapPassportSlugs, listSitemapLaboratorySlugs } from "@/server/evidence-network/repository";
 import { reportError } from "@/server/observability/alerts";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,13 @@ export async function GET() {
     reportError({ kind: "sitemap-degraded", message: "The sitemap could not read the catalog and is serving static routes only. It will NOT be cached in this state.", context: { error: String(error) } });
     return null;
   });
+  // Passport and laboratory pages exist and serve, but were absent from the sitemap entirely, so
+  // search engines had no way to reach the certificate records this site is built around. Failing
+  // to read them degrades to omitting them rather than taking the whole sitemap down.
+  const [passportSlugs, labSlugs] = await Promise.all([
+    listSitemapPassportSlugs().catch(() => [] as string[]),
+    listSitemapLaboratorySlugs().catch(() => [] as string[]),
+  ]);
   const lastmod = new Date().toISOString().slice(0, 10);
 
   const entries = [
@@ -51,6 +59,8 @@ export async function GET() {
     ...(catalog?.products ?? []).map((p) => urlEntry(`/products/${p.slug}`, "daily", 0.8, lastmod)),
     ...(catalog?.compounds ?? []).map((c) => urlEntry(`/compounds/${c.slug}`, "weekly", 0.75, lastmod)),
     ...(catalog?.vendors ?? []).map((v) => urlEntry(`/vendors/${v.slug}`, "weekly", 0.7, lastmod)),
+    ...passportSlugs.map((slug) => urlEntry(`/passports/${slug}`, "monthly", 0.65, lastmod)),
+    ...labSlugs.map((slug) => urlEntry(`/labs/${slug}`, "monthly", 0.5, lastmod)),
   ];
 
   return new Response(

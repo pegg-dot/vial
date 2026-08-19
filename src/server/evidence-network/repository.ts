@@ -393,3 +393,26 @@ export async function submitEvidenceProposal(input: { laboratoryId: string; toke
   return { ok: true, id, status: "pending" };
 }
 export async function authenticateLaboratoryApiToken(raw: string) { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); const row = (await db.query<QueryResultRow & { id: string; laboratory_id: string; scopes: unknown }>(`SELECT id,laboratory_id,scopes FROM laboratory_api_tokens WHERE token_hash=$1 AND status='active' AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>NOW())`, [tokenHash(raw)])).rows[0]; if (!row) return null; await db.query(`UPDATE laboratory_api_tokens SET last_used_at=NOW() WHERE id=$1`, [row.id]); return { tokenId: row.id, laboratoryId: row.laboratory_id, scopes: json<string[]>(row.scopes, []) }; }
+
+// Slug-only reads for the sitemap.
+//
+// Both page families exist and serve, and neither was listed in the sitemap — so ~279 batch
+// passports and every laboratory profile were invisible to search engines. Those passport pages are
+// the actual differentiator: they are the certificates nobody else publishes free.
+//
+// Deliberately SELECT slug and nothing else. listPublicPassports() returns full rows with
+// correlated subqueries per passport, which is far more than a list of links needs, and the whole
+// point of the recent work was to stop reading rows nobody renders.
+export async function listSitemapPassportSlugs(connection?: SqlConnection): Promise<string[]> {
+  const db = connection ?? (await getDatabase());
+  return (await db.query<{ slug: string }>(
+    `SELECT slug FROM batch_passports WHERE status='published' ORDER BY updated_at DESC`,
+  )).rows.map((r) => r.slug);
+}
+
+export async function listSitemapLaboratorySlugs(connection?: SqlConnection): Promise<string[]> {
+  const db = connection ?? (await getDatabase());
+  return (await db.query<{ slug: string }>(
+    `SELECT slug FROM laboratory_profiles ORDER BY display_name`,
+  )).rows.map((r) => r.slug);
+}

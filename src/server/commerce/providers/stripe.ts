@@ -1,3 +1,4 @@
+import { RELEASE, SERVICE_NAME } from "@/lib/release";
 import Stripe from "stripe";
 import type {
   CommerceMode,
@@ -48,7 +49,7 @@ export class StripeConnectAdapter implements PaymentProcessorAdapter {
       email: input.email,
       business_profile: { name: input.businessName, product_description: "VialGrade marketplace seller" },
       capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
-      metadata: { platform: "vial", release: "5.0.0" },
+      metadata: { platform: SERVICE_NAME, release: RELEASE },
     });
     return accountSnapshot(account, this.mode);
   }

@@ -17,7 +17,7 @@ const envSchema = z.object({
   VIALGRADE_SEED_DEMO_ACCOUNTS: booleanString.default(false),
   VIALGRADE_SEED_FIXTURES: booleanString.default(false),
   VIALGRADE_BUILD_SHA: z.string().default(process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ?? "development"),
-  VIALGRADE_RELEASE: z.string().default("5.0.0"),
+  VIALGRADE_RELEASE: z.string().default(""), // empty -> callers fall back to lib/release (package.json)
   VIALGRADE_COMMERCE_MODE: z.enum(["sandbox", "test", "live"]).default("sandbox"),
   VIALGRADE_PAYMENT_PROVIDER: z.enum(["mock", "stripe"]).default("mock"),
   VIALGRADE_COMMERCE_POLICY_VERSION: z.string().default("commerce-v5.0"),
