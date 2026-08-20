@@ -17,13 +17,20 @@
 // per-vendor failure, and the whole call is wrapped — a grade is not worth a failed boot. An
 // earlier migration bug took production down, and that lesson is applied here.
 import type { SqlConnection } from "./client";
-import { recomputeAllVendorGrades } from "../verify/grade-store";
 
-export async function refreshAllVendorGrades(db: SqlConnection): Promise<void> {
-  try {
-    const result = await recomputeAllVendorGrades({ connection: db, budgetMs: 45_000, limit: 500 });
-    console.log(`[grade-refresh] regraded ${result.graded}, skipped ${result.skipped}, budgetExhausted=${result.budgetExhausted}`);
-  } catch (error) {
-    console.error("[grade-refresh] skipped:", error);
-  }
+
+// ⚠️ DISABLED. Shipping this as boot work took production down: `/` and `/vendors` timed out at 45s
+// while cached routes still served, because the recompute runs INSIDE the boot path that every cold
+// serverless instance must finish before it answers its first request. 4.9s measured against local
+// PGlite did not predict it — production is Postgres over the network, every query pays round-trip
+// latency, and 89 vendors x several queries each blew straight past the function ceiling.
+//
+// The measurement was real; the inference from it was wrong. A local single-process embedded
+// database is not a model for a networked one, and I should not have treated it as one.
+//
+// The version is KEPT and made a no-op rather than removed, so instances that already recorded 48
+// stay consistent with those that did not. The grade refresh now belongs where it always belonged:
+// the daily collect cron, which is already sized to cover the whole vendor list in one run.
+export async function refreshAllVendorGrades(_db: SqlConnection): Promise<void> {
+  return;
 }
