@@ -3,18 +3,63 @@
 **Read this top to bottom before touching anything.** The code is complete through v10.0 and
 backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth for the vision.
 
-> **Status, 2026-08-12.** The three problems this document was written to solve are now largely
-> solved, and the paragraph that used to sit here ("the data is 100% fake") is no longer true —
-> leaving it would mislead the next reader:
-> - **Data is real.** 89 live vendors, 279 independent COAs, 537 listings, 28 review records,
->   aggregated from real public sources. Records are **demo unless marked Live**.
-> - **Deployed.** Live on Vercel project `vial`, Neon Postgres, domain `vialgrade.com`
->   (DNS pending). `/api/health/ready` reports schema 33.
-> - **Renamed** VIAL → VialGrade, with a headline letter grade (`src/server/verify/grade.ts`).
+> **Status, 2026-08-20.** Launched. Indexed by Google. The status block that sat here described a
+> site that was not yet deployed; it is replaced rather than appended, because a stale status
+> paragraph at the top of the START HERE doc is worse than none.
 >
-> What remains genuinely open: **listing evidence coverage is 10.2%** — only ~1 in 10 listings
-> carries a vendor-specific independent lab record. That, not the codebase, is the product gap.
-> See `docs/STOREFRONT-COA.md` for why the obvious fix does not work.
+> - **Live** at `vialgrade.com`, Vercel project `vial`, Neon Postgres (paid plan — see the cost
+>   note below). `/api/health/ready` reports **schema 49**. All 26 public pages serve.
+> - **Data is real and 100% live.** 82 vendors, 805 listings, 60 compounds, 279 COAs. **Zero demo
+>   records reach production** — fixture seeding is off there, so the seeded demo companies
+>   (northstar-research, helix-science and four more) exist only in a local dev database. If you
+>   see them in `.data/pglite`, that is expected; if you ever see them on the site, something is
+>   badly wrong.
+> - **Indexed.** Homepage confirmed on Google. Sitemap (~1,143 URLs) submitted and reading
+>   "Success" in Search Console.
+>
+> ### ⚠️ The database quota incident, and the rules that came out of it
+>
+> On 2026-08-14 the site returned a server error on **every page for several hours** and nobody
+> noticed. Cause: `src/app/layout.tsx` — the ROOT layout — read the entire catalog on every request,
+> and nothing was cached (138 of 140 routes were `force-dynamic`). With ~1,000 pages and continuous
+> crawler traffic, that exhausted Neon's data-transfer quota. **There were no users.** The rules
+> that came out of it, all of them load-bearing:
+>
+> 1. **Never cache a failure.** The degraded sitemap got cached for 26 hours and served 20 URLs
+>    instead of 1,000 to Google, with `x-vercel-cache: HIT`, while the site looked healthy.
+>    `src/app/sitemap.xml/route.ts` is a route handler purely so a degraded response can be
+>    marked `no-store`.
+> 2. **Never do slow work on the boot path.** On 2026-08-19 a grade-recompute migration timed out
+>    `/` and `/vendors` at 45s. It measured 4.9s locally — against embedded PGlite, one process, no
+>    network. Production is Postgres over the wire. **A local embedded database is not a model for
+>    a networked one.** Boot tasks must be a fixed number of round trips, not per-row.
+> 3. **Test every migration against a copy of the real store first.**
+>    `cp -R .data/pglite /tmp/copy` and run it there. This caught a migration that set a NOT NULL
+>    column to NULL — migrations run at boot, so it would have taken production down.
+> 4. **Fixing code does not heal stored rows.** Repeatedly this session, correct code sat on top of
+>    stale data because the only remediation was a script nobody ran. Ship repairs as migrations.
+> 5. **The cost canary.** `src/server/observability/cost-signals.ts` counts how often the uncached
+>    catalog path runs and alerts if caching silently breaks. A healthy day is single digits.
+>
+> ### What is still genuinely open
+>
+> - **Listing evidence coverage** — still the real product gap. See `docs/STOREFRONT-COA.md`.
+> - **No outside monitoring.** The owner declined an uptime check and the alert webhook. In-app
+>   alerting (`src/server/observability/alerts.ts`) works and is throttled, but it cannot report the
+>   failure that actually happened: when the deployment itself is broken, the code that would send
+>   the alert never runs. Set `VIALGRADE_ALERT_WEBHOOK` (Discord/Slack URL) and point any uptime
+>   service at `/api/health/ready` — **not** the homepage, which now deliberately returns a friendly
+>   200 during an outage. See `docs/MONITORING.md`.
+> - **Catalog coverage gap.** `science-bio` and `certified-peptides` probe as `operating` but have
+>   no organization row, so they are tracked and never imported. Six `vendor_status` rows have no
+>   vendor for this reason; the other four are `blocked`/`parked`/`offline`, which explains itself.
+>   Left in place deliberately — deleting real collected signal to tidy a table loses information.
+> - **Grade sweep is progressive.** Stored vendor grades refresh in the daily collect cron
+>   (04:30 UTC), sized to cover the whole list in one run. A grading change is not visible on the
+>   directory until it runs; vendor detail pages compute live and are correct immediately.
+> - **`sahepeptides` / `sh-peptide` were deliberately NOT merged.** They share a source, which is
+>   not proof of shared ownership. A wrong merge destroys a real distinction and is much harder to
+>   undo than a missed one.
 
 ---
 
