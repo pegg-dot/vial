@@ -36,6 +36,30 @@ describe("bot detection", () => {
     expect(isBotUserAgent("VialGrade-Catalog-Import/1.0 (+https://vialgrade.app/how-we-check)")).toBe(true);
   });
 
+  // An app name in the user-agent is ambiguous: WhatsApp and Pinterest send it BOTH from their
+  // link-preview crawler and from the in-app browser a real person taps a link in. Dropping the
+  // whole substring threw away real readers — and, worse, marked their outbound clicks as bot
+  // traffic, so genuine demand never reached the vendor-facing figure.
+  it("keeps people reading inside a social app's in-app browser", () => {
+    for (const ua of [
+      "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36 WhatsApp/2.24.15.78",
+      "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36 [Pinterest/Android]",
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 302.0.0.23.113",
+    ]) {
+      expect(isBotUserAgent(ua), ua).toBe(false);
+    }
+  });
+
+  it("still drops those same apps' link-preview crawlers", () => {
+    for (const ua of [
+      "WhatsApp/2.24.15.78 A",
+      "Pinterest/0.2 (+https://www.pinterest.com/bot.html)",
+      "Mozilla/5.0 (compatible; Pinterestbot/1.0; +https://www.pinterest.com/bot.html)",
+    ]) {
+      expect(isBotUserAgent(ua), ua).toBe(true);
+    }
+  });
+
   it("lets real browsers through", () => {
     for (const ua of [
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
