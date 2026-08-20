@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetDatabaseForTests, getDatabase } from "@/server/db/client";
 import { recordPageView, getVisitorSummary } from "@/server/analytics/visitors";
+import { resolveAndRecordClick } from "@/server/outbound/clicks";
+import { upsertLiveCompound, upsertLiveListing, upsertLiveVendor } from "@/server/ingest/live-sources";
 
 // A real browser agent. Views without one are treated as automated and excluded from every figure,
 // which is exactly what stops crawler hits inflating "buyers sent" — so the fixtures must look like
@@ -26,7 +28,7 @@ describe("inbound visitor funnel", () => {
 
     const s = await getVisitorSummary({ connection: db });
     expect(s.visits).toBe(4);
-    expect(s.people).toBe(2);
+    expect(s.readerDays).toBe(2);
   });
 
   it("attributes a source, and treats our own pages as direct", async () => {
@@ -40,30 +42,50 @@ describe("inbound visitor funnel", () => {
     expect(sources["direct"]).toBe(1);
   });
 
-  // The ratio that sells a deal: arrivals who went on to a vendor.
-  it("computes the arrivals-to-buyers rate from a real outbound click", async () => {
+  // Arrivals we can tie to an outbound click. Recorded through the REAL click writer, because a
+  // hand-built row can satisfy the join while diverging from what production actually stores.
+  it("matches an arrival to a real outbound click on the same day", async () => {
     const db = await getDatabase();
+    await upsertLiveCompound(db, {
+      slug: "funnel-compound", name: "Funnel Compound", shorthand: "FUN",
+      category: "Peptide", description: "test compound", aliases: ["Fun"],
+    });
+    await upsertLiveVendor(db, {
+      slug: "funnel-vendor", name: "Funnel Vendor", domains: ["funnelvendor.example"], description: "test vendor",
+    });
+    await upsertLiveListing(db, {
+      compoundSlug: "funnel-compound", vendorSlug: "funnel-vendor", slug: "funnel-listing",
+      name: "Funnel 5mg", quantity: "5mg", externalUrl: "https://funnelvendor.example/p/funnel", price: 49,
+    } as Parameters<typeof upsertLiveListing>[1]);
+
     await recordPageView({ path: "/products/x", ip: "1.1.1.1", userAgent: BROWSER }, db);
     await recordPageView({ path: "/products/y", ip: "3.3.3.3", userAgent: BROWSER }, db);
-
-    // The click carries the SAME daily visitor hash, which is what makes the join possible.
-    const { visitorHash } = await import("@/server/outbound/attribution");
-    await db.query(
-      `INSERT INTO outbound_clicks(id, listing_slug, vendor_slug, destination_host, visitor_hash)
-       VALUES('click:1','l','v','v.example',$1)`,
-      [visitorHash("1.1.1.1", BROWSER)],
-    );
+    // Same ip + agent as the first reader, so the daily hash matches — that is what links them.
+    await resolveAndRecordClick("funnel-listing", db, { ip: "1.1.1.1", userAgent: BROWSER });
 
     const s = await getVisitorSummary({ connection: db });
-    expect(s.people).toBe(2);
-    expect(s.clickedOut).toBe(1);
-    expect(Math.round(s.clickThroughRate * 100)).toBe(50);
+    expect(s.readerDays).toBe(2);
+    expect(s.matchedClickers).toBe(1);
   });
 
-  it("reports a zero rate rather than dividing by zero on an empty site", async () => {
+  // The counting unit, stated out loud: a hash rotates daily, so `readerDays` is reader-days, not
+  // distinct humans. `busiestDay` is the honest "how many at once" figure.
+  it("reports the busiest day rather than implying a distinct-person total", async () => {
+    const db = await getDatabase();
+    await recordPageView({ path: "/", ip: "1.1.1.1", userAgent: BROWSER }, db);
+    await recordPageView({ path: "/market", ip: "2.2.2.2", userAgent: BROWSER }, db);
+    await recordPageView({ path: "/market", ip: "2.2.2.2", userAgent: BROWSER }, db);
+
+    const s = await getVisitorSummary({ connection: db });
+    expect(s.readerDays).toBe(2);
+    expect(s.busiestDay?.people).toBe(2);
+    expect(s.busiestDay?.day).toBe(new Date().toISOString().slice(0, 10));
+  });
+
+  it("reports nothing rather than dividing by zero on an empty site", async () => {
     const db = await getDatabase();
     const s = await getVisitorSummary({ connection: db });
-    expect(s.people).toBe(0);
-    expect(s.clickThroughRate).toBe(0);
+    expect(s.readerDays).toBe(0);
+    expect(s.busiestDay).toBeNull();
   });
 });

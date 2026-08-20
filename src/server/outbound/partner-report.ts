@@ -1,7 +1,7 @@
 // The evidence pack you put in front of a vendor.
 //
-// The pitch is: "we sent you N real buyers last month, for free. Here is how to check that in your
-// own dashboard. Now let's talk about a cut." Everything here is designed to survive a sceptic:
+// The pitch is: "we sent you N click-throughs last month, for free. Here is how to check that in
+// your own dashboard. Now let's talk about a cut." Everything is designed to survive a sceptic:
 // every number is one they can independently corroborate, and the report says exactly how.
 import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
@@ -12,7 +12,8 @@ export interface PartnerReport {
   vendorName: string;
   periodDays: number;
   clicks: number;
-  people: number;              // distinct daily visitor hashes — "people", not "hits"
+  /** Distinct daily visitor hashes — VISITOR-DAYS. A person returning tomorrow counts twice. */
+  visitorDays: number;
   listingsClicked: number;
   topCompounds: { compound: string; clicks: number }[];
   daily: { day: string; clicks: number }[];
@@ -87,7 +88,7 @@ export async function getPartnerReport(
     vendorName: vendor.display_name,
     periodDays: days,
     clicks: Number(totals.clicks),
-    people: Number(totals.people),
+    visitorDays: Number(totals.people),
     listingsClicked: Number(totals.listings),
     topCompounds, daily, devices,
     firstClickAt: totals.first_at, lastClickAt: totals.last_at,
@@ -111,8 +112,13 @@ export async function getPartnerReport(
 export async function getAttributionOverview(
   options: { days?: number; connection?: SqlConnection } = {},
 ): Promise<{
-  totals: { clicks: number; people: number; vendors: number; conversions: number; revenueCents: number };
-  vendors: { vendorSlug: string; vendorName: string; clicks: number; people: number; conversions: number; revenueCents: number; status: string; lastClickAt: string | null }[];
+  /**
+   * `clickers` is the CANONICAL count of people who clicked through to a vendor: distinct daily
+   * hashes in outbound_clicks. Every surface reads this one — never re-derive it by joining page
+   * views, which silently drops anyone whose view-tracking was blocked.
+   */
+  totals: { clicks: number; clickers: number; vendors: number; conversions: number; revenueCents: number };
+  vendors: { vendorSlug: string; vendorName: string; clicks: number; visitorDays: number; conversions: number; revenueCents: number; status: string; lastClickAt: string | null }[];
 }> {
   const db = options.connection ?? await getDatabase();
   const window = `${options.days ?? 30} days`;
@@ -137,14 +143,14 @@ export async function getAttributionOverview(
      ORDER BY clicks DESC`, [window],
   )).rows.map(r => ({
     vendorSlug: String(r.vendor_slug), vendorName: String(r.vendor_name),
-    clicks: Number(r.clicks), people: Number(r.people),
+    clicks: Number(r.clicks), visitorDays: Number(r.people),
     conversions: Number(r.conversions), revenueCents: Number(r.revenue ?? 0),
     status: String(r.status), lastClickAt: r.last_at ? String(r.last_at) : null,
   }));
 
   return {
     totals: {
-      clicks: Number(totals.clicks), people: Number(totals.people),
+      clicks: Number(totals.clicks), clickers: Number(totals.people),
       vendors: Number(totals.vendors), conversions: Number(totals.conversions),
       revenueCents: Number(totals.revenue ?? 0),
     },

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recordPageView } from "@/server/analytics/visitors";
 import { isBotUserAgent } from "@/server/analytics/is-bot";
+import { isStaffTraffic } from "@/server/analytics/self-traffic";
+import { SESSION_COOKIE } from "@/server/auth/session-envelope";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,12 @@ export async function POST(request: NextRequest) {
     // indexed, retained and scanned without a single query ever returning one — a database write
     // per crawler hit, for data nothing reads. The counting rule is unchanged; only the storage is.
     if (isBotUserAgent(request.headers.get("user-agent"))) return new NextResponse(null, { status: 204 });
+
+    // Our own reading of the live site is not traffic we can quote to a vendor. The staff session
+    // cookie the browser already sends is the signal; see server/analytics/self-traffic.ts.
+    if (await isStaffTraffic(request.cookies.get(SESSION_COOKIE)?.value)) {
+      return new NextResponse(null, { status: 204 });
+    }
 
     await recordPageView({
       path: path.split("?")[0]!,

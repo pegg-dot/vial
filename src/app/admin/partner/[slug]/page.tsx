@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { getPartnerReport } from "@/server/outbound/partner-report";
+import { partnerCountingNote, partnerHeadline } from "@/server/outbound/partner-claim";
 
 export const dynamic = "force-dynamic";
 
@@ -30,18 +31,25 @@ export default async function PartnerReportPage({ params }: { params: Promise<{ 
       <div className="ink hard mt-8 rounded-[20px] bg-[#e6fbf4] p-6">
         <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#0e8f80]">The pitch</p>
         <p className="mt-3 text-2xl font-extrabold leading-snug tracking-[-.03em]">
-          VialGrade sent {report.vendorName} {report.people.toLocaleString()} {report.people === 1 ? "buyer" : "buyers"} in {report.periodDays} days — free.
+          {partnerHeadline({
+            vendorName: report.vendorName,
+            clicks: report.clicks,
+            visitorDays: report.visitorDays,
+            conversions: report.conversions,
+            periodDays: report.periodDays,
+          })}
         </p>
         <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[#0e8f80]">
-          These are people who read the lab evidence for a specific product and then chose to click through to you.
-          You do not have to take our word for any of it — see how to check it below.
+          These are people who read the lab evidence for a specific product and then chose to click through to you.{" "}
+          {partnerCountingNote({ visitorDays: report.visitorDays, periodDays: report.periodDays })} You do not have to
+          take our word for any of it — see how to check it below.
         </p>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-4">
         {[
-          ["Buyers sent", report.clicks.toLocaleString()],
-          ["Distinct people", report.people.toLocaleString()],
+          ["Clicks sent", report.clicks.toLocaleString()],
+          ["Readers, once a day", report.visitorDays.toLocaleString()],
           ["Products clicked", String(report.listingsClicked)],
           ["Confirmed orders", report.conversions ? String(report.conversions) : "—"],
         ].map(([label, value]) => (

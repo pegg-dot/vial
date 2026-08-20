@@ -64,7 +64,7 @@ describe("attribution — click to partner report", () => {
 
     const report = await getPartnerReport("attr-vendor", { connection: db });
     expect(report!.clicks).toBe(4);
-    expect(report!.people).toBe(2);
+    expect(report!.visitorDays).toBe(2);
   });
 
   it("reports zero revenue until a partner actually confirms an order", async () => {

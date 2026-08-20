@@ -51,9 +51,19 @@ export async function recordPageView(
 
 export interface VisitorSummary {
   visits: number;
-  people: number;
-  clickedOut: number;          // distinct people who went on to a vendor
-  clickThroughRate: number;    // clickedOut / people
+  /**
+   * Distinct visitor hashes in the window — READER-DAYS, not distinct humans.
+   *
+   * The hash is salted with the calendar date so nobody can be followed across days. The direct
+   * consequence is that one person reading on five days is five hashes. Over a 30-day window this
+   * figure is therefore an UPPER bound on people, and calling it "people" overstates reach — the
+   * one error we cannot afford, since a vendor checks their own analytics first.
+   */
+  readerDays: number;
+  /** Reader-days we can tie to an outbound click. Diagnostic only — see the note below. */
+  matchedClickers: number;
+  /** The most readers seen in any single day: the honest "how many at once" figure. */
+  busiestDay: { day: string; people: number } | null;
   topSources: { source: string; people: number }[];
   topPages: { path: string; visits: number }[];
   byKind: { kind: string; visits: number }[];
@@ -63,9 +73,14 @@ export interface VisitorSummary {
 /**
  * The inbound picture.
  *
- * `clickedOut` joins visits to outbound clicks on the SAME-DAY visitor hash. That is deliberately
- * conservative: someone who browses today and buys tomorrow is not counted, because the hash has
- * rotated. Under-reporting is the right direction of error for a number used in a negotiation.
+ * `matchedClickers` joins visits to outbound clicks on the same-day hash, so it only sees a click
+ * whose page view was also recorded. It is systematically LOWER than the true number of people who
+ * clicked through — a privacy extension that blocks /api/track/view still allows the outbound
+ * redirect, so the click lands and the view does not.
+ *
+ * It is therefore a diagnostic (roughly: how much view-tracking we are losing), NOT the headline.
+ * The canonical count of people who clicked through is the outbound_clicks figure in
+ * server/outbound/partner-report.ts — one number, derived once, reused rather than re-derived.
  */
 export async function getVisitorSummary(
   options: { days?: number; connection?: SqlConnection } = {},
@@ -108,13 +123,16 @@ export async function getVisitorSummary(
      GROUP BY 1 ORDER BY 1`, [window],
   )).rows.map(r => ({ day: r.day, people: Number(r.n) }));
 
-  const people = Number(totals.people);
-  const clickedOut = Number(converted.n);
+  const busiestDay = daily.reduce<VisitorSummary["busiestDay"]>(
+    (best, d) => (best === null || d.people > best.people ? { day: d.day, people: d.people } : best),
+    null,
+  );
+
   return {
     visits: Number(totals.visits),
-    people,
-    clickedOut,
-    clickThroughRate: people > 0 ? clickedOut / people : 0,
+    readerDays: Number(totals.people),
+    matchedClickers: Number(converted.n),
+    busiestDay,
     topSources, topPages, byKind, daily,
   };
 }

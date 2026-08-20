@@ -57,21 +57,40 @@ export default async function AdminPage() {
 
   const { totals, vendors } = attribution;
 
+  // One number for "people who clicked through", read from outbound_clicks — the same source card 2
+  // uses. The page previously showed 4 here and 2 in the banner because the banner re-derived it by
+  // joining page views, which drops anyone whose view-tracking was blocked. Numerator and
+  // denominator are now both distinct-daily-hashes, so the ratio is like-for-like.
+  const clickThroughRate = visitors.readerDays > 0 ? totals.clickers / visitors.readerDays : 0;
+  const unmatchedClickers = Math.max(0, totals.clickers - visitors.matchedClickers);
+
   return (
     <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
       <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Admin</p>
       <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Traffic you can prove you sent</h1>
       <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Last 30 days. Read it in order: people <strong>arrive</strong>, some <strong>click through</strong> to a
+        Last 30 days. Read it in order: readers <strong>arrive</strong>, some <strong>click through</strong> to a
         vendor, and a few of those <strong>buy</strong>. Automated traffic — search crawlers, link previews, our own
-        checks — is excluded everywhere, so these are people. Every link carries{" "}
+        checks — is excluded, and so is our own signed-in browsing. Readers are counted{" "}
+        <strong>once a day</strong>: with no cookies and no accounts we cannot tell that today&rsquo;s reader is
+        yesterday&rsquo;s, so someone returning on another day counts again. Treat these as visits by readers, not as
+        a headcount of distinct people. Every link carries{" "}
         <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[12px]">utm_source=vialgrade</code>, so a
         vendor can confirm the numbers in their own analytics without taking our word for it.
       </p>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Stat icon={Users} value={visitors.people.toLocaleString()} label="1. People who arrived" sub={`${visitors.visits.toLocaleString()} pages read`} />
-        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="2. Clicks to a vendor" sub={`from ${totals.people.toLocaleString()} ${totals.people === 1 ? "person" : "people"}`} />
+        <Stat
+          icon={Users}
+          value={visitors.readerDays.toLocaleString()}
+          label="1. Readers, counted once a day"
+          sub={
+            visitors.busiestDay
+              ? `${visitors.visits.toLocaleString()} pages read · busiest day ${visitors.busiestDay.people}`
+              : `${visitors.visits.toLocaleString()} pages read`
+          }
+        />
+        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="2. Clicks to a vendor" sub={`from ${totals.clickers.toLocaleString()} ${totals.clickers === 1 ? "reader" : "readers"}`} />
         <Stat icon={Link2} value={String(totals.vendors)} label="3. Vendors receiving them" />
         <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="4. Confirmed orders" sub={totals.conversions === 0 ? "zero until a vendor sends orders back" : "reported back by a partner"} />
         <Stat icon={Database} value={money(totals.revenueCents)} label="5. Revenue we drove" sub={totals.revenueCents === 0 ? "zero until a deal is live" : undefined} />
@@ -82,12 +101,14 @@ export default async function AdminPage() {
       <div className="ink hard mt-4 rounded-[18px] bg-[#e6fbf4] p-5">
         <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#0e8f80]">The number that sells a deal</p>
         <p className="mt-2 text-3xl font-extrabold tracking-[-.03em]">
-          {Math.round(visitors.clickThroughRate * 100)}% of arrivals clicked through to a vendor
+          {Math.round(clickThroughRate * 100)}% of readers clicked through to a vendor
         </p>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#0e8f80]">
-          {visitors.people === 0
-            ? "No human traffic yet, so there is nothing to rate. This fills in as real visitors arrive."
-            : `${visitors.clickedOut} of ${visitors.people} people went on to a seller. No cookies and no accounts — people are counted with a hash that resets daily, and the match only counts same-day, so the real figure is at least this.`}
+          {visitors.readerDays === 0
+            ? "No reader traffic yet, so there is nothing to rate. This fills in as real visitors arrive."
+            : `${totals.clickers.toLocaleString()} of ${visitors.readerDays.toLocaleString()} readers went on to a seller. Both sides are counted the same way — a hash that resets daily, no cookies and no accounts — so a reader returning on another day counts again in both.`}
+          {unmatchedClickers > 0 &&
+            ` We could tie ${visitors.matchedClickers} of those clicks back to a recorded page view; the other ${unmatchedClickers} came from readers whose view-tracking was blocked, which is normal and means arrivals are undercounted.`}
         </p>
       </div>
 
@@ -129,8 +150,8 @@ export default async function AdminPage() {
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
             <tr>
-              <th className="px-5 py-3">Vendor</th><th className="px-5 py-3">Buyers sent</th>
-              <th className="px-5 py-3">People</th><th className="px-5 py-3">Orders</th>
+              <th className="px-5 py-3">Vendor</th><th className="px-5 py-3">Clicks sent</th>
+              <th className="px-5 py-3">Readers</th><th className="px-5 py-3">Orders</th>
               <th className="px-5 py-3">Revenue</th><th className="px-5 py-3">Status</th><th className="px-5 py-3" />
             </tr>
           </thead>
@@ -144,7 +165,7 @@ export default async function AdminPage() {
               <tr key={v.vendorSlug}>
                 <td className="px-5 py-3 font-bold">{v.vendorName}</td>
                 <td className="px-5 py-3 font-extrabold tabular-nums">{v.clicks.toLocaleString()}</td>
-                <td className="px-5 py-3 tabular-nums">{v.people.toLocaleString()}</td>
+                <td className="px-5 py-3 tabular-nums">{v.visitorDays.toLocaleString()}</td>
                 <td className="px-5 py-3 tabular-nums">{v.conversions || "—"}</td>
                 <td className="px-5 py-3 tabular-nums">{v.revenueCents ? money(v.revenueCents) : "—"}</td>
                 <td className="px-5 py-3"><span className="ink-1 rounded-full bg-[#f2f2ef] px-2 py-1 text-[11px] font-bold uppercase tracking-[.08em]">{v.status}</span></td>

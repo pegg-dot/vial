@@ -15,7 +15,7 @@ export interface OutboundResolution { destination: string; vendorSlug: string | 
 export async function resolveAndRecordClick(
   listingSlug: string,
   connection?: SqlConnection,
-  visitor?: { ip?: string | null; userAgent?: string | null; landingPath?: string | null },
+  visitor?: { ip?: string | null; userAgent?: string | null; landingPath?: string | null; staff?: boolean },
 ): Promise<OutboundResolution | null> {
   const db = connection ?? (await getDatabase());
   const row = (await db.query<QueryResultRow & { external_url: string | null; vendor_slug: string | null; compound_slug: string | null; origin: string | null }>(
@@ -38,6 +38,12 @@ export async function resolveAndRecordClick(
   const destination = affiliateApplied
     ? url
     : tagDestination(url, { compoundSlug: row.compound_slug, listingSlug, clickRef });
+
+  // Our own staff clicking through to check a link is not vendor demand. The handoff still happens
+  // — only the row is skipped, because "we sent you N people" must never include us.
+  if (visitor?.staff) {
+    return { destination, vendorSlug: row.vendor_slug, compoundSlug: row.compound_slug, affiliateApplied, clickRef };
+  }
 
   await db.query(
     `INSERT INTO outbound_clicks(id, listing_slug, vendor_slug, compound_slug, destination_host,
