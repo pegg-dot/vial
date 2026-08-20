@@ -4,6 +4,7 @@ import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { deviceOf, visitorHash } from "@/server/outbound/attribution";
 import { isBotUserAgent } from "./is-bot";
+import { countingDaySql } from "./counting-day";
 
 /** Coarse page type, so the funnel can be read without parsing paths in SQL. */
 export function pageKind(path: string): string {
@@ -54,7 +55,7 @@ export interface VisitorSummary {
   /**
    * Distinct visitor hashes in the window — READER-DAYS, not distinct humans.
    *
-   * The hash is salted with the calendar date so nobody can be followed across days. The direct
+   * The hash is salted with the counting day so nobody can be followed across days. The direct
    * consequence is that one person reading on five days is five hashes. Over a 30-day window this
    * figure is therefore an UPPER bound on people, and calling it "people" overstates reach — the
    * one error we cannot afford, since a vendor checks their own analytics first.
@@ -118,7 +119,7 @@ export async function getVisitorSummary(
   )).rows.map(r => ({ kind: r.page_kind ?? "other", visits: Number(r.n) }));
 
   const daily = (await db.query<QueryResultRow & { day: string; n: string | number }>(
-    `SELECT TO_CHAR(created_at,'YYYY-MM-DD') AS day, COUNT(DISTINCT visitor_hash) AS n
+    `SELECT ${countingDaySql("created_at")} AS day, COUNT(DISTINCT visitor_hash) AS n
      FROM page_views WHERE NOT is_bot AND created_at > NOW() - $1::interval
      GROUP BY 1 ORDER BY 1`, [window],
   )).rows.map(r => ({ day: r.day, people: Number(r.n) }));

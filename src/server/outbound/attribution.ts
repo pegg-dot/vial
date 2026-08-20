@@ -10,6 +10,7 @@
 // their Shopify/Woo/GA referral report, VialGrade is already itemised with sessions and orders
 // against it. The `vg` ref is what later closes the loop exactly, if they choose to post back.
 import { createHash } from "node:crypto";
+import { countingDay } from "@/server/analytics/counting-day";
 
 export const UTM_SOURCE = "vialgrade";
 
@@ -30,7 +31,10 @@ export function newClickRef(): string {
  */
 export function visitorHash(ip: string | null, userAgent: string | null, day = new Date()): string {
   const secret = privacySecret();
-  const stamp = day.toISOString().slice(0, 10);
+  // The counting day, not the UTC date. Midnight UTC is 8pm Eastern, so rotating there split one
+  // evening's reading into two "readers" during the busiest hours. See analytics/counting-day.ts —
+  // the same definition backs the daily SQL buckets, and a test fails if the two ever disagree.
+  const stamp = countingDay(day);
   return createHash("sha256")
     .update(`${secret}:${stamp}:${ip ?? ""}:${userAgent ?? ""}`)
     .digest("hex")

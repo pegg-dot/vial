@@ -6,6 +6,7 @@
 import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { UTM_SOURCE } from "./attribution";
+import { countingDaySql } from "@/server/analytics/counting-day";
 
 export interface PartnerReport {
   vendorSlug: string;
@@ -66,7 +67,7 @@ export async function getPartnerReport(
   )).rows.map(r => ({ compound: r.compound_slug, clicks: Number(r.n) }));
 
   const daily = (await db.query<QueryResultRow & { day: string; n: string | number }>(
-    `SELECT TO_CHAR(created_at,'YYYY-MM-DD') AS day, COUNT(*) AS n FROM outbound_clicks
+    `SELECT ${countingDaySql("created_at")} AS day, COUNT(*) AS n FROM outbound_clicks
      WHERE vendor_slug=$1 AND NOT is_bot AND created_at > NOW() - $2::interval
      GROUP BY 1 ORDER BY 1`,
     [vendorSlug, window],
