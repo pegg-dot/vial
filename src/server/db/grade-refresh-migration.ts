@@ -16,7 +16,6 @@
 // exhausted budget simply resumes on the next cron, recomputeAllVendorGrades already isolates a
 // per-vendor failure, and the whole call is wrapped — a grade is not worth a failed boot. An
 // earlier migration bug took production down, and that lesson is applied here.
-import type { SqlConnection } from "./client";
 
 
 // ⚠️ DISABLED. Shipping this as boot work took production down: `/` and `/vendors` timed out at 45s
@@ -31,6 +30,6 @@ import type { SqlConnection } from "./client";
 // The version is KEPT and made a no-op rather than removed, so instances that already recorded 48
 // stay consistent with those that did not. The grade refresh now belongs where it always belonged:
 // the daily collect cron, which is already sized to cover the whole vendor list in one run.
-export async function refreshAllVendorGrades(_db: SqlConnection): Promise<void> {
+export async function refreshAllVendorGrades(): Promise<void> {
   return;
 }
