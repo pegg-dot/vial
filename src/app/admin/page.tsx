@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, Database, FlaskConical, Link2, MousePointerClick, Users } from "lucide-react";
+import { ArrowUpRight, Database, FlaskConical, KeyRound, Link2, MousePointerClick, ShieldAlert, Users } from "lucide-react";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { getAttributionOverview } from "@/server/outbound/partner-report";
 import { getDataFreshness, getBrokenCollectors } from "@/server/health/data-health";
 import { getVisitorSummary } from "@/server/analytics/visitors";
+import { getPeopleOverview } from "@/server/admin/people";
 import { getDatabase } from "@/server/db/client";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin" };
+
+const when = (iso: string) => new Date(iso).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 const money = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
@@ -28,9 +31,10 @@ export default async function AdminPage() {
   if (!principal || principal.accountType !== "staff") redirect("/admin/login?next=%2Fadmin");
 
   const db = await getDatabase();
-  const [attribution, visitors, freshness, broken, counts, collectors] = await Promise.all([
+  const [attribution, visitors, people, freshness, broken, counts, collectors] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getVisitorSummary({ days: 30 }),
+    getPeopleOverview({ recentDays: 7 }),
     getDataFreshness(),
     getBrokenCollectors(),
     db.query<{ vendors: string; listings: string; coas: string; graded: string; due: string }>(
@@ -177,6 +181,97 @@ export default async function AdminPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Account administration, deliberately NOT analytics. The privacy notice promises that
+          analytics records carry no account identifier, so nothing here is joined to what anyone
+          read — and the stored IP/user-agent hashes are counted but never shown. */}
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">People and sign-ins</h2>
+      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+        Who holds an account, and who has signed in. This is account administration — it is never joined to what
+        anyone read, and the IP and device hashes kept for session security are deliberately not shown here.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          icon={Users}
+          value={String(people.totals.accounts)}
+          label="Accounts"
+          sub={people.totals.byType.map(t => `${t.count} ${t.accountType}`).join(" · ") || undefined}
+        />
+        <Stat icon={KeyRound} value={String(people.totals.signedInNow)} label="Signed in right now" sub="live, unexpired sessions" />
+        <Stat
+          icon={ShieldAlert}
+          value={String(people.totals.failedRecently)}
+          label="Failed sign-ins, 7 days"
+          sub={people.totals.failedRecently === 0 ? "nothing to look at" : "check the log below"}
+        />
+        <Stat
+          icon={ShieldAlert}
+          value={String(people.totals.lockedNow)}
+          label="Locked out now"
+          sub={people.totals.lockedNow === 0 ? "no account is locked" : "too many failed attempts"}
+        />
+      </div>
+
+      <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+        <table className="w-full min-w-[820px] text-left text-sm">
+          <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+            <tr>
+              <th className="px-5 py-3">Person</th><th className="px-5 py-3">Type</th>
+              <th className="px-5 py-3">Status</th><th className="px-5 py-3">Last signed in</th>
+              <th className="px-5 py-3">Sessions</th><th className="px-5 py-3">Joined</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#111214]/10">
+            {people.accounts.length === 0 && (
+              <tr><td colSpan={6} className="px-5 py-8 text-center text-sm font-medium text-[var(--muted)]">
+                No accounts yet.
+              </td></tr>
+            )}
+            {people.accounts.map(a => (
+              <tr key={a.userId}>
+                <td className="px-5 py-3">
+                  <span className="font-bold">{a.displayName}</span>
+                  <span className="block text-xs font-medium text-[var(--muted)]">{a.email}</span>
+                </td>
+                <td className="px-5 py-3">
+                  <span className="ink-1 rounded-full bg-[#f2f2ef] px-2 py-1 text-[11px] font-bold uppercase tracking-[.08em]">{a.accountType}</span>
+                </td>
+                <td className="px-5 py-3 text-xs font-bold">
+                  {a.lockedUntil && new Date(a.lockedUntil) > new Date()
+                    ? <span className="text-[#b4241f]">Locked</span>
+                    : <span className={a.status === "active" ? "" : "text-[var(--muted)]"}>{a.status}</span>}
+                  {!a.emailVerified && <span className="block font-medium text-[var(--muted)]">email unverified</span>}
+                </td>
+                <td className="px-5 py-3 text-xs font-medium tabular-nums">{a.lastLoginAt ? when(a.lastLoginAt) : "never"}</td>
+                <td className="px-5 py-3 tabular-nums">{a.activeSessions || "—"}</td>
+                <td className="px-5 py-3 text-xs font-medium tabular-nums text-[var(--muted)]">{a.createdAt ? when(a.createdAt) : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {people.signIns.length > 0 && (
+        <div className="ink hard mt-3 overflow-x-auto rounded-[18px] bg-white">
+          <p className="px-5 pt-5 text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Sign-in attempts, last 7 days</p>
+          <table className="mt-3 w-full min-w-[520px] text-left text-sm">
+            <tbody className="divide-y divide-[#111214]/10">
+              {people.signIns.slice(0, 25).map((s, i) => (
+                <tr key={`${s.at}-${i}`}>
+                  <td className="px-5 py-2.5 text-xs font-medium tabular-nums text-[var(--muted)]">{when(s.at)}</td>
+                  <td className="px-5 py-2.5 font-medium">{s.email}</td>
+                  <td className="px-5 py-2.5 text-xs font-bold">
+                    {s.outcome === "success"
+                      ? <span className="text-[#0e8f80]">signed in</span>
+                      : <span className="text-[#b4241f]">{s.outcome}</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="h-4" />
+        </div>
+      )}
 
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Is the data healthy?</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

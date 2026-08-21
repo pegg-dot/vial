@@ -13,8 +13,18 @@ export const dynamic = "force-dynamic";
 // every error returns 204 and is swallowed. Traffic measurement is not worth a broken site.
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as { path?: string };
+    const body = (await request.json()) as { path?: string; referrer?: string };
     const path = String(body.path ?? "").slice(0, 300);
+    // The referrer MUST come from the body, not from this request's own headers. The beacon is a
+    // same-origin POST from the page being viewed, so its `Referer` is always a VialGrade URL —
+    // which referrerHost then discards as internal navigation. Reading the header meant every
+    // reader looked like direct traffic no matter where they actually came from, and the "where
+    // they came from" panel could never report anything else. Only the client can see the real
+    // referrer, via document.referrer.
+    //
+    // Client-supplied and therefore untrusted: it is length-capped here and only ever stored as a
+    // bare hostname parsed by URL(), which rejects anything that is not a real URL.
+    const referrer = typeof body.referrer === "string" ? body.referrer.slice(0, 500) : null;
     // Only record real in-app paths; never a full URL, never anything with a query string.
     if (!path.startsWith("/") || path.includes("://")) return new NextResponse(null, { status: 204 });
 
@@ -32,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     await recordPageView({
       path: path.split("?")[0]!,
-      referrer: request.headers.get("referer"),
+      referrer,
       ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
       userAgent: request.headers.get("user-agent"),
       selfHost: request.nextUrl.host,
