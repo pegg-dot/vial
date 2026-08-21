@@ -32,6 +32,7 @@ export interface AccountRow {
   failedLoginCount: number;
 }
 
+/** Most recent attempts, CAPPED for display. Never derive a total from this — see failedRecently. */
 export interface SignInEvent {
   at: string;
   email: string;
@@ -92,6 +93,19 @@ export async function getPeopleOverview(
     )
   ).rows.map(r => ({ at: String(r.created_at), email: r.normalized_email, outcome: r.outcome }));
 
+  // Counted in SQL, NOT from the list above — that list is capped for display, and a brute-force
+  // burst is exactly the case that runs past the cap. Deriving the number from the truncated rows
+  // would make the tile read low during the only event it exists to reveal.
+  const failedRecently = Number(
+    (
+      await db.query<QueryResultRow & { n: string | number }>(
+        `SELECT COUNT(*) AS n FROM auth_login_attempts
+         WHERE outcome <> 'success' AND created_at > NOW() - $1::interval`,
+        [window],
+      )
+    ).rows[0]!.n,
+  );
+
   const byType = (
     await db.query<QueryResultRow & { account_type: string; n: string | number }>(
       `SELECT account_type, COUNT(*) AS n FROM auth_users GROUP BY 1 ORDER BY 2 DESC`,
@@ -105,7 +119,7 @@ export async function getPeopleOverview(
       accounts: accounts.length,
       byType,
       signedInNow: accounts.reduce((n, a) => n + (a.activeSessions > 0 ? 1 : 0), 0),
-      failedRecently: signIns.filter(s => s.outcome !== "success").length,
+      failedRecently,
       lockedNow: accounts.filter(a => a.lockedUntil !== null && new Date(a.lockedUntil) > new Date()).length,
     },
   };

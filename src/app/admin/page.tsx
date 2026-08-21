@@ -253,7 +253,11 @@ export default async function AdminPage() {
 
       {people.signIns.length > 0 && (
         <div className="ink hard mt-3 overflow-x-auto rounded-[18px] bg-white">
-          <p className="px-5 pt-5 text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Sign-in attempts, last 7 days</p>
+          <p className="px-5 pt-5 text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">
+            {people.signIns.length > 25
+              ? `Sign-in attempts · 25 most recent of ${people.signIns.length >= 100 ? "100+" : people.signIns.length} in 7 days`
+              : "Sign-in attempts, last 7 days"}
+          </p>
           <table className="mt-3 w-full min-w-[520px] text-left text-sm">
             <tbody className="divide-y divide-[#111214]/10">
               {people.signIns.slice(0, 25).map((s, i) => (

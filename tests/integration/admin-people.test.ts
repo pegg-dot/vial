@@ -63,6 +63,19 @@ describe("who has an account and who signed in", () => {
     expect(overview.totals.failedRecently).toBe(1);
   });
 
+  // The tile exists to reveal a brute-force burst, which is precisely when attempts run past any
+  // display limit. Counting from the truncated list would under-report during the only event that
+  // matters — a silent cap on a security number.
+  it("counts every failed attempt in the window, not just the ones it displays", async () => {
+    const db = await getDatabase();
+    for (let i = 0; i < 120; i++) {
+      await recordLoginAttempt("owner@vialgrade.test", "failure", { requestId: `r${i}`, ipHash: "h" }, db);
+    }
+
+    const overview = await getPeopleOverview();
+    expect(overview.totals.failedRecently).toBe(120);
+  });
+
   // The privacy notice promises analytics carry no account identifier, and that the stored IP and
   // user-agent hashes exist for session management and rate-limiting — not for profiling. This is
   // an account-administration view, so it must never surface either.
