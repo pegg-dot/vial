@@ -10,6 +10,7 @@
 // Run with the dev server STOPPED (file-backed PGlite is single-writer), then start
 // `npm run dev` to see real BPC-157 listings in the app.
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { provisionRealBpc157, runLiveIngestAndApprove, REAL_BPC157_VENDORS } from "../src/server/ingest/bpc157.ts";
 
 if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
@@ -17,6 +18,8 @@ if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
   process.exit(1);
 }
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("ingest-real-bpc157");
 const db = await getDatabase();
 
 console.log(`Provisioning ${REAL_BPC157_VENDORS.length} real BPC-157 vendors + the Janoshik COA source…`);

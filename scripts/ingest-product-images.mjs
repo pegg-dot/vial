@@ -11,6 +11,7 @@
 //
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { extractProductImage } from "../src/server/ingest/product-image.ts";
 
 if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
@@ -19,6 +20,8 @@ if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
 }
 
 const refresh = process.argv.includes("--refresh");
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("ingest-product-images");
 const db = await getDatabase();
 
 const { rows } = await db.query(

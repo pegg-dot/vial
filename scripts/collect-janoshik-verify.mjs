@@ -8,10 +8,13 @@ process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures 
 // each certificate is STILL publicly listed by the lab and stamps the recency. A cert that has since
 // been pulled shows up in `delisted` — a real trust change worth surfacing.
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { fetchJanoshikPortal, annotateJanoshikListings } from "../src/server/verify/janoshik-verify.ts";
 
 if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("collect-janoshik-verify");
 const db = await getDatabase();
 console.log("Fetching Janoshik public feed…");
 const { entries } = await fetchJanoshikPortal();

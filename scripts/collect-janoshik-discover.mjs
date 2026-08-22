@@ -13,6 +13,7 @@ process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures 
 // off OR delisted — the feed alone cannot distinguish; we say so rather than overclaim.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { parseJanoshikFeed } from "../src/server/ingest/lab-tests.ts";
 import { ingestNewJanoshikTests, applyPurities, annotateTestTypes } from "../src/server/ingest/janoshik-discovery.ts";
 import { reconcileLabsFromRegistry } from "../src/server/ingest/lab-tests.ts";
@@ -48,6 +49,8 @@ const vendors = existsSync(new URL("peptide-vendors.json", DATA))
   : [];
 const purities = existsSync(new URL("janoshik-purities.json", DATA)) ? readJson("janoshik-purities.json") : {};
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("collect-janoshik-discover");
 const db = await getDatabase();
 const res = await ingestNewJanoshikTests(db, entries, { compounds, vendors }, purities);
 console.log(`\n${res.newTests.length} test(s) in the feed we didn't hold (feed=${res.feedSize}).`);

@@ -6,6 +6,7 @@ process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures 
 //   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-vendor-coas.mjs
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { upsertLiveVendor, recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
 import { recordLabTest, reconcileLabsFromRegistry } from "../src/server/ingest/lab-tests.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
@@ -27,6 +28,8 @@ const compoundRefs = readJson("peptide-compounds.json").map((c) => ({ slug: c.sl
 const vendorRefs = existsSync(new URL("peptide-vendors.json", DATA)) ? readJson("peptide-vendors.json").map((v) => ({ slug: v.slug, name: v.name, domain: v.domain })) : [];
 const vcoas = readJson("vendor-coas.json");
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("ingest-vendor-coas");
 const db = await getDatabase();
 const nameOf = new Map(compoundRefs.map((c) => [c.slug, c.name]));
 

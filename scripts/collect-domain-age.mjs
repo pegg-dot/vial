@@ -9,6 +9,7 @@ process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures 
 //   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-domain-age.mjs [--dry]
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { fetchDomainRegistrationDate, domainAgeNote, YOUNG_DOMAIN_RE } from "../src/server/collect/domain-age.ts";
 import { recordDomainAge } from "../src/server/external/repository.ts";
 import { recordCollectorRun } from "../src/server/health/data-health.ts";
@@ -20,6 +21,8 @@ if (!DRY && process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") {
   process.exit(1);
 }
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("collect-domain-age");
 const db = await getDatabase();
 const rows = await vendorDomains(db);
 

@@ -8,6 +8,7 @@
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { readFileSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { recordFingerprint, computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { dhash } from "../src/server/verify/photo-hash.ts";
 
@@ -55,6 +56,8 @@ async function productImages(v, n) {
   return [];
 }
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("collect-vendor-fingerprints");
 const db = await getDatabase();
 console.log(`Collecting web fingerprints for ${vendors.length} vendors…`);
 let withFp = 0;

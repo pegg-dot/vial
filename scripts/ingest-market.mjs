@@ -5,6 +5,7 @@ process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures 
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { upsertLiveCompound, upsertLiveVendor, recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
 import { importShopifyCatalog } from "../src/server/ingest/shopify-import.ts";
 import { importWooCommerceCatalog } from "../src/server/ingest/woocommerce-import.ts";
@@ -30,6 +31,8 @@ const vendors = existsSync(new URL("peptide-vendors.json", DATA)) ? readJson("pe
 const compoundRefs = compounds.map((c) => ({ slug: c.slug, name: c.name, aliases: c.aliases }));
 const vendorRefs = vendors.map((v) => ({ slug: v.slug, name: v.name, domain: v.domain }));
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("ingest-market");
 const db = await getDatabase();
 
 console.log(`Upserting ${compounds.length} real compounds…`);

@@ -9,6 +9,7 @@
 process.env.VIALGRADE_SEED_FIXTURES ||= "false";
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { recordAggregatorRating } from "../src/server/external/repository.ts";
 import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
@@ -17,6 +18,8 @@ if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusi
 const file = new URL("./data/vendor-trustpilot.json", import.meta.url);
 if (!existsSync(file)) { console.log("No vendor-trustpilot.json found."); process.exit(1); }
 const rows = JSON.parse(readFileSync(file, "utf8"));
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("ingest-vendor-metadata");
 const db = await getDatabase();
 
 let trustpilot = 0, meta = 0;

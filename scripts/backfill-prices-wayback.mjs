@@ -10,6 +10,7 @@
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { readFileSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { matchCompound } from "../src/server/ingest/shopify-import.ts";
 import { wooPrice } from "../src/server/ingest/woocommerce-import.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
@@ -61,6 +62,8 @@ function extractPrices(payload, isShopify) {
   return out;
 }
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("backfill-prices-wayback");
 const db = await getDatabase();
 let totalObs = 0;
 const touchedListings = new Set();

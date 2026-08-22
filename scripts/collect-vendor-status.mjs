@@ -3,6 +3,7 @@
 //   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-vendor-status.mjs
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { probeVendorStatus, recordVendorStatus } from "../src/server/verify/vendor-status.ts";
 import { vendorDomains } from "./lib/vendor-domains.mjs";
 
@@ -11,6 +12,8 @@ if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusi
 // Probe ALL vendors — including red-flagged/defunct ones, to confirm they're actually gone.
 // Read from the catalogue, not the 34-row seed file: that mismatch is why Site status covered
 // 37% of vendors while the other 56 silently had none.
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("collect-vendor-status");
 const db = await getDatabase();
 const vendors = await vendorDomains(db);
 console.log(`Probing ${vendors.length} vendor domains…`);

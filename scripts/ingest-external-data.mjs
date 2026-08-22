@@ -4,6 +4,7 @@
 process.env.VIALGRADE_SEED_FIXTURES ||= "false";
 import { readFileSync, existsSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { recordAggregatorRating, recordVendorSignals, recordVendorOffer, recordNewsItem, recordCompoundResearch, setCompoundRegulatory } from "../src/server/external/repository.ts";
 import { recordCollectorRun } from "../src/server/health/data-health.ts";
 
@@ -20,6 +21,8 @@ const read = (n) => {
   }
   return null;
 };
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("ingest-external-data");
 const db = await getDatabase();
 
 const agg = read("aggregator-ratings.json");

@@ -11,6 +11,7 @@
 //   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/ingest-wayback-prices.mjs [maxListings]
 process.env.VIALGRADE_SEED_FIXTURES ||= "false";
 import { getDatabase } from "../src/server/db/client.ts";
+import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { extractArchivedPrice, snapshotDate } from "../src/server/ingest/wayback-prices.ts";
 import { recordPriceObservation, rebuildListingPriceHistory } from "../src/server/ingest/price-history.ts";
 
@@ -45,6 +46,8 @@ async function closestSnapshot(url, ts) {
   return null;
 }
 
+// The file-backed store is single-writer; two writers corrupt it. Claim it before opening.
+acquireStoreLock("ingest-wayback-prices");
 const db = await getDatabase();
 const listings = (await db.query(
   `SELECT DISTINCT ON (l.external_url) l.slug, l.external_url, o.slug vendor, c.slug compound
