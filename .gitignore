@@ -48,3 +48,6 @@ next-env.d.ts
 .data/
 audits/playwright-report/
 test-results/
+
+# Firecrawl scrape cache
+.firecrawl/

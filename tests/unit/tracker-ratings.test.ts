@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseShopRating, ratingForDomain } from "@/server/collect/tracker-ratings";
+import { parseShopRating, ratingForDomain, classifyTrustpilot } from "@/server/collect/tracker-ratings";
 
 // The Reputation dimension read `absent` for almost every vendor because all three of its inputs
 // were hand-written files. Peptigrity is a third-party peptide-shop tracker that publishes a
@@ -68,5 +68,95 @@ describe("attributing a rating to a vendor", () => {
 
   it("refuses when the page names no domain", () => {
     expect(ratingForDomain({ ...parsed, domain: "" }, "corepeptides.com")).toBeNull();
+  });
+});
+
+// Trustpilot publishes the same schema.org shape but identifies the business differently: `name`
+// is the trading name ("Nootropic Source") and the domain lives in the review URL path. Reading
+// only `name` gave "nootropic source", which matches no vendor, so every live profile silently
+// resolved to nothing. The domain has to come from wherever the page actually states it — and it
+// still has to match the vendor we asked about, which is the guard that matters.
+describe("reading a rating from a Trustpilot profile", () => {
+  const tp = (over = {}) => page([
+    { "@type": "Organization", name: "Trustpilot", url: "https://www.trustpilot.com" },
+    {
+      "@type": "LocalBusiness",
+      name: "Nootropic Source",
+      url: "https://www.trustpilot.com/review/nootropicsource.com",
+      aggregateRating: { "@type": "AggregateRating", bestRating: "5", worstRating: "1", ratingValue: "2", reviewCount: "110" },
+      ...over,
+    },
+  ]);
+
+  it("takes the domain from the review url and the rating as numbers", () => {
+    expect(parseShopRating(tp())).toEqual({
+      domain: "nootropicsource.com", ratingValue: 2, bestRating: 5, ratingCount: 110, reviewCount: 110,
+    });
+  });
+
+  it("still attributes only to the vendor the page is about", () => {
+    const parsed = parseShopRating(tp());
+    expect(ratingForDomain(parsed, "nootropicsource.com")).not.toBeNull();
+    expect(ratingForDomain(parsed, "chemyo.com")).toBeNull();
+  });
+
+  // Trustpilot's own Organization node must never be the answer, or every vendor inherits it.
+  it("ignores Trustpilot's own organization record", () => {
+    const onlyTrustpilot = page([
+      { "@type": "Organization", name: "Trustpilot", url: "https://www.trustpilot.com", aggregateRating: { ratingValue: "4.5", reviewCount: "9999" } },
+    ]);
+    expect(parseShopRating(onlyTrustpilot)).toBeNull();
+  });
+
+  // A trading name that is not a domain, with no url to fall back on, is not enough to attribute.
+  it("refuses to guess a domain from a trading name alone", () => {
+    const noUrl = page([{ "@type": "LocalBusiness", name: "Nootropic Source", aggregateRating: { ratingValue: "2", reviewCount: "110" } }]);
+    expect(parseShopRating(noUrl)).toBeNull();
+  });
+});
+
+// This one nearly shipped a completely wrong dataset that looked entirely plausible.
+//
+// Trustpilot ships its whole i18n bundle in every page, including
+// "business-profile-page/errors/parasiticseo/header":"This profile has been removed". So a regex
+// over the raw HTML says "removed" for EVERY profile — including live ones with a real rating
+// sitting right there. A first run reported 8 of 8 vendors removed, which is a believable claim
+// about this market and was false.
+//
+// The rating is the evidence. Removal is only considered when there is no rating, and only from
+// the rendered text a reader would actually see.
+describe("classifying a Trustpilot profile", () => {
+  const LIVE_HTML = page([
+    { "@type": "Organization", name: "Trustpilot", url: "https://www.trustpilot.com" },
+    {
+      "@type": "LocalBusiness", name: "Nootropic Source",
+      url: "https://www.trustpilot.com/review/nootropicsource.com",
+      aggregateRating: { ratingValue: "2", bestRating: "5", reviewCount: "110" },
+    },
+  ]) + `<script>{"business-profile-page/errors/parasiticseo/header":"This profile has been removed"}</script>`;
+
+  it("reads a live profile as rated even though the removal string is in the page bundle", () => {
+    const r = classifyTrustpilot({ html: LIVE_HTML, markdown: "# Nootropic Source\nTrustScore 2", domain: "nootropicsource.com" });
+    expect(r.state).toBe("rated");
+    expect(r.rating?.ratingValue).toBe(2);
+  });
+
+  it("reads a genuinely removed profile from the rendered text", () => {
+    const r = classifyTrustpilot({
+      html: `<html>${LIVE_HTML.replace(/aggregateRating/g, "x")}</html>`,
+      markdown: "# This profile has been removed\nThe business you're trying to find goes against our guidelines",
+      domain: "chemyo.com",
+    });
+    expect(r.state).toBe("removed");
+  });
+
+  it("reads a profile with no rating and no removal notice as nothing published", () => {
+    const r = classifyTrustpilot({ html: "<html></html>", markdown: "# Some Business\nnothing here", domain: "x.com" });
+    expect(r.state).toBe("none");
+  });
+
+  // Attribution still governs: a rating for another business is not this vendor's.
+  it("does not credit a rating that names a different business", () => {
+    expect(classifyTrustpilot({ html: LIVE_HTML, markdown: "x", domain: "chemyo.com" }).state).toBe("none");
   });
 });
