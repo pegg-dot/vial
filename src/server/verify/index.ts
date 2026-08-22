@@ -47,6 +47,25 @@ export function looksLikeCoaCode(q: string): boolean {
 
 // ---- live checks (best-effort; a failed check degrades to unknown, never throws) ----
 
+/**
+ * The verdict for a domain VialGrade has never seen.
+ *
+ * This used to count `ok === false` signals and publish "high risk" at two. Two of the three
+ * signals on this path are ABSENCES — no Reddit mentions, no third-party test records — and the
+ * COA check only runs after the known-vendor list and the organizations table have both missed, so
+ * it returns zero by construction for exactly these domains. The threshold therefore collapsed to
+ * "any one other false signal", and a real business whose domain was registered 89 days ago was
+ * enough to publish a high-risk verdict about it by name, on the site's headline action.
+ *
+ * An absence is recorded untagged precisely so it cannot vote — the same convention trust-graph.ts
+ * uses. High risk now requires something a person actually reported; inference alone stays
+ * `unproven`, which is the honest answer and already what the rest of the codebase does.
+ */
+export function unknownDomainVerdict(signals: Signal[]): Verdict {
+  const substantiated = signals.filter((s) => s.ok === false && s.confidence && s.confidence !== "inferred");
+  return substantiated.length > 0 ? "high-risk" : "unproven";
+}
+
 async function checkDomainAge(domain: string): Promise<Signal> {
   try {
     const res = await fetch(`https://rdap.org/domain/${domain}`, { headers: { accept: "application/rdap+json", "user-agent": UA }, signal: AbortSignal.timeout(8000) });
@@ -55,7 +74,9 @@ async function checkDomainAge(domain: string): Promise<Signal> {
     const reg = data.events?.find((e) => e.eventAction === "registration");
     if (!reg) return { ok: null, label: "Domain age", detail: "Registration date not published." };
     const days = Math.floor((Date.now() - new Date(reg.eventDate).getTime()) / 86_400_000);
-    if (days < 90) return { ok: false, label: "Domain age", detail: `Registered ${days} days ago — brand-new domains are a common scam pattern.` };
+    // `inferred`: a registry date was read. Nobody examined this business. One inferred concern is
+    // context, never a verdict on its own — the same rule trust-graph.ts and grade.ts already apply.
+    if (days < 90) return { ok: false, label: "Domain age", detail: `Registered ${days} days ago — brand-new domains are a common scam pattern.`, confidence: "inferred" };
     if (days < 365) return { ok: null, label: "Domain age", detail: `Registered ${days} days ago — relatively new.` };
     const years = (days / 365).toFixed(1);
     return { ok: true, label: "Domain age", detail: `Registered ${years} years ago — an established domain.` };
@@ -75,7 +96,9 @@ async function checkReddit(name: string): Promise<Signal> {
   // Require corroboration before this reads as a red signal — a single negative-classified post
   // (which can be a mis-scored post DEFENDING a vendor) must not flag, matching the composed
   // community seam's neg>=2 gate. One lone complaint is a "read it yourself," not a verdict.
-  if (scammy.length >= 2) return { ok: false, label: "Community (r/Peptides)", detail: `${posts.length} mentions, and ${scammy.length} look like scam/quality complaints. Read them before buying.` };
+  // `reported`: real posts by real people, corroborated at 2+. This is the one signal on this path
+  // substantiated enough to carry a verdict.
+  if (scammy.length >= 2) return { ok: false, label: "Community (r/Peptides)", detail: `${posts.length} mentions, and ${scammy.length} look like scam/quality complaints. Read them before buying.`, confidence: "reported" };
   if (scammy.length === 1) return { ok: null, label: "Community (r/Peptides)", detail: `${posts.length} mentions; 1 looks like a complaint — thin, read it yourself before judging.` };
   return { ok: true, label: "Community (r/Peptides)", detail: `${posts.length} mentions found and none flagged as scams.` };
 }
@@ -288,8 +311,7 @@ export async function runVerification(rawQuery: string): Promise<VerifyResult> {
   // 4. An unknown domain — run live checks so "unknown" is an informed verdict.
   if (domain) {
     const [age, community, coas] = await Promise.all([checkDomainAge(domain), checkReddit(query.replace(/^https?:\/\//, "").replace(/\/.*$/, "")), coaSignal(domain)]);
-    const bad = [age, community, coas].filter((s) => s.ok === false).length;
-    const verdict: Verdict = bad >= 2 ? "high-risk" : "unproven";
+    const verdict: Verdict = unknownDomainVerdict([age, community, coas]);
     return {
       query: domain, kind: "unknown-domain", verdict,
       headline: verdict === "high-risk" ? `${domain} — high risk, treat as unproven` : `${domain} — we've never seen this vendor`,
