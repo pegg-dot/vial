@@ -132,8 +132,17 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
   // or `caution` verdict falls through to the switch and keeps its letter and its adverse band.
   const adverseVerdict = composed.verdict === "avoid" || composed.verdict === "high-risk" || composed.verdict === "caution";
   const nothingListed = input.listingCount === 0;
+  // ...but the fall-through belongs to findings someone actually RECORDED. An adverse verdict
+  // resting only on inference — a registry date, a regex over page copy — is not grounds to put a
+  // maker who sells nothing onto the buyer scale. Collecting operational signals for the first
+  // time would otherwise have handed a buyer-facing C+ to 26 zero-listing manufacturers whose
+  // sole offence was a new domain, which is precisely the inversion this shortcut prevents.
+  // An absence is `ok:false` with NO confidence tag and correctly counts for nothing here.
+  const adverseIsSubstantiated = composed.factors.some(
+    (f) => f.ok === false && (f.confidence === "verified" || f.confidence === "reported"),
+  );
 
-  if (nothingListed && !adverseVerdict) {
+  if (nothingListed && (!adverseVerdict || !adverseIsSubstantiated)) {
     const tests = `${input.coaCount} independent lab test${input.coaCount === 1 ? "" : "s"}`;
     // A second bug lived in this wording. `vendor_kind` is curated: when it says `storefront`, the
     // system KNOWS the vendor sells direct, and 18 rows — Chemyo and Core Peptides among them —

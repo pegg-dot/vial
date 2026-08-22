@@ -8,6 +8,7 @@ import { getDatabase } from "../src/server/db/client.ts";
 import { upsertLiveCompound, upsertLiveVendor, recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
 import { importShopifyCatalog } from "../src/server/ingest/shopify-import.ts";
 import { importWooCommerceCatalog } from "../src/server/ingest/woocommerce-import.ts";
+import { importRscCatalog, productUrlsFromSitemap } from "../src/server/ingest/rsc-storefront-import.ts";
 import { parseJanoshikFeed, recordLabTest, classifyTestNote } from "../src/server/ingest/lab-tests.ts";
 import { deriveCoaVendors } from "../src/server/ingest/coa-vendors.ts";
 import { detectVendorCoaFlags, writeVendorFlags } from "../src/server/verify/coa-integrity.ts";
@@ -146,6 +147,55 @@ for (const v of woo) {
     console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched)`);
   } catch (e) {
     await recordCollectorRun(db, { collector: "woocommerce", target: v.domain, items: 0, ok: false });
+    console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
+  }
+}
+
+// Import catalogs from headless storefronts — a Medusa backend behind a Next.js app. There is no
+// /products.json and no /wp-json to read, so these vendors were not merely unlisted, they were
+// never looked at. The catalogue is in the server-component payload; the importer reassembles it.
+// Their own COA metadata rides along, which is what lets the listing carry real lab evidence.
+const rsc = legit.filter((v) => v.rscWorks);
+console.log(`\nImporting catalogs from ${rsc.length} headless vendors…`);
+for (const v of rsc) {
+  try {
+    const res = await fetch(`https://${v.domain}/sitemap.xml`, { headers: { "user-agent": "VialGrade-Catalog-Import/1.0" }, redirect: "follow" });
+    if (!res.ok) throw new Error(`sitemap HTTP ${res.status}`);
+    // The sitemap is the vendor's own list of what exists; off-host entries are dropped inside.
+    const productUrls = productUrlsFromSitemap(await res.text(), v.rscProductPath ?? "/product/", v.domain);
+    if (!productUrls.length) throw new Error("no product urls in sitemap");
+
+    const r = await importRscCatalog(db, {
+      vendorSlug: v.slug, vendorName: v.name, domain: v.domain, location: v.location,
+      description: `${v.reputationSummary ?? ""} Aggregated from ${v.name}'s public catalog.`.trim(),
+      compounds: compoundRefs, productUrls,
+    });
+    totalListings += r.imported.length;
+
+    // Record each certificate the storefront publishes. rscCoaFromMetadata has already refused
+    // anything without a NAMED lab, so everything arriving here is independent by construction.
+    let coas = 0;
+    for (const c of r.coas) {
+      const rec = await recordLabTest(db, {
+        testId: `${v.slug}-${c.compoundSlug}-${(c.batchId || c.url).slice(-8)}`,
+        verifyUrl: c.url,
+        sampleName: compoundRefs.find((x) => x.slug === c.compoundSlug)?.name ?? c.compoundSlug,
+        manufacturer: v.name,
+        batchCode: c.batchId ?? undefined,
+        purityPct: c.purityPct,
+        measuredContent: null,
+        testedAt: c.testedAt,
+        lab: c.lab,
+        vendorSlug: v.slug,
+        isIndependent: true,
+      }, { compounds: compoundRefs, vendors: vendorRefs });
+      if (rec.vendorSlug) coas += 1;
+    }
+
+    await recordCollectorRun(db, { collector: "rsc-storefront", target: v.domain, items: r.imported.length, ok: true });
+    console.log(`  ${v.name.padEnd(24)} ${String(r.imported.length).padStart(3)} listings  (${r.matched}/${r.productsSeen} matched, ${coas} COAs)`);
+  } catch (e) {
+    await recordCollectorRun(db, { collector: "rsc-storefront", target: v.domain, items: 0, ok: false });
     console.log(`  ${v.name.padEnd(24)} FAILED: ${e instanceof Error ? e.message : e}`);
   }
 }

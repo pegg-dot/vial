@@ -2,15 +2,17 @@
 //
 //   VIALGRADE_LIVE_INGEST_APPROVED=true node --import tsx scripts/collect-vendor-status.mjs
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
-import { readFileSync } from "node:fs";
 import { getDatabase } from "../src/server/db/client.ts";
 import { probeVendorStatus, recordVendorStatus } from "../src/server/verify/vendor-status.ts";
+import { vendorDomains } from "./lib/vendor-domains.mjs";
 
 if (process.env.VIALGRADE_LIVE_INGEST_APPROVED !== "true") { console.log("Refusing to run: set VIALGRADE_LIVE_INGEST_APPROVED=true."); process.exit(1); }
 
 // Probe ALL vendors — including red-flagged/defunct ones, to confirm they're actually gone.
-const vendors = JSON.parse(readFileSync(new URL("./data/peptide-vendors.json", import.meta.url), "utf8")).filter((v) => v.domain);
+// Read from the catalogue, not the 34-row seed file: that mismatch is why Site status covered
+// 37% of vendors while the other 56 silently had none.
 const db = await getDatabase();
+const vendors = await vendorDomains(db);
 console.log(`Probing ${vendors.length} vendor domains…`);
 const tally = {};
 for (const v of vendors) {

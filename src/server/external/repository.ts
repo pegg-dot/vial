@@ -28,6 +28,24 @@ export async function recordVendorSignals(db: SqlConnection, s: { vendorSlug: st
     [s.vendorSlug, s.checkoutStatus ?? null, JSON.stringify(s.paymentMethods ?? []), s.domainAgeNote ?? null, s.shipsFrom ?? null, s.guarantees ?? null, s.researchDisclaimer ?? null, s.notableCopy ?? null, s.sourceUrl ?? null],
   );
 }
+/**
+ * Stamp a freshly collected domain age onto a vendor's signals row, touching nothing else.
+ *
+ * `recordVendorSignals` above upserts every column from its argument, so using it to record one
+ * collected field would null out the curated ones already on the row. A null note is ignored
+ * rather than written: not knowing a domain's age has to read as unknown, and one timed-out RDAP
+ * lookup must not erase a note we already hold.
+ */
+export async function recordDomainAge(db: SqlConnection, vendorSlug: string, note: string | null): Promise<void> {
+  if (!note) return;
+  await db.query(
+    `INSERT INTO vendor_signals (vendor_slug, domain_age_note, payment_methods)
+     VALUES ($1,$2,'[]'::jsonb)
+     ON CONFLICT (vendor_slug) DO UPDATE SET domain_age_note=EXCLUDED.domain_age_note, updated_at=NOW()`,
+    [vendorSlug, note],
+  );
+}
+
 export async function getVendorSignals(vendorSlug: string, connection?: SqlConnection): Promise<VendorSignals | null> {
   const db = connection ?? (await getDatabase());
   return (await db.query<VendorSignals>(`SELECT * FROM vendor_signals WHERE vendor_slug=$1`, [vendorSlug])).rows[0] ?? null;

@@ -268,3 +268,52 @@ describe("VialGrade — makers are not shops", () => {
   });
 
 });
+
+// The reference band's fall-through, calibrated by the same distinction.
+//
+// The shortcut deliberately falls through for an adverse verdict, so that a vendor with a DOJ
+// record does not get a neutral "Maker — not a shop" chip on every card while its detail page
+// shows the enforcement banner. That is right, and must stay right. But "adverse" was being read
+// as any caution at all, so once operational signals were collected, 26 zero-listing
+// manufacturers would have been handed a buyer-facing C+ for having a new domain. The fall-through
+// belongs to findings someone actually recorded, not to inference.
+const inferredBad = (label: string): Signal => ({ ok: false, label, detail: "d", confidence: "inferred" });
+
+describe("reference band — a maker is only pulled onto the buyer scale by substantiated findings", () => {
+  it("keeps a zero-listing maker in the reference band when the concern is only inferred", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "caution", factors: [inferredBad("Domain age"), inferredBad("Storefront signal")] }),
+      { coaCount: 2, listingCount: 0, vendorKind: "manufacturer" },
+    );
+    expect(grade.letter).toBeNull();
+    expect(grade.band).toBe("reference");
+  });
+
+  // The regression this must never cause: Paradigm Peptides, a DOJ action with a recorded guilty
+  // plea, has zero listings. Its warning has to survive.
+  it("still surfaces a verified enforcement record against a zero-listing vendor", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "avoid", factors: [verifiedBad("Government enforcement")] }),
+      { coaCount: 0, listingCount: 0, vendorKind: "storefront" },
+    );
+    expect(grade.letter).toBe("F");
+    expect(grade.band).toBe("adverse");
+  });
+
+  it("still surfaces a reported buyer concern against a zero-listing vendor", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "caution", factors: [reportedBad("Scam & red flags")] }),
+      { coaCount: 0, listingCount: 0, vendorKind: "storefront" },
+    );
+    expect(grade.band).toBe("mixed");
+    expect(grade.letter).toBe("C");
+  });
+
+  it("leaves an unremarkable zero-listing maker in the reference band as before", () => {
+    const grade = gradeFromVerdict(
+      composed({ verdict: "trusted", factors: [] }),
+      { coaCount: 1, listingCount: 0, vendorKind: "manufacturer" },
+    );
+    expect(grade.band).toBe("reference");
+  });
+});

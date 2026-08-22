@@ -37,6 +37,33 @@ function yearOf(s: string): number | null {
   return m ? Number(m[1]) : null;
 }
 
+const MONTHS = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec";
+
+/**
+ * Whether a `batch_code` value is actually a lot number.
+ *
+ * Source pages offer whatever they offer, and what lands in this field is often the analysis
+ * DATE — "2025-10-06", "3rd June 2026", or a bare "2026". Grouping on those makes unrelated
+ * products look like one production run, and the reused-lot flag then says in the vendor's own
+ * name that their certificates are a template rather than real per-batch testing. Over the real
+ * corpus that was three of four reused-lot flags: false accusations about real businesses.
+ *
+ * The test is whether the value is ENTIRELY a date. A genuine lot that happens to embed one
+ * ("RT30/2026-04-06A") is still a lot, and must keep counting — blinding the detector is the
+ * failure in the other direction.
+ */
+export function looksLikeLotNumber(lot: string | null | undefined): lot is string {
+  const s = (lot ?? "").trim();
+  if (!s || /^n\/?a$/i.test(s)) return false;
+  if (/^\d{4}$/.test(s)) return false;                                             // bare year
+  if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(s)) return false;                     // 2025-10-06
+  if (/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}$/.test(s)) return false;                   // 06/10/2025
+  if (new RegExp(`^\\d{1,2}(st|nd|rd|th)?\\s+(${MONTHS})[a-z]*\\.?\\s+\\d{2,4}$`, "i").test(s)) return false;  // 3rd June 2026
+  if (new RegExp(`^(${MONTHS})[a-z]*\\.?\\s+\\d{1,2}(st|nd|rd|th)?,?\\s*\\d{2,4}$`, "i").test(s)) return false; // June 3 2026
+  if (new RegExp(`^(${MONTHS})[a-z]*\\.?\\s+\\d{4}$`, "i").test(s)) return false;                                  // June 2026
+  return true;
+}
+
 /**
  * Derive integrity flags for one vendor from the certificates it publishes.
  * `nowYear` is passed in (no ambient clock) so callers control staleness cut-off.
@@ -50,7 +77,7 @@ export function detectVendorCoaFlags(vendorName: string, coas: PostedCoa[], nowY
   //    not per-batch testing. A real lot is one manufacturing run of one product.
   const byLot = new Map<string, Set<string>>();
   for (const c of coas) {
-    if (!c.lot) continue;
+    if (!looksLikeLotNumber(c.lot)) continue;
     const set = byLot.get(c.lot) ?? new Set<string>();
     set.add(c.compound);
     byLot.set(c.lot, set);

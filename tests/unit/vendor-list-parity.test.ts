@@ -7,7 +7,7 @@ import bundled from "@/server/verify/known-vendors.json";
 // bundled copy was missing `wooWorks`, which silently gave the scheduler ZERO WooCommerce targets
 // while 14 of 15 tracked storefronts run WooCommerce. Nothing failed; collection just quietly
 // covered one vendor.
-type Vendor = { slug: string; domain?: string; productsJsonWorks?: boolean; wooWorks?: boolean; redFlag?: boolean };
+type Vendor = { slug: string; domain?: string; productsJsonWorks?: boolean; wooWorks?: boolean; rscWorks?: boolean; redFlag?: boolean };
 
 function list(raw: unknown): Vendor[] {
   const items = Array.isArray(raw) ? raw : ((raw as { vendors?: unknown[] }).vendors ?? []);
@@ -28,13 +28,14 @@ describe("vendor list parity", () => {
       const other = byScript.get(v.slug)!;
       expect(Boolean(v.wooWorks), `wooWorks for ${v.slug}`).toBe(Boolean(other.wooWorks));
       expect(Boolean(v.productsJsonWorks), `productsJsonWorks for ${v.slug}`).toBe(Boolean(other.productsJsonWorks));
+      expect(Boolean(v.rscWorks), `rscWorks for ${v.slug}`).toBe(Boolean(other.rscWorks));
       expect(Boolean(v.redFlag), `redFlag for ${v.slug}`).toBe(Boolean(other.redFlag));
     }
   });
 
   // If this ever hits zero, the scheduler is collecting almost nothing and nothing else complains.
   it("yields a non-trivial number of catalog targets", () => {
-    const catalogable = appSide.filter(v => !v.redFlag && (v.wooWorks || v.productsJsonWorks));
+    const catalogable = appSide.filter(v => !v.redFlag && (v.wooWorks || v.productsJsonWorks || v.rscWorks));
     expect(catalogable.length).toBeGreaterThanOrEqual(10);
   });
 });

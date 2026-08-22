@@ -171,3 +171,52 @@ describe("trust graph — composeVerdict folds every seam into ONE verdict (no b
     expect(r.weighed).toBeGreaterThanOrEqual(2);
   });
 });
+
+// Calibrating the operational signals, measured rather than guessed.
+//
+// Turning domain-age collection on showed what the signal actually does: of 35 vendors with a
+// young domain, only THREE were real storefronts. The other 26 were zero-listing manufacturers
+// who would be dragged out of the reference band and handed a buyer-facing C+ — re-breaking the
+// exact thing the reference band was added to fix — plus 6 already carrying real warnings.
+//
+// A young domain is `inferred`: nobody looked at this vendor, a registry date was read. The
+// avoid/high-risk branch already refuses to publish a letter on inference alone, saying so in as
+// many words. The same argument holds one band up. So one inferred operational concern is
+// CONTEXT — recorded, shown, not a verdict. Two or more co-occurring is a pattern, and counts.
+describe("trust graph — inferred operational signals are context until they corroborate", () => {
+  const withSignals = (over: Partial<NonNullable<VerdictInput["signals"]>>): VerdictInput => ({
+    ...EMPTY,
+    coaCount: 4,
+    signals: { domain_age_note: null, research_disclaimer: null, notable_copy: null, payment_methods: [], ...over },
+  });
+
+  const YOUNG = "Domain registered 2025-11-29 (~9 months old) — VERY YOUNG, a notable risk signal";
+
+  it("records a young domain as a factor without making the verdict caution", () => {
+    const r = composeVerdict(withSignals({ domain_age_note: YOUNG }));
+    expect(r.factors.some((f) => f.label === "Domain age")).toBe(true);
+    expect(r.verdict).toBe("trusted");
+  });
+
+  it("treats two co-occurring operational concerns as a pattern worth caution", () => {
+    const r = composeVerdict(withSignals({ domain_age_note: YOUNG, notable_copy: "back online after downtime — RISK" }));
+    expect(r.verdict).toBe("caution");
+    expect(r.summary).toContain("young domain");
+  });
+
+  // The softening applies only to inference. Anything a person or a registry actually recorded
+  // still lands on its own.
+  it("still cautions on a single verified concern", () => {
+    const r = composeVerdict({ ...withSignals({ domain_age_note: YOUNG }), flagCount: 1 });
+    expect(r.verdict).toBe("caution");
+  });
+
+  it("still avoids on a single enforcement record", () => {
+    const r = composeVerdict({ ...withSignals({ domain_age_note: YOUNG }), enforcement: [{ severity: "severe" }] });
+    expect(r.verdict).toBe("avoid");
+  });
+
+  it("leaves a vendor with no operational signals exactly as it was", () => {
+    expect(composeVerdict({ ...EMPTY, coaCount: 4 }).verdict).toBe("trusted");
+  });
+});

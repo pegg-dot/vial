@@ -109,7 +109,7 @@
     "productsJsonWorks": false,
     "redFlag": true,
     "publishesJanoshik": true,
-    "reputationSummary": "AVOID — DOJ-confirmed fraud (owner + employee pled guilty, N.D. Indiana Dec 2025; products sold as SARMs contained testosterone)."
+    "reputationSummary": "AVOID \u2014 DOJ-confirmed fraud (owner + employee pled guilty, N.D. Indiana Dec 2025; products sold as SARMs contained testosterone)."
   },
   {
     "slug": "modern-aminos",
@@ -309,5 +309,17 @@
     "redFlag": true,
     "publishesJanoshik": false,
     "reputationSummary": "RED FLAG. Serves a cloaked page rather than a normal storefront; flagged 'avoid'. Treat as untrustworthy."
+  },
+  {
+    "slug": "ascend-bio-labs",
+    "name": "Ascend Bio Labs",
+    "domain": "ascendbiolabs.com",
+    "productsJsonWorks": false,
+    "wooWorks": false,
+    "rscWorks": true,
+    "rscProductPath": "/product/",
+    "redFlag": false,
+    "publishesJanoshik": false,
+    "reputationSummary": "US-domestic storefront publishing batch-level certificates from Vanguard Laboratory (Olympic Analytical LLC, Olympia WA), an ISO/IEC 17025:2017 lab accredited under A2LA certificate 6377.01. Certificates carry HPLC purity and assay, ICP-MS heavy metals, LAL endotoxin and USP <71> sterility. Domain registered 2025-11-29. The storefront advertises LC-MS identity testing on every batch; the certificates examined do not include an identity test."
   }
 ]

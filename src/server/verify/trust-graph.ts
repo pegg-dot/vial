@@ -4,6 +4,7 @@
 // means adding one case here — and every verdict across the app gets sharper for free.
 import type { Verdict, Signal } from "./index";
 import { findKnownVendorBySlug } from "./index";
+import { YOUNG_DOMAIN_RE } from "@/server/collect/domain-age";
 import { getVendorBySlug } from "@/server/catalog/repository";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { getVendorRegulatoryActions } from "@/server/regulatory/repository";
@@ -94,14 +95,26 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
 
   // 5. Operational signals — read from the vendor's own storefront.
   if (v.signals) {
-    const young = /~?\s*(months old|VERY YOUNG|\b[0-1]\.\d\s*yr)/i.test(v.signals.domain_age_note ?? "");
+    const young = YOUNG_DOMAIN_RE.test(v.signals.domain_age_note ?? "");
     const methods = Array.isArray(v.signals.payment_methods) ? (v.signals.payment_methods as string[]) : [];
     const altOnly = methods.length > 0 && methods.every((m) => ALT_RAILS.has(m.toLowerCase()));
     const noRuo = v.signals.research_disclaimer === false;
     const riskCopy = /RISK|workaround|back online|downtime/i.test(v.signals.notable_copy ?? "");
-    if (young) { factors.push({ ok: false, label: "Domain age", detail: v.signals.domain_age_note ?? "Recently registered domain.", confidence: "inferred" }); reasons.caution.push("a very young domain"); }
-    if (riskCopy) { factors.push({ ok: false, label: "Storefront signal", detail: v.signals.notable_copy ?? "", confidence: "inferred" }); reasons.caution.push("a risk signal on its own storefront"); }
-    if (altOnly && v.coaCount === 0) reasons.caution.push("alternative-only payment rails with no test record");
+    // These three are all `inferred` — nobody examined this vendor, a registry date and some page
+    // copy were read. Each is recorded as a factor either way, so the Business-signals dimension
+    // fills and a buyer can see it. What changed is when one becomes a VERDICT.
+    //
+    // Measured, not assumed: of 35 tracked vendors with a young domain, three were real
+    // storefronts. Twenty-six were zero-listing manufacturers who would have been pulled out of
+    // the reference band and handed a buyer-facing C+ for the sole offence of being new — which
+    // is the scale inversion the reference band exists to prevent. The avoid/high-risk branch
+    // already declines to publish a letter on inference alone and says why; the same reasoning
+    // holds a band up. One inferred concern is context. Two that co-occur is a pattern.
+    const operational: string[] = [];
+    if (young) { factors.push({ ok: false, label: "Domain age", detail: v.signals.domain_age_note ?? "Recently registered domain.", confidence: "inferred" }); operational.push("a very young domain"); }
+    if (riskCopy) { factors.push({ ok: false, label: "Storefront signal", detail: v.signals.notable_copy ?? "", confidence: "inferred" }); operational.push("a risk signal on its own storefront"); }
+    if (altOnly && v.coaCount === 0) operational.push("alternative-only payment rails with no test record");
+    if (operational.length >= 2) reasons.caution.push(...operational);
     if (noRuo) factors.push({ ok: null, label: "Research-use notice", detail: "No research-use-only disclaimer found on the homepage.", confidence: "inferred" });
   }
 

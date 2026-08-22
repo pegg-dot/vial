@@ -3,6 +3,7 @@ import { resetDatabaseForTests, getDatabase } from "@/server/db/client";
 import { recordPageView, getVisitorSummary } from "@/server/analytics/visitors";
 import { resolveAndRecordClick } from "@/server/outbound/clicks";
 import { upsertLiveCompound, upsertLiveListing, upsertLiveVendor } from "@/server/ingest/live-sources";
+import { countingDay } from "@/server/analytics/counting-day";
 
 // A real browser agent. Views without one are treated as automated and excluded from every figure,
 // which is exactly what stops crawler hits inflating "buyers sent" — so the fixtures must look like
@@ -79,7 +80,10 @@ describe("inbound visitor funnel", () => {
     const s = await getVisitorSummary({ connection: db });
     expect(s.readerDays).toBe(2);
     expect(s.busiestDay?.people).toBe(2);
-    expect(s.busiestDay?.day).toBe(new Date().toISOString().slice(0, 10));
+    // A day here is the counting day (4am America/New_York), which is the one definition
+    // the product uses. Comparing against a bare UTC date made this test fail every night
+    // between 8pm and midnight Eastern, when the two disagree.
+    expect(s.busiestDay?.day).toBe(countingDay(new Date()));
   });
 
   it("reports nothing rather than dividing by zero on an empty site", async () => {
