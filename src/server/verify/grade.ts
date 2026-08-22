@@ -99,6 +99,26 @@ function buildDimensions(factors: Signal[]): GradeDimension[] {
  * independently-verified evidence backs it. `coaCount` is passed separately because an
  * independent lab test is the one seam that can lift a vendor to the top of the scale.
  */
+/**
+ * The findings an adverse rationale is allowed to describe.
+ *
+ * The rationale used to assert, in fixed words, that an F rested on "a government action, court
+ * filing, or a hard link to a flagged storefront". That held only while enforcement and operator
+ * links were the ONLY verified negatives the trust graph could emit. The moment dose accuracy
+ * joined them, a manufacturer whose own factor list read "No FDA/DOJ/FTC enforcement or recall
+ * record on file" was handed an F whose stated reason was a government action — a false statement
+ * of fact about a real business, published by the site whose product is checking such statements.
+ *
+ * So the sentence is built from the findings that actually exist. An absence is `ok:false` with no
+ * confidence tag and is correctly excluded.
+ */
+function verifiedNegativeLabels(composed: ComposedVerdict): string[] {
+  return [...new Set(composed.factors.filter((f) => f.ok === false && f.confidence === "verified").map((f) => f.label))];
+}
+
+const listLabels = (labels: string[]): string =>
+  labels.length <= 1 ? (labels[0] ?? "") : `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+
 export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: number; listingCount?: number; vendorKind?: string | null }): VialGradeResult {
   const dimensions = buildDimensions(composed.factors);
   const base = {
@@ -204,7 +224,7 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         band: "adverse",
         headline: `${letter} — avoid`,
         rationale: hasVerifiedNegative
-          ? `There is an official record against this vendor — a government action, court filing, or a hard link to a flagged storefront. That is the strongest evidence we hold, and it caps the grade here.${notListedNote}`
+          ? `The strongest evidence we hold counts against this vendor — ${listLabels(verifiedNegativeLabels(composed)).toLowerCase()}. That is independently documented, and it caps the grade here.${notListedNote}`
           : `Buyers and the community report problems, but we have no official record to point at. That is why this is a D rather than an F.${notListedNote}`,
       };
     }
@@ -217,7 +237,7 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         band: "mixed",
         headline: `${letter} — proceed with caution`,
         rationale: hasVerifiedNegative
-          ? `Something official counts against this vendor — a government record or a hard link to a flagged store. Real lab tests would not cancel that out, so the grade stops here.${notListedNote}`
+          ? `Something independently documented counts against this vendor — ${listLabels(verifiedNegativeLabels(composed)).toLowerCase()}. Real lab tests would not cancel that out, so the grade stops here.${notListedNote}`
           : tested
             ? `There are real reasons to be careful with this vendor, but they do have independent lab tests on file, which counts for something.${notListedNote}`
             : `There are real reasons to be careful with this vendor, and no independent lab tests to weigh against them.${notListedNote}`,

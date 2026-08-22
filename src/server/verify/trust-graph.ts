@@ -5,6 +5,7 @@
 import type { Verdict, Signal } from "./index";
 import { findKnownVendorBySlug } from "./index";
 import { YOUNG_DOMAIN_RE } from "@/server/collect/domain-age";
+import { checkContent } from "./content-check";
 import { getVendorBySlug } from "@/server/catalog/repository";
 import { getVendorReputationBySlug } from "@/server/reputation/repository";
 import { getVendorRegulatoryActions } from "@/server/regulatory/repository";
@@ -22,6 +23,10 @@ export interface VerdictInput {
   coaCount: number;
   medianPurity: number | null;
   blindCount: number;
+  /** Certificates whose measured content fell short of the label. See content-check.ts. */
+  underdosedCount?: number;
+  /** Generous fills. Counted so the seam can say "we looked", never treated as a concern. */
+  overfilledCount?: number;
   enforcement: Array<{ severity: string }>;
   reputationDimensions: Array<{ key: string; status: string; value: string }>;
   aggregators: Array<{ source: string; score: number | null; max_score: number | null }>;
@@ -66,6 +71,28 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
     factors.push({ ok: true, label: "Independent testing", detail: `${bits.join(" · ")}.`, confidence: "verified" });
     reasons.trust.push(`${v.coaCount} independent lab test${v.coaCount === 1 ? "" : "s"}${v.blindCount > 0 ? " (incl. blind purchases)" : ""}`);
   } else factors.push({ ok: false, label: "Independent testing", detail: "No third-party lab tests on record for this vendor." }); // absence, not a verified record — untagged
+
+  // 2b. Dose accuracy — what those certificates actually SAY, not how many there are.
+  //
+  // A vial can be 99% pure, the right molecule, and still be 7 mg where the label says 10. That is
+  // the fraud this market runs on, and until now it could not reach a verdict: content-check.ts
+  // measured it and only ever drew a table cell, while the seam above counted the same certificate
+  // as a verified positive. Ten certificates documenting a short fill read as ten reasons to trust
+  // the vendor. The evidence of the defect was raising the grade.
+  //
+  // A lab measurement is the strongest evidence this product holds, so it is tagged `verified` —
+  // the inferred-only guards must not discard it. An overfill is not a concern: vials run generous
+  // and getting more than you paid for is not a warning.
+  const underdosed = v.underdosedCount ?? 0;
+  if (underdosed > 0) {
+    factors.push({
+      ok: false,
+      label: "Dose accuracy",
+      detail: `${underdosed} independent certificate${underdosed === 1 ? "" : "s"} measured LESS peptide than the label claims.`,
+      confidence: "verified",
+    });
+    reasons.caution.push(`${underdosed} certificate${underdosed === 1 ? "" : "s"} showing an underdosed vial`);
+  }
 
   // 3. Reputation dimensions — the composed-but-not-scored reputation record.
   // NOTE on semantics (easy to get backwards): a dimension's status "established" means the
@@ -234,6 +261,9 @@ export async function composeVerdictForVendorSlug(
     coaCount: vendor.coaCount,
     medianPurity: vendor.medianPurity,
     blindCount: vendorLabTests.filter((t) => t.is_blind).length,
+    // Free — these rows are already in hand; no extra query to ask what they say.
+    underdosedCount: vendorLabTests.filter((t) => checkContent(t.sample_name ?? "", t.measured_content ?? null).verdict === "underdosed").length,
+    overfilledCount: vendorLabTests.filter((t) => checkContent(t.sample_name ?? "", t.measured_content ?? null).verdict === "overfilled").length,
     enforcement: enforcement.map((a) => ({ severity: a.severity })),
     reputationDimensions: reputation?.dimensions ?? [],
     aggregators: aggregatorRatings.map((a) => ({ source: a.source, score: a.score, max_score: a.max_score })),

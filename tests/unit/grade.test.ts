@@ -317,3 +317,51 @@ describe("reference band — a maker is only pulled onto the buyer scale by subs
     expect(grade.band).toBe("reference");
   });
 });
+
+// The F rationale used to assert, in fixed words, "There is an official record against this vendor
+// — a government action, court filing, or a hard link to a flagged storefront." That was safe only
+// while enforcement and operator-network links were the ONLY verified negatives the graph could
+// emit. Adding dose accuracy as a verified finding broke it instantly: a manufacturer with no
+// enforcement record whatsoever — its own factor list reads "No FDA/DOJ/FTC enforcement or recall
+// record on file" — was handed an F whose stated reason was a government action.
+//
+// A published false statement of fact about a real business, from the site whose product is
+// checking such statements. The rationale must describe the finding that actually exists.
+describe("an adverse rationale names the finding that exists", () => {
+  it("does not claim a government action when the finding is a short fill", () => {
+    const g = gradeFromVerdict(
+      composed({ verdict: "avoid", factors: [verifiedOk("Government enforcement"), verifiedBad("Dose accuracy")] }),
+      { coaCount: 3, listingCount: 0, vendorKind: "manufacturer" },
+    );
+    expect(g.letter).toBe("F");
+    expect(g.rationale).not.toMatch(/government action|court filing/i);
+    expect(g.rationale.toLowerCase()).toContain("dose accuracy");
+  });
+
+  it("still says so plainly when there IS an enforcement record", () => {
+    const g = gradeFromVerdict(
+      composed({ verdict: "avoid", factors: [verifiedBad("Government enforcement")] }),
+      { coaCount: 0, listingCount: 0, vendorKind: "storefront" },
+    );
+    expect(g.letter).toBe("F");
+    expect(g.rationale.toLowerCase()).toContain("government enforcement");
+  });
+
+  it("names several findings when several exist", () => {
+    const g = gradeFromVerdict(
+      composed({ verdict: "avoid", factors: [verifiedBad("Dose accuracy"), verifiedBad("Operator network")] }),
+      { coaCount: 2, listingCount: 4 },
+    );
+    expect(g.rationale.toLowerCase()).toContain("dose accuracy");
+    expect(g.rationale.toLowerCase()).toContain("operator network");
+  });
+
+  it("keeps the caution rationale honest for the same reason", () => {
+    const g = gradeFromVerdict(
+      composed({ verdict: "caution", factors: [verifiedBad("Dose accuracy")] }),
+      { coaCount: 6, listingCount: 12 },
+    );
+    expect(g.rationale).not.toMatch(/government record|flagged store/i);
+    expect(g.rationale.toLowerCase()).toContain("dose accuracy");
+  });
+});

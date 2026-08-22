@@ -220,3 +220,49 @@ describe("trust graph — inferred operational signals are context until they co
     expect(composeVerdict({ ...EMPTY, coaCount: 4 }).verdict).toBe("trusted");
   });
 });
+
+// Underdosing is the fraud this market actually runs on, and the codebase already knows how to
+// measure it: content-check.ts compares the lab's measured mg against the label and has done since
+// it was written. It had exactly one consumer — a table cell in lab-tests-panel.tsx — computed at
+// render and thrown away.
+//
+// Meanwhile the trust graph counts certificates. `coaCount > 0` emits a VERIFIED POSITIVE and
+// pushes a trust reason, without ever asking what those certificates say. So ten certificates each
+// documenting 8 mg in a 10 mg vial read as ten pieces of evidence that a vendor is trustworthy, and
+// on the count ladder that is an A. The evidence of the defect was raising the grade.
+//
+// Measured against this corpus: of 115 dose-comparable records, 4 are underdosed (3.5%) while only
+// 1 of 251 purity-scored records falls below 95% (0.4%). Underdosing is roughly nine times more
+// common here than a purity failure, and it was the one axis that could not reach a verdict.
+describe("trust graph — a certificate that documents a short fill is not evidence of trust", () => {
+  const tested = (over = {}) => ({ ...EMPTY, coaCount: 6, medianPurity: 99.2, ...over });
+
+  it("stays trusted when the doses check out", () => {
+    expect(composeVerdict(tested({ underdosedCount: 0 })).verdict).toBe("trusted");
+  });
+
+  it("cautions when a lab measured a short fill", () => {
+    const r = composeVerdict(tested({ underdosedCount: 1 }));
+    expect(r.verdict).toBe("caution");
+    expect(r.summary).toMatch(/dose|underdos/i);
+  });
+
+  // A lab measurement is the strongest tier the product has. It must not be filed as inference,
+  // or the inferred-only guards would discard it.
+  it("records the short fill as a verified finding", () => {
+    const f = composeVerdict(tested({ underdosedCount: 2 })).factors.find((x) => /dose/i.test(x.label));
+    expect(f).toBeDefined();
+    expect(f?.ok).toBe(false);
+    expect(f?.confidence).toBe("verified");
+  });
+
+  // Vials run generous all the time. Getting more than you paid for is not a warning.
+  it("says nothing about a generous fill", () => {
+    expect(composeVerdict(tested({ underdosedCount: 0, overfilledCount: 3 })).verdict).toBe("trusted");
+  });
+
+  it("is silent when no certificate reported a comparable dose", () => {
+    const r = composeVerdict(tested({ underdosedCount: 0 }));
+    expect(r.factors.some((x) => /dose/i.test(x.label))).toBe(false);
+  });
+});
