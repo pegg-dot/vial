@@ -266,3 +266,39 @@ describe("trust graph — a certificate that documents a short fill is not evide
     expect(r.factors.some((x) => /dose/i.test(x.label))).toBe(false);
   });
 });
+
+// The harshest verdict the product has must not rest on a probe timeout.
+//
+// Site status is `inferred` by construction — grade.ts calls it "a SINGLE unretried HTTP probe that
+// calls a vendor 'offline' on any timeout or 404" — and it was pushing straight to `avoid`. That was
+// survivable only while `adverseIsInferredOnly` caught it, which needs it to be the ONLY adverse
+// tier. The moment dose accuracy added a verified negative, three real manufacturers were about to
+// be published as "F — avoid ... this rests on a dead storefront", alongside Paradigm Peptides,
+// whose F rests on a proven enforcement action and a recorded guilty plea. Those are not the same
+// claim and must not carry the same letter.
+//
+// A storefront that is genuinely gone still reaches `avoid` — through scam reports, an enforcement
+// record, or a hard link to a flagged operator. It just cannot get there on one failed request.
+describe("trust graph — an unretried probe is not grounds for the harshest verdict", () => {
+  const withStatus = (status: string, over = {}) => ({ ...EMPTY, coaCount: 3, status: { status }, ...over });
+
+  it("cautions rather than condemns when a storefront looks offline", () => {
+    const r = composeVerdict(withStatus("offline"));
+    expect(r.verdict).toBe("caution");
+    expect(r.factors.some((f) => f.label === "Site status" && f.ok === false)).toBe(true);
+  });
+
+  it("treats a parked domain the same way", () => {
+    expect(composeVerdict(withStatus("parked")).verdict).toBe("caution");
+  });
+
+  it("still reaches avoid when something substantiated says so", () => {
+    expect(composeVerdict(withStatus("offline", { enforcement: [{ severity: "severe" }] })).verdict).toBe("avoid");
+  });
+
+  it("leaves an operating storefront alone", () => {
+    const r = composeVerdict(withStatus("operating"));
+    expect(r.factors.some((f) => f.label === "Site status")).toBe(false);
+    expect(r.verdict).toBe("trusted");
+  });
+});

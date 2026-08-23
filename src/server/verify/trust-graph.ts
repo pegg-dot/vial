@@ -200,7 +200,17 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
   if (v.status && v.status.status !== "operating" && v.status.status !== "unknown" && v.status.status !== "blocked") {
     const dead = v.status.status === "offline" || v.status.status === "parked";
     factors.push({ ok: false, label: "Site status", detail: dead ? "Their storefront is offline or parked." : "Their storefront redirects away.", confidence: "inferred" });
-    if (dead) reasons.avoid.push("a dead storefront"); else reasons.caution.push("a redirecting storefront");
+    // Caution, not avoid — even for a storefront that looks gone. This seam is ONE unretried
+    // request, and `avoid` is the harshest thing the product says about a named business. It was
+    // safe only while `adverseIsInferredOnly` could catch it, which requires inference to be the
+    // only adverse tier present; adding dose accuracy broke that assumption and three real
+    // manufacturers were a deploy away from "F — avoid ... this rests on a dead storefront",
+    // sitting beside a vendor whose F rests on a DOJ action and a recorded guilty plea.
+    //
+    // A storefront that is genuinely gone still reaches `avoid` — via scam reports, an enforcement
+    // record, or a hard identifier shared with a flagged operator. It just cannot get there on a
+    // timeout.
+    reasons.caution.push(dead ? "a storefront that appears to be gone" : "a redirecting storefront");
   }
 
   // 10. COA integrity flags (borrowed/mismatched certificates).
