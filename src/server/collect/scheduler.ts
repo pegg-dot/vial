@@ -22,9 +22,13 @@ import { recomputeAllVendorGrades } from "@/server/verify/grade-store";
 import type { CompoundRef } from "@/server/ingest/shopify-import";
 import { collectEnforcement } from "./enforcement";
 import { collectNews } from "./news";
+import { fetchDomainRegistrationDate, domainAgeNote } from "./domain-age";
+import { fetchShopRating, ratingForDomain, normalizeDomain } from "./tracker-ratings";
+import { recordDomainAge, recordAggregatorRating } from "@/server/external/repository";
+import { importRscCatalog, productUrlsFromSitemap } from "@/server/ingest/rsc-storefront-import";
 import type { CollectorOutcome } from "./types";
 
-export type CollectorKind = "catalog-shopify" | "catalog-woo" | "vendor-status" | "enforcement-openfda" | "news-feeds";
+export type CollectorKind = "catalog-shopify" | "catalog-woo" | "catalog-rsc" | "vendor-status" | "domain-age" | "tracker-ratings" | "enforcement-openfda" | "news-feeds";
 
 // Market-wide collectors run once per tick, not once per vendor. They share this target name.
 const MARKET_TARGET = "market";
@@ -33,6 +37,10 @@ const MARKET_COLLECTORS: CollectorKind[] = ["enforcement-openfda", "news-feeds"]
 interface KnownVendor {
   slug: string; name: string; domain: string;
   redFlag?: boolean; productsJsonWorks?: boolean; wooWorks?: boolean;
+  // Headless storefronts (Medusa behind Next.js): no /products.json, no /wp-json. The catalogue is
+  // in the server-component payload. Without this flag here the whole vendor class is never
+  // collected in production, however well the importer works on a laptop.
+  rscWorks?: boolean; rscProductPath?: string;
   reputationSummary?: string;
 }
 
@@ -47,6 +55,13 @@ export const CADENCE_MINUTES: Record<CollectorKind, number> = {
   // day, and a twice-daily pass keeps `/news` current without hammering a public feed.
   "enforcement-openfda": 24 * 60,
   "news-feeds": 12 * 60,
+  // A headless catalogue changes as fast as a Shopify one — same prices, same stock.
+  "catalog-rsc": 6 * 60,
+  // A registration date does not move. This is here to notice NEW vendors and to re-check the ones
+  // whose lookup failed, not to re-ask a question whose answer is fixed.
+  "domain-age": 30 * 24 * 60,
+  // Someone else's review corpus. Weekly is enough to track a trend without hammering their site.
+  "tracker-ratings": 7 * 24 * 60,
 };
 
 const MAX_BACKOFF_MINUTES = 7 * 24 * 60;
@@ -69,7 +84,13 @@ export async function syncCollectionTargets(connection?: SqlConnection): Promise
   for (const v of legit) {
     if (v.productsJsonWorks) rows.push({ collector: "catalog-shopify", target: v.slug });
     else if (v.wooWorks) rows.push({ collector: "catalog-woo", target: v.slug });
+    else if (v.rscWorks) rows.push({ collector: "catalog-rsc", target: v.slug });
     rows.push({ collector: "vendor-status", target: v.slug });
+    // Per-vendor rather than one market-wide sweep, deliberately. A polite pass over 58 domains
+    // takes longer than a serverless tick is allowed to live; per-vendor targets let the queue
+    // spread the work across ticks and resume exactly where it stopped.
+    rows.push({ collector: "domain-age", target: v.slug });
+    rows.push({ collector: "tracker-ratings", target: v.slug });
   }
   // Market-wide intelligence: one target each, independent of the vendor list. These must be
   // enqueued even when every vendor is red-flagged, because enforcement and news are the seams
@@ -152,12 +173,53 @@ async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome
     return { items: 1, ok: true };
   }
 
+  if (t.collector === "domain-age") {
+    const note = domainAgeNote(await fetchDomainRegistrationDate(vendor.domain));
+    // A lookup that failed is NOT an answer. recordDomainAge ignores null rather than erasing a
+    // note we already hold, and reporting ok:false lets the queue back this target off instead of
+    // asking a registry that just refused us again on the next tick.
+    if (!note) return { items: 0, ok: false };
+    await recordDomainAge(db, vendor.slug, note);
+    return { items: 1, ok: true };
+  }
+
+  if (t.collector === "tracker-ratings") {
+    const domain = normalizeDomain(vendor.domain);
+    for (const url of [`https://peptigrity.com/shops/${domain.replace(/\./g, "-")}`, `https://peptigrity.com/shops/${domain}`]) {
+      // The page must name THIS vendor's domain. A redirect or a recycled slug otherwise attaches
+      // one shop's reputation to another, which is the worst thing this product can get wrong.
+      const rating = ratingForDomain(await fetchShopRating(url), domain);
+      if (!rating) continue;
+      await recordAggregatorRating(db, {
+        vendorSlug: vendor.slug, source: "peptigrity-community",
+        score: rating.ratingValue, maxScore: rating.bestRating,
+        testCount: null, avgPurity: null, wouldBuyAgainPct: null,
+        summary: `Peptigrity community rates ${rating.domain} ${rating.ratingValue}/${rating.bestRating} from ${rating.ratingCount} community review${rating.ratingCount === 1 ? "" : "s"}.`,
+        sourceUrl: url,
+      });
+      return { items: 1, ok: true };
+    }
+    // Not tracked there is a real answer, not a failure — most vendors are not.
+    return { items: 0, ok: true };
+  }
+
   const compounds = await compoundRefs(db);
   const input = {
     vendorSlug: vendor.slug, vendorName: vendor.name, domain: vendor.domain,
     description: `${vendor.reputationSummary ?? "Research-peptide vendor."} Aggregated from public sources; VialGrade does not endorse any vendor.`,
     compounds,
   };
+  if (t.collector === "catalog-rsc") {
+    // A headless storefront publishes no catalogue endpoint, so its own sitemap is how we learn
+    // what exists. Off-host entries are dropped inside productUrlsFromSitemap.
+    const res = await fetch(`https://${vendor.domain}/sitemap.xml`, { headers: { "user-agent": "VialGrade-Catalog-Import/1.0" }, redirect: "follow" });
+    if (!res.ok) throw new Error(`sitemap HTTP ${res.status}`);
+    const productUrls = productUrlsFromSitemap(await res.text(), vendor.rscProductPath ?? "/product/", vendor.domain);
+    if (!productUrls.length) throw new Error("no product urls in sitemap");
+    const rsc = await importRscCatalog(db, { ...input, productUrls });
+    return { items: rsc.imported.length, ok: true };
+  }
+
   const result = t.collector === "catalog-shopify"
     ? await importShopifyCatalog(db, input)
     : await importWooCommerceCatalog(db, input);

@@ -153,3 +153,37 @@ describe("collection queue — cheap collectors run before the fleet", () => {
     else expect(solo.last_run_at).toBeNull(); // nothing ran at all — acceptable at a 1ms budget
   });
 });
+
+// Collectors written outside this scheduler never run in production. The cron drains this queue
+// and nothing else — so a collector that exists only as a script under scripts/ is, from the
+// deployment's point of view, not a collector at all. Three were in exactly that state: the
+// headless-catalog importer that reads Ascend Bio Labs, the RDAP domain-age reader, and the
+// third-party tracker ratings. They had run once each, by hand, on a laptop.
+describe("collectors that exist are actually scheduled", () => {
+  it("queues a catalog collector for a headless storefront, not just Shopify and Woo", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    const rows = (await db.query<{ target: string }>(
+      `SELECT target FROM collection_targets WHERE collector='catalog-rsc'`,
+    )).rows;
+    // Ascend Bio Labs is the rscWorks vendor in the curated list.
+    expect(rows.map((r) => r.target)).toContain("ascend-bio-labs");
+  });
+
+  it("queues the market-wide signal collectors", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    const kinds = (await db.query<{ collector: string }>(
+      `SELECT DISTINCT collector FROM collection_targets`,
+    )).rows.map((r) => r.collector);
+    expect(kinds).toContain("domain-age");
+    expect(kinds).toContain("tracker-ratings");
+  });
+
+  // Every kind needs a cadence or the queue cannot schedule it at all.
+  it("gives every new kind a cadence", async () => {
+    for (const k of ["catalog-rsc", "domain-age", "tracker-ratings"] as const) {
+      expect(CADENCE_MINUTES[k]).toBeGreaterThan(0);
+    }
+  });
+});
