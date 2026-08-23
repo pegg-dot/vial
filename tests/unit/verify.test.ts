@@ -302,3 +302,42 @@ describe("trust graph — an unretried probe is not grounds for the harshest ver
     expect(r.verdict).toBe("trusted");
   });
 });
+
+// Restoring exit-scam detection on a defensible basis.
+//
+// A storefront that has vanished IS a reason to steer clear — that is what an exit scam looks like,
+// and the directory has always flagged it. But vendor_status keeps ONE row per vendor, overwritten
+// on every probe, so a single failed request was the entire evidence base for the harshest verdict
+// the product publishes. Bot protection already taught this lesson once: `blocked` had to be
+// excluded because the old gate was sinking live vendors as "defunct".
+//
+// So the same rule as everywhere else today — one observation is context, a repeated one is a
+// finding. Offline once cautions; offline again condemns.
+describe("trust graph — a storefront is condemned for staying gone, not for one bad request", () => {
+  const seen = (status: string, consecutiveFailures: number, over = {}) =>
+    ({ ...EMPTY, coaCount: 3, status: { status, consecutiveFailures }, ...over });
+
+  it("cautions the first time a storefront fails to answer", () => {
+    expect(composeVerdict(seen("offline", 1)).verdict).toBe("caution");
+  });
+
+  it("condemns a storefront that is still gone on a later check", () => {
+    const r = composeVerdict(seen("offline", 2));
+    expect(r.verdict).toBe("avoid");
+    expect(r.summary).toMatch(/gone|offline|storefront/i);
+  });
+
+  it("treats a parked domain the same way once corroborated", () => {
+    expect(composeVerdict(seen("parked", 1)).verdict).toBe("caution");
+    expect(composeVerdict(seen("parked", 3)).verdict).toBe("avoid");
+  });
+
+  // Absent a failure count at all, assume the worst about our own data, not about the vendor.
+  it("cautions rather than condemns when no failure count is recorded", () => {
+    expect(composeVerdict({ ...EMPTY, coaCount: 3, status: { status: "offline" } }).verdict).toBe("caution");
+  });
+
+  it("still ignores a storefront that merely blocks bots", () => {
+    expect(composeVerdict(seen("blocked", 9)).verdict).toBe("trusted");
+  });
+});

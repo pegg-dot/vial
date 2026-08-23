@@ -4,7 +4,7 @@ import { assessVendorRisk } from "@/server/vendors/directory";
 // The directory's redFlag is now exactly "the composed verdict is avoid" — the SAME verdict the
 // vendor page and /verify show. These cases are the concrete divergences the old ad-hoc gate had.
 const V = { name: "Test Vendor", coaCount: 0, medianPurity: null };
-const CLEAN = { enforcement: [] as Array<{ severity: string }>, reviewSentiment: null as string | null, reviewVolume: null as string | null, reviewConfidence: null as string | null, communitySentiment: null as string | null, communityMentionCount: null as number | null, communityNegativeCount: null as number | null, communityPositiveCount: null as number | null, links: [] as Array<{ strength: string; linkedSlug: string }>, status: "operating", integrityFlagged: false };
+const CLEAN = { enforcement: [] as Array<{ severity: string }>, reviewSentiment: null as string | null, reviewVolume: null as string | null, reviewConfidence: null as string | null, communitySentiment: null as string | null, communityMentionCount: null as number | null, communityNegativeCount: null as number | null, communityPositiveCount: null as number | null, links: [] as Array<{ strength: string; linkedSlug: string }>, status: "operating", statusFailures: 0, integrityFlagged: false };
 const risk = (over: Partial<typeof CLEAN>) => assessVendorRisk(V, { ...CLEAN, ...over });
 
 describe("assessVendorRisk (directory redFlag == vendor-page verdict avoid)", () => {
@@ -48,9 +48,20 @@ describe("assessVendorRisk (directory redFlag == vendor-page verdict avoid)", ()
     expect(r.verdict).not.toBe("avoid");
   });
 
-  it("a genuinely dead storefront (offline/parked) → avoid", () => {
-    expect(risk({ status: "offline" }).redFlag).toBe(true);
-    expect(risk({ status: "parked" }).redFlag).toBe(true);
+  // A vanished storefront is still flagged — that is what an exit scam looks like — but it takes
+  // more than one failed request. vendor_status keeps a single row per vendor, overwritten every
+  // probe, so before corroboration a lone timeout was the entire evidence base for the harshest
+  // verdict the product publishes. `blocked` was already excluded for the same reason: the old gate
+  // sank live vendors as defunct on bot protection.
+  it("a storefront gone on repeated checks → avoid", () => {
+    expect(risk({ status: "offline", statusFailures: 2 }).redFlag).toBe(true);
+    expect(risk({ status: "parked", statusFailures: 3 }).redFlag).toBe(true);
+  });
+
+  it("a storefront that missed ONE check is a caution, not a red flag", () => {
+    const r = risk({ status: "offline", statusFailures: 1 });
+    expect(r.verdict).toBe("caution");
+    expect(r.redFlag).toBe(false);
   });
 
   it("a redirected storefront → caution, not flagged", () => {

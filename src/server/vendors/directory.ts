@@ -20,6 +20,8 @@ export interface VendorRiskSignals {
   communityPositiveCount: number | null;   // threaded so the directory verdict can't diverge from the vendor page
   links: Array<{ strength: string; linkedSlug: string }>;
   status: string;                 // vendor_status kind, or "operating"
+  /** Consecutive not-operating checks. One failed request is a timeout; two is a storefront gone. */
+  statusFailures?: number;
   integrityFlagged: boolean;
 }
 
@@ -50,7 +52,7 @@ export function assessVendorRisk(
     review: s.reviewSentiment ? { sentiment: s.reviewSentiment, reviewVolume: s.reviewVolume ?? undefined, confidence: s.reviewConfidence ?? undefined } : null,
     community: s.communitySentiment ? { sentiment: s.communitySentiment, mentionCount: s.communityMentionCount ?? undefined, negativeCount: s.communityNegativeCount ?? undefined, positiveCount: s.communityPositiveCount ?? undefined } : null,
     links: s.links,
-    status: { status: s.status },
+    status: { status: s.status, consecutiveFailures: s.statusFailures },
     flagCount: s.integrityFlagged ? 1 : 0,
   });
   return { verdict: composed.verdict, redFlag: composed.verdict === "avoid" };
@@ -61,7 +63,7 @@ export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
   const [regActions, flagged, statusRows, reviewRows, communityRows, linkRows] = await Promise.all([
     listRegulatoryActions(db, 500),
     getFlaggedVendorSlugs(db),
-    db.query<{ vendor_slug: string; status: string }>(`SELECT vendor_slug, status FROM vendor_status WHERE status <> 'operating'`),
+    db.query<{ vendor_slug: string; status: string; consecutive_failures: number }>(`SELECT vendor_slug, status, consecutive_failures FROM vendor_status WHERE status <> 'operating'`),
     db.query<{ vendor_slug: string; sentiment: ReviewSentiment; review_volume: string; confidence: string }>(`SELECT vendor_slug, sentiment, review_volume, confidence FROM vendor_reviews`),
     db.query<{ vendor_slug: string; sentiment: string; mention_count: number; negative_count: number; positive_count: number }>(`SELECT DISTINCT ON (vendor_slug) vendor_slug, sentiment, mention_count, negative_count, positive_count FROM community_mentions ORDER BY vendor_slug, fetched_at DESC`),
     db.query<{ vendor_slug: string; linked_slug: string; strength: string }>(`SELECT vendor_slug, linked_slug, strength FROM vendor_links`),
@@ -78,7 +80,7 @@ export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
     const sev = a.severity === "severe" ? "severe" : a.severity === "caution" ? "caution" : null;
     if (sev) { const cur = worstEnforcement.get(a.vendor_slug); if (!cur || SEVERITY_RANK[sev] > SEVERITY_RANK[cur]) worstEnforcement.set(a.vendor_slug, sev); }
   }
-  const statusByVendor = new Map(statusRows.rows.map((r) => [r.vendor_slug, r.status]));
+  const statusByVendor = new Map(statusRows.rows.map((r) => [r.vendor_slug, { kind: r.status, failures: Number(r.consecutive_failures ?? 0) }]));
   const reviewByVendor = new Map(reviewRows.rows.map((r) => [r.vendor_slug, r]));
   const communityByVendor = new Map(communityRows.rows.map((r) => [r.vendor_slug, r]));
   const linksByVendor = new Map<string, Array<{ strength: string; linkedSlug: string }>>();
@@ -98,7 +100,8 @@ export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
     const listings = listingsByVendor.get(vendor.slug) ?? [];
     const idx = vendorPriceIndex(listings, products);
     const enforcement = worstEnforcement.get(vendor.slug) ?? null;
-    const statusKind = statusByVendor.get(vendor.slug) ?? "operating";
+    const statusRow = statusByVendor.get(vendor.slug);
+    const statusKind = statusRow?.kind ?? "operating";
     const integrityFlagged = flagged.has(vendor.slug);
     const review = reviewByVendor.get(vendor.slug) ?? null;
     const reviewSentiment = review?.sentiment ?? null;
@@ -114,6 +117,7 @@ export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
       communityPositiveCount: community?.positive_count ?? null,
       links: linksByVendor.get(vendor.slug) ?? [],
       status: statusKind,
+      statusFailures: statusRow?.failures ?? 0,
       integrityFlagged,
     });
     // "Defunct" = a genuinely dead storefront (offline/parked), matching composeVerdict's avoid.

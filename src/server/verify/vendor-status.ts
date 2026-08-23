@@ -5,7 +5,7 @@ import type { SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 
 export type VendorStatusKind = "operating" | "offline" | "redirected" | "parked" | "blocked" | "unknown";
-export interface VendorStatus { status: VendorStatusKind; httpCode: number | null; redirectHost: string | null; detail: string; checkedAt?: string | null }
+export interface VendorStatus { status: VendorStatusKind; httpCode: number | null; redirectHost: string | null; detail: string; checkedAt?: string | null; consecutiveFailures?: number }
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36";
 // Registrable-ish domain: last two labels (good enough for the .com/.is/.co TLDs here).
@@ -38,15 +38,21 @@ export async function recordVendorStatus(db: SqlConnection, vendorSlug: string, 
   await db.query(
     `INSERT INTO vendor_status (id, vendor_slug, status, http_code, redirect_host, detail, origin, checked_at)
      VALUES ($1,$2,$3,$4,$5,$6,'live',NOW())
-     ON CONFLICT (vendor_slug) DO UPDATE SET status=EXCLUDED.status, http_code=EXCLUDED.http_code, redirect_host=EXCLUDED.redirect_host, detail=EXCLUDED.detail, checked_at=NOW()`,
+     ON CONFLICT (vendor_slug) DO UPDATE SET status=EXCLUDED.status, http_code=EXCLUDED.http_code, redirect_host=EXCLUDED.redirect_host, detail=EXCLUDED.detail, checked_at=NOW(),
+       -- Count consecutive NOT-operating answers. A blocked status is bot protection, not absence,
+       -- and must not accumulate: that mistake once sank live vendors as defunct. Recovery resets.
+       consecutive_failures = CASE
+         WHEN EXCLUDED.status IN ('operating','blocked','unknown') THEN 0
+         ELSE vendor_status.consecutive_failures + 1
+       END`,
     [newId("vstat"), vendorSlug, s.status, s.httpCode, s.redirectHost, s.detail],
   );
 }
 
 export async function getVendorStatus(db: SqlConnection, vendorSlug: string): Promise<VendorStatus | null> {
-  const r = (await db.query<{ status: VendorStatusKind; http_code: number | null; redirect_host: string | null; detail: string; checked_at: string | null }>(
-    `SELECT status, http_code, redirect_host, detail, checked_at FROM vendor_status WHERE vendor_slug=$1`,
+  const r = (await db.query<{ status: VendorStatusKind; http_code: number | null; redirect_host: string | null; detail: string; checked_at: string | null; consecutive_failures?: number }>(
+    `SELECT status, http_code, redirect_host, detail, checked_at, consecutive_failures FROM vendor_status WHERE vendor_slug=$1`,
     [vendorSlug],
   )).rows[0];
-  return r ? { status: r.status, httpCode: r.http_code, redirectHost: r.redirect_host, detail: r.detail, checkedAt: r.checked_at } : null;
+  return r ? { status: r.status, httpCode: r.http_code, redirectHost: r.redirect_host, detail: r.detail, checkedAt: r.checked_at, consecutiveFailures: Number(r.consecutive_failures ?? 0) } : null;
 }

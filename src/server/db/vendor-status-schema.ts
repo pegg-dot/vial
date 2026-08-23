@@ -16,5 +16,10 @@ CREATE TABLE IF NOT EXISTS vendor_status (
   origin TEXT NOT NULL DEFAULT 'live',
   checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- How many consecutive checks have found this storefront not operating. One failed request is a
+-- timeout, the same answer twice is a storefront that is actually gone. Without this the table
+-- keeps only the latest probe, so a lone network blip was the whole evidence base for a verdict.
+-- NOTE no semicolons in this comment: exec() splits schema SQL on them and would cut it in half.
+ALTER TABLE vendor_status ADD COLUMN IF NOT EXISTS consecutive_failures INTEGER NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_vendor_status_vendor ON vendor_status(vendor_slug);
 `;
