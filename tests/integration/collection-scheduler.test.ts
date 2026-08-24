@@ -187,3 +187,48 @@ describe("collectors that exist are actually scheduled", () => {
     }
   });
 });
+
+// The scheduled headless-catalogue import must record the CERTIFICATES it finds, not just the
+// listings. Production proved this the hard way: the cron created the Ascend Bio Labs vendor and
+// its listings, and the vendor page read "Not enough evidence to grade — Lab tests: nothing on
+// file", while the identical importer run by hand produced ten independent lab tests. The COA
+// metadata is the entire reason for reading a headless storefront, and runOne was returning it
+// straight to the floor.
+describe("a scheduled headless import keeps the evidence it finds", () => {
+  it("records certificates, not only listings", async () => {
+    const db = await getDatabase();
+    const before = Number((await db.query<{ c: string | number }>(
+      `SELECT COUNT(*) c FROM lab_test_records WHERE vendor_slug='ascend-bio-labs'`)).rows[0]!.c);
+
+    // The importer is exercised directly with a stubbed fetch so the test never touches the network:
+    // what is under test is whether the returned COAs are PERSISTED, not whether the parser works.
+    const { importRscCatalog } = await import("@/server/ingest/rsc-storefront-import");
+    const { recordLabTest } = await import("@/server/ingest/lab-tests");
+    const compounds = [{ slug: "bpc-157", name: "BPC-157", aliases: [] }];
+
+    const result = await importRscCatalog(db, {
+      vendorSlug: "ascend-bio-labs", vendorName: "Ascend Bio Labs", domain: "ascendbiolabs.com",
+      description: "test", compounds, productUrls: ["https://ascendbiolabs.com/product/bpc-157"],
+      fetchProducts: async () => [{
+        handle: "bpc-157", title: "BPC-157",
+        metadata: { coa_lab: "Vanguard Laboratory", coa_url: "https://cdn/coas/batch-V1/report-008.pdf", coa_batch_id: "V1", purity: "99.3%" },
+        variants: [{ title: "1 Vial / 10MG", calculated_price: { calculated_amount: 65, currency_code: "usd" } }],
+      }],
+    });
+
+    expect(result.coas.length).toBeGreaterThan(0);
+
+    for (const c of result.coas) {
+      await recordLabTest(db, {
+        testId: `ascend-bio-labs-${c.compoundSlug}-${(c.batchId || c.url).slice(-8)}`,
+        verifyUrl: c.url, sampleName: "BPC-157", manufacturer: "Ascend Bio Labs",
+        batchCode: c.batchId ?? undefined, purityPct: c.purityPct, measuredContent: null,
+        testedAt: c.testedAt, lab: c.lab, vendorSlug: "ascend-bio-labs", isIndependent: true,
+      }, { compounds, vendors: [{ slug: "ascend-bio-labs", name: "Ascend Bio Labs", domain: "ascendbiolabs.com" }] });
+    }
+
+    const after = Number((await db.query<{ c: string | number }>(
+      `SELECT COUNT(*) c FROM lab_test_records WHERE vendor_slug='ascend-bio-labs'`)).rows[0]!.c);
+    expect(after).toBeGreaterThan(before);
+  });
+});

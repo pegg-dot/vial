@@ -16,6 +16,7 @@ import { importShopifyCatalog } from "@/server/ingest/shopify-import";
 import { importWooCommerceCatalog } from "@/server/ingest/woocommerce-import";
 import { probeVendorStatus, recordVendorStatus } from "@/server/verify/vendor-status";
 import { recomputeCompoundStats } from "@/server/ingest/live-sources";
+import { recordLabTest } from "@/server/ingest/lab-tests";
 import { recomputeVendorStats } from "@/server/db/vendor-stats-repair";
 import { rebuildSearchIndex } from "@/server/search/engine";
 import { recomputeAllVendorGrades } from "@/server/verify/grade-store";
@@ -217,7 +218,35 @@ async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome
     const productUrls = productUrlsFromSitemap(await res.text(), vendor.rscProductPath ?? "/product/", vendor.domain);
     if (!productUrls.length) throw new Error("no product urls in sitemap");
     const rsc = await importRscCatalog(db, { ...input, productUrls });
-    return { items: rsc.imported.length, ok: true };
+
+    // Record the certificates the storefront publishes. Forgetting this is why production showed
+    // Ascend Bio Labs as "not enough evidence to grade — nothing on file" while the same importer
+    // run by hand produced ten independent lab tests: importRscCatalog RETURNS the COA metadata and
+    // this path was dropping it, so the one reason to read a headless storefront at all was thrown
+    // away on the only path that actually runs in production.
+    //
+    // rscCoaFromMetadata has already refused anything without a NAMED third-party lab, so
+    // everything arriving here is independent by construction.
+    let coas = 0;
+    for (const c of rsc.coas) {
+      const recorded = await recordLabTest(db, {
+        testId: `${vendor.slug}-${c.compoundSlug}-${(c.batchId || c.url).slice(-8)}`,
+        verifyUrl: c.url,
+        sampleName: compounds.find((x) => x.slug === c.compoundSlug)?.name ?? c.compoundSlug,
+        manufacturer: vendor.name,
+        batchCode: c.batchId ?? undefined,
+        purityPct: c.purityPct,
+        measuredContent: null,
+        testedAt: c.testedAt,
+        lab: c.lab,
+        vendorSlug: vendor.slug,
+        isIndependent: true,
+      }, { compounds, vendors: vendors().map((v) => ({ slug: v.slug, name: v.name, domain: v.domain })) });
+      if (recorded.vendorSlug) coas += 1;
+    }
+    // Both numbers matter to whoever reads collector_runs: listings are the catalogue, certificates
+    // are the evidence, and a run that imported one but not the other is not a healthy run.
+    return { items: rsc.imported.length + coas, ok: true };
   }
 
   const result = t.collector === "catalog-shopify"
