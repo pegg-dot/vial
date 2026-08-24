@@ -159,6 +159,70 @@ async function compoundRefs(db: SqlConnection): Promise<CompoundRef[]> {
   }));
 }
 
+/**
+ * Collect a headless storefront's catalogue AND the certificates it publishes.
+ *
+ * Exported and injectable on purpose. The first version of this lived inline in runOne, which is
+ * module-private, so the regression test that was supposed to guard it re-implemented the same loop
+ * by hand — meaning a one-line revert of the real code left the test green. A guard that cannot
+ * fail is worse than none, so the test calls THIS, the same function production calls.
+ */
+export async function collectRscCatalog(
+  db: SqlConnection,
+  input: {
+    vendor: { slug: string; name: string; domain: string; rscProductPath?: string };
+    compounds: CompoundRef[];
+    description: string;
+    /** Injected by tests so the path can be exercised without the network. */
+    fetchImpl?: typeof fetch;
+    fetchProducts?: Parameters<typeof importRscCatalog>[1]["fetchProducts"];
+  },
+): Promise<CollectorOutcome> {
+  const { vendor, compounds, description } = input;
+  const doFetch = input.fetchImpl ?? fetch;
+
+  // A headless storefront publishes no catalogue endpoint, so its own sitemap is how we learn what
+  // exists. Off-host entries are dropped inside productUrlsFromSitemap.
+  const res = await doFetch(`https://${vendor.domain}/sitemap.xml`, { headers: { "user-agent": "VialGrade-Catalog-Import/1.0" }, redirect: "follow" });
+  if (!res.ok) throw new Error(`sitemap HTTP ${res.status}`);
+  const productUrls = productUrlsFromSitemap(await res.text(), vendor.rscProductPath ?? "/product/", vendor.domain);
+  if (!productUrls.length) throw new Error("no product urls in sitemap");
+
+  const rsc = await importRscCatalog(db, {
+    vendorSlug: vendor.slug, vendorName: vendor.name, domain: vendor.domain,
+    description, compounds, productUrls,
+    ...(input.fetchProducts ? { fetchProducts: input.fetchProducts } : {}),
+  });
+
+  // Record the certificates the storefront publishes. Forgetting this is why production showed
+  // Ascend Bio Labs as "not enough evidence to grade — nothing on file" while the same importer run
+  // by hand produced ten independent lab tests: importRscCatalog RETURNS the COA metadata and this
+  // path was dropping it. rscCoaFromMetadata has already refused anything without a NAMED
+  // third-party lab, so everything arriving here is independent by construction.
+  let coas = 0;
+  for (const c of rsc.coas) {
+    const recorded = await recordLabTest(db, {
+      testId: `${vendor.slug}-${c.compoundSlug}-${(c.batchId || c.url).slice(-8)}`,
+      verifyUrl: c.url,
+      sampleName: compounds.find((x) => x.slug === c.compoundSlug)?.name ?? c.compoundSlug,
+      manufacturer: vendor.name,
+      batchCode: c.batchId ?? undefined,
+      purityPct: c.purityPct,
+      measuredContent: null,
+      testedAt: c.testedAt,
+      lab: c.lab,
+      vendorSlug: vendor.slug,
+      isIndependent: true,
+    }, { compounds, vendors: vendors().map((v) => ({ slug: v.slug, name: v.name, domain: v.domain })) });
+    if (recorded.vendorSlug) coas += 1;
+  }
+
+  // Both numbers matter to whoever reads collector_runs: listings are the catalogue, certificates
+  // are the evidence, and a run that imported one but not the other is not a healthy run.
+  return { items: rsc.imported.length + coas, ok: true };
+}
+
+
 async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome> {
   // Market-wide collectors have no vendor, and they report ok/not-ok themselves rather than
   // signalling a dead source by throwing.
@@ -211,42 +275,7 @@ async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome
     compounds,
   };
   if (t.collector === "catalog-rsc") {
-    // A headless storefront publishes no catalogue endpoint, so its own sitemap is how we learn
-    // what exists. Off-host entries are dropped inside productUrlsFromSitemap.
-    const res = await fetch(`https://${vendor.domain}/sitemap.xml`, { headers: { "user-agent": "VialGrade-Catalog-Import/1.0" }, redirect: "follow" });
-    if (!res.ok) throw new Error(`sitemap HTTP ${res.status}`);
-    const productUrls = productUrlsFromSitemap(await res.text(), vendor.rscProductPath ?? "/product/", vendor.domain);
-    if (!productUrls.length) throw new Error("no product urls in sitemap");
-    const rsc = await importRscCatalog(db, { ...input, productUrls });
-
-    // Record the certificates the storefront publishes. Forgetting this is why production showed
-    // Ascend Bio Labs as "not enough evidence to grade — nothing on file" while the same importer
-    // run by hand produced ten independent lab tests: importRscCatalog RETURNS the COA metadata and
-    // this path was dropping it, so the one reason to read a headless storefront at all was thrown
-    // away on the only path that actually runs in production.
-    //
-    // rscCoaFromMetadata has already refused anything without a NAMED third-party lab, so
-    // everything arriving here is independent by construction.
-    let coas = 0;
-    for (const c of rsc.coas) {
-      const recorded = await recordLabTest(db, {
-        testId: `${vendor.slug}-${c.compoundSlug}-${(c.batchId || c.url).slice(-8)}`,
-        verifyUrl: c.url,
-        sampleName: compounds.find((x) => x.slug === c.compoundSlug)?.name ?? c.compoundSlug,
-        manufacturer: vendor.name,
-        batchCode: c.batchId ?? undefined,
-        purityPct: c.purityPct,
-        measuredContent: null,
-        testedAt: c.testedAt,
-        lab: c.lab,
-        vendorSlug: vendor.slug,
-        isIndependent: true,
-      }, { compounds, vendors: vendors().map((v) => ({ slug: v.slug, name: v.name, domain: v.domain })) });
-      if (recorded.vendorSlug) coas += 1;
-    }
-    // Both numbers matter to whoever reads collector_runs: listings are the catalogue, certificates
-    // are the evidence, and a run that imported one but not the other is not a healthy run.
-    return { items: rsc.imported.length + coas, ok: true };
+    return collectRscCatalog(db, { vendor, compounds, description: input.description });
   }
 
   const result = t.collector === "catalog-shopify"

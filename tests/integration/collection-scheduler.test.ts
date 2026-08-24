@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetDatabaseForTests, getDatabase } from "@/server/db/client";
 import {
-  syncCollectionTargets, claimDueTargets, runCollectionTick, CADENCE_MINUTES,
+  syncCollectionTargets, claimDueTargets, runCollectionTick, CADENCE_MINUTES, collectRscCatalog,
 } from "@/server/collect/scheduler";
 
 beforeEach(async () => {
@@ -191,44 +191,78 @@ describe("collectors that exist are actually scheduled", () => {
 // The scheduled headless-catalogue import must record the CERTIFICATES it finds, not just the
 // listings. Production proved this the hard way: the cron created the Ascend Bio Labs vendor and
 // its listings, and the vendor page read "Not enough evidence to grade — Lab tests: nothing on
-// file", while the identical importer run by hand produced ten independent lab tests. The COA
-// metadata is the entire reason for reading a headless storefront, and runOne was returning it
-// straight to the floor.
+// file", while the identical importer run by hand produced ten independent lab tests.
+//
+// The first version of this test re-implemented the collector's own COA loop inline, so reverting
+// the real fix left it green — it proved the importer returns COAs and nothing about whether the
+// scheduled path persists them. It calls collectRscCatalog now, the same function the cron calls,
+// with the network stubbed. Deleting the recording loop from that function fails this.
 describe("a scheduled headless import keeps the evidence it finds", () => {
-  it("records certificates, not only listings", async () => {
+  const SITEMAP = `<?xml version="1.0"?><urlset><url><loc>https://ascendbiolabs.com/product/bpc-157</loc></url></urlset>`;
+
+  const stubbedProduct = [{
+    handle: "bpc-157", title: "BPC-157",
+    metadata: {
+      coa_lab: "Vanguard Laboratory",
+      coa_url: "https://cdn/coas/batch-V1/report-008.pdf",
+      coa_batch_id: "V1", purity: "99.3%", coa_test_date: "2026-06-12",
+    },
+    variants: [{ title: "1 Vial / 10MG", calculated_price: { calculated_amount: 65, currency_code: "usd" } }],
+  }];
+
+  async function collectOnce() {
+    const db = await getDatabase();
+    return collectRscCatalog(db, {
+      vendor: { slug: "ascend-bio-labs", name: "Ascend Bio Labs", domain: "ascendbiolabs.com", rscProductPath: "/product/" },
+      compounds: [{ slug: "bpc-157", name: "BPC-157", aliases: [] }],
+      description: "test",
+      fetchImpl: (async () => new Response(SITEMAP, { status: 200 })) as unknown as typeof fetch,
+      fetchProducts: async () => stubbedProduct as never,
+    });
+  }
+
+  it("persists the certificates, not only the listings", async () => {
     const db = await getDatabase();
     const before = Number((await db.query<{ c: string | number }>(
       `SELECT COUNT(*) c FROM lab_test_records WHERE vendor_slug='ascend-bio-labs'`)).rows[0]!.c);
 
-    // The importer is exercised directly with a stubbed fetch so the test never touches the network:
-    // what is under test is whether the returned COAs are PERSISTED, not whether the parser works.
-    const { importRscCatalog } = await import("@/server/ingest/rsc-storefront-import");
-    const { recordLabTest } = await import("@/server/ingest/lab-tests");
-    const compounds = [{ slug: "bpc-157", name: "BPC-157", aliases: [] }];
-
-    const result = await importRscCatalog(db, {
-      vendorSlug: "ascend-bio-labs", vendorName: "Ascend Bio Labs", domain: "ascendbiolabs.com",
-      description: "test", compounds, productUrls: ["https://ascendbiolabs.com/product/bpc-157"],
-      fetchProducts: async () => [{
-        handle: "bpc-157", title: "BPC-157",
-        metadata: { coa_lab: "Vanguard Laboratory", coa_url: "https://cdn/coas/batch-V1/report-008.pdf", coa_batch_id: "V1", purity: "99.3%" },
-        variants: [{ title: "1 Vial / 10MG", calculated_price: { calculated_amount: 65, currency_code: "usd" } }],
-      }],
-    });
-
-    expect(result.coas.length).toBeGreaterThan(0);
-
-    for (const c of result.coas) {
-      await recordLabTest(db, {
-        testId: `ascend-bio-labs-${c.compoundSlug}-${(c.batchId || c.url).slice(-8)}`,
-        verifyUrl: c.url, sampleName: "BPC-157", manufacturer: "Ascend Bio Labs",
-        batchCode: c.batchId ?? undefined, purityPct: c.purityPct, measuredContent: null,
-        testedAt: c.testedAt, lab: c.lab, vendorSlug: "ascend-bio-labs", isIndependent: true,
-      }, { compounds, vendors: [{ slug: "ascend-bio-labs", name: "Ascend Bio Labs", domain: "ascendbiolabs.com" }] });
-    }
+    const outcome = await collectOnce();
+    expect(outcome.ok).toBe(true);
 
     const after = Number((await db.query<{ c: string | number }>(
       `SELECT COUNT(*) c FROM lab_test_records WHERE vendor_slug='ascend-bio-labs'`)).rows[0]!.c);
     expect(after).toBeGreaterThan(before);
+  });
+
+  // The reported count is what lands in collector_runs and is the only number a human reading the
+  // sources page ever sees. A run that imported the listings but dropped every certificate must not
+  // be able to report the same number as one that kept them, so this is an EQUALITY, not a floor —
+  // `>= coas` passed happily while the certificates were excluded from the count.
+  it("counts the certificates in what it reports", async () => {
+    const db = await getDatabase();
+    const outcome = await collectOnce();
+    const coas = Number((await db.query<{ c: string | number }>(
+      `SELECT COUNT(*) c FROM lab_test_records WHERE vendor_slug='ascend-bio-labs'`)).rows[0]!.c);
+    const listings = Number((await db.query<{ c: string | number }>(
+      `SELECT COUNT(*) c FROM listings l JOIN products p ON p.id=l.product_id JOIN organizations o ON o.id=p.vendor_id WHERE o.slug='ascend-bio-labs'`)).rows[0]!.c);
+    expect(coas).toBeGreaterThan(0);
+    expect(listings).toBeGreaterThan(0);
+    expect(outcome.items).toBe(listings + coas);
+  });
+
+  // A certificate only earns a vendor anything if it came from a NAMED third-party lab, and the
+  // grade reads is_independent to decide that. rscCoaFromMetadata has already refused anything
+  // without a named lab, so everything the collector records is independent by construction — but
+  // "by construction" is exactly the kind of claim that rots silently. Recording these as in-house
+  // would leave the count healthy and the vendor ungraded, which is the original bug wearing a
+  // different hat.
+  it("records them as independent third-party evidence, not self-published", async () => {
+    const db = await getDatabase();
+    await collectOnce();
+    const rows = (await db.query<{ is_independent: boolean; lab: string | null }>(
+      `SELECT is_independent, lab FROM lab_test_records WHERE vendor_slug='ascend-bio-labs'`)).rows;
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.is_independent === true)).toBe(true);
+    expect(rows.every((r) => (r.lab ?? "").trim().length > 0)).toBe(true);
   });
 });
