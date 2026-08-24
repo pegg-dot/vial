@@ -41,6 +41,10 @@ export interface VialGradeResult {
 const DIMENSION_OF: Record<string, DimensionKey> = {
   "Independent testing": "testing",
   "COA integrity": "testing",
+  // A short fill is a finding OF the testing, so it belongs to the testing dimension. Leaving it
+  // unrouted dropped it from every dimension and left Independent testing reading a green
+  // "supported" on a vendor whose downgrade came from a lab measurement.
+  "Dose accuracy": "testing",
   "Government enforcement": "regulatory",
   "Operator network": "regulatory",
   "Scam & red flags": "reputation",

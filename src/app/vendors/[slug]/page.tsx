@@ -15,6 +15,7 @@ import { signalLabel } from "@/lib/signal-copy";
 import { ProductCard } from "@/components/product-card";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
+import { checkContent } from "@/server/verify/content-check";
 import { composeVerdict } from "@/server/verify/trust-graph";
 import { gradeFromVerdict } from "@/server/verify/grade";
 import { persistVendorGrade } from "@/server/verify/grade-store";
@@ -148,7 +149,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
     review: vendorReview ? { sentiment: vendorReview.sentiment, reviewVolume: vendorReview.reviewVolume, confidence: vendorReview.confidence } : null,
     community: communitySignal ? { sentiment: communitySignal.sentiment, mentionCount: communitySignal.mention_count, negativeCount: communitySignal.negative_count, positiveCount: communitySignal.positive_count } : null,
     links: vendorLinks.map((l) => ({ strength: l.strength, linkedSlug: l.linkedSlug })),
-    status: vendorStatus ? { status: vendorStatus.status } : null,
+    status: vendorStatus ? { status: vendorStatus.status, consecutiveFailures: vendorStatus.consecutiveFailures ?? 0 } : null,
+    // Read from the certificates already loaded above. Omitting these is what made this page
+    // publish a dose-blind verdict AND write it over the correct one.
+    underdosedCount: vendorLabTests.filter((t) => checkContent(t.sample_name ?? "", t.measured_content ?? null).verdict === "underdosed").length,
+    overfilledCount: vendorLabTests.filter((t) => checkContent(t.sample_name ?? "", t.measured_content ?? null).verdict === "overfilled").length,
     flagCount: vendorFlags.length,
   });
   // The headline letter is a projection of the verdict above — same seams, no second opinion.

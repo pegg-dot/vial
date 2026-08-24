@@ -20,6 +20,9 @@ export interface VendorRiskSignals {
   communityPositiveCount: number | null;   // threaded so the directory verdict can't diverge from the vendor page
   links: Array<{ strength: string; linkedSlug: string }>;
   status: string;                 // vendor_status kind, or "operating"
+  /** Certificates measuring short of the label. Same seam the vendor page and the cron weigh. */
+  underdosedCount?: number;
+  overfilledCount?: number;
   /** Consecutive not-operating checks. One failed request is a timeout; two is a storefront gone. */
   statusFailures?: number;
   integrityFlagged: boolean;
@@ -52,7 +55,9 @@ export function assessVendorRisk(
     review: s.reviewSentiment ? { sentiment: s.reviewSentiment, reviewVolume: s.reviewVolume ?? undefined, confidence: s.reviewConfidence ?? undefined } : null,
     community: s.communitySentiment ? { sentiment: s.communitySentiment, mentionCount: s.communityMentionCount ?? undefined, negativeCount: s.communityNegativeCount ?? undefined, positiveCount: s.communityPositiveCount ?? undefined } : null,
     links: s.links,
-    status: { status: s.status, consecutiveFailures: s.statusFailures },
+    status: { status: s.status, consecutiveFailures: s.statusFailures ?? 0 },
+    underdosedCount: s.underdosedCount ?? 0,
+    overfilledCount: s.overfilledCount ?? 0,
     flagCount: s.integrityFlagged ? 1 : 0,
   });
   return { verdict: composed.verdict, redFlag: composed.verdict === "avoid" };

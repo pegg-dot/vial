@@ -36,8 +36,11 @@ export async function probeVendorStatus(domain: string): Promise<VendorStatus> {
 
 export async function recordVendorStatus(db: SqlConnection, vendorSlug: string, s: VendorStatus): Promise<void> {
   await db.query(
-    `INSERT INTO vendor_status (id, vendor_slug, status, http_code, redirect_host, detail, origin, checked_at)
-     VALUES ($1,$2,$3,$4,$5,$6,'live',NOW())
+    `INSERT INTO vendor_status (id, vendor_slug, status, http_code, redirect_host, detail, origin, checked_at, consecutive_failures)
+     -- The first probe counts. Omitting this column let a brand-new row take the schema default of
+     -- zero on a probe that had just FAILED, so the two-check gate actually needed three failures
+     -- and then printed "still gone after 2 checks" — off by one, and misstating its own evidence.
+     VALUES ($1,$2,$3,$4,$5,$6,'live',NOW(), CASE WHEN $3 IN ('operating','blocked','unknown') THEN 0 ELSE 1 END)
      ON CONFLICT (vendor_slug) DO UPDATE SET status=EXCLUDED.status, http_code=EXCLUDED.http_code, redirect_host=EXCLUDED.redirect_host, detail=EXCLUDED.detail, checked_at=NOW(),
        -- Count consecutive NOT-operating answers. A blocked status is bot protection, not absence,
        -- and must not accumulate: that mistake once sank live vendors as defunct. Recovery resets.

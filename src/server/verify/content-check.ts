@@ -55,3 +55,30 @@ export function checkContent(sampleName: string, measuredContent: string | null)
     : `Measured ${measuredMg} mg against ${labeledMg} mg labeled (${pct}%) — the dose is there.`;
   return { labeledMg, measuredMg, ratio, verdict, note };
 }
+
+/**
+ * How many certificates per vendor measured short of the label, and how many ran generous.
+ *
+ * One batch read for the whole market. Three separate surfaces compose a verdict — the cron, the
+ * vendor page and the directory — and each needs the same answer; deriving it three different ways
+ * is how they came to disagree in the first place.
+ */
+export async function doseCountsByVendor(
+  db: { query: <T>(sql: string, params?: unknown[]) => Promise<{ rows: T[] }> },
+): Promise<Map<string, { underdosed: number; overfilled: number }>> {
+  const { rows } = await db.query<{ vendor_slug: string | null; sample_name: string | null; measured_content: string | null }>(
+    `SELECT vendor_slug, sample_name, measured_content
+       FROM lab_test_records
+      WHERE vendor_slug IS NOT NULL AND measured_content IS NOT NULL`,
+  );
+  const out = new Map<string, { underdosed: number; overfilled: number }>();
+  for (const row of rows) {
+    if (!row.vendor_slug) continue;
+    const verdict = checkContent(row.sample_name ?? "", row.measured_content).verdict;
+    if (verdict !== "underdosed" && verdict !== "overfilled") continue;
+    const entry = out.get(row.vendor_slug) ?? { underdosed: 0, overfilled: 0 };
+    if (verdict === "underdosed") entry.underdosed += 1; else entry.overfilled += 1;
+    out.set(row.vendor_slug, entry);
+  }
+  return out;
+}

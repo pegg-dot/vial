@@ -1,4 +1,5 @@
 import { ThumbsUp, TriangleAlert, ExternalLink } from "lucide-react";
+import { splitFindingsAndGaps } from "@/server/verify/absence";
 import type { VendorReview } from "@/server/verify/vendor-reviews";
 
 const SENTIMENT: Record<string, { chip: string; label: string; bg: string }> = {
@@ -50,12 +51,25 @@ export function VendorReviewsPanel({ review, vendorName }: { review: VendorRevie
                 </ul>
               </div>
             )}
-            {review.redFlags.length > 0 && (
+            {/* Two different kinds of sentence used to share one rose "Red flags reported" heading.
+                A note that WE could not find a forum footprint is a gap in our capture, not a fault
+                of the business — and it was being published as a red flag on vendors this site
+                grades A. Findings keep the warning treatment; gaps are stated plainly as ours. */}
+            {splitFindingsAndGaps(review.redFlags).findings.length > 0 && (
               <div>
                 <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-rose-700"><TriangleAlert className="size-3.5" /> Red flags reported</p>
                 <ul className="mt-2 space-y-1.5">
-                  {review.redFlags.map((r, i) => <li key={i} className="flex gap-2 text-[13px] leading-5 text-black/65"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-rose-500" />{r}</li>)}
+                  {splitFindingsAndGaps(review.redFlags).findings.map((r, i) => <li key={i} className="flex gap-2 text-[13px] leading-5 text-black/65"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-rose-500" />{r}</li>)}
                 </ul>
+              </div>
+            )}
+            {splitFindingsAndGaps(review.redFlags).gaps.length > 0 && (
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-black/45">What we could not check</p>
+                <ul className="mt-2 space-y-1.5">
+                  {splitFindingsAndGaps(review.redFlags).gaps.map((r, i) => <li key={i} className="flex gap-2 text-[13px] leading-5 text-black/55"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-black/20" />{r}</li>)}
+                </ul>
+                <p className="mt-2 text-[11px] leading-4 text-black/40">This is a gap in what we found, not a finding against the vendor.</p>
               </div>
             )}
           </div>

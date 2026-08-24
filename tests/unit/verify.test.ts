@@ -7,6 +7,7 @@ import { sentimentOf } from "@/server/ingest/reddit";
 // A vendor with nothing on record — every seam empty. The base against which each seam is toggled.
 const EMPTY: VerdictInput = {
   vendorName: "Test Vendor", coaCount: 0, medianPurity: null, blindCount: 0,
+  underdosedCount: 0, overfilledCount: 0,
   enforcement: [], reputationDimensions: [], aggregators: [], signals: null,
   review: null, community: null, links: [], status: null, flagCount: 0,
 };
@@ -280,7 +281,7 @@ describe("trust graph — a certificate that documents a short fill is not evide
 // A storefront that is genuinely gone still reaches `avoid` — through scam reports, an enforcement
 // record, or a hard link to a flagged operator. It just cannot get there on one failed request.
 describe("trust graph — an unretried probe is not grounds for the harshest verdict", () => {
-  const withStatus = (status: string, over = {}) => ({ ...EMPTY, coaCount: 3, status: { status }, ...over });
+  const withStatus = (status: string, over = {}) => ({ ...EMPTY, coaCount: 3, status: { status, consecutiveFailures: 0 }, ...over });
 
   it("cautions rather than condemns when a storefront looks offline", () => {
     const r = composeVerdict(withStatus("offline"));
@@ -334,7 +335,7 @@ describe("trust graph — a storefront is condemned for staying gone, not for on
 
   // Absent a failure count at all, assume the worst about our own data, not about the vendor.
   it("cautions rather than condemns when no failure count is recorded", () => {
-    expect(composeVerdict({ ...EMPTY, coaCount: 3, status: { status: "offline" } }).verdict).toBe("caution");
+    expect(composeVerdict({ ...EMPTY, coaCount: 3, status: { status: "offline", consecutiveFailures: 0 } }).verdict).toBe("caution");
   });
 
   it("still ignores a storefront that merely blocks bots", () => {

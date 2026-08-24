@@ -60,10 +60,19 @@ export default async function NewsPage() {
                     <span className={`ink-1 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${meta.cls}`}>{meta.label}</span>
                     {n.news_date && <span className="text-[11px] font-bold tabular-nums text-[var(--muted)]">{n.news_date}</span>}
                     {n.publisher && <span className="text-[11px] font-semibold text-[var(--muted)]">· {n.publisher}</span>}
-                    {n.vendor_slug && (
+                    {/* vendor_name comes from a LEFT JOIN, so it is null exactly when we do not
+                        hold that vendor. Linking on the SLUG alone published a dead link on the
+                        DOJ guilty-plea item — the single entry on this page whose credibility
+                        matters most. Name it either way; only link when there is a page to reach. */}
+                    {n.vendor_slug && n.vendor_name && (
                       <Link href={`/vendors/${n.vendor_slug}`} className="ink-1 ml-auto inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#111214] transition hover:-translate-y-0.5">
-                        {n.vendor_name ?? n.vendor_slug} <ArrowUpRight className="size-3" />
+                        {n.vendor_name} <ArrowUpRight className="size-3" />
                       </Link>
+                    )}
+                    {n.vendor_slug && !n.vendor_name && (
+                      <span className="ink-1 ml-auto inline-flex items-center rounded-full bg-[#f7f7f4] px-2.5 py-1 text-[11px] font-bold text-[var(--muted)]" title="Named in this record. We do not track this vendor.">
+                        {n.vendor_slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                      </span>
                     )}
                   </div>
                   <h2 className="mt-3 text-xl font-extrabold leading-6 tracking-[-.02em]">{n.title}</h2>

@@ -23,10 +23,14 @@ export interface VerdictInput {
   coaCount: number;
   medianPurity: number | null;
   blindCount: number;
+  // REQUIRED, deliberately. These were optional and two of the three call sites silently omitted
+  // them — including the vendor page, which then PERSISTED its dose-blind verdict over the correct
+  // one the cron had computed. A field a caller can forget is a field a caller will forget, so the
+  // compiler enforces it now instead of a reviewer noticing.
   /** Certificates whose measured content fell short of the label. See content-check.ts. */
-  underdosedCount?: number;
+  underdosedCount: number;
   /** Generous fills. Counted so the seam can say "we looked", never treated as a concern. */
-  overfilledCount?: number;
+  overfilledCount: number;
   enforcement: Array<{ severity: string }>;
   reputationDimensions: Array<{ key: string; status: string; value: string }>;
   aggregators: Array<{ source: string; score: number | null; max_score: number | null }>;
@@ -34,7 +38,9 @@ export interface VerdictInput {
   review: { sentiment: string; reviewVolume?: string; confidence?: string } | null;
   community: { classification?: string | null; sentiment?: string | null; mentionCount?: number | null; negativeCount?: number | null; positiveCount?: number | null } | null;
   links: Array<{ strength: string; linkedSlug: string }>;
-  status: { status: string; consecutiveFailures?: number } | null;
+  // consecutiveFailures is REQUIRED for the same reason: dropped on the vendor page, the
+  // corroboration gate could never fire and a vanished storefront could never be condemned there.
+  status: { status: string; consecutiveFailures: number } | null;
   flagCount: number;
 }
 
@@ -283,7 +289,7 @@ export async function composeVerdictForVendorSlug(
     review: vendorReview ? { sentiment: vendorReview.sentiment, reviewVolume: vendorReview.reviewVolume, confidence: vendorReview.confidence } : null,
     community: communitySignal ? { sentiment: communitySignal.sentiment, mentionCount: communitySignal.mention_count, negativeCount: communitySignal.negative_count, positiveCount: communitySignal.positive_count } : null,
     links: vendorLinks.map((l) => ({ strength: l.strength, linkedSlug: l.linkedSlug })),
-    status: vendorStatus ? { status: vendorStatus.status, consecutiveFailures: vendorStatus.consecutiveFailures } : null,
+    status: vendorStatus ? { status: vendorStatus.status, consecutiveFailures: vendorStatus.consecutiveFailures ?? 0 } : null,
     flagCount: vendorFlags.length,
   });
   return { composed, vendorName: vendor.name, slug: vendor.slug };

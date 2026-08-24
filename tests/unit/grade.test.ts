@@ -166,7 +166,10 @@ describe("VialGrade dimensions", () => {
       signals: { domain_age_note: "3 months old", research_disclaimer: false, notable_copy: "back online", payment_methods: ["crypto"] },
       review: { sentiment: "mixed", reviewVolume: "heavy", confidence: "high" },
       community: { classification: "vouch", positiveCount: 3, mentionCount: 4, negativeCount: 0 },
-      links: [], status: { status: "offline" }, flagCount: 1,
+      links: [], status: { status: "offline", consecutiveFailures: 2 }, flagCount: 1,
+      // A dose factor MUST be emitted here, or this routing guard silently stops covering the
+      // newest seam — which is exactly how a label reaches the UI unrouted.
+      underdosedCount: 1, overfilledCount: 1,
     });
     expect(real.factors.length).toBeGreaterThan(6);
 
