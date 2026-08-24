@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { secretMatches } from "@/server/auth/secret-compare";
 import { runCollectionTick } from "@/server/collect/scheduler";
+import { TICK_MAX_TARGETS } from "@/server/collect/schedule-capacity";
 import { isLiveIngestApproved } from "@/server/ingest/live-sources";
 import { revalidateTag } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = await runCollectionTick({ budgetMs: 45_000, maxTargets: 8 });
+  const result = await runCollectionTick({ budgetMs: 45_000, maxTargets: TICK_MAX_TARGETS });
   // The catalog is served from cache because the root layout reads it on every request. This is the
   // moment it actually changed, so mark it stale now rather than serving old prices until the
   // revalidate window expires. "max" is stale-while-revalidate: the next visitor gets the cached
