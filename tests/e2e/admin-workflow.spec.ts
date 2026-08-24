@@ -99,7 +99,7 @@ test("staff can ingest, review, publish, and observe a catalog update", async ({
 });
 
 
-test.fixme("a controlled fixture change creates one visible cascade", async ({ page }) => {
+test("a controlled fixture change creates one visible cascade", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
   await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");

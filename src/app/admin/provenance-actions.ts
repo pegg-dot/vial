@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { requireStaff } from "@/server/auth/session";
 import { runSourceIngestion } from "@/server/agents/pipeline";
 import { reviewClaim } from "@/server/review/repository";
+import { advanceFixture } from "@/server/refresh/repository";
+import { processRefreshJob } from "@/server/refresh/scheduler";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 
 // The two writes behind snapshot → review → publish.
@@ -78,5 +80,37 @@ export async function reviewClaimAction(formData: FormData) {
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")) throw error;
     redirect(`/admin/review?error=${encodeURIComponent(error instanceof Error ? error.message.slice(0, 160) : "review failed")}`);
+  }
+}
+
+/**
+ * Advance a controlled fixture to its next version and immediately run the refresh it triggers.
+ *
+ * The two halves belong together. `advanceFixture` moves the source and emits
+ * `source.fixture.advanced` as a ROOT event; `processRefreshJob` fetches, snapshots, diffs and
+ * proposes claims under that same root. Leaving them apart would mean advancing a source and
+ * waiting on a sweep to notice — which is exactly the lag that made the whole pipeline feel
+ * theoretical.
+ *
+ * Everything that follows is linked to that one root, which is what makes a published price
+ * traceable back through the refresh to the version of the source that changed it.
+ */
+export async function advanceAndTraceAction(formData: FormData) {
+  const { principal } = await requireStaff();
+  const policyId = text(formData, "policyId");
+  if (!policyId) redirect("/admin/sources?error=missing");
+
+  try {
+    const { jobId } = await advanceFixture(policyId, principal.email);
+    const result = await processRefreshJob(jobId);
+    revalidatePath("/admin/sources");
+    revalidatePath("/admin/review");
+    // A refresh can legitimately end in "not-modified" — the source did not change — which carries
+    // no claim count. Reporting that honestly matters more than always having a number to show.
+    const claims = result && "proposedClaims" in result ? result.proposedClaims : 0;
+    redirect(`/admin/sources?refreshed=1&claims=${claims}&status=${encodeURIComponent(result?.status ?? "completed")}`);
+  } catch (error) {
+    if (error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")) throw error;
+    redirect(`/admin/sources?error=${encodeURIComponent(error instanceof Error ? error.message.slice(0, 160) : "refresh failed")}`);
   }
 }
