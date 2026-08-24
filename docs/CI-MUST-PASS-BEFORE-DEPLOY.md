@@ -1,84 +1,77 @@
 # Make CI a precondition for deploying
 
-Right now it isn't. Between 20 and 24 August the `verify` workflow failed eight times in a row on
-`main`, and every one of those commits deployed to vialgrade.com anyway, because Vercel builds from
-`main` whatever GitHub Actions says. Nobody was notified, so nobody looked.
+## What was wrong
 
-Two settings close it. Both are yours — I can't change either from here. Five minutes total.
+Between 20 and 24 August the `verify` workflow failed eight times in a row on `main`, and every one
+of those commits deployed to vialgrade.com anyway, because Vercel builds from `main` whatever GitHub
+Actions says. Nobody was notified, so nobody looked.
 
----
+Measured on 2026-08-24, so this isn't a theory:
 
-## 1. GitHub: stop anything merging into `main` while CI is red
+| | |
+|---|---|
+| commit `1d5594a` authored | **18:34:58** |
+| Vercel production deployment created | **18:35:02** — 4 seconds later |
+| CI finished | **~18:40** — five minutes after the site was already live |
 
-1. Go to **https://github.com/pegg-dot/vial/settings/rules** → **New ruleset** → **New branch ruleset**
-2. **Ruleset name**: `main must be green`
-3. **Enforcement status**: switch from *Disabled* to **Active** — it defaults to disabled and does nothing until you change it
-4. Under **Target branches** → **Add target** → **Include default branch**
-5. Under **Rules**, tick:
-   - **Require status checks to pass**
-     - then **Add checks** and search for **`verify`** — that's the job name in `.github/workflows/ci.yml`
-     - tick **Require branches to be up to date before merging**
-   - **Block force pushes**
-6. **Create**
+## Why a GitHub ruleset does not fix it
 
-**One thing to decide.** If you also tick *Require a pull request before merging*, you can no longer
-push straight to `main` — every change goes through a PR. That's the stronger setup and it's what
-makes the status check actually unavoidable. Without it, a direct push to `main` still lands; the
-ruleset only governs merges.
+A branch ruleset governs **merges**. This repo is worked by pushing straight to `main`, and a direct
+push isn't a merge, so the status check never gets a chance to block it. You'd have to also require
+a pull request for every change — and even then Vercel would still deploy the merge commit the
+instant it lands, before the post-merge run finishes.
 
-Given how this repo is worked on today (direct pushes to `main`), I'd suggest **leaving the PR
-requirement off for now** and turning it on when you want that discipline. The status check alone
-still gets you the alert and the red X.
+The only thing that makes green a real precondition is **making CI the deploy path**, so a red run
+has nothing to promote.
 
 ---
 
-## 2. Vercel: stop deploying a commit whose CI failed
+## Built (in the repo, already on `main`)
 
-1. Go to **https://vercel.com** → your **vial** project → **Settings** → **Git**
-2. Find **Ignored Build Step** (near the bottom)
-3. Set it to **Custom** and paste this command:
+`.github/workflows/ci.yml` has a `deploy` job that `needs: [verify, postgres-contract]`. It runs
+only on a push to `main`, builds with the Vercel CLI, promotes to production, and then curls
+vialgrade.com until it returns 200 — a promotion nobody checked is not a deployment.
+
+It is **inert right now**. Without `VERCEL_TOKEN` it does not deploy, and it says so in the run
+summary with a warning annotation rather than skipping quietly, so a green check never implies a
+gate that isn't there.
+
+## The two steps left — both yours, about three minutes
+
+### 1. Give CI a token
 
 ```bash
-node -e "process.exit(process.env.VERCEL_GIT_COMMIT_REF==='main'?0:0)"
+# create at https://vercel.com/account/settings/tokens  (scope: your team, no expiry or 1 year)
+gh secret set VERCEL_TOKEN --repo pegg-dot/vial
 ```
 
-Actually — **skip that one.** Vercel's Ignored Build Step runs *before* CI finishes, so it can't
-wait for a result that doesn't exist yet. Racing it produces flaky deploys, which is worse than the
-problem.
+Paste the token when it prompts. Nothing else needs configuring — the org and project IDs are
+already in the workflow, and they're not secrets (they're in every deployment URL).
 
-**Do this instead — Vercel's own setting for exactly this:**
+### 2. Tell me, and I'll turn Vercel's auto-deploy off
 
-1. **Settings** → **Git** → **Deploy Hooks / Production Branch**
-2. Turn ON **"Only deploy when GitHub Actions succeed"** if your plan shows it
-   *(Vercel labels this differently across plans — look for wording about waiting on checks)*
-3. If your plan doesn't offer it, the reliable alternative is to **disconnect automatic Git
-   deploys** and deploy from CI instead: add a final step to `.github/workflows/ci.yml` that runs
-   `vercel deploy --prod` with a `VERCEL_TOKEN` secret. That way CI *is* the deploy path, and a red
-   run physically cannot ship.
+One line in `vercel.json`:
 
-I'd do option 3 if the setting isn't available. Tell me and I'll write the workflow step — it's
-about fifteen lines and I can have it tested before you touch anything.
+```json
+"git": { "deploymentEnabled": { "main": false } }
+```
 
----
+**This must land after the token, never before.** Flipping it while CI can't deploy means nothing
+ships at all. That's why it isn't already committed.
 
-## 3. Get told when it breaks
-
-The reason a week of red went unnoticed is that nothing said so.
-
-1. **https://github.com/settings/notifications**
-2. Under **Actions**, tick **Send notifications for failed workflows only**
-3. Choose email, or **Web and Mobile** if you have the GitHub app
-
-That single checkbox is what would have caught this on day one.
+Once both are done: push to `main` → checks run → green promotes, red does not, and the run summary
+tells you which happened.
 
 ---
 
-## What "green" currently means
+## Also worth turning on (30 seconds, unrelated to the above)
 
-The `verify` job runs, in order: `npm ci` · lint · typecheck · **623 unit tests** ·
-**57 integration files** · static security audit (575 source files) · database backup drill ·
-`npm audit --audit-level=high` · production build · roles audit · accessibility audit ·
-**14 Playwright end-to-end tests** — then a second job validates the production environment and
-builds against the real PostgreSQL contract.
+Nobody was notified during those eight red runs. GitHub → your avatar → **Settings** →
+**Notifications** → **Actions** → tick **Send notifications for failed workflows only**. Without it
+a red `main` is silent, which is how it went unnoticed for four days.
 
-That is a genuinely strong gate. It has just never been load-bearing.
+## What was NOT the answer
+
+Vercel's **Ignored Build Step** can't do this. It runs before CI has finished — often before it has
+started — so there is no result for it to wait on. Racing it produces flaky deploys, which is worse
+than the problem it's trying to solve.
