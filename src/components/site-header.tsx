@@ -25,7 +25,7 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-[#111214] bg-[rgba(247,247,244,.85)] backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-[1320px] items-center gap-6 px-5 sm:px-8">
-        <Wordmark />
+        <Wordmark idPrefix="wmh" />
 
         <nav aria-label="Primary navigation" className="hidden items-center gap-1 md:flex">
           {items.map((item) => {

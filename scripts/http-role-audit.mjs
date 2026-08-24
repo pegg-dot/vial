@@ -1,21 +1,78 @@
-import { login,startProductionServer,stopProductionServer } from "./lib/production-server.mjs";
-const server=await startProductionServer({port:3417});const {base,child}=server;const failures=[];
-async function check(path,expected,{cookie,method="GET",body,headers={}}={}){const r=await fetch(`${base}${path}`,{method,headers:{...(cookie?{cookie}:{}),...(body?{"content-type":"application/json"}:{}),...headers},body:body?JSON.stringify(body):undefined,redirect:"manual"});if(![].concat(expected).includes(r.status))failures.push(`${method} ${path}: expected ${expected}, got ${r.status}`);return r}
-try{
- await check("/market",200);await check("/search?q=bpc157",200);await check("/sell",200);await check("/labs",200);await check("/passports",200);await check("/testing",200);await check("/admin/users",307);await check("/account",307);await check("/for-you",307);await check("/saved-searches",307);await check("/seller",307);await check("/seller/onboarding",307);await check("/lab",307);
- await check("/api/v1/seller/operator/catalog",401);await check("/api/v1/seller/operator/catalog",401,{headers:{authorization:"Bearer vial_seller_invalid"}});
- const customer=await login(base,"nora@example.test","VialGradeDemoCustomer!2026");const seller=await login(base,"marcus@helixtest.test","VialGradeDemoSeller!2026");const laboratory=await login(base,"elena@aperture.test","VialGradeDemoLaboratory!2026");const reviewer=await login(base,"maya@vialgrade.test","VialGradeDemoReviewer!2026","staff");const admin=await login(base,"jon@vialgrade.test","VialGradeDemoAdmin!2026","staff");
- for(const path of ["/account","/for-you","/saved-searches","/account/preferences","/account/history","/account/notifications"])await check(path,200,{cookie:customer});await check("/seller",307,{cookie:customer});await check("/seller/onboarding",307,{cookie:customer});await check("/lab",307,{cookie:customer});await check("/admin",307,{cookie:customer});
- const sellerPages=["/seller","/seller/onboarding","/seller/integrations","/seller/imports","/seller/catalog","/seller/batches","/seller/evidence","/seller/testing","/seller/inventory","/seller/orders","/seller/payouts","/seller/disputes","/seller/support","/seller/analytics","/seller/health","/seller/team","/seller/developer","/seller/payments","/seller/settings"];
- for(const path of sellerPages)await check(path,200,{cookie:seller});for(const path of ["/account","/for-you","/saved-searches","/cart","/checkout"])await check(path,[307,308],{cookie:seller});await check("/admin",307,{cookie:seller});await check("/admin/sellers",307,{cookie:seller});
- const tokenResponse=await check("/api/v1/seller/tokens",201,{cookie:seller,method:"POST",body:{name:"Runtime audit token",scopes:["seller:read","catalog:read"]}});const tokenPayload=tokenResponse.status===201?await tokenResponse.json():{};if(tokenPayload.token){await check("/api/v1/seller/operator/catalog",200,{headers:{authorization:`Bearer ${tokenPayload.token}`}});await check("/api/v1/seller/operator/imports",403,{method:"POST",headers:{authorization:`Bearer ${tokenPayload.token}`},body:{provider:"csv",rows:[{title:"BPC-157 10 mg"}]}});}else failures.push("Seller token creation did not return a raw token");
- const labPages=["/lab","/lab/onboarding","/lab/orders","/lab/samples","/lab/custody","/lab/methods","/lab/runs","/lab/reports","/lab/quality","/lab/developer"];
- for(const path of labPages)await check(path,200,{cookie:laboratory});for(const path of ["/account","/seller","/cart","/checkout","/admin"])await check(path,[307,308],{cookie:laboratory});
- await check("/api/v1/laboratory/context",200,{cookie:laboratory});await check("/api/v1/laboratory/methods",200,{cookie:laboratory});await check("/api/v1/laboratory/context",401);await check("/api/v1/laboratory/operator/orders",401,{headers:{authorization:"Bearer vial_lab_invalid"}});
- const labTokenResponse=await check("/api/v1/laboratory/tokens",201,{cookie:laboratory,method:"POST",body:{label:"Runtime lab token",scopes:["lab:read"]}});const labTokenPayload=labTokenResponse.status===201?await labTokenResponse.json():{};if(labTokenPayload.token){await check("/api/v1/laboratory/operator/orders",200,{headers:{authorization:`Bearer ${labTokenPayload.token}`}});await check("/api/v1/laboratory/operator/report-drafts",403,{method:"POST",headers:{authorization:`Bearer ${labTokenPayload.token}`},body:{testOrderId:"missing",sampleId:"missing",reportNumber:"X",summary:"X"}});}else failures.push("Laboratory token creation did not return a raw token");
- await check("/admin/review",200,{cookie:reviewer});for(const path of ["/admin/entities","/admin/benchmarks","/admin/data-quality","/admin/search-quality","/admin/evidence-network","/admin/laboratories","/admin/sampling","/admin/passports","/admin/report-integrity"])await check(path,200,{cookie:reviewer});await check("/admin/finance",307,{cookie:reviewer});await check("/admin/users",307,{cookie:reviewer});await check("/admin/sellers",200,{cookie:reviewer});for(const path of ["/admin/underwriting","/admin/activation","/admin/provider-events"])await check(path,200,{cookie:reviewer});await check("/admin/settlements",307,{cookie:reviewer});
- for(const path of ["/admin","/admin/users","/admin/finance","/admin/security","/admin/observability","/admin/entities","/admin/benchmarks","/admin/data-quality","/admin/search-quality","/admin/consumer-intelligence","/admin/sellers","/admin/underwriting","/admin/activation","/admin/settlements","/admin/provider-events","/admin/evidence-network","/admin/laboratories","/admin/sampling","/admin/passports","/admin/report-integrity"])await check(path,200,{cookie:admin});
- await check("/api/v1/commerce/refunds",403,{cookie:reviewer,method:"POST",body:{orderId:"missing",amount:1}});await check("/api/v1/commerce/control-plane",200,{cookie:reviewer});await check("/api/v1/commerce/settlements",403,{cookie:reviewer,method:"POST",body:{}});await check("/api/v1/commerce/refunds",400,{cookie:admin,method:"POST",body:{orderId:"missing",amount:1}});
- for(const path of ["/api/v1/watchlist","/api/v1/consumer/preferences","/api/v1/saved-searches","/api/v1/comparisons","/api/v1/follows","/api/v1/notifications","/api/v1/market-summary"])await check(path,200,{cookie:customer});await check("/api/v1/watchlist",401);await check("/api/v1/consumer/preferences",401);
- if(failures.length)throw new Error(`${failures.join("\n")}\n\nServer output:\n${server.output()}`);console.log("HTTP role audit passed for anonymous, customer, seller, laboratory, reviewer, administrator, and scoped seller/laboratory API boundaries.");
-}finally{await stopProductionServer(child)}
+import { login, startProductionServer, stopProductionServer } from "./lib/production-server.mjs";
+import { discoverRoutes, needsCustomer, needsAdmin, isPublic, isRedirected, assertDiscoverySane } from "./lib/app-routes.mjs";
+
+// Who can reach what, checked over real HTTP against the production build.
+//
+// This audit is about AUTHORIZATION BOUNDARIES, and it had stopped testing them. Its route list was
+// typed out by hand and commit 298e7ce ("buyer-only surface, one admin") deleted the /seller and
+// /lab surfaces and most of /admin, so it demanded ~50 pages that 404 and failed on the first one —
+// `GET /sell: expected 200, got 404` — before reaching a single boundary assertion. A red build
+// nobody read meant nobody knew the boundaries had gone unchecked.
+//
+// The page matrix is derived now. The API assertions stay written out, because they are claims
+// about specific endpoints and cannot be inferred from a filename.
+const server = await startProductionServer({ port: 3417 });
+const { base, child } = server;
+const failures = [];
+
+async function check(path, expected, { cookie, method = "GET", body, headers = {} } = {}) {
+  const r = await fetch(`${base}${path}`, {
+    method,
+    headers: { ...(cookie ? { cookie } : {}), ...(body ? { "content-type": "application/json" } : {}), ...headers },
+    body: body ? JSON.stringify(body) : undefined,
+    redirect: "manual",
+  });
+  if (![].concat(expected).includes(r.status)) failures.push(`${method} ${path}: expected ${expected}, got ${r.status}`);
+  return r;
+}
+
+try {
+  const routes = await discoverRoutes();
+  assertDiscoverySane(routes);
+  const publicRoutes = routes.filter(isPublic);
+  const customerRoutes = routes.filter(needsCustomer);
+  const adminRoutes = routes.filter(needsAdmin);
+  console.log(`Auditing ${routes.length} routes: ${publicRoutes.length} public, ${customerRoutes.length} customer, ${adminRoutes.length} staff.`);
+
+  // ── A stranger ──────────────────────────────────────────────────────────────────────────────
+  // Public pages must open. Everything else must redirect, not render and not error: a 404 would
+  // leak nothing but a 200 would leak everything.
+  for (const path of publicRoutes) await check(path, 200);
+  // Quarantined commerce and permanent aliases must redirect. If /cart or /checkout ever answers
+  // 200 this fails, which is exactly the alarm we want: it would mean commerce came back.
+  for (const path of routes.filter(isRedirected)) await check(path, [307, 308]);
+  for (const path of [...customerRoutes, ...adminRoutes]) await check(path, [307, 308]);
+
+  // Unauthenticated API access is refused, and a forged bearer is refused the same way — the seller
+  // and laboratory operator APIs outlived their pages and are still reachable.
+  for (const path of ["/api/v1/watchlist", "/api/v1/consumer/preferences", "/api/v1/laboratory/context"]) await check(path, 401);
+  await check("/api/v1/seller/operator/catalog", 401);
+  await check("/api/v1/seller/operator/catalog", 401, { headers: { authorization: "Bearer vial_seller_invalid" } });
+  await check("/api/v1/laboratory/operator/orders", 401, { headers: { authorization: "Bearer vial_lab_invalid" } });
+
+  // ── A signed-in customer ────────────────────────────────────────────────────────────────────
+  const customer = await login(base, "nora@example.test", "VialGradeDemoCustomer!2026");
+  for (const path of customerRoutes) await check(path, 200, { cookie: customer });
+  // The boundary that matters: a customer session must not open a staff surface.
+  for (const path of adminRoutes) await check(path, [307, 308], { cookie: customer });
+  for (const path of ["/api/v1/watchlist", "/api/v1/consumer/preferences", "/api/v1/saved-searches", "/api/v1/comparisons", "/api/v1/follows", "/api/v1/notifications", "/api/v1/market-summary"]) {
+    await check(path, 200, { cookie: customer });
+  }
+
+  // ── Staff ───────────────────────────────────────────────────────────────────────────────────
+  const admin = await login(base, "jon@vialgrade.test", "VialGradeDemoAdmin!2026", "staff");
+  for (const path of adminRoutes) await check(path, 200, { cookie: admin });
+
+  // Money moves only for an administrator. A reviewer is staff and still must not: 403, not 200.
+  const reviewer = await login(base, "maya@vialgrade.test", "VialGradeDemoReviewer!2026", "staff");
+  await check("/api/v1/commerce/control-plane", 200, { cookie: reviewer });
+  await check("/api/v1/commerce/refunds", 403, { cookie: reviewer, method: "POST", body: { orderId: "missing", amount: 1 } });
+  await check("/api/v1/commerce/settlements", 403, { cookie: reviewer, method: "POST", body: {} });
+  // 400 not 403: the administrator IS permitted, and fails only on the missing order.
+  await check("/api/v1/commerce/refunds", 400, { cookie: admin, method: "POST", body: { orderId: "missing", amount: 1 } });
+
+  if (failures.length) throw new Error(`${failures.join("\n")}\n\nServer output:\n${server.output()}`);
+  console.log("HTTP role audit passed for anonymous, customer and staff page boundaries, and for scoped seller/laboratory/commerce API boundaries.");
+} finally {
+  await stopProductionServer(child);
+}

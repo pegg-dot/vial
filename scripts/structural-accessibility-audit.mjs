@@ -1,14 +1,77 @@
 import { load } from "cheerio";
-import { login,startProductionServer,stopProductionServer } from "./lib/production-server.mjs";
-const {base,child}=await startProductionServer({port:3418});const failures=[];
-function audit(path,html){const $=load(html);if(!$("html").attr("lang"))failures.push(`${path}: missing html lang`);if(!$("title").text().trim())failures.push(`${path}: missing title`);if($("h1").length!==1)failures.push(`${path}: expected exactly one h1, found ${$("h1").length}`);$("img").each((_,element)=>{if($(element).attr("alt")==null)failures.push(`${path}: image missing alt`)});const ids=new Set();$("[id]").each((_,element)=>{const id=$(element).attr("id");if(id&&ids.has(id))failures.push(`${path}: duplicate id ${id}`);if(id)ids.add(id)});$("button").each((index,element)=>{const node=$(element);const name=node.text().trim()||node.attr("aria-label")||node.attr("title");if(!name)failures.push(`${path}: button ${index+1} has no accessible name`)});$("input:not([type=hidden]), select, textarea").each((index,element)=>{const node=$(element);const id=node.attr("id");const named=node.attr("aria-label")||node.attr("aria-labelledby")||(id&&$(`label[for='${id}']`).length)||node.closest("label").length;if(!named)failures.push(`${path}: form control ${index+1} has no associated label`)});}
-async function page(path,cookie){const r=await fetch(`${base}${path}`,{headers:cookie?{cookie}:{}});if(r.status!==200){failures.push(`${path}: returned ${r.status}`);return}audit(path,await r.text())}
-try{
- for(const path of ["/","/market","/search?q=bpc157","/compounds","/vendors","/research","/labs","/passports","/testing","/signals","/about","/help","/sell","/login"])await page(path);
- const customer=await login(base,"nora@example.test","VialGradeDemoCustomer!2026");const seller=await login(base,"marcus@helixtest.test","VialGradeDemoSeller!2026");const laboratory=await login(base,"elena@aperture.test","VialGradeDemoLaboratory!2026");const admin=await login(base,"jon@vialgrade.test","VialGradeDemoAdmin!2026","staff");
- for(const path of ["/account","/account/security","/account/preferences","/account/history","/account/notifications","/for-you","/saved-searches","/watchlist","/compare","/cart"])await page(path,customer);
- for(const path of ["/seller","/seller/onboarding","/seller/integrations","/seller/imports","/seller/catalog","/seller/batches","/seller/evidence","/seller/testing","/seller/inventory","/seller/orders","/seller/payouts","/seller/disputes","/seller/support","/seller/analytics","/seller/health","/seller/team","/seller/developer","/seller/payments","/seller/settings"])await page(path,seller);
- for(const path of ["/lab","/lab/onboarding","/lab/orders","/lab/samples","/lab/custody","/lab/methods","/lab/runs","/lab/reports","/lab/quality","/lab/developer"])await page(path,laboratory);
- for(const path of ["/admin","/admin/security","/admin/observability","/admin/entities","/admin/benchmarks","/admin/data-quality","/admin/search-quality","/admin/consumer-intelligence","/admin/sellers","/admin/underwriting","/admin/activation","/admin/settlements","/admin/provider-events","/admin/evidence-network","/admin/laboratories","/admin/sampling","/admin/passports","/admin/report-integrity"])await page(path,admin);
- if(failures.length)throw new Error(failures.join("\n"));console.log("Structural accessibility audit passed across public, customer, seller, laboratory, and staff surfaces.")
-}finally{await stopProductionServer(child)}
+import { login, startProductionServer, stopProductionServer } from "./lib/production-server.mjs";
+import { discoverRoutes, needsCustomer, needsAdmin, isPublic, assertDiscoverySane } from "./lib/app-routes.mjs";
+
+// Structural accessibility across every page the app actually serves.
+//
+// The route list used to be typed out here by hand, and it rotted. Commit 298e7ce ("buyer-only
+// surface, one admin") deleted the entire /seller and /lab surfaces and all but three /admin pages;
+// this file went on requesting 47 routes that no longer existed, so the audit failed on 404s and
+// said nothing whatsoever about accessibility. CI stayed red for a week and the real signal — that
+// every served page has a title, one h1, labelled controls and named buttons — was lost inside it.
+//
+// So the list is DISCOVERED now. Every page.tsx under src/app is a route, which means a page added
+// tomorrow is audited tomorrow, and a page deleted stops being demanded. The assertions below are
+// unchanged: this fixes WHICH pages are checked, never HOW strictly.
+const { base, child } = await startProductionServer({ port: 3418 });
+const failures = [];
+
+function audit(route, html) {
+  const $ = load(html);
+  if (!$("html").attr("lang")) failures.push(`${route}: missing html lang`);
+  if (!$("title").text().trim()) failures.push(`${route}: missing title`);
+  if ($("h1").length !== 1) failures.push(`${route}: expected exactly one h1, found ${$("h1").length}`);
+  $("img").each((_, element) => { if ($(element).attr("alt") == null) failures.push(`${route}: image missing alt`); });
+  const ids = new Set();
+  $("[id]").each((_, element) => {
+    const id = $(element).attr("id");
+    if (id && ids.has(id)) failures.push(`${route}: duplicate id ${id}`);
+    if (id) ids.add(id);
+  });
+  $("button").each((index, element) => {
+    const node = $(element);
+    if (!(node.text().trim() || node.attr("aria-label") || node.attr("title"))) failures.push(`${route}: button ${index + 1} has no accessible name`);
+  });
+  $("input:not([type=hidden]), select, textarea").each((index, element) => {
+    const node = $(element);
+    const id = node.attr("id");
+    const named = node.attr("aria-label") || node.attr("aria-labelledby") || (id && $(`label[for='${id}']`).length) || node.closest("label").length;
+    if (!named) failures.push(`${route}: form control ${index + 1} has no associated label`);
+  });
+}
+
+async function page(route, cookie) {
+  const r = await fetch(`${base}${route}`, { headers: cookie ? { cookie } : {} });
+  // A login page redirecting an already-authenticated session is correct behaviour, not a fault.
+  if (r.status !== 200) {
+    if (isLoginPage(route) && cookie && (r.status === 302 || r.status === 307)) return;
+    failures.push(`${route}: returned ${r.status}`);
+    return;
+  }
+  audit(route, await r.text());
+}
+
+try {
+  const routes = await discoverRoutes();
+  assertDiscoverySane(routes);
+  const publicRoutes = routes.filter(isPublic);
+  const customerRoutes = routes.filter(needsCustomer);
+  const adminRoutes = routes.filter(needsAdmin);
+  console.log(`Auditing ${routes.length} discovered routes: ${publicRoutes.length} public, ${customerRoutes.length} customer, ${adminRoutes.length} staff.`);
+
+  for (const route of publicRoutes) await page(route);
+
+  if (customerRoutes.length) {
+    const customer = await login(base, "nora@example.test", "VialGradeDemoCustomer!2026");
+    for (const route of customerRoutes) await page(route, customer);
+  }
+  if (adminRoutes.length) {
+    const admin = await login(base, "jon@vialgrade.test", "VialGradeDemoAdmin!2026", "staff");
+    for (const route of adminRoutes) await page(route, admin);
+  }
+
+  if (failures.length) throw new Error(failures.join("\n"));
+  console.log("Structural accessibility audit passed across every served page.");
+} finally {
+  await stopProductionServer(child);
+}

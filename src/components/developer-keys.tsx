@@ -64,7 +64,10 @@ export function DeveloperKeys({ initialKeys }: { initialKeys: KeyRow[] }) {
 
       <div className="ink hard rounded-[20px] bg-white p-6">
         <h2 className="text-lg font-extrabold tracking-[-.02em]">Create an API key</h2>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Key name (e.g. reporting pipeline)" className="ink-1 mt-4 w-full rounded-[10px] bg-white px-4 py-2.5 text-sm font-medium outline-none focus:shadow-[3px_3px_0_0_#2b31d8]" />
+        {/* A placeholder is not a label: it is unreadable to a screen reader as a name and it
+            disappears the moment someone types, so anyone who looks away loses what the field was
+            for. The visible placeholder stays as a hint; the accessible name is explicit. */}
+        <input value={name} onChange={(e) => setName(e.target.value)} aria-label="Key name" placeholder="Key name (e.g. reporting pipeline)" className="ink-1 mt-4 w-full rounded-[10px] bg-white px-4 py-2.5 text-sm font-medium outline-none focus:shadow-[3px_3px_0_0_#2b31d8]" />
         <div className="mt-4 space-y-2">
           {SCOPES.map((scope) => (
             <label key={scope.id} className="flex items-center gap-3 text-sm">
