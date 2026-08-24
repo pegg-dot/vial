@@ -108,3 +108,24 @@ export async function getObservedIssuers(): Promise<{ lab: string; count: number
     `SELECT lab, COUNT(*) n FROM lab_test_records WHERE lab IS NOT NULL AND lab <> '' GROUP BY lab ORDER BY n DESC`,
   )).rows.map((r) => ({ lab: r.lab, count: Number(r.n) }));
 }
+
+/**
+ * A homepage reading, and whether it is usable.
+ *
+ * The distinction this exists to hold: a FAILED read is null, and zero is an ANSWER. The homepage
+ * used to test `!catalog || !labTests`, and getCertificatesOnRecord returns a number — so a site
+ * holding no certificates rendered a notice reading "We can't reach the catalogue right now" and,
+ * in the same breath, "they are not zero, and nothing has been lost". Both halves false, published
+ * with total confidence, by a site whose product is catching exactly that in other people's
+ * marketing.
+ *
+ * An empty catalogue is a true and unremarkable thing to render. Only an unreadable one is an
+ * incident. Written as a type predicate so the compiler enforces the narrowing rather than the
+ * caller re-deriving it and getting it wrong a second time.
+ */
+export interface HomeReading<TCatalog> { catalog: TCatalog | null; certificates: number | null }
+
+export function isReadable<TCatalog>(reading: HomeReading<TCatalog>): reading is { catalog: TCatalog; certificates: number } {
+  return reading.catalog !== null && reading.catalog !== undefined
+    && reading.certificates !== null && reading.certificates !== undefined;
+}

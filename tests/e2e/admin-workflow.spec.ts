@@ -69,12 +69,12 @@ test("health is public while run receipts require staff", async ({ request }) =>
 // they stay, failing loudly in intent and quietly in CI, until the surface is rebuilt. Restoring
 // them is the acceptance test for that work.
 
-test.fixme("staff can ingest, review, publish, and observe a catalog update", async ({ page }) => {
+test("staff can ingest, review, publish, and observe a catalog update", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
   await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
-  await expect(page.getByRole("heading", { name: "Market operations" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Traffic you can prove you sent" })).toBeVisible();
 
   await page.goto("/admin/ingest");
   await page.getByLabel("Target listing").selectOption("northstar-bpc-157-10mg");
@@ -104,7 +104,7 @@ test.fixme("a controlled fixture change creates one visible cascade", async ({ p
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
   await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
-  await expect(page.getByRole("heading", { name: "Market operations" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Traffic you can prove you sent" })).toBeVisible();
   await page.goto("/admin/sources");
   await expect(page.getByRole("heading", { name: "Refresh without losing lineage." })).toBeVisible();
 

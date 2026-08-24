@@ -21,6 +21,15 @@ export function AdminShell({ role, principal, children }: { role: StaffRole; pri
         <div className="flex items-center gap-3">
           <Link href="/admin" className="text-sm font-black uppercase tracking-[.18em]">VialGrade admin</Link>
           <span className="rounded-full bg-white/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.1em]">{role}</span>
+          {/* The provenance loop, in the order it runs. It is three pages rather than a sidebar
+              because it is one path, and a reviewer who lands mid-way should see where they are in it. */}
+          <nav aria-label="Provenance" className="ml-2 hidden items-center gap-1 text-[11px] font-bold uppercase tracking-[.1em] text-white/55 sm:flex">
+            <Link href="/admin/ingest" className="rounded-full px-2.5 py-1 transition hover:bg-white/12 hover:text-white">Capture</Link>
+            <span aria-hidden className="text-white/25">→</span>
+            <Link href="/admin/review" className="rounded-full px-2.5 py-1 transition hover:bg-white/12 hover:text-white">Review</Link>
+            <span aria-hidden className="text-white/25">→</span>
+            <Link href="/admin/publications" className="rounded-full px-2.5 py-1 transition hover:bg-white/12 hover:text-white">Published</Link>
+          </nav>
         </div>
         <div className="flex items-center gap-4 text-xs font-semibold text-white/60">
           <span className="hidden sm:inline">{principal.email}</span>

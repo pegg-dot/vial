@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
-import { getCertificatesOnRecord } from "@/server/public-repository";
+import { getCertificatesOnRecord, isReadable } from "@/server/public-repository";
 import { HomeTicker } from "@/components/home/ticker";
 import { HomeHero } from "@/components/home/hero";
 import { HomeManifesto } from "@/components/home/manifesto";
@@ -36,8 +36,10 @@ export default async function HomePage() {
     return null;
   });
   const labTests = await getCertificatesOnRecord().catch(() => null);
-  if (!catalog || !labTests) return <HomeDataUnavailable />;
-  const { compounds, products, vendors } = catalog;
+  // null means the read FAILED. Zero certificates is an ANSWER, not an outage — see isReadable.
+  const reading = { catalog, certificates: labTests };
+  if (!isReadable(reading)) return <HomeDataUnavailable />;
+  const { compounds, products, vendors } = reading.catalog;
   // Curated shortlists — no more 83-wide walls.
   const topVendors = [...vendors]
     .sort((a, b) => b.coaCount - a.coaCount || b.productCount - a.productCount || b.passportCount - a.passportCount)
@@ -68,7 +70,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <HomeBigNumber labTests={labTests} vendors={vendors.length} listings={products.length} />
+      <HomeBigNumber labTests={reading.certificates} vendors={vendors.length} listings={products.length} />
 
       {/* Most-tested vendors */}
       <section className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24">

@@ -12,18 +12,13 @@ async function loginCustomer(page: import("@playwright/test").Page) {
   await expect(page).toHaveURL(/\/account/);
 }
 
-// ⚠️ Harness gap, not a product bug. Under `next start` the audit/e2e server seeds with
-// VIALGRADE_SEED_FIXTURES but the catalogue comes back empty, so `/` renders its honest empty
-// state — "We can't reach the catalogue right now." — and there is no hero heading to assert.
-// Verified two ways before marking this: the identical probe against 0a56f3b (this session's
-// starting commit) shows the same empty state, so it predates today's work entirely; and
-// production is fine — vialgrade.com serves "Know what's really in the vial." right now.
-//
-// The other six specs in this file pass because they exercise surfaces that do not need a
-// populated catalogue. Fixing the fixture seeding under a production server is the real work, and
-// unskipping this is its acceptance test.
+// This was failing because of a real bug, not a stale expectation. getCertificatesOnRecord returns
+// a NUMBER and the homepage guarded with `!labTests`, so a database holding zero certificates —
+// a fresh deployment, or this harness — rendered the outage notice claiming the catalogue was
+// unreachable and that the figures were "not zero, and nothing has been lost". Both false. See
+// isReadable in public-repository: a failed read is null, and zero is an answer.
 
-test.fixme("home page and command search expose the market", async ({ page }) => {
+test("home page and command search expose the market", async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
