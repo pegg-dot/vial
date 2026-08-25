@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { AlertTriangle, CheckCircle2, Database, RadioTower, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, XCircle } from "lucide-react";
 import { getRefreshMetrics } from "@/server/refresh/repository";
 import { getIntelligenceMetrics } from "@/server/intelligence/repository";
 import { checkReadiness } from "@/server/health/readiness";
+import { getCollectionMetrics, isKeepingUp, describeWait } from "@/server/collect/metrics";
 
 export const metadata: Metadata = { title: "System status", alternates: { canonical: "/status" } };
 export const dynamic = "force-dynamic";
@@ -29,21 +30,32 @@ export default async function StatusPage() {
   // checkReadiness never throws — an unreachable database is a result, not an exception.
   const readiness = await checkReadiness();
   const online = readiness.database === "reachable";
-  const [refresh, intel] = online
+  const [refresh, intel, collect] = online
     ? await Promise.all([
         getRefreshMetrics().catch((error) => { console.error("[status] refresh metrics unavailable:", error); return null; }),
         getIntelligenceMetrics().catch((error) => { console.error("[status] intelligence metrics unavailable:", error); return null; }),
+        getCollectionMetrics().catch((error) => { console.error("[status] collection metrics unavailable:", error); return null; }),
       ])
-    : [null, null];
+    : [null, null, null];
+
+  // A starving queue is an outage with none of an outage's symptoms: every tick succeeds, nothing
+  // errors, and the data quietly goes stale. Until this line the page could not have said so.
+  const collectorsBehind = collect ? !isKeepingUp(collect) : false;
 
   const banner =
     readiness.status === "not_ready"
       ? { Icon: XCircle, tone: "#ff9d94", shadow: "hard", text: "Major outage — the database is unreachable" }
       : readiness.status === "degraded"
         ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — database schema is at ${readiness.schema.actual}, expected ${readiness.schema.expected}` }
-        : refresh && intel
-          ? { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" }
-          : { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — one or more subsystems are not reporting" };
+        : !(refresh && intel && collect)
+          ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — one or more subsystems are not reporting" }
+          : collect.enabled === 0
+            ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — no collectors are registered, so nothing is being gathered" }
+            : collectorsBehind
+              ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — collectors are behind; the oldest source has waited ${describeWait(collect.oldestOverdueMinutes ?? 0)} past its schedule` }
+              : refresh.enabled === 0
+                ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — no sources are enabled, so nothing is being refreshed" }
+                : { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" };
 
   return (
     <div className="mx-auto max-w-[1000px] px-5 py-16 sm:px-8 sm:py-24">
@@ -61,7 +73,7 @@ export default async function StatusPage() {
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card
           icon={Database}
           title="Catalog"
@@ -73,8 +85,29 @@ export default async function StatusPage() {
           icon={RadioTower}
           title="Refresh engine"
           value={refresh ? `${refresh.enabled} enabled` : "Not reporting"}
-          detail={refresh ? `${refresh.queued} queued · ${refresh.stale} stale` : "No figures available while this subsystem is unreadable"}
-          ok={Boolean(refresh)}
+          detail={
+            !refresh
+              ? "No figures available while this subsystem is unreadable"
+              : refresh.enabled === 0
+                ? "No sources are enabled — nothing is being refreshed"
+                : `${refresh.queued} queued · ${refresh.stale} stale`
+          }
+          ok={refresh !== null && refresh.enabled > 0}
+        />
+        <Card
+          icon={Timer}
+          title="Collectors"
+          value={collect ? `${collect.enabled} enabled` : "Not reporting"}
+          detail={
+            !collect
+              ? "No figures available while this subsystem is unreadable"
+              : collect.enabled === 0
+                ? "Nothing is being gathered — no collectors are registered"
+                : collect.overdue === 0
+                  ? "Every source is within its schedule"
+                  : `${collect.overdue} waiting · oldest ${describeWait(collect.oldestOverdueMinutes ?? 0)} past due`
+          }
+          ok={Boolean(collect) && !collectorsBehind}
         />
         <Card
           icon={ShieldCheck}
@@ -96,6 +129,12 @@ export default async function StatusPage() {
           <code className="font-mono text-[13px]">/api/health/ready</code> — it is not a fixed message.
           When a subsystem cannot be read this page says so and shows no number for it, rather than
           reporting a zero it cannot stand behind.
+        </p>
+        <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">
+          &ldquo;Collectors&rdquo; is about whether the queue that gathers prices, certificates and
+          vendor status is <em>keeping up</em>, not merely whether its last run succeeded. A queue that
+          always succeeds and is always behind serves data that is quietly out of date, which is why
+          the figure shown is how long the oldest source has waited past its own schedule.
         </p>
       </div>
     </div>

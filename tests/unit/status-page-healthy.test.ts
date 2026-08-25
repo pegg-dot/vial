@@ -16,6 +16,16 @@ vi.mock("@/server/refresh/repository", () => ({
 vi.mock("@/server/intelligence/repository", () => ({
   getIntelligenceMetrics: vi.fn(async () => ({ open: 5, watching: 6, traces: 118, alerts: 7 })),
 }));
+// A healthy system has collectors, and they are inside their cadence. This fixture had to change
+// when the Collectors card landed, which is the point: "healthy" now includes something it did not
+// before, and a stale fixture would have gone on asserting operational while the page said
+// otherwise. isKeepingUp is deliberately NOT mocked — the real predicate judges these numbers.
+vi.mock("@/server/collect/metrics", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/collect/metrics")>()),
+  getCollectionMetrics: vi.fn(async () => ({
+    enabled: 99, disabled: 0, overdue: 6, oldestOverdueMinutes: 42, worstLateness: 0.4,
+  })),
+}));
 
 const StatusPage = (await import("@/app/status/page")).default;
 
@@ -48,6 +58,8 @@ describe("/status when everything is healthy", () => {
     expect(text).toContain("4 queued · 2 stale");
     expect(text).toContain("118 traces");
     expect(text).toContain("7 alerts · 5 open signals");
+    expect(text).toContain("99 enabled");
+    expect(text).toContain("6 waiting · oldest 42m past due");
     expect(text).not.toContain("Major outage");
     expect(text).not.toContain("Not reporting");
   });
