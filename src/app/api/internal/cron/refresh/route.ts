@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { secretMatches } from "@/server/auth/secret-compare";
 import { runIntelligenceSweep } from "@/server/intelligence/scanner";
-import { runRefreshSweep } from "@/server/refresh/scheduler";
 import { getDatabase } from "@/server/db/client";
 import { applyRetention } from "@/server/db/retention";
 import { reviewCostSignals } from "@/server/observability/cost-signals";
@@ -25,7 +24,10 @@ function authorized(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const refresh = await runRefreshSweep(20);
+  // The refresh sweep moved to /api/internal/cron/provenance, which runs hourly. It sat here
+  // claiming 20 jobs once a day, which was invisible while nothing was enrolled and would have
+  // starved instantly once every catalogue listing was. What remains here is housekeeping, and
+  // none of it wants to run 24 times a day.
   const intelligence = await runIntelligenceSweep("system:cron");
   // Housekeeping runs with the daily sweep. Operational history used to grow forever — one row per
   // collector run, per page view, per reliability pass, none of it ever removed — which turns into
@@ -36,5 +38,5 @@ export async function GET(request: NextRequest) {
   // early warning the last quota blowout did not have: the cache breaking is silent, and the only
   // symptom before was the database dying two weeks later.
   const cost = await reviewCostSignals(db).catch(() => []);
-  return NextResponse.json({ refresh, intelligence, retention, cost, completedAt: new Date().toISOString() });
+  return NextResponse.json({ intelligence, retention, cost, completedAt: new Date().toISOString() });
 }

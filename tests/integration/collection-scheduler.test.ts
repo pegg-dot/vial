@@ -266,3 +266,65 @@ describe("a scheduled headless import keeps the evidence it finds", () => {
     expect(rows.every((r) => (r.lab ?? "").trim().length > 0)).toBe(true);
   });
 });
+
+// Enrolment has to happen on the REAL collector path, not merely exist as a function. The whole
+// defect being fixed is that recordCatalogListing created a `sources` row and stopped, so the
+// review queue was permanently empty in production while the catalogue changed underneath it.
+//
+// This drives the same collectRscCatalog the cron drives, then asserts a refresh policy exists for
+// what it wrote — which is the difference between "the pipeline is built" and "the pipeline is fed".
+describe("a scheduled import enrols what it writes in the provenance pipeline", () => {
+  const SITEMAP = `<?xml version="1.0"?><urlset><url><loc>https://ascendbiolabs.com/product/bpc-157</loc></url></urlset>`;
+  const stubbedProduct = [{
+    handle: "bpc-157", title: "BPC-157",
+    metadata: { coa_lab: "Vanguard Laboratory", coa_url: "https://cdn/coas/batch-V1/report-008.pdf", coa_batch_id: "V1", purity: "99.3%", coa_test_date: "2026-06-12" },
+    variants: [{ title: "1 Vial / 10MG", calculated_price: { calculated_amount: 65, currency_code: "usd" } }],
+  }];
+
+  it("creates an enabled refresh policy for every listing it records", async () => {
+    const db = await getDatabase();
+    await collectRscCatalog(db, {
+      vendor: { slug: "ascend-bio-labs", name: "Ascend Bio Labs", domain: "ascendbiolabs.com", rscProductPath: "/product/" },
+      compounds: [{ slug: "bpc-157", name: "BPC-157", aliases: [] }],
+      description: "test",
+      fetchImpl: (async () => new Response(SITEMAP, { status: 200 })) as unknown as typeof fetch,
+      fetchProducts: async () => stubbedProduct as never,
+    });
+
+    const policies = await db.query<{ enabled: boolean; interval_minutes: number; parser_profile: string; allowed_hostnames: unknown; target_listing_id: string }>(
+      `SELECT p.enabled, p.interval_minutes, p.parser_profile, p.allowed_hostnames, p.target_listing_id
+         FROM source_refresh_policies p
+         JOIN listings l ON l.id = p.target_listing_id
+         JOIN products pr ON pr.id = l.product_id
+         JOIN organizations o ON o.id = pr.vendor_id
+        WHERE o.slug = 'ascend-bio-labs'`,
+    );
+    expect(policies.rows.length).toBeGreaterThan(0);
+    for (const row of policies.rows) {
+      expect(row.enabled).toBe(true);
+      expect(Number(row.interval_minutes)).toBe(1440);
+      expect(row.parser_profile).toBe("jsonld");
+      // The allowlist is the listing's own vendor host and nothing wider.
+      const hosts = typeof row.allowed_hostnames === "string" ? JSON.parse(row.allowed_hostnames) : row.allowed_hostnames;
+      expect(hosts).toEqual(["ascendbiolabs.com"]);
+    }
+  });
+
+  // Collectors re-run hourly. Enrolment must be idempotent or every tick would pile up duplicate
+  // policies for the same source and the sweep would spend its whole budget re-fetching one page.
+  it("does not duplicate a policy when the collector runs again", async () => {
+    const db = await getDatabase();
+    const run = () => collectRscCatalog(db, {
+      vendor: { slug: "ascend-bio-labs", name: "Ascend Bio Labs", domain: "ascendbiolabs.com", rscProductPath: "/product/" },
+      compounds: [{ slug: "bpc-157", name: "BPC-157", aliases: [] }],
+      description: "test",
+      fetchImpl: (async () => new Response(SITEMAP, { status: 200 })) as unknown as typeof fetch,
+      fetchProducts: async () => stubbedProduct as never,
+    });
+    await run();
+    const before = Number((await db.query<{ c: string | number }>(`SELECT COUNT(*) c FROM source_refresh_policies`)).rows[0]!.c);
+    await run();
+    const after = Number((await db.query<{ c: string | number }>(`SELECT COUNT(*) c FROM source_refresh_policies`)).rows[0]!.c);
+    expect(after).toBe(before);
+  });
+});

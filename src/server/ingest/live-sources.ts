@@ -270,6 +270,61 @@ export async function upsertLiveCompound(db: SqlConnection, input: LiveCompoundI
  * 'public-only', label "Vendor catalog") linked to a source, NOT passed off as lab evidence.
  * A live HTTP source can still be registered separately to keep it fresh via the pipeline.
  */
+/**
+ * Enrol a catalogue listing in the provenance pipeline.
+ *
+ * Until now the collectors created a `sources` row for every listing and stopped there, so nothing
+ * was ever snapshotted, diffed, reviewed or published — the entire spine behind /admin/ingest,
+ * /admin/review, /admin/publications and /admin/traces sat empty in production while prices were
+ * written straight to the catalogue. AGENTS.md is explicit that every changed observed value must
+ * enter the review queue; this is the missing enrolment.
+ *
+ * The hostname allowlist is exactly the listing's OWN vendor domain, which is already in
+ * known-vendors.json and is already being fetched by the collector that produced this row. That is
+ * the same trust boundary, not a broadened one — the policy still cannot be pointed anywhere else.
+ *
+ * Interval is DAILY on purpose. The collectors re-read prices hourly, so freshness is already
+ * handled; what this pipeline adds is a provenance record, and one snapshot per listing per day is
+ * a complete record without a thousand fetches a day against other people's servers.
+ */
+export const PROVENANCE_INTERVAL_MINUTES = 1440;
+
+export async function enrolListingForRefresh(
+  db: SqlConnection,
+  input: { listingId: string; sourceId: string; canonicalLocation: string },
+): Promise<{ policyId: string; enrolled: boolean }> {
+  let hostname: string;
+  try {
+    hostname = new URL(input.canonicalLocation).hostname.toLowerCase();
+  } catch {
+    // A listing without a resolvable source URL cannot be refreshed. Skip it rather than writing a
+    // policy that could only ever fail, and let the caller carry on.
+    return { policyId: "", enrolled: false };
+  }
+
+  const policyId = `policy:catalog:${input.listingId}`;
+  await db.query(
+    `INSERT INTO source_refresh_policies
+       (id, source_id, target_listing_id, transport, parser_profile, enabled, interval_minutes, next_run_at,
+        allowed_hostnames, allowed_content_types, timeout_ms, max_response_bytes)
+     VALUES ($1,$2,$3,'http','jsonld',TRUE,$4,NOW(),$5::jsonb,$6::jsonb,15000,3000000)
+     ON CONFLICT (source_id) DO UPDATE
+       SET target_listing_id = EXCLUDED.target_listing_id,
+           allowed_hostnames = EXCLUDED.allowed_hostnames,
+           parser_profile = 'jsonld',
+           updated_at = NOW()`,
+    [
+      policyId,
+      input.sourceId,
+      input.listingId,
+      PROVENANCE_INTERVAL_MINUTES,
+      JSON.stringify([hostname]),
+      JSON.stringify(["text/html", "application/json"]),
+    ],
+  );
+  return { policyId, enrolled: true };
+}
+
 export async function recordCatalogListing(
   db: SqlConnection,
   input: LiveListingInput & { price: number; availability: "In stock" | "Low stock" | "Unavailable"; sourceUrl: string; sourceLabel: string; imageUrl?: string },
@@ -297,6 +352,9 @@ export async function recordCatalogListing(
     realSourceId = sourceId;
   }
   await db.query(`UPDATE listings SET source_id = $2 WHERE id = $1`, [listingId, realSourceId]);
+  // Enrol in the provenance pipeline. Creating the source without a refresh policy is what left
+  // the review queue permanently empty while the catalogue updated underneath it.
+  await enrolListingForRefresh(db, { listingId, sourceId: realSourceId, canonicalLocation: input.sourceUrl });
   // When the storefront published a Janoshik COA VialGrade holds for this compound, stamp the testing claim
   // (issuer + the cited batch) so the hardened crossCheckCoa can resolve the verdict. Presence of the
   // claim — not the batch — sets the issuer, since a Janoshik link without a printed batch still means

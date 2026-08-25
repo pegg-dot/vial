@@ -9,7 +9,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import { getDatabase } from "@/server/db/client";
 import { runRefreshSweep } from "@/server/refresh/scheduler";
-import { reviewClaim } from "@/server/review/repository";
+import { triagePendingClaims } from "@/server/refresh/auto-triage";
 import {
   markCompoundLive,
   registerLiveHttpSource,
@@ -157,8 +157,6 @@ export interface IngestReport {
 
 // Guardrails: a plausible per-vial BPC-157 price. Anything outside is not auto-approved
 // (left pending for a human), so a mis-parsed shipping fee or aggregate never publishes.
-const PRICE_MIN = 10;
-const PRICE_MAX = 500;
 
 /**
  * Approve every pending claim on a live listing whose value passes the sanity policy;
@@ -166,53 +164,15 @@ const PRICE_MAX = 500;
  */
 export async function approveSaneLiveClaims(db?: SqlConnection): Promise<Pick<IngestReport, "approved" | "heldForReview">> {
   const database = db ?? (await getDatabase());
-  const pending = await database.query<{ id: string; predicate: string; value_json: string; subject_id: string }>(
-    `SELECT ec.id, ec.predicate, ec.value_json, ec.subject_id
-     FROM evidence_claims ec
-     JOIN listings l ON l.id = ec.subject_id
-     WHERE ec.review_status = 'pending' AND l.origin = 'live'
-     ORDER BY ec.created_at ASC`,
-  );
-
-  const approved: IngestReport["approved"] = [];
-  const heldForReview: IngestReport["heldForReview"] = [];
-
-  // Evidence predicates (batch code, report metadata) must come from a real lab/COA
-  // source, NOT a vendor storefront page — the deterministic parser scrapes page nav and
-  // boilerplate into these (e.g. batchCode "SYNTHESIS", reportIssuer "...Search Login Cart").
-  // Auto-REJECT that noise on live listings so the review queue never fills with garbage
-  // and a human can't accidentally publish page-chrome as a real batch code.
-  const STOREFRONT_NOISE = new Set(["batchCode", "reportDate", "reportIssuer", "reportConfirmed"]);
-
-  for (const claim of pending.rows) {
-    let value: unknown;
-    try { value = JSON.parse(claim.value_json); } catch { value = claim.value_json; }
-
-    if (STOREFRONT_NOISE.has(claim.predicate)) {
-      try {
-        await reviewClaim({ claimId: claim.id, decision: "reject", actor: "script:ingest-real-bpc157", role: "admin", notes: "Evidence claim scraped from a vendor storefront page — not a valid COA source." });
-      } catch { /* best-effort cleanup */ }
-      heldForReview.push({ claimId: claim.id, predicate: claim.predicate, value, reason: "auto-rejected: storefront noise, not a COA source" });
-      continue;
-    }
-
-    const inRange =
-      claim.predicate === "price"
-        ? typeof value === "number" && value >= PRICE_MIN && value <= PRICE_MAX
-        : claim.predicate === "availability" || claim.predicate === "shipping";
-
-    if (!inRange) {
-      heldForReview.push({ claimId: claim.id, predicate: claim.predicate, value, reason: `${claim.predicate} outside auto-approve policy` });
-      continue;
-    }
-    try {
-      await reviewClaim({ claimId: claim.id, decision: "approve", actor: "script:ingest-real-bpc157", role: "admin" });
-      approved.push({ claimId: claim.id, predicate: claim.predicate, value, listing: claim.subject_id });
-    } catch (error) {
-      heldForReview.push({ claimId: claim.id, predicate: claim.predicate, value, reason: error instanceof Error ? error.message : String(error) });
-    }
-  }
-
+  // The policy itself now lives in @/server/refresh/auto-triage, because enrolling every catalogue
+  // listing means it runs on every sweep, not only in this one-off script. Behaviour is unchanged;
+  // this keeps the script's own actor string on the audit trail.
+  const outcome = await triagePendingClaims(database, { actor: "script:ingest-real-bpc157" });
+  const approved: IngestReport["approved"] = outcome.approved.map((c) => ({ claimId: c.claimId, predicate: c.predicate, value: c.value, listing: "" }));
+  const heldForReview: IngestReport["heldForReview"] = [
+    ...outcome.rejected.map((c) => ({ claimId: c.claimId, predicate: c.predicate, value: c.value, reason: "auto-rejected: storefront noise, not a COA source" })),
+    ...outcome.held.map((c) => ({ claimId: c.claimId, predicate: c.predicate, value: c.value, reason: c.reason })),
+  ];
   return { approved, heldForReview };
 }
 

@@ -7,6 +7,10 @@
     {
       "path": "/api/internal/cron/collect",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/internal/cron/provenance",
+      "schedule": "15 * * * *"
     }
   ]
 }

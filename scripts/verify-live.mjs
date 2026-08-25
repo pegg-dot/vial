@@ -98,7 +98,8 @@ if (blind.length) {
 const PUBLIC = ["/", "/vendors", "/compounds", "/verify", "/news", "/testing", "/status", "/search", "/signals"];
 for (const path of PUBLIC) {
   const res = await get(path, { redirect: "follow" });
-  res.ok ? pass(`GET ${path}`, `HTTP ${res.status}`) : fail(`GET ${path}`, `HTTP ${res.status}`);
+  if (res.ok) pass(`GET ${path}`, `HTTP ${res.status}`);
+  else fail(`GET ${path}`, `HTTP ${res.status}`);
 }
 
 // ── 2. Admin is protected — 307 to login, never 200 ─────────────────────────────────────────────
@@ -147,7 +148,6 @@ for (const path of ["/admin", "/admin/sources", "/admin/ingest", "/admin/review"
   else {
     const text = renderedText(await res.text());
     const gapPhrase = /No independent Reddit|No community verification|forum verification found/i.test(text);
-    const idxFlags = text.search(/Red flags reported/i);
     const idxGaps = text.search(/What we could not check|could not check|Gaps in our/i);
     if (!gapPhrase) unknown("absence-vs-finding split", "no gap-phrased note on this page to judge");
     else if (idxGaps === -1) fail("absence-vs-finding split", "gap note present but no 'could not check' section — it is still rendered as a finding");

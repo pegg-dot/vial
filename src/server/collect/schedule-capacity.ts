@@ -76,22 +76,16 @@ export function headroom(cron: string, counts: TargetCounts, maxTargets = TICK_M
   return dailyCapacity(cron, maxTargets) / dailyDemand(counts);
 }
 
-// ── The refresh sweep has the same shape of trap, currently dormant ──────────────────────────────
+// ── Provenance sweep capacity ────────────────────────────────────────────────────────────────────
 //
-// The collection queue starved because nobody compared its capacity to its demand. The refresh
-// sweep has the identical exposure and has simply never been loaded: `runRefreshSweep(20)` fires
-// once a day, and production has ZERO enabled policies, so it does nothing and looks fine.
-//
-// The moment sources are registered it bites. A policy on the registration default of 720 minutes
-// needs two runs a day, so twenty jobs a day serve ten policies — and on the SCHEMA default of 360
-// it serves five. An eleventh policy does not error; it just never runs, exactly as 91 collection
-// targets never ran.
-//
-// Written down here so the number is a fact rather than a surprise, and asserted in CI so changing
-// the sweep size, the cron, or a default interval without recomputing turns red.
+// The refresh sweep used to ride the daily housekeeping cron claiming 20 jobs, which was harmless
+// only because nothing was ever enrolled. Now every catalogue listing is, so it has its own hourly
+// cron and its own arithmetic. These two intervals still differ on purpose — the registration
+// default applies to manually registered sources, the schema default to anything inserted without
+// one — and the difference is load-bearing, so it is asserted rather than tidied away.
 
-/** Jobs one refresh sweep claims. Mirrors runRefreshSweep(20) in the cron route. */
-export const REFRESH_SWEEP_JOBS = 20;
+/** Jobs one provenance sweep claims. The route imports this, so scored and used cannot drift. */
+export const PROVENANCE_SWEEP_JOBS = 20;
 
 /** Interval a policy gets from registerLiveHttpSource when the caller does not specify one. */
 export const REFRESH_DEFAULT_INTERVAL_MINUTES = 720;
@@ -100,11 +94,14 @@ export const REFRESH_DEFAULT_INTERVAL_MINUTES = 720;
 export const REFRESH_SCHEMA_INTERVAL_MINUTES = 360;
 
 /**
- * How many enabled policies this schedule can actually serve at a given interval.
+ * Listings the provenance sweep can serve.
  *
- * Register one more than this and it silently never refreshes.
+ * Every catalogue listing is now enrolled, at PROVENANCE_INTERVAL_MINUTES (daily), so demand is
+ * simply the listing count. Supply is the hourly cron times the sweep size. Production had 43
+ * listings when this was written and the old daily sweep of 20 could not have served even that —
+ * enrolling without moving the schedule would have rebuilt the collector starvation on purpose.
  */
-export function refreshPolicyCeiling(cron: string, intervalMinutes: number, sweepJobs = REFRESH_SWEEP_JOBS): number {
-  const runsPerPolicyPerDay = MINUTES_PER_DAY / intervalMinutes;
-  return Math.floor((ticksPerDay(cron) * sweepJobs) / runsPerPolicyPerDay);
+export function provenanceListingCeiling(cron: string, intervalMinutes: number, sweepJobs = PROVENANCE_SWEEP_JOBS): number {
+  const runsPerListingPerDay = MINUTES_PER_DAY / intervalMinutes;
+  return Math.floor((ticksPerDay(cron) * sweepJobs) / runsPerListingPerDay);
 }
