@@ -49,6 +49,11 @@ const PUBLIC_API_EXACT = new Set([
   // here or the deny-by-default perimeter 401s them BEFORE the handler runs — which is exactly
   // what silently disabled continuous collection: Vercel Cron sends no session cookie.
   "/api/internal/cron/collect",
+  // The provenance sweep. Added 2026-08-25 and omitted from this list, so the perimeter 401'd every
+  // Vercel Cron invocation before the handler ran and the sweep never executed once — the identical
+  // failure the comment above describes, repeated three lines below the warning about it. There is
+  // a test now that reads vercel.json and requires every cron path to appear here.
+  "/api/internal/cron/provenance",
   // Partner postbacks authenticate with a per-vendor HMAC inside the handler.
   "/api/partner/conversion",
   // Anonymous page-view beacon. No auth by design; it stores no identity.
