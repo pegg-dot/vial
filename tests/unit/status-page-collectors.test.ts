@@ -95,6 +95,18 @@ describe("/status can report a starving collection queue", () => {
     expect(await render()).toContain("All systems operational");
   });
 
+  // "0 queued · N stale" is what a queue looks like when nothing has run, AND what it looks like
+  // when every job ran and failed — last_succeeded_at is null either way. Production showed exactly
+  // that ambiguity and the card could not resolve it.
+  it("says how many refresh jobs failed rather than hiding it behind 'stale'", async () => {
+    const { getRefreshMetrics } = await import("@/server/refresh/repository");
+    vi.mocked(getRefreshMetrics).mockResolvedValueOnce({ enabled: 25, due: 0, queued: 0, failed: 25, stale: 25, attempts: 25, worstLateness: null });
+    metrics.value = { enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null };
+    const text = await render();
+    expect(text).toContain("25 failed");
+    expect(text).not.toContain("All systems operational");
+  });
+
   // The control: with collectors present and inside cadence, the page must still say so, or the
   // check above is just a page that always cries wolf.
   it("still reports operational when the queue is keeping up", async () => {

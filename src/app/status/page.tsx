@@ -61,6 +61,12 @@ export default async function StatusPage() {
                 ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — no sources are enabled, so nothing is being refreshed" }
                 : refreshBehind
                   ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — the refresh queue is behind; the worst source is ${Math.round(refresh.worstLateness ?? 0)}x its own interval late` }
+                  // A card reading "25 failed" under a green "All systems operational" banner is the
+                  // precise contradiction this page exists to prevent — it used to hardcode the
+                  // headline while querying for the cards, and could only ever claim there was no
+                  // outage. The headline has to move with the numbers.
+                  : refresh.failed > 0
+                    ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — ${refresh.failed} refresh ${refresh.failed === 1 ? "job has" : "jobs have"} failed` }
                 : { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" };
 
   return (
@@ -98,9 +104,15 @@ export default async function StatusPage() {
                 ? "No sources are enabled — nothing is being refreshed"
                 : refreshBehind
                   ? `${refresh.due} due · worst is ${Math.round(refresh.worstLateness ?? 0)}x its interval late`
-                  : `${refresh.queued} queued · ${refresh.stale} stale`
+                  // Failures have to be on the face of this card. "0 queued · 25 stale" is what a
+                  // queue looks like when nothing has run AND what it looks like when every job
+                  // ran and failed — last_succeeded_at stays null either way. Those are opposite
+                  // problems and the card could not tell them apart.
+                  : refresh.failed > 0
+                    ? `${refresh.failed} failed · ${refresh.queued} queued · ${refresh.stale} stale`
+                    : `${refresh.queued} queued · ${refresh.stale} stale`
           }
-          ok={refresh !== null && refresh.enabled > 0 && !refreshBehind}
+          ok={refresh !== null && refresh.enabled > 0 && !refreshBehind && refresh.failed === 0}
         />
         <Card
           icon={Timer}
