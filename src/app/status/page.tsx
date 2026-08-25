@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, 
 import { getRefreshMetrics } from "@/server/refresh/repository";
 import { getIntelligenceMetrics } from "@/server/intelligence/repository";
 import { checkReadiness } from "@/server/health/readiness";
-import { getCollectionMetrics, isKeepingUp, describeWait } from "@/server/collect/metrics";
+import { getCollectionMetrics, isKeepingUp, describeWait, LATENESS_DEGRADED } from "@/server/collect/metrics";
 
 export const metadata: Metadata = { title: "System status", alternates: { canonical: "/status" } };
 export const dynamic = "force-dynamic";
@@ -41,6 +41,10 @@ export default async function StatusPage() {
   // A starving queue is an outage with none of an outage's symptoms: every tick succeeds, nothing
   // errors, and the data quietly goes stale. Until this line the page could not have said so.
   const collectorsBehind = collect ? !isKeepingUp(collect) : false;
+  // Same question of the refresh queue. Sizing it correctly depends on the live listing count,
+  // which was misread once already — so the page reports being behind rather than relying on the
+  // arithmetic having been right.
+  const refreshBehind = refresh ? refresh.worstLateness !== null && refresh.worstLateness >= LATENESS_DEGRADED : false;
 
   const banner =
     readiness.status === "not_ready"
@@ -55,6 +59,8 @@ export default async function StatusPage() {
               ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — collectors are behind; the oldest source has waited ${describeWait(collect.oldestOverdueMinutes ?? 0)} past its schedule` }
               : refresh.enabled === 0
                 ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — no sources are enabled, so nothing is being refreshed" }
+                : refreshBehind
+                  ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — the refresh queue is behind; the worst source is ${Math.round(refresh.worstLateness ?? 0)}x its own interval late` }
                 : { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" };
 
   return (
@@ -90,9 +96,11 @@ export default async function StatusPage() {
               ? "No figures available while this subsystem is unreadable"
               : refresh.enabled === 0
                 ? "No sources are enabled — nothing is being refreshed"
-                : `${refresh.queued} queued · ${refresh.stale} stale`
+                : refreshBehind
+                  ? `${refresh.due} due · worst is ${Math.round(refresh.worstLateness ?? 0)}x its interval late`
+                  : `${refresh.queued} queued · ${refresh.stale} stale`
           }
-          ok={refresh !== null && refresh.enabled > 0}
+          ok={refresh !== null && refresh.enabled > 0 && !refreshBehind}
         />
         <Card
           icon={Timer}

@@ -11,7 +11,7 @@ vi.mock("@/server/db/client", () => ({
   })),
 }));
 vi.mock("@/server/refresh/repository", () => ({
-  getRefreshMetrics: vi.fn(async () => ({ enabled: 12, due: 3, queued: 4, failed: 0, stale: 2 })),
+  getRefreshMetrics: vi.fn(async () => ({ enabled: 12, due: 3, queued: 4, failed: 0, stale: 2, attempts: 0, worstLateness: 0.3 })),
 }));
 vi.mock("@/server/intelligence/repository", () => ({
   getIntelligenceMetrics: vi.fn(async () => ({ open: 5, watching: 6, traces: 118, alerts: 7 })),

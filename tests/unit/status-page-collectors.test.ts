@@ -15,7 +15,7 @@ vi.mock("@/server/db/client", () => ({
   })),
 }));
 vi.mock("@/server/refresh/repository", () => ({
-  getRefreshMetrics: vi.fn(async () => ({ enabled: 12, due: 3, queued: 4, failed: 0, stale: 2 })),
+  getRefreshMetrics: vi.fn(async () => ({ enabled: 12, due: 3, queued: 4, failed: 0, stale: 2, attempts: 0, worstLateness: 0.3 })),
 }));
 vi.mock("@/server/intelligence/repository", () => ({
   getIntelligenceMetrics: vi.fn(async () => ({ open: 5, watching: 6, traces: 118, alerts: 7 })),
@@ -67,11 +67,32 @@ describe("/status can report a starving collection queue", () => {
   // The refresh engine card had the same shape and the same blind spot.
   it("does not call the refresh engine healthy with nothing enabled", async () => {
     const { getRefreshMetrics } = await import("@/server/refresh/repository");
-    vi.mocked(getRefreshMetrics).mockResolvedValueOnce({ enabled: 0, due: 0, queued: 0, failed: 0, stale: 0, attempts: 0 });
+    vi.mocked(getRefreshMetrics).mockResolvedValueOnce({ enabled: 0, due: 0, queued: 0, failed: 0, stale: 0, attempts: 0, worstLateness: null });
     metrics.value = { enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null };
     const text = await render();
     expect(text).not.toContain("All systems operational");
     expect(text).toContain("nothing is being refreshed");
+  });
+
+  // Sizing the refresh sweep depends on the live listing count, and that was misread once already
+  // (43 off a facet count, when the sitemap carries 897 product pages). So the page has to report
+  // the queue being behind on its own, rather than the arithmetic being trusted to have been right.
+  it("says the refresh queue is behind when it cannot catch up", async () => {
+    const { getRefreshMetrics } = await import("@/server/refresh/repository");
+    vi.mocked(getRefreshMetrics).mockResolvedValueOnce({ enabled: 900, due: 640, queued: 20, failed: 0, stale: 300, attempts: 9, worstLateness: 7 });
+    metrics.value = { enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null };
+    const text = await render();
+    expect(text).not.toContain("All systems operational");
+    expect(text).toContain("refresh queue is behind");
+    expect(text).toContain("7x its own interval late");
+  });
+
+  // Control: a queue with work in it that is keeping up is normal and must not cry wolf.
+  it("does not call a busy-but-current refresh queue behind", async () => {
+    const { getRefreshMetrics } = await import("@/server/refresh/repository");
+    vi.mocked(getRefreshMetrics).mockResolvedValueOnce({ enabled: 900, due: 40, queued: 20, failed: 0, stale: 10, attempts: 9, worstLateness: 0.6 });
+    metrics.value = { enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null };
+    expect(await render()).toContain("All systems operational");
   });
 
   // The control: with collectors present and inside cadence, the page must still say so, or the

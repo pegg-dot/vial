@@ -175,6 +175,7 @@ export async function getRefreshMetrics() {
     failed: string | number;
     stale: string | number;
     attempts: string | number;
+    worst_lateness: string | number | null;
   }>(
     `SELECT
        (SELECT COUNT(*) FROM source_refresh_policies WHERE enabled) AS enabled,
@@ -182,7 +183,12 @@ export async function getRefreshMetrics() {
        (SELECT COUNT(*) FROM refresh_jobs WHERE status IN ('queued','retrying','running')) AS queued,
        (SELECT COUNT(*) FROM refresh_jobs WHERE status = 'failed') AS failed,
        (SELECT COUNT(*) FROM source_refresh_policies WHERE last_succeeded_at IS NULL OR last_succeeded_at < NOW() - INTERVAL '24 hours') AS stale,
-       (SELECT COUNT(*) FROM refresh_attempts) AS attempts`,
+       (SELECT COUNT(*) FROM refresh_attempts) AS attempts,
+       -- How far behind the worst policy is, measured against ITS OWN interval. A count of "due"
+       -- cannot distinguish a queue that is a few minutes late from one that can never catch up,
+       -- and the second is an outage with none of an outage's symptoms.
+       (SELECT MAX((EXTRACT(EPOCH FROM (NOW() - next_run_at)) / 60) / GREATEST(interval_minutes, 1))
+          FROM source_refresh_policies WHERE enabled AND next_run_at <= NOW()) AS worst_lateness`,
   );
   const row = result.rows[0];
   return {
@@ -192,6 +198,7 @@ export async function getRefreshMetrics() {
     failed: Number(row?.failed ?? 0),
     stale: Number(row?.stale ?? 0),
     attempts: Number(row?.attempts ?? 0),
+    worstLateness: row?.worst_lateness === null || row?.worst_lateness === undefined ? null : Number(row.worst_lateness),
   };
 }
 

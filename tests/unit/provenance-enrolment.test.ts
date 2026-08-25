@@ -51,25 +51,37 @@ describe("deciding which claims a person actually has to look at", () => {
 });
 
 describe("the provenance schedule can serve everything enrolled", () => {
-  const PROVENANCE_CRON = "15 * * * *";
+  const PROVENANCE_CRON = "*/15 * * * *";
 
   it("matches the cron actually configured", () => {
     const cfg = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8")) as { crons: { path: string; schedule: string }[] };
     expect(cfg.crons.find((c) => c.path.endsWith("/provenance"))?.schedule).toBe(PROVENANCE_CRON);
   });
 
-  // Production had 43 listings when this was built and grows as the collector backlog drains. The
-  // ceiling has to leave room for that, not just clear today's number.
-  it("serves far more listings than production has", () => {
+  // Sized against the real catalogue. The public sitemap carries 897 product pages and
+  // woocommerce-import records 537 live listings; an earlier reading of "43 listings" off /market
+  // was a facet count. Sizing to 43 would have rebuilt the collector starvation on purpose.
+  const REAL_CATALOGUE = 897;
+
+  it("serves the whole catalogue with headroom", () => {
     const ceiling = provenanceListingCeiling(PROVENANCE_CRON, PROVENANCE_INTERVAL_MINUTES);
-    expect(ceiling).toBe(480);
-    expect(ceiling).toBeGreaterThan(43 * 5);
+    expect(ceiling).toBe(1920);
+    expect(ceiling).toBeGreaterThan(REAL_CATALOGUE * 1.5);
   });
 
-  // The old arrangement — one sweep a day — could not serve even the 43 that existed. Enrolling
-  // everything onto that schedule would have rebuilt the starvation deliberately.
-  it("rejects the daily sweep this replaced", () => {
-    expect(provenanceListingCeiling("30 5 * * *", PROVENANCE_INTERVAL_MINUTES)).toBeLessThan(43);
+  // Both arrangements this replaced. The daily sweep could not serve even a fiftieth of it, and the
+  // hourly one I sized off the wrong number could not serve it either.
+  it("rejects the daily and hourly schedules this replaced", () => {
+    expect(provenanceListingCeiling("30 5 * * *", PROVENANCE_INTERVAL_MINUTES)).toBeLessThan(REAL_CATALOGUE);
+    expect(provenanceListingCeiling("15 * * * *", PROVENANCE_INTERVAL_MINUTES)).toBeLessThan(REAL_CATALOGUE);
+  });
+
+  // A sweep is sequential and every job is a network fetch, so it must stop on time rather than be
+  // killed mid-flight leaving a job claimed and unfinished. Frequency is what scales this, not size.
+  it("bounds a sweep by time, not only by count", () => {
+    const scheduler = readFileSync(new URL("../../src/server/refresh/scheduler.ts", import.meta.url), "utf8");
+    expect(scheduler).toContain("budgetMs");
+    expect(scheduler).toMatch(/if \(Date\.now\(\) >= deadline\) break;/);
   });
 
   it("keeps the sweep size the route uses and the one it scores identical", () => {

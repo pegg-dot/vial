@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/internal/cron/provenance",
-      "schedule": "15 * * * *"
+      "schedule": "*/15 * * * *"
     }
   ]
 }

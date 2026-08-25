@@ -97,9 +97,16 @@ export const REFRESH_SCHEMA_INTERVAL_MINUTES = 360;
  * Listings the provenance sweep can serve.
  *
  * Every catalogue listing is now enrolled, at PROVENANCE_INTERVAL_MINUTES (daily), so demand is
- * simply the listing count. Supply is the hourly cron times the sweep size. Production had 43
- * listings when this was written and the old daily sweep of 20 could not have served even that —
- * enrolling without moving the schedule would have rebuilt the collector starvation on purpose.
+ * simply the listing count. Supply is the cron frequency times the sweep size.
+ *
+ * Sized against the real catalogue, not a guess: the public sitemap carries 897 product pages, and
+ * a comment in woocommerce-import records 537 live listings at the time it was written. An earlier
+ * reading of "43 listings" off the /market page was a facet count, and sizing to it would have
+ * rebuilt the collector starvation on purpose — the very thing this whole arc was about.
+ *
+ * The answer is frequency, not a bigger sweep: jobs run sequentially and each is a network fetch,
+ * so a sweep large enough to serve 900+ listings daily would outlive the 120s function ceiling and
+ * be killed mid-flight.
  */
 export function provenanceListingCeiling(cron: string, intervalMinutes: number, sweepJobs = PROVENANCE_SWEEP_JOBS): number {
   const runsPerListingPerDay = MINUTES_PER_DAY / intervalMinutes;

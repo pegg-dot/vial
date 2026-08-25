@@ -277,13 +277,19 @@ export async function processRefreshJob(jobId: string) {
   return processClaimedRefreshJob(job);
 }
 
-export async function runRefreshSweep(limit = 10) {
+export async function runRefreshSweep(limit = 10, budgetMs = 90_000) {
   const enqueued = await enqueueDueRefreshJobs();
   const results: Awaited<ReturnType<typeof processRefreshJob>>[] = [];
+  // Jobs run one at a time and each is a network fetch against someone else's server, so a sweep
+  // sized only by count can outlive the serverless function that invoked it — and a function killed
+  // mid-sweep leaves a job claimed and unfinished. Stop on whichever limit arrives first; the next
+  // tick resumes from the queue.
+  const deadline = Date.now() + budgetMs;
   for (let index = 0; index < limit; index += 1) {
+    if (Date.now() >= deadline) break;
     const next = await claimNextRefreshJob();
     if (!next) break;
     results.push(await processClaimedRefreshJob(next));
   }
-  return { enqueued: enqueued.length, processed: results.length, results };
+  return { enqueued: enqueued.length, processed: results.length, results, budgetExhausted: Date.now() >= deadline };
 }
