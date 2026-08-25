@@ -55,17 +55,43 @@ re-run `gh secret set VERCEL_TOKEN --repo pegg-dot/vial` and paste it. Nothing e
 
 ---
 
-## Step 2 — the one still open
+## Step 2 — done (2026-08-25)
 
-Vercel is **still auto-deploying every push to `main` on its own**, in parallel with the CI deploy.
-So right now a red run does not deploy *via CI*, but Vercel ships it anyway four seconds after the
-push. The gate is not closed until auto-deploy is off:
+`vercel.json` now carries:
 
 ```json
 "git": { "deploymentEnabled": { "main": false } }
 ```
 
-in `vercel.json`. One line. It is not committed yet because it had to land **after** the token, and
-because it is worth watching one green CI deploy succeed first — if the deploy job can't promote
-for some reason, turning off the only other path that can means nothing ships at all.
+Vercel no longer builds pushes to `main` on its own. **CI is the only path to production.** A red
+run has nothing to promote, which was the whole point.
 
+It landed only after watching a green CI deploy actually promote and serve — and that caution paid
+for itself. The first real run of the deploy job *failed*: `vercel build --prebuilt` cannot work
+here, because every production env var is Encrypted and `vercel pull` returns those as empty
+strings, so the runner built with a blank session secret and env validation stopped it. Vercel
+builds it now instead. Had auto-deploy been switched off before that was found, nothing would have
+shipped at all.
+
+### What this changes for you
+
+- **Deploying now takes about six minutes**, because the checks run first. That is the trade.
+- **A red suite means no deploy.** Not a warning — it does not ship.
+- **To deploy without CI** (a hotfix, or CI itself being broken): `npx vercel --prod` from the repo.
+  That still works and always will; it is a CLI deployment, not a git one.
+- **To undo all of this**: delete the `"git"` block from `vercel.json`. Auto-deploy comes back.
+
+---
+
+## Also worth turning on (30 seconds)
+
+Nobody was notified during those eight red runs. GitHub → your avatar → **Settings** →
+**Notifications** → **Actions** → tick **Send notifications for failed workflows only**. Without it
+a red `main` is silent, which is how it went unnoticed for four days. It matters more now, not
+less: a red run is the thing standing between a broken commit and the site.
+
+## What was NOT the answer
+
+Vercel's **Ignored Build Step** can't do this. It runs before CI has finished — often before it has
+started — so there is no result for it to wait on. Racing it produces flaky deploys, which is worse
+than the problem it's trying to solve.
