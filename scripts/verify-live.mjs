@@ -169,19 +169,58 @@ for (const path of ["/admin", "/admin/sources", "/admin/ingest", "/admin/review"
   }
 }
 
-// ── 7. Every deployment since the gate closed must come from CI, not from git ───────────────────
+// ── 7. Whatever the deploy path is, SOMETHING must refuse a red commit ─────────────────────────
+//
+// This check used to assert that no production deploy came from git — true while CI was the only
+// deploy path, and deliberately false since GitHub Actions became unavailable and the gate moved
+// into the Vercel build. The check flagged itself, which is the point of it existing; a verifier
+// that quietly kept passing on a stale premise would be worse than none.
+//
+// What must hold in EITHER architecture is that a red suite cannot reach the site. So: assert the
+// gate exists wherever it currently lives, and name which mode is active rather than assuming.
+{
+  const { readFileSync } = await import("node:fs");
+  const build = readFileSync(new URL("../scripts/build.mjs", import.meta.url), "utf8");
+  const vercelCfg = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  const autoDeployOff = vercelCfg.git?.deploymentEnabled?.main === false;
+  const buildGated = /vitest\.mjs[\s\S]{0,200}tests\/unit/.test(build) && /Refusing to build/.test(build);
+
+  if (autoDeployOff) {
+    // CI-gated mode: the deploy job is the only path, so no production deploy may come from git.
+    const token = process.env.VERCEL_TOKEN;
+    if (!token) unknown("deploy gate (CI mode)", "set VERCEL_TOKEN to check deployment sources");
+    else {
+      const res = await fetch("https://api.vercel.com/v6/deployments?projectId=prj_IsRs7YJEMkuBWGR7qCRbNrceqCCC&teamId=team_MA7HI0IC6XvMpuw33G9utThB&target=production&limit=3",
+        { headers: { Authorization: `Bearer ${token}` } });
+      const recent = ((await res.json()).deployments ?? []).slice(0, 3);
+      const git = recent.filter((d) => d.source === "git");
+      if (git.length) fail("deploy gate (CI mode)", `${git.length} of ${recent.length} deploys came from git, bypassing CI`);
+      else pass("deploy gate (CI mode)", `last ${recent.length} deploys all source=cli`);
+    }
+  } else if (buildGated) {
+    pass("deploy gate (build mode)", "auto-deploy on; scripts/build.mjs refuses to build a red unit suite");
+  } else {
+    fail("deploy gate", "auto-deploy is ON and the build does not run the unit suite — nothing checks a commit before it ships");
+  }
+}
+
+// ── 8. Production must be serving the commit that was verified ─────────────────────────────────
 {
   const token = process.env.VERCEL_TOKEN;
-  if (!token) unknown("deploy gate", "set VERCEL_TOKEN to check deployment sources");
+  const { execSync } = await import("node:child_process");
+  let head = null;
+  try { head = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim(); } catch { /* not a repo */ }
+  if (!token || !head) unknown("production serves HEAD", "needs VERCEL_TOKEN and a git checkout");
   else {
-    const res = await fetch("https://api.vercel.com/v6/deployments?projectId=prj_IsRs7YJEMkuBWGR7qCRbNrceqCCC&teamId=team_MA7HI0IC6XvMpuw33G9utThB&target=production&limit=4",
+    const res = await fetch("https://api.vercel.com/v6/deployments?projectId=prj_IsRs7YJEMkuBWGR7qCRbNrceqCCC&teamId=team_MA7HI0IC6XvMpuw33G9utThB&target=production&limit=1",
       { headers: { Authorization: `Bearer ${token}` } });
-    const json = await res.json();
-    const recent = (json.deployments ?? []).slice(0, 3);
-    const git = recent.filter((d) => d.source === "git");
-    if (!recent.length) unknown("deploy gate", "no deployments returned");
-    else if (git.length) fail("deploy gate", `${git.length} of the last ${recent.length} production deploys came from git auto-deploy, bypassing CI`);
-    else pass("deploy gate", `last ${recent.length} production deploys all source=cli (CI-promoted)`);
+    const d = ((await res.json()).deployments ?? [])[0];
+    const sha = d?.meta?.githubCommitSha;
+    if (!d) unknown("production serves HEAD", "no deployment returned");
+    else if (d.readyState !== "READY") unknown("production serves HEAD", `latest deployment is ${d.readyState}`);
+    else if (!sha) unknown("production serves HEAD", "deployment carries no commit metadata");
+    else if (sha !== head) fail("production serves HEAD", `live ${sha.slice(0, 7)} but HEAD is ${head.slice(0, 7)} — main is ahead of the site`);
+    else pass("production serves HEAD", sha.slice(0, 7));
   }
 }
 
