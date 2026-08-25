@@ -75,3 +75,36 @@ export function dailyCapacity(cron: string, maxTargets = TICK_MAX_TARGETS): numb
 export function headroom(cron: string, counts: TargetCounts, maxTargets = TICK_MAX_TARGETS): number {
   return dailyCapacity(cron, maxTargets) / dailyDemand(counts);
 }
+
+// ── The refresh sweep has the same shape of trap, currently dormant ──────────────────────────────
+//
+// The collection queue starved because nobody compared its capacity to its demand. The refresh
+// sweep has the identical exposure and has simply never been loaded: `runRefreshSweep(20)` fires
+// once a day, and production has ZERO enabled policies, so it does nothing and looks fine.
+//
+// The moment sources are registered it bites. A policy on the registration default of 720 minutes
+// needs two runs a day, so twenty jobs a day serve ten policies — and on the SCHEMA default of 360
+// it serves five. An eleventh policy does not error; it just never runs, exactly as 91 collection
+// targets never ran.
+//
+// Written down here so the number is a fact rather than a surprise, and asserted in CI so changing
+// the sweep size, the cron, or a default interval without recomputing turns red.
+
+/** Jobs one refresh sweep claims. Mirrors runRefreshSweep(20) in the cron route. */
+export const REFRESH_SWEEP_JOBS = 20;
+
+/** Interval a policy gets from registerLiveHttpSource when the caller does not specify one. */
+export const REFRESH_DEFAULT_INTERVAL_MINUTES = 720;
+
+/** Interval the schema hands a policy inserted without one. Deliberately different — that is the point. */
+export const REFRESH_SCHEMA_INTERVAL_MINUTES = 360;
+
+/**
+ * How many enabled policies this schedule can actually serve at a given interval.
+ *
+ * Register one more than this and it silently never refreshes.
+ */
+export function refreshPolicyCeiling(cron: string, intervalMinutes: number, sweepJobs = REFRESH_SWEEP_JOBS): number {
+  const runsPerPolicyPerDay = MINUTES_PER_DAY / intervalMinutes;
+  return Math.floor((ticksPerDay(cron) * sweepJobs) / runsPerPolicyPerDay);
+}
