@@ -128,3 +128,63 @@ test("a controlled fixture change creates one visible cascade", async ({ page })
   await page.goto("/signals");
   await expect(page.getByRole("heading", { name: /moving right now/i })).toBeVisible();
 });
+
+// Every admin page has to be reachable by clicking, not by typing a URL.
+//
+// The chrome carried three links — Capture, Review, Published — from when those were the only admin
+// pages. Sources and Traces were built later and never added to it, so the surfaces showing what
+// the collectors are doing and how a value was derived could only be reached by knowing the path.
+// The whole row was also hidden below the `sm` breakpoint, so on a phone there was no way to move
+// between admin pages at all.
+//
+// A unit test can assert the links exist in the file. Only this can assert clicking one arrives.
+test("staff can click between every admin page", async ({ page }) => {
+  await page.goto("/admin/login");
+  await page.getByLabel("Staff email").fill("jon@vialgrade.test");
+  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
+  await page.getByRole("button", { name: "Continue securely" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+
+  const nav = page.getByRole("navigation", { name: "Provenance pipeline" });
+  const steps = [
+    { label: "Sources", path: "/admin/sources" },
+    { label: "Capture", path: "/admin/ingest" },
+    { label: "Review", path: "/admin/review" },
+    { label: "Published", path: "/admin/publications" },
+    { label: "Traces", path: "/admin/traces" },
+  ];
+
+  // Walk the whole pipeline by clicking, never by navigating. Each hop starts from wherever the
+  // last one landed, which is what proves the chrome is present on every page rather than only on
+  // the one it was tested from.
+  for (const step of steps) {
+    await expect(nav).toBeVisible();
+    await nav.getByRole("link", { name: step.label, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${step.path}$`));
+    // The current step is announced, not merely coloured.
+    await expect(nav.getByRole("link", { name: step.label, exact: true })).toHaveAttribute("aria-current", "page");
+  }
+
+  // And back to the far end, to prove the row is still complete after walking it.
+  await nav.getByRole("link", { name: "Sources", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/sources$/);
+  await expect(nav.getByRole("link")).toHaveCount(steps.length);
+});
+
+// The row used to vanish entirely below the `sm` breakpoint.
+test("the admin pipeline is navigable on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/admin/login");
+  await page.getByLabel("Staff email").fill("jon@vialgrade.test");
+  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
+  await page.getByRole("button", { name: "Continue securely" }).click();
+  // Wait for the session to land. Navigating straight after the click races the login POST, and
+  // the redirect back to /admin/login then looks exactly like a missing nav.
+  await expect(page).toHaveURL(/\/admin$/);
+
+  await page.goto("/admin/review");
+  const nav = page.getByRole("navigation", { name: "Provenance pipeline" });
+  await expect(nav).toBeVisible();
+  await nav.getByRole("link", { name: "Traces", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/traces$/);
+});
