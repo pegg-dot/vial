@@ -28,6 +28,9 @@ jobs:
       # it advisory meant an unprotected /admin route could go green.
       - run: npm run audit:roles
       - run: npm run audit:accessibility
+      # Offline only: proves the live verifier's parsers can still reject known-bad input.
+      # The live checks themselves hit production and would race this very deploy.
+      - run: npm run verify:live:selftest
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
   postgres-contract:
