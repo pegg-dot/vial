@@ -1,97 +1,78 @@
-# Make CI a precondition for deploying
+# What stops a bad commit reaching vialgrade.com
 
-## What was wrong
+## The history
 
 Between 20 and 24 August the `verify` workflow failed eight times in a row on `main`, and every one
-of those commits deployed to vialgrade.com anyway, because Vercel builds from `main` whatever GitHub
-Actions says. Nobody was notified, so nobody looked.
+of those commits deployed anyway, because Vercel built from `main` whatever GitHub Actions said.
+Measured 2026-08-24: commit authored **18:34:58**, production deployment created **18:35:02** — four
+seconds later, with five minutes of CI still to run.
 
-Measured on 2026-08-24, so this isn't a theory:
+A GitHub ruleset cannot fix that. Rulesets govern **merges**, and this repo is pushed to directly.
 
-| | |
-|---|---|
-| commit `1d5594a` authored | **18:34:58** |
-| Vercel production deployment created | **18:35:02** — 4 seconds later |
-| CI finished | **~18:40** — five minutes after the site was already live |
+## What happened next
 
-## Why a GitHub ruleset does not fix it
+CI became the deploy path (a `deploy` job needing both check jobs), and `vercel.json` turned git
+auto-deploy off. That worked, and was proven: production deployments switched from `source=git` to
+`source=cli`.
 
-A branch ruleset governs **merges**. This repo is worked by pushing straight to `main`, and a direct
-push isn't a merge, so the status check never gets a chance to block it. You'd have to also require
-a pull request for every change — and even then Vercel would still deploy the merge commit the
-instant it lands, before the post-merge run finishes.
+Then GitHub Actions stopped running:
 
-The only thing that makes green a real precondition is **making CI the deploy path**, so a red run
-has nothing to promote.
+> *"The job was not started because recent account payments have failed or your spending limit needs
+> to be increased."*
 
----
+CI was the only deploy path, and CI could not deploy. **The site could not ship at all.**
 
-## Built (in the repo, already on `main`)
+## Where it stands now — the gate lives in the build
 
-`.github/workflows/ci.yml` has a `deploy` job that `needs: [verify, postgres-contract]`. It runs
-only on a push to `main`, builds with the Vercel CLI, promotes to production, and then curls
-vialgrade.com until it returns 200 — a promotion nobody checked is not a deployment.
+Paying for Actions minutes is not on the table, so the check moved to compute already paid for:
+Vercel's build.
 
-Without `VERCEL_TOKEN` the job does not deploy, and says so in the run summary with a warning
-annotation rather than skipping quietly — a green check must never imply a gate that isn't there.
-That was its state until the token landed; see Step 1.
+- **`vercel.json` has no `git` block** — Vercel builds and deploys every push to `main` again.
+- **`scripts/build.mjs` runs the unit suite before it builds.** Red suite → non-zero exit →
+  *"Refusing to build: the unit suite is red. This commit will not deploy."* → Vercel ships nothing.
 
-## Step 1 — done (2026-08-25)
+Proven by deliberately adding a failing test: build exited 1 and refused. Removing it: exit 0.
 
-`VERCEL_TOKEN` is set on the repo, so the `deploy` job is live: a push to `main` now runs the
-checks, and only a green run promotes to production.
+`build.mjs` already treated `tsc --noEmit` as a release gate and already validated the production
+environment contract, so this is the same idea one step further. All three now run on every deploy.
 
-**What the token is, and why you may want to replace it.** It is the Vercel CLI's own auth token
-from this machine — the credential `vercel` already uses locally. It works, and it is scoped to your
-account. Two caveats worth knowing:
+### What it does and does not cover
 
-- It carries **full account access**, not just deploy rights. A dedicated token is narrower blast
-  radius if it ever leaks.
-- It dies if you ever run `vercel logout`, and the deploy job would start failing with a 403.
+| | runs on deploy | why |
+|---|---|---|
+| `tsc --noEmit` | yes | already was |
+| production env contract | yes | already was |
+| unit suite (650+, ~15s) | **yes, new** | fast, no browser, no database |
+| integration suite | no | needs `DATABASE_URL` stripped from a build whose purpose is having one |
+| e2e | no | needs a browser |
+| security / roles / accessibility audits | no | keep them in the local gate |
 
-If you'd rather have a purpose-built one: create it at
-<https://vercel.com/account/settings/tokens>, name it something like `github-actions-vial`, then
-re-run `gh secret set VERCEL_TOKEN --repo pegg-dot/vial` and paste it. Nothing else changes.
+Run the full thing before pushing anything substantial:
 
----
-
-## Step 2 — done (2026-08-25)
-
-`vercel.json` now carries:
-
-```json
-"git": { "deploymentEnabled": { "main": false } }
+```bash
+npm run verify        # lint, types, all tests, audits, build
+npm run verify:live   # what is actually true on vialgrade.com right now
 ```
 
-Vercel no longer builds pushes to `main` on its own. **CI is the only path to production.** A red
-run has nothing to promote, which was the whole point.
+### The integration suite and production data
 
-It landed only after watching a green CI deploy actually promote and serve — and that caution paid
-for itself. The first real run of the deploy job *failed*: `vercel build --prebuilt` cannot work
-here, because every production env var is Encrypted and `vercel pull` returns those as empty
-strings, so the runner built with a blank session secret and env validation stopped it. Vercel
-builds it now instead. Had auto-deploy been switched off before that was found, nothing would have
-shipped at all.
+Not an oversight. `scripts/run-isolated-tests.mjs` used to spread `{...process.env}` into its
+children, and `databaseChoice` read `DATABASE_URL` **before** the in-memory flag — so running the
+integration suite on any machine with `DATABASE_URL` exported pointed it at that database. On a
+build machine that is production. Nothing ever broke, because nobody happened to run it that way.
 
-### What this changes for you
+Both ends are closed now: the runner strips every real-database handle, and `databaseChoice` throws
+rather than guess when both are set. That is also why the build gate runs unit tests only.
 
-- **Deploying now takes about six minutes**, because the checks run first. That is the trade.
-- **A red suite means no deploy.** Not a warning — it does not ship.
-- **To deploy without CI** (a hotfix, or CI itself being broken): `npx vercel --prod` from the repo.
-  That still works and always will; it is a CLI deployment, not a git one.
-- **To undo all of this**: delete the `"git"` block from `vercel.json`. Auto-deploy comes back.
+## If Actions ever comes back
 
----
+`.github/workflows/ci.yml` still has the full `verify`, `postgres-contract` and `deploy` jobs. The
+deploy job is inert without `VERCEL_TOKEN` and says so. To return to CI-gated deploys, put the
+`"git": { "deploymentEnabled": { "main": false } }` block back in `vercel.json` — **after**
+confirming a green CI deploy actually promotes, never before, or nothing ships at all. That is not
+hypothetical; it is exactly what happened here.
 
-## Also worth turning on (30 seconds)
+## Still worth doing, free
 
-Nobody was notified during those eight red runs. GitHub → your avatar → **Settings** →
-**Notifications** → **Actions** → tick **Send notifications for failed workflows only**. Without it
-a red `main` is silent, which is how it went unnoticed for four days. It matters more now, not
-less: a red run is the thing standing between a broken commit and the site.
-
-## What was NOT the answer
-
-Vercel's **Ignored Build Step** can't do this. It runs before CI has finished — often before it has
-started — so there is no result for it to wait on. Racing it produces flaky deploys, which is worse
-than the problem it's trying to solve.
+GitHub → avatar → **Settings** → **Notifications** → **Actions** → **failed workflows only**.
+Nobody was told during those eight red runs, which is how it went unnoticed for four days.

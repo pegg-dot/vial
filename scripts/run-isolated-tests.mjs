@@ -12,6 +12,11 @@ const files = requested.length > 0
       .sort()
       .map((name) => `tests/integration/${name}`);
 
+// Strip every real-database handle before spawning. `{...process.env}` carried DATABASE_URL
+// straight through, and the db client checks that BEFORE the in-memory flag — so running the
+// integration suite on any machine with DATABASE_URL exported pointed it at that database. On a
+// deploy machine that is production. The client now refuses this combination outright; this keeps
+// the runner from ever presenting it.
 const env = {
   ...process.env,
   VIALGRADE_PGLITE_MEMORY: "true",
@@ -20,6 +25,7 @@ const env = {
   VIALGRADE_SESSION_SECRET: "integration-session-secret-at-least-32-characters",
   VIALGRADE_PRIVACY_HASH_SECRET: "integration-privacy-secret-at-least-32-characters",
 };
+for (const key of ["DATABASE_URL", "POSTGRES_URL", "DATABASE_POSTGRES_PRISMA_URL", "PGHOST", "PGUSER", "PGPASSWORD", "PGDATABASE"]) delete env[key];
 
 function killGroup(pid) {
   if (!pid) return;

@@ -30,6 +30,34 @@ env.VIALGRADE_SKIP_NEXT_TYPECHECK = "1";
 // below and the whole site could be deindexed. A missing privacy salt is worse — visitor hashes
 // become reversible. Both fail silently at build and only surface as damage later, so the build is
 // the right place to stop.
+// The unit suite is a release gate on DEPLOYED builds.
+//
+// GitHub Actions is not available on this account, so the CI deploy job cannot run and Vercel
+// builds every push again. Without something here, nothing checks a commit before it reaches
+// vialgrade.com — which is the state that shipped eight red commits in August.
+//
+// Unit only, deliberately: 600+ tests in ~15s, no browser, no database. The integration suite is
+// NOT run here. It would need DATABASE_URL stripped from a build whose whole purpose is to have
+// one, and databaseChoice now refuses that combination outright rather than let a test run touch
+// production. e2e needs a browser. Both stay in the local gate (`npm run verify`).
+if (env.DATABASE_URL?.trim()) {
+  // Build the child env explicitly. Setting a key to `undefined` is not a reliable way to unset it
+  // for a spawned process, and leaving BOTH unset would drop the suite onto an on-disk store. The
+  // suite wants a real isolated in-memory database and no handle on the production one.
+  const suiteEnv = { ...env };
+  for (const key of ["DATABASE_URL", "POSTGRES_URL", "DATABASE_POSTGRES_PRISMA_URL", "PGHOST", "PGUSER", "PGPASSWORD", "PGDATABASE"]) delete suiteEnv[key];
+  suiteEnv.VIALGRADE_PGLITE_MEMORY = "true";
+  const suite = spawnSync(
+    process.execPath,
+    ["node_modules/vitest/vitest.mjs", "run", "tests/unit", "--maxWorkers=1", "--no-file-parallelism"],
+    { stdio: "inherit", env: suiteEnv },
+  );
+  if (suite.status !== 0) {
+    console.error("\nRefusing to build: the unit suite is red. This commit will not deploy.");
+    process.exit(suite.status ?? 1);
+  }
+}
+
 if (env.DATABASE_URL?.trim()) {
   const check = spawnSync(process.execPath, ["scripts/check-env.mjs"], { stdio: "inherit", env });
   if (check.status !== 0) {
