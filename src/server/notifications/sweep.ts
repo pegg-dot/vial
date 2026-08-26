@@ -84,7 +84,36 @@ async function markSwept(db: SqlConnection, userId: string) {
   );
 }
 
+/**
+ * Runs the sweep and ALWAYS leaves a receipt, even when it throws before doing any work.
+ *
+ * This wrapper exists because its absence cost hours of misdiagnosis. Three columns were missing
+ * from the production database, so `candidateUsers` threw on its first query — before the loop,
+ * before `recordCollectorRun`. No receipt was written, /status read "Never run", and "never run"
+ * is indistinguishable from "never invoked". The cron was firing correctly the whole time and the
+ * owner was told to suspect CRON_SECRET and the perimeter, both of which were fine.
+ *
+ * A scheduled job that can fail silently is a job you cannot debug from the outside. It re-throws
+ * afterwards so the route still 500s and the platform still records the invocation as failed.
+ */
 export async function runNotificationSweep(options: { maxUsers?: number; budgetMs?: number; now?: Date } = {}): Promise<SweepResult> {
+  try {
+    return await sweep(options);
+  } catch (error) {
+    console.error("[notification-sweep] tick failed before completing:", error);
+    // Best-effort and deliberately separate: if the database is the thing that is broken, this
+    // write fails too, and that must not replace the original error with a confusing one.
+    try {
+      const db = await getDatabase();
+      await recordCollectorRun(db, { collector: "notification-sweep", target: "customers", items: 0, ok: false });
+    } catch (receiptError) {
+      console.error("[notification-sweep] could not even record the failure:", receiptError);
+    }
+    throw error;
+  }
+}
+
+async function sweep(options: { maxUsers?: number; budgetMs?: number; now?: Date } = {}): Promise<SweepResult> {
   const maxUsers = Math.max(1, options.maxUsers ?? NOTIFICATION_SWEEP_USERS);
   const budgetMs = Math.max(1_000, options.budgetMs ?? 60_000);
   const now = options.now ?? new Date();

@@ -20,6 +20,14 @@ export interface CollectionMetrics {
   /** That wait as a multiple of the target's own cadence — the number that says "behind". */
   worstLateness: number | null;
   disabled: number;
+  /**
+   * Enabled targets whose last attempt failed.
+   *
+   * "Behind" has two completely different causes and the card could not tell them apart: a queue
+   * that is merely slow drains on its own, and a queue full of failing targets never will. The
+   * refresh card was given a failure count for exactly this reason; the collector card was not.
+   */
+  failing: number;
 }
 
 /**
@@ -50,6 +58,7 @@ export async function getCollectionMetrics(): Promise<CollectionMetrics> {
     overdue: string | number;
     oldest_minutes: string | number | null;
     worst_lateness: string | number | null;
+    failing: string | number;
   }>(
     // Lateness is measured per target against ITS OWN cadence, then maxed — a domain-age target on a
     // 30-day cadence being a day late is fine; a catalogue on a 6-hour cadence being a day late is
@@ -61,7 +70,8 @@ export async function getCollectionMetrics(): Promise<CollectionMetrics> {
        (SELECT MAX(EXTRACT(EPOCH FROM (NOW() - next_due_at)) / 60)
           FROM collection_targets WHERE enabled AND next_due_at <= NOW()) AS oldest_minutes,
        (SELECT MAX((EXTRACT(EPOCH FROM (NOW() - next_due_at)) / 60) / GREATEST(cadence_minutes, 1))
-          FROM collection_targets WHERE enabled AND next_due_at <= NOW()) AS worst_lateness`,
+          FROM collection_targets WHERE enabled AND next_due_at <= NOW()) AS worst_lateness,
+       (SELECT COUNT(*) FROM collection_targets WHERE enabled AND consecutive_failures > 0) AS failing`,
   );
   const row = result.rows[0];
   const num = (v: string | number | null | undefined) => (v === null || v === undefined ? null : Number(v));
@@ -71,6 +81,7 @@ export async function getCollectionMetrics(): Promise<CollectionMetrics> {
     overdue: Number(row?.overdue ?? 0),
     oldestOverdueMinutes: num(row?.oldest_minutes),
     worstLateness: num(row?.worst_lateness),
+    failing: Number(row?.failing ?? 0),
   };
 }
 

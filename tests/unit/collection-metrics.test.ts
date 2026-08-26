@@ -10,7 +10,7 @@ import { isKeepingUp, describeWait, LATENESS_DEGRADED, type CollectionMetrics } 
 // catalogue on the site is stale.
 
 const m = (over: Partial<CollectionMetrics> = {}): CollectionMetrics => ({
-  enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null, ...over,
+  enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null, failing: 0, ...over,
 });
 
 describe("knowing whether the collection queue is keeping up", () => {
@@ -58,5 +58,25 @@ describe("zero collectors is the worst state, not the calmest", () => {
 
   it("still reports healthy when there are collectors and none are late", () => {
     expect(isKeepingUp(m({ enabled: 1, overdue: 0 }))).toBe(true);
+  });
+});
+
+// "Behind" has two causes with opposite prognoses and the card could not tell them apart: a merely
+// slow queue drains on its own, a queue of failing targets never will. The refresh card was given a
+// failure count for exactly this reason; the collector card was not, and a backlog that grew for
+// hours during one session could not be attributed without database access.
+describe("a backlog is attributable", () => {
+  it("carries a failure count alongside the wait", () => {
+    expect(m({ overdue: 36, failing: 12 }).failing).toBe(12);
+    expect(m({ overdue: 36 }).failing).toBe(0);
+  });
+
+  it("does not confuse failing with overdue", () => {
+    // A target can be failing and not yet due again, or due and never attempted. They are
+    // independent, and collapsing them would make the new number as unreadable as the old one.
+    const draining = m({ overdue: 36, failing: 0 });
+    const stuck = m({ overdue: 36, failing: 36 });
+    expect(draining.overdue).toBe(stuck.overdue);
+    expect(draining.failing).not.toBe(stuck.failing);
   });
 });

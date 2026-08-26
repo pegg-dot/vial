@@ -134,8 +134,10 @@ export default async function StatusPage() {
               : collect.enabled === 0
                 ? "Nothing is being gathered — no collectors are registered"
                 : collect.overdue === 0
-                  ? "Every source is within its schedule"
-                  : `${collect.overdue} waiting · oldest ${describeWait(collect.oldestOverdueMinutes ?? 0)} past due`
+                  ? collect.failing === 0
+                    ? "Every source is within its schedule"
+                    : `Every source is within its schedule · ${collect.failing} failing`
+                  : `${collect.overdue} waiting · oldest ${describeWait(collect.oldestOverdueMinutes ?? 0)} past due${collect.failing > 0 ? ` · ${collect.failing} failing` : " · none failing, the queue is draining"}`
           }
           ok={Boolean(collect) && !collectorsBehind}
         />

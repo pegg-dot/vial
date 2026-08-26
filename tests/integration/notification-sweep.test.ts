@@ -129,6 +129,35 @@ describe("the scheduled notification sweep", () => {
     ).toBe(true);
   });
 
+  // The gap that cost hours of misdiagnosis in production: three columns were missing, the very
+  // first query threw before the loop and before the receipt, /status read "Never run", and
+  // "never run" looks exactly like "never invoked". The cron was firing the whole time.
+  it("leaves a FAILURE receipt when the tick dies before doing any work", async () => {
+    const db = await getDatabase();
+    await db.query(`DELETE FROM collector_runs WHERE collector='notification-sweep'`);
+
+    // Break the first thing the sweep touches, the way a missing column would.
+    await db.query(`ALTER TABLE user_visit_state RENAME TO user_visit_state_hidden`);
+    try {
+      await expect(runNotificationSweep({ maxUsers: 5 })).rejects.toThrow();
+    } finally {
+      await db.query(`ALTER TABLE user_visit_state_hidden RENAME TO user_visit_state`);
+    }
+
+    const runs = (await db.query<{ items: number; ok: boolean }>(
+      `SELECT items, ok FROM collector_runs WHERE collector='notification-sweep'`,
+    )).rows;
+    expect(runs.length, "a tick that died left no trace — /status cannot tell it from never being scheduled").toBe(1);
+    expect(runs[0]!.ok, "a failed tick must be recorded as failed, not as a quiet success").toBe(false);
+  });
+
+  it("reports a crashed tick as unhealthy rather than as never run", async () => {
+    const health = await getNotificationSweepHealth();
+    expect(health.lastRanAt, "the failure receipt must give /status a timestamp to show").not.toBeNull();
+    expect(health.lastOk).toBe(false);
+    expect(isSweepHealthy(health)).toBe(false);
+  });
+
   it("leaves a receipt so a quiet tick is distinguishable from no tick at all", async () => {
     const db = await getDatabase();
     await db.query(`DELETE FROM collector_runs WHERE collector='notification-sweep'`);
