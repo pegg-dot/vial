@@ -43,8 +43,8 @@ export function FollowingPanel({ initial }: { initial: FollowedEntity[] }) {
       <div className="ink hard rounded-[18px] bg-white p-6">
         <p className="text-sm font-bold">You aren&rsquo;t following anything yet.</p>
         <p className="mt-2 max-w-lg text-sm font-medium leading-6 text-[var(--muted)]">
-          Follow a compound or a vendor and every reviewed price move and evidence change on it lands here and in
-          your alerts — you won&rsquo;t have to come back and check.
+          Follow a compound or a vendor and every reviewed price move and evidence change on it is waiting here and
+          in your alerts next time you look.
         </p>
         <div className="mt-5 flex flex-wrap gap-2.5">
           <Link href="/compounds" className="ink hard-sm press inline-flex items-center gap-1.5 rounded-full bg-[#111214] px-4 py-2.5 text-sm font-bold text-white">Browse compounds <ArrowUpRight className="size-3.5" /></Link>
