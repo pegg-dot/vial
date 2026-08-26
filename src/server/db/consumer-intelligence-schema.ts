@@ -107,6 +107,7 @@ ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS quiet_hours_s
 ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS quiet_hours_end TEXT NOT NULL DEFAULT '08:00';
 ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'America/New_York';
 ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS relevance_threshold NUMERIC(5,4) NOT NULL DEFAULT 0.45;
+ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS availability_alerts BOOLEAN NOT NULL DEFAULT TRUE;
 
 CREATE INDEX IF NOT EXISTS idx_saved_searches_user ON saved_searches(user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_comparisons_user ON comparison_sessions(user_id, updated_at DESC);

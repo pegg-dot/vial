@@ -54,6 +54,10 @@ const PUBLIC_API_EXACT = new Set([
   // failure the comment above describes, repeated three lines below the warning about it. There is
   // a test now that reads vercel.json and requires every cron path to appear here.
   "/api/internal/cron/provenance",
+  // The nightly notification sweep. Without this entry the perimeter 401s Vercel Cron before the
+  // handler runs, and every reader silently stops being told anything — the same failure as the
+  // two above, on the one route whose whole purpose is to reach people who are not looking.
+  "/api/internal/cron/notifications",
   // Partner postbacks authenticate with a per-vendor HMAC inside the handler.
   "/api/partner/conversion",
   // Anonymous page-view beacon. No auth by design; it stores no identity.

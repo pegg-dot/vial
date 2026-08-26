@@ -22,6 +22,12 @@ vi.mock("@/server/intelligence/repository", () => ({
 }));
 
 const metrics = vi.hoisted(() => ({ value: { enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null as number | null, worstLateness: null as number | null } }));
+vi.mock("@/server/notifications/sweep", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/notifications/sweep")>()),
+  getNotificationSweepHealth: vi.fn(async () => ({
+    lastRanAt: "2026-08-26T00:00:00.000Z", lastSweptUsers: 31, lastOk: true, hoursSinceLastRun: 3,
+  })),
+}));
 vi.mock("@/server/collect/metrics", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/server/collect/metrics")>()),
   getCollectionMetrics: vi.fn(async () => metrics.value),

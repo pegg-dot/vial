@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { AlertTriangle, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, XCircle } from "lucide-react";
+import { SWEEP_STALE_HOURS, getNotificationSweepHealth, isSweepHealthy } from "@/server/notifications/sweep";
+import { AlertTriangle, BellRing, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, XCircle } from "lucide-react";
 import { getRefreshMetrics } from "@/server/refresh/repository";
 import { getIntelligenceMetrics } from "@/server/intelligence/repository";
 import { checkReadiness } from "@/server/health/readiness";
@@ -30,13 +31,14 @@ export default async function StatusPage() {
   // checkReadiness never throws — an unreachable database is a result, not an exception.
   const readiness = await checkReadiness();
   const online = readiness.database === "reachable";
-  const [refresh, intel, collect] = online
+  const [refresh, intel, collect, sweep] = online
     ? await Promise.all([
         getRefreshMetrics().catch((error) => { console.error("[status] refresh metrics unavailable:", error); return null; }),
         getIntelligenceMetrics().catch((error) => { console.error("[status] intelligence metrics unavailable:", error); return null; }),
         getCollectionMetrics().catch((error) => { console.error("[status] collection metrics unavailable:", error); return null; }),
+        getNotificationSweepHealth().catch((error) => { console.error("[status] notification sweep unavailable:", error); return null; }),
       ])
-    : [null, null, null];
+    : [null, null, null, null];
 
   // A starving queue is an outage with none of an outage's symptoms: every tick succeeds, nothing
   // errors, and the data quietly goes stale. Until this line the page could not have said so.
@@ -51,7 +53,7 @@ export default async function StatusPage() {
       ? { Icon: XCircle, tone: "#ff9d94", shadow: "hard", text: "Major outage — the database is unreachable" }
       : readiness.status === "degraded"
         ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — database schema is at ${readiness.schema.actual}, expected ${readiness.schema.expected}` }
-        : !(refresh && intel && collect)
+        : !(refresh && intel && collect && sweep)
           ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — one or more subsystems are not reporting" }
           : collect.enabled === 0
             ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — no collectors are registered, so nothing is being gathered" }
@@ -67,6 +69,8 @@ export default async function StatusPage() {
                   // outage. The headline has to move with the numbers.
                   : refresh.failed > 0
                     ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — ${refresh.failed} refresh ${refresh.failed === 1 ? "job has" : "jobs have"} failed` }
+                    : !isSweepHealthy(sweep)
+                      ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: sweep.lastRanAt === null ? "Degraded — the alert sweep has never run, so nobody is being notified while they are away" : "Degraded — the alert sweep has not completed on schedule" }
                 : { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" };
 
   return (
@@ -128,6 +132,23 @@ export default async function StatusPage() {
                   : `${collect.overdue} waiting · oldest ${describeWait(collect.oldestOverdueMinutes ?? 0)} past due`
           }
           ok={Boolean(collect) && !collectorsBehind}
+        />
+        <Card
+          icon={BellRing}
+          title="Alerts going out"
+          value={!sweep ? "Not reporting" : sweep.lastRanAt === null ? "Never run" : `${sweep.lastSweptUsers} readers`}
+          detail={
+            !sweep
+              ? "No figures available while this subsystem is unreadable"
+              : sweep.lastRanAt === null
+                ? "The nightly sweep has never run — nobody is being told anything while they are away"
+                : !sweep.lastOk
+                  ? `Last sweep did not finish cleanly, ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
+                  : (sweep.hoursSinceLastRun ?? 0) >= SWEEP_STALE_HOURS
+                    ? `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago — past its daily schedule`
+                    : `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
+          }
+          ok={sweep !== null && isSweepHealthy(sweep)}
         />
         <Card
           icon={ShieldCheck}

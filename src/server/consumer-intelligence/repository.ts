@@ -1,6 +1,7 @@
 import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
+import { DEFAULT_NOTIFICATION_PREFERENCES, type NotificationPreferences } from "@/server/notifications/policy";
 import type {
   ComparisonSession,
   ConsumerPreferences,
@@ -93,6 +94,7 @@ function toSavedSearch(row: SavedSearchRow): SavedSearch {
 export async function listSavedSearches(userId:string,connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query<SavedSearchRow>(`SELECT * FROM saved_searches WHERE user_id=$1 ORDER BY updated_at DESC`,[userId]);return result.rows.map(toSavedSearch)}
 export async function getSavedSearch(userId:string,id:string,connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query<SavedSearchRow>(`SELECT * FROM saved_searches WHERE user_id=$1 AND id=$2`,[userId,id]);return result.rows[0]?toSavedSearch(result.rows[0]):null}
 export async function createSavedSearch(userId:string,input:{name:string;query:string;filters?:Record<string,unknown>;alertMode?:SavedSearch["alertMode"]},connection?:SqlConnection){const db=connection??await getDatabase();const id=newId("saved-search");await db.query(`INSERT INTO saved_searches(id,user_id,name,query,filters,alert_mode) VALUES($1,$2,$3,$4,$5::jsonb,$6)`,[id,userId,input.name,input.query,JSON.stringify(input.filters??{}),input.alertMode??"important"]);return getSavedSearch(userId,id,db)}
+export async function updateSavedSearch(userId:string,id:string,input:{name?:string;alertMode?:SavedSearch["alertMode"]},connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query<{id:string}>(`UPDATE saved_searches SET name=COALESCE($3::text,name),alert_mode=COALESCE($4::text,alert_mode),updated_at=NOW() WHERE user_id=$1 AND id=$2 RETURNING id`,[userId,id,input.name??null,input.alertMode??null]);return result.rows[0]?getSavedSearch(userId,id,db):null}
 export async function updateSavedSearchResult(userId:string,id:string,count:number,connection?:SqlConnection){const db=connection??await getDatabase();await db.query(`UPDATE saved_searches SET last_result_count=$3,last_run_at=NOW(),updated_at=NOW() WHERE user_id=$1 AND id=$2`,[userId,id,count])}
 export async function deleteSavedSearch(userId:string,id:string,connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query(`DELETE FROM saved_searches WHERE user_id=$1 AND id=$2 RETURNING id`,[userId,id]);return Boolean(result.rows[0])}
 
@@ -148,13 +150,44 @@ export async function listFollowedListingSlugs(userId:string,connection?:SqlConn
   return Array.from(byListing,([listingSlug,reason])=>({listingSlug,reason}));
 }
 
-export async function getNotificationChannelPreferences(userId:string,connection?:SqlConnection){
+interface NotificationPreferenceRow extends QueryResultRow {
+  in_app_enabled:boolean;email_enabled:boolean;price_alerts:boolean;evidence_alerts:boolean;availability_alerts:boolean;
+  order_alerts:boolean;saved_search_alerts:boolean;followed_entity_alerts:boolean;market_digest:boolean;
+  digest_frequency:string;quiet_hours_start:string;quiet_hours_end:string;timezone:string;relevance_threshold:string|number;
+}
+
+/**
+ * The reader's full notification policy input.
+ *
+ * This used to select two columns — the only two anything read — while /account rendered fourteen
+ * controls. Selecting the whole row and mapping it into the policy type means a column that is
+ * stored but absent here is a compile error, not a silently dead setting.
+ *
+ * No row means the reader has never opened preferences. The schema defaults are all permissive, so
+ * the absence of a row must read the same way; defaulting to off here would mute someone who never
+ * touched a thing.
+ */
+export async function getNotificationChannelPreferences(userId:string,connection?:SqlConnection):Promise<NotificationPreferences>{
   const db=connection??await getDatabase();
-  const row=(await db.query<{followed_entity_alerts:boolean;price_alerts:boolean}>(`SELECT followed_entity_alerts,price_alerts FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0];
-  // No row means the user has never opened preferences. The schema default is TRUE, so the absence
-  // of a row must read as "on" too — defaulting to off here would silently mute a user who never
-  // touched the setting.
-  return{followedEntityAlerts:row?Boolean(row.followed_entity_alerts):true,priceAlerts:row?Boolean(row.price_alerts):true};
+  const row=(await db.query<NotificationPreferenceRow>(`SELECT * FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0];
+  if(!row)return{...DEFAULT_NOTIFICATION_PREFERENCES};
+  const frequency=row.digest_frequency==="daily"||row.digest_frequency==="weekly"?row.digest_frequency:"instant";
+  return{
+    inAppEnabled:Boolean(row.in_app_enabled),
+    emailEnabled:Boolean(row.email_enabled),
+    priceAlerts:Boolean(row.price_alerts),
+    evidenceAlerts:Boolean(row.evidence_alerts),
+    availabilityAlerts:Boolean(row.availability_alerts),
+    orderAlerts:Boolean(row.order_alerts),
+    savedSearchAlerts:Boolean(row.saved_search_alerts),
+    followedEntityAlerts:Boolean(row.followed_entity_alerts),
+    marketDigest:Boolean(row.market_digest),
+    digestFrequency:frequency,
+    quietHoursStart:row.quiet_hours_start??DEFAULT_NOTIFICATION_PREFERENCES.quietHoursStart,
+    quietHoursEnd:row.quiet_hours_end??DEFAULT_NOTIFICATION_PREFERENCES.quietHoursEnd,
+    timezone:row.timezone??DEFAULT_NOTIFICATION_PREFERENCES.timezone,
+    relevanceThreshold:Number(row.relevance_threshold??DEFAULT_NOTIFICATION_PREFERENCES.relevanceThreshold),
+  };
 }
 
 export async function setFollow(userId:string,entityType:string,entitySlug:string,followed:boolean,connection?:SqlConnection){const db=connection??await getDatabase();if(followed)await db.query(`INSERT INTO entity_follows(user_id,entity_type,entity_slug) VALUES($1,$2,$3) ON CONFLICT DO NOTHING`,[userId,entityType,entitySlug]);else await db.query(`DELETE FROM entity_follows WHERE user_id=$1 AND entity_type=$2 AND entity_slug=$3`,[userId,entityType,entitySlug]);return listFollows(userId,db)}
@@ -168,30 +201,6 @@ function toNotification(row:NotificationRow):UserNotification{return{id:row.id,c
 export async function listUserNotifications(userId:string,input:{status?:string;limit?:number}={},connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query<NotificationRow>(`SELECT un.* FROM user_notifications un LEFT JOIN user_notification_preferences p ON p.user_id=un.user_id WHERE un.user_id=$1 AND un.deliver_after<=NOW() AND un.relevance_score>=COALESCE(p.relevance_threshold,0) AND ($2::text IS NULL OR un.status=$2) ORDER BY CASE un.status WHEN 'unread' THEN 0 ELSE 1 END,un.relevance_score DESC,un.created_at DESC LIMIT $3`,[userId,input.status??null,input.limit??100]);return result.rows.map(toNotification)}
 function minuteValue(value:string){const [hour,minute]=value.split(":").map(Number);return Number.isFinite(hour)&&Number.isFinite(minute)?hour*60+minute:0}
 async function quietDeliveryTime(userId:string,now:Date,db:SqlConnection){const row=(await db.query<{quiet_hours_start:string;quiet_hours_end:string;timezone:string}>(`SELECT quiet_hours_start,quiet_hours_end,timezone FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0];if(!row)return now;let parts:Intl.DateTimeFormatPart[];try{parts=new Intl.DateTimeFormat("en-US",{timeZone:row.timezone,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(now)}catch{return now}const hour=Number(parts.find(part=>part.type==="hour")?.value??0),minute=Number(parts.find(part=>part.type==="minute")?.value??0),current=hour*60+minute,start=minuteValue(row.quiet_hours_start),end=minuteValue(row.quiet_hours_end);const active=start===end?false:start<end?current>=start&&current<end:current>=start||current<end;if(!active)return now;const minutesUntilEnd=start<end?end-current:current<end?end-current:24*60-current+end;return new Date(now.getTime()+Math.max(1,minutesUntilEnd)*60_000)}
-/**
- * Whether a push may go out right now, and above what relevance.
- *
- * The inbox row already honours both settings — `upsertUserNotification` defers `deliver_after`
- * through `quietDeliveryTime`, and `listUserNotifications` filters on `relevance_threshold`. The
- * PUSH did neither: it fired immediately and unconditionally inside the same loop. So quiet hours
- * of 22:00–08:00 silenced the inbox and did nothing about the phone buzzing at 3am, and a reader
- * who dragged relevance to 100% got an empty inbox and a full lock screen.
- *
- * A push cannot be deferred — there is no scheduler to hand it to — so during quiet hours it is
- * dropped. The notification itself is still written and still waiting in the inbox afterwards,
- * which is what "quiet" should mean.
- */
-export async function getPushDeliveryGate(userId:string,now=new Date(),connection?:SqlConnection){
-  const db=connection??await getDatabase();
-  const deliverAt=await quietDeliveryTime(userId,now,db);
-  const row=(await db.query<{relevance_threshold:string|number}>(`SELECT relevance_threshold FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0];
-  return{
-    inQuietHours:deliverAt.getTime()>now.getTime(),
-    // No row means the reader never opened preferences; COALESCE to 0 exactly as the inbox query does.
-    relevanceThreshold:row?Number(row.relevance_threshold):0,
-  };
-}
-
 export async function upsertUserNotification(userId:string,input:{category:string;title:string;body:string;actionHref?:string;relevanceScore:number;dedupeKey:string;deliverAfter?:Date},connection?:SqlConnection){const db=connection??await getDatabase();const deliverAfter=input.deliverAfter??await quietDeliveryTime(userId,new Date(),db);await db.query(`INSERT INTO user_notifications(id,user_id,category,title,body,action_href,relevance_score,dedupe_key,deliver_after) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(user_id,dedupe_key) DO UPDATE SET title=EXCLUDED.title,body=EXCLUDED.body,action_href=EXCLUDED.action_href,relevance_score=GREATEST(user_notifications.relevance_score,EXCLUDED.relevance_score),deliver_after=LEAST(user_notifications.deliver_after,EXCLUDED.deliver_after)`,[newId("notification"),userId,input.category,input.title,input.body,input.actionHref??null,input.relevanceScore,input.dedupeKey,deliverAfter])}
 export async function updateNotificationStatus(userId:string,id:string,status:UserNotification["status"],connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query(`UPDATE user_notifications SET status=$3,read_at=CASE WHEN $3='read' THEN NOW() ELSE read_at END WHERE user_id=$1 AND id=$2 RETURNING id`,[userId,id,status]);return Boolean(result.rows[0])}
 

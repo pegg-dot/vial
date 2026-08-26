@@ -267,6 +267,32 @@ export async function getAlertsForListingSlugs(slugs: string[], limit = 50) {
   }));
 }
 
+/**
+ * How much reviewed change activity each listing has seen since `since`, keyed by listing slug.
+ *
+ * This is the data behind the reader's `homeView: "changes-first"` ranking. It is deliberately ONE
+ * query for the whole catalogue rather than `getAlertsForListingSlugs` per card: the ranking touches
+ * every listing, so a per-listing lookup would be one round trip per listing on every For You load.
+ *
+ * Watchtower alerts are tied to reviewed changes and explicit operational failures, so counting them
+ * is counting reviewed activity — not raw source churn that never passed review.
+ */
+export async function getRecentListingChangeActivity(since: Date) {
+  const db = await getDatabase();
+  const result = await db.query<QueryResultRow & { listing_slug: string; alert_count: string | number; last_at: Date | string }>(
+    `SELECT l.slug AS listing_slug, COUNT(*) AS alert_count, MAX(ae.created_at) AS last_at
+     FROM alert_events ae
+     JOIN listings l ON ae.entity_type='listing' AND l.id=ae.entity_id
+     WHERE ae.created_at >= $1
+     GROUP BY l.slug`,
+    [since],
+  );
+  return new Map(result.rows.map((row) => [row.listing_slug, {
+    count: Number(row.alert_count),
+    lastAt: new Date(row.last_at).toISOString(),
+  }]));
+}
+
 export async function getIntelligenceMetrics() {
   const db = await getDatabase();
   const result = await db.query<QueryResultRow & {

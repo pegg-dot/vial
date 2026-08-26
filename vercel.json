@@ -11,6 +11,10 @@
     {
       "path": "/api/internal/cron/provenance",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/internal/cron/notifications",
+      "schedule": "30 15 * * *"
     }
   ]
 }

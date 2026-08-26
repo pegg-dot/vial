@@ -1,8 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import {
   getNotificationChannelPreferences,
-  getPushDeliveryGate,
   listFollowedListingSlugs,
   listUserNotifications,
   setFollow,
@@ -56,8 +55,20 @@ async function pickAlertedListing() {
   return fixture;
 }
 
+async function neutraliseDeliveryTiming() {
+  const db = await getDatabase();
+  const now = new Date();
+  const current = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const fmt = (minutes: number) => `${String(Math.floor((minutes % 1440) / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  await db.query(
+    `UPDATE user_notification_preferences SET quiet_hours_start=$2, quiet_hours_end=$3, timezone='UTC', digest_frequency='instant', relevance_threshold=0 WHERE user_id=$1`,
+    [userId, fmt(current + 120), fmt(current + 180)],
+  );
+}
+
 describe("following produces notifications", () => {
   beforeAll(async () => { await resetDatabaseForTests(); await getDatabase(); });
+  beforeEach(neutraliseDeliveryTiming);
   afterAll(async () => { await resetDatabaseForTests(); });
 
   it("resolves a followed compound to its listings", async () => {
@@ -151,45 +162,4 @@ describe("following produces notifications", () => {
     await db.query(`INSERT INTO user_notification_preferences(user_id) VALUES($1) ON CONFLICT DO NOTHING`, [userId]);
   });
 
-  // The inbox honoured quiet hours and the relevance slider; the push ignored both and fired
-  // inside the same loop. Quiet hours silenced the inbox and left the phone buzzing at 3am.
-  describe("the push gate", () => {
-    const fmt = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-
-    async function setQuietWindow(coveringNow: boolean) {
-      const db = await getDatabase();
-      const now = new Date();
-      const current = now.getUTCHours() * 60 + now.getUTCMinutes();
-      // A window that either brackets this minute or sits an hour away from it.
-      const start = coveringNow ? (current + 1439) % 1440 : (current + 120) % 1440;
-      const end = coveringNow ? (current + 2) % 1440 : (current + 180) % 1440;
-      await db.query(`UPDATE user_notification_preferences SET quiet_hours_start=$2,quiet_hours_end=$3,timezone='UTC' WHERE user_id=$1`, [userId, fmt(start), fmt(end)]);
-    }
-
-    it("reports quiet hours when the current minute is inside the window", async () => {
-      await setQuietWindow(true);
-      expect((await getPushDeliveryGate(userId)).inQuietHours).toBe(true);
-    });
-
-    it("reports no quiet hours when the window is elsewhere in the day", async () => {
-      await setQuietWindow(false);
-      expect((await getPushDeliveryGate(userId)).inQuietHours).toBe(false);
-    });
-
-    it("surfaces the relevance threshold the reader set", async () => {
-      const db = await getDatabase();
-      await db.query(`UPDATE user_notification_preferences SET relevance_threshold=0.8 WHERE user_id=$1`, [userId]);
-      expect((await getPushDeliveryGate(userId)).relevanceThreshold).toBeCloseTo(0.8);
-      await db.query(`UPDATE user_notification_preferences SET relevance_threshold=0 WHERE user_id=$1`, [userId]);
-    });
-
-    it("treats a reader with no preferences row as pushable and unthrottled", async () => {
-      const db = await getDatabase();
-      await db.query(`DELETE FROM user_notification_preferences WHERE user_id=$1`, [userId]);
-      const gate = await getPushDeliveryGate(userId);
-      expect(gate.inQuietHours).toBe(false);
-      expect(gate.relevanceThreshold).toBe(0);
-      await db.query(`INSERT INTO user_notification_preferences(user_id) VALUES($1) ON CONFLICT DO NOTHING`, [userId]);
-    });
-  });
 });

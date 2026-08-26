@@ -27,6 +27,13 @@ vi.mock("@/server/collect/metrics", async (importOriginal) => ({
   })),
 }));
 
+vi.mock("@/server/notifications/sweep", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/notifications/sweep")>()),
+  getNotificationSweepHealth: vi.fn(async () => ({
+    lastRanAt: "2026-08-26T00:00:00.000Z", lastSweptUsers: 31, lastOk: true, hoursSinceLastRun: 3,
+  })),
+}));
+
 const StatusPage = (await import("@/app/status/page")).default;
 
 function strings(node: unknown, out: string[] = []): string[] {
@@ -58,6 +65,7 @@ describe("/status when everything is healthy", () => {
     expect(text).toContain("4 queued · 2 stale");
     expect(text).toContain("118 traces");
     expect(text).toContain("7 alerts · 5 open signals");
+    expect(text).toContain("31 readers");
     expect(text).toContain("99 enabled");
     expect(text).toContain("6 waiting · oldest 42m past due");
     expect(text).not.toContain("Major outage");

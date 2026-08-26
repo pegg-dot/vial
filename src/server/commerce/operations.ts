@@ -1,4 +1,5 @@
 import type { QueryResultRow } from "pg";
+import { notifyOrderShipped } from "@/server/notifications/order-alerts";
 import { getDatabase, withTransaction } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { getPaymentProvider } from "./provider";
@@ -161,7 +162,7 @@ export async function createRefund(input: { orderId: string; amount: number; rea
 }
 
 export async function createShipment(input: { orderId: string; sellerId: string; carrier: string; trackingCode: string }) {
-  return withTransaction(async (db) => {
+  const result = await withTransaction(async (db) => {
     const owned = (await db.query(`SELECT 1 FROM commerce_order_lines WHERE order_id=$1 AND seller_id=$2 LIMIT 1`, [input.orderId,input.sellerId])).rows[0];
     if (!owned) throw new Error("Seller order allocation not found");
     const current = (await db.query<QueryResultRow & { id: string; status: string; tracking_code: string | null }>(`SELECT id,status,tracking_code FROM commerce_shipments WHERE order_id=$1 AND seller_id=$2 ORDER BY created_at LIMIT 1 FOR UPDATE`, [input.orderId,input.sellerId])).rows[0];
@@ -174,6 +175,8 @@ export async function createShipment(input: { orderId: string; sellerId: string;
     await db.query(`UPDATE commerce_orders SET status=$2,updated_at=NOW() WHERE id=$1`, [input.orderId,unshipped===0?"shipped":"partially_shipped"]);
     return { id, status: "shipped", idempotent: false };
   });
+  if (!result.idempotent) await notifyOrderShipped({ orderId: input.orderId, trackingCode: input.trackingCode });
+  return result;
 }
 
 export async function createSandboxDispute(input: { orderId: string; amount: number; reason: string }) {

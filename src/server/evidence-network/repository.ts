@@ -6,6 +6,7 @@ import { ensureSellerOpsSeed, resolveSellerMembership } from "@/server/seller/op
 import { projectEvidenceRegistry } from "@/server/registry/repository";
 import { consumeRateLimit } from "@/server/security/rate-limit";
 import { getLivePassportEvidence } from "@/server/evidence-network/live-passports";
+import type { PassportRow } from "@/lib/passport-filter";
 
 const onboardingSteps = ["identity", "quality", "scope", "methods", "team", "security", "agreement", "review"] as const;
 
@@ -310,7 +311,19 @@ export async function getLaboratoryContext(email: string) {
 
 export async function listPublicLaboratories() { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); return (await db.query(`SELECT lp.*,o.description,o.location,(SELECT COUNT(*) FROM laboratory_methods m WHERE m.laboratory_id=lp.id AND m.validation_status='validated') method_count,(SELECT COUNT(*) FROM laboratory_reports r WHERE r.laboratory_id=lp.id AND r.status='issued') issued_reports FROM laboratory_profiles lp JOIN organizations o ON o.id=lp.organization_id WHERE lp.status IN ('sandbox','active') ORDER BY lp.display_name`)).rows; }
 export async function getPublicLaboratory(slug: string) { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); const lab = (await db.query(`SELECT lp.*,o.description,o.location FROM laboratory_profiles lp JOIN organizations o ON o.id=lp.organization_id WHERE lp.slug=$1 AND lp.status IN ('sandbox','active')`, [slug])).rows[0]; if (!lab) return null; const [methods, reports] = await Promise.all([db.query(`SELECT * FROM laboratory_methods WHERE laboratory_id=$1 AND validation_status='validated' ORDER BY technique,name`, [lab.id]), db.query(`SELECT r.id,r.report_number,r.version,r.status,r.public_summary,r.issued_at,s.sample_code,o.declared_batch_code FROM laboratory_reports r JOIN laboratory_samples s ON s.id=r.sample_id JOIN laboratory_test_orders o ON o.id=r.test_order_id WHERE r.laboratory_id=$1 AND r.status='issued' ORDER BY r.issued_at DESC`, [lab.id])]); return { lab, methods: methods.rows, reports: reports.rows }; }
-export async function listPublicPassports() { await ensureEvidenceNetworkSeed(); const db = await getDatabase(); return (await db.query(`SELECT bp.*,o.display_name vendor_name,o.slug vendor_slug,p.name product_name,c.canonical_name compound_name,c.slug compound_slug_join,l.slug listing_slug,(SELECT COUNT(*) FROM passport_evidence_links pel WHERE pel.passport_id=bp.id AND pel.status='active')+(SELECT COUNT(*) FROM passport_lab_tests plt WHERE plt.passport_id=bp.id) evidence_links,(SELECT COUNT(*) FROM evidence_conflicts ec WHERE ec.passport_id=bp.id AND ec.status='open') open_conflicts FROM batch_passports bp LEFT JOIN organizations o ON o.id=bp.vendor_id LEFT JOIN products p ON p.id=bp.product_id LEFT JOIN compounds c ON c.slug=bp.compound_slug LEFT JOIN listings l ON l.id=bp.listing_id WHERE bp.status='published' ORDER BY bp.origin='live' DESC,bp.evidence_confidence DESC,bp.updated_at DESC`)).rows; }
+// Every published passport, for the /passports index. Bounded, and named columns only.
+//
+// This is the same leak the compound page had (see listPublicPassportsForCompound below): `bp.*`
+// with no LIMIT reads the whole published table — every JSONB dimensions/limitations/
+// confidence_basis blob included — on every index view, including every crawler hit, to render a
+// grid nobody scrolls to the end of. The page filters and pages client-side, so the cap is what
+// the reader can plausibly work through, not what the table holds. The ORDER BY puts live records
+// with the strongest evidence first, so a cap truncates the tail rather than the useful head.
+export async function listPublicPassports(limit = 200): Promise<PassportRow[]> {
+  await ensureEvidenceNetworkSeed();
+  const db = await getDatabase();
+  return (await db.query<QueryResultRow & PassportRow>(`SELECT bp.id,bp.slug,bp.declared_batch_code,bp.origin,bp.sampling_level,bp.evidence_confidence,bp.compound_slug,o.display_name vendor_name,o.slug vendor_slug,p.name product_name,c.canonical_name compound_name,c.slug compound_slug_join,l.slug listing_slug,(SELECT COUNT(*) FROM passport_evidence_links pel WHERE pel.passport_id=bp.id AND pel.status='active')+(SELECT COUNT(*) FROM passport_lab_tests plt WHERE plt.passport_id=bp.id) evidence_links,(SELECT COUNT(*) FROM evidence_conflicts ec WHERE ec.passport_id=bp.id AND ec.status='open') open_conflicts FROM batch_passports bp LEFT JOIN organizations o ON o.id=bp.vendor_id LEFT JOIN products p ON p.id=bp.product_id LEFT JOIN compounds c ON c.slug=bp.compound_slug LEFT JOIN listings l ON l.id=bp.listing_id WHERE bp.status='published' ORDER BY bp.origin='live' DESC,bp.evidence_confidence DESC,bp.updated_at DESC LIMIT $1`, [limit])).rows;
+}
 // Passports for ONE compound, filtered and limited in SQL.
 //
 // The compound page used to call listPublicPassports() — every published passport, every column,
