@@ -104,6 +104,59 @@ export async function saveDefaultComparison(userId:string,listingSlugs:string[],
 export async function createNamedComparison(userId:string,input:{name:string;listingSlugs:string[];notes?:Record<string,string>},connection?:SqlConnection){const db=connection??await getDatabase();const id=newId("comparison");await db.query(`INSERT INTO comparison_sessions(id,user_id,name,listing_slugs,notes,is_default) VALUES($1,$2,$3,$4::jsonb,$5::jsonb,FALSE)`,[id,userId,input.name,JSON.stringify(input.listingSlugs.slice(0,4)),JSON.stringify(input.notes??{})]);return (await listComparisons(userId,db)).find(item=>item.id===id)??null}
 
 export async function listFollows(userId:string,connection?:SqlConnection){const db=connection??await getDatabase();return (await db.query<{entity_type:string;entity_slug:string}>(`SELECT entity_type,entity_slug FROM entity_follows WHERE user_id=$1 ORDER BY created_at DESC`,[userId])).rows.map(row=>({entityType:row.entity_type,entitySlug:row.entity_slug}))}
+/**
+ * The listings a user's follows actually cover, with the follow that pulled each one in.
+ *
+ * Following was a ranking signal and nothing else: `syncWatchlistNotifications` read only
+ * `user_watchlists`, so following a vendor produced no alert anywhere while /account/notifications
+ * told the user it delivered "changes to the things you follow". This is the missing join.
+ *
+ * The reason travels with the row because a notification that cannot say why it reached you is
+ * indistinguishable from spam — and it is what lets the inbox name the follow the user made.
+ */
+export async function listFollowedListingSlugs(userId:string,connection?:SqlConnection):Promise<{listingSlug:string;reason:string}[]>{
+  const db=connection??await getDatabase();
+  const result=await db.query<{listing_slug:string;compound_slug:string;compound_name:string;vendor_slug:string;vendor_name:string}>(
+    `SELECT l.slug listing_slug,c.slug compound_slug,c.canonical_name compound_name,o.slug vendor_slug,o.display_name vendor_name
+     FROM entity_follows f
+     JOIN compounds c ON f.entity_type='compound' AND c.slug=f.entity_slug
+     JOIN products p ON p.compound_id=c.id AND p.status='active'
+     JOIN organizations o ON o.id=p.vendor_id
+     JOIN listings l ON l.product_id=p.id
+     WHERE f.user_id=$1
+     UNION
+     SELECT l.slug,c.slug,c.canonical_name,o.slug,o.display_name
+     FROM entity_follows f
+     JOIN organizations o ON f.entity_type='vendor' AND o.slug=f.entity_slug
+     JOIN products p ON p.vendor_id=o.id AND p.status='active'
+     JOIN compounds c ON c.id=p.compound_id
+     JOIN listings l ON l.product_id=p.id
+     WHERE f.user_id=$1`,
+    [userId],
+  );
+  const follows=await listFollows(userId,db);
+  const followedCompounds=new Set(follows.filter(item=>item.entityType==="compound").map(item=>item.entitySlug));
+  const followedVendors=new Set(follows.filter(item=>item.entityType==="vendor").map(item=>item.entitySlug));
+  // One row per listing. A listing reached by BOTH a followed compound and a followed vendor must
+  // not become two notifications for the same change; name the compound, which is the narrower reason.
+  const byListing=new Map<string,string>();
+  for(const row of result.rows){
+    if(byListing.has(row.listing_slug))continue;
+    const reason=followedCompounds.has(row.compound_slug)?`You follow ${row.compound_name}`:followedVendors.has(row.vendor_slug)?`You follow ${row.vendor_name}`:"";
+    if(reason)byListing.set(row.listing_slug,reason);
+  }
+  return Array.from(byListing,([listingSlug,reason])=>({listingSlug,reason}));
+}
+
+export async function getNotificationChannelPreferences(userId:string,connection?:SqlConnection){
+  const db=connection??await getDatabase();
+  const row=(await db.query<{followed_entity_alerts:boolean;price_alerts:boolean}>(`SELECT followed_entity_alerts,price_alerts FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0];
+  // No row means the user has never opened preferences. The schema default is TRUE, so the absence
+  // of a row must read as "on" too — defaulting to off here would silently mute a user who never
+  // touched the setting.
+  return{followedEntityAlerts:row?Boolean(row.followed_entity_alerts):true,priceAlerts:row?Boolean(row.price_alerts):true};
+}
+
 export async function setFollow(userId:string,entityType:string,entitySlug:string,followed:boolean,connection?:SqlConnection){const db=connection??await getDatabase();if(followed)await db.query(`INSERT INTO entity_follows(user_id,entity_type,entity_slug) VALUES($1,$2,$3) ON CONFLICT DO NOTHING`,[userId,entityType,entitySlug]);else await db.query(`DELETE FROM entity_follows WHERE user_id=$1 AND entity_type=$2 AND entity_slug=$3`,[userId,entityType,entitySlug]);return listFollows(userId,db)}
 
 interface DecisionRow extends QueryResultRow{id:string;event_type:string;subject_type:string;subject_id:string;metadata:unknown;occurred_at:Date|string}

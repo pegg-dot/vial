@@ -8,6 +8,8 @@ import {
   getConsumerPreferences,
   getVisitState,
   listDecisionEvents,
+  getNotificationChannelPreferences,
+  listFollowedListingSlugs,
   listFollows,
   listMarketChangeSummaries,
   listSavedSearches,
@@ -50,7 +52,8 @@ export async function getPersonalizedMarket(userId: string) {
       let score = evidenceScore(product, preferences);
       const reasons:string[]=[];
       if (preferences.preferredCompoundSlugs.includes(product.compoundSlug) || followedCompounds.has(product.compoundSlug)) {score+=28;reasons.push("Followed compound");}
-      if (preferences.preferredVendorSlugs.includes(product.vendorSlug) || followedVendors.has(product.vendorSlug)) {score+=20;reasons.push("Preferred vendor");}
+      if (followedVendors.has(product.vendorSlug)) {score+=20;reasons.push("Followed vendor");}
+      else if (preferences.preferredVendorSlugs.includes(product.vendorSlug)) {score+=20;reasons.push("Preferred vendor");}
       if (watched.has(product.slug)) {score+=12;reasons.push("On your watchlist");}
       if (product.price>=preferences.priceFloor&&product.price<=preferences.priceCeiling) {score+=12;reasons.push("Within your price range");}
       if (shippingDays(product.shipping)<=preferences.maxShippingDays) {score+=6;reasons.push("Matches shipping preference");}
@@ -82,4 +85,47 @@ export async function generateMarketChangeSummary(userId:string,connection?:SqlC
   return generated;
 }
 
-export async function syncWatchlistNotifications(userId:string){const slugs=await getWatchlistSlugs(userId);const alerts=await getAlertsForListingSlugs(slugs,75);for(const alert of alerts){const relevance=alert.severity==="warning"?0.9:alert.category.includes("price")?0.72:0.68;await upsertUserNotification(userId,{category:alert.category,title:alert.title,body:alert.message,actionHref:`/products/${alert.listingSlug}`,relevanceScore:relevance,dedupeKey:`alert:${alert.id}`});try{await sendPushToUser(userId,{title:alert.title,body:alert.message,url:`/products/${alert.listingSlug}`,tag:`alert:${alert.id}`});}catch{/* best-effort: push must never break notification creation */}}return listUserNotifications(userId,{limit:100});}
+/**
+ * Turn reviewed market changes into this user's inbox.
+ *
+ * It used to read ONLY `user_watchlists` while /account/notifications told the reader it delivered
+ * "changes to the things you follow" — so following a vendor produced nothing here, and the copy
+ * was a promise the code did not keep. Both subscriptions now feed the same pipeline.
+ *
+ * `followed_entity_alerts` finally binds: the column has existed and been toggleable in
+ * /account since the preferences panel shipped, and no code has ever read it.
+ */
+export async function syncWatchlistNotifications(userId:string){
+  const [watchedSlugs,followed,channels]=await Promise.all([
+    getWatchlistSlugs(userId),
+    listFollowedListingSlugs(userId),
+    getNotificationChannelPreferences(userId),
+  ]);
+  const followedListings=channels.followedEntityAlerts?followed:[];
+  const reasonBySlug=new Map(followedListings.map(item=>[item.listingSlug,item.reason]));
+  // A listing the user both watches and follows is ONE subscription, not two. The watchlist is the
+  // more deliberate act, so it names the reason.
+  for(const slug of watchedSlugs)reasonBySlug.set(slug,"On your watchlist");
+  const slugs=Array.from(reasonBySlug.keys());
+  if(!slugs.length)return listUserNotifications(userId,{limit:100});
+  const alerts=await getAlertsForListingSlugs(slugs,150);
+  for(const alert of alerts){
+    const watched=watchedSlugs.includes(alert.listingSlug);
+    let relevance=alert.severity==="warning"?0.9:alert.category.includes("price")?0.72:0.68;
+    // A follow is a broader net than a watchlist save — the user asked about a compound or a
+    // vendor, not this listing. Rank it below an explicit save so the inbox does not invert.
+    if(!watched)relevance=Math.max(0.5,relevance-0.12);
+    const reason=reasonBySlug.get(alert.listingSlug);
+    await upsertUserNotification(userId,{
+      category:alert.category,
+      title:alert.title,
+      // Why this reached you. A notification that cannot say that is indistinguishable from spam.
+      body:reason?`${alert.message} · ${reason}`:alert.message,
+      actionHref:`/products/${alert.listingSlug}`,
+      relevanceScore:relevance,
+      dedupeKey:`alert:${alert.id}`,
+    });
+    try{await sendPushToUser(userId,{title:alert.title,body:alert.message,url:`/products/${alert.listingSlug}`,tag:`alert:${alert.id}`});}catch{/* best-effort: push must never break notification creation */}
+  }
+  return listUserNotifications(userId,{limit:100});
+}

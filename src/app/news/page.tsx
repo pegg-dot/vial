@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowUpRight, ExternalLink, Newspaper } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import { getDatabase } from "@/server/db/client";
 import { listNews } from "@/server/external/repository";
 import { ArtCoa, ArtShieldCheck } from "@/components/vial-art";
 import { DataUnavailable } from "@/components/home-data-unavailable";
+import { NewsFeed } from "@/components/news-feed";
+import { NEWS_TOPICS, type NewsTopicId } from "@/lib/news-filter";
 import { reportError } from "@/server/observability/alerts";
 
 export const dynamic = "force-dynamic";
@@ -15,20 +16,23 @@ export const metadata: Metadata = {
   description: "Sourced news, regulatory actions, and court records shaping the research-peptide market. Every item links to its source and is labeled by how reliable that source is.",
 };
 
-// Source-type honesty: government/court/trade records are primary and high-confidence; blogs/forums
-// are industry chatter and clearly marked as such so a reader weights them accordingly.
-const SOURCE_META: Record<string, { label: string; cls: string; note: string }> = {
-  trade: { label: "Official record", cls: "bg-[#e6fbf6] text-[#0e8f80]", note: "Primary government, court, or regulatory document" },
-  news: { label: "News", cls: "bg-[#eaf3ff] text-[#2b31d8]", note: "Reported by an established news outlet" },
-  blog: { label: "Industry blog", cls: "bg-[#fff6e6] text-[#b26a00]", note: "Industry tracker/blog — not independently verified" },
-  forum: { label: "Forum", cls: "bg-[#fff6e6] text-[#b26a00]", note: "Community/forum report — treat as unconfirmed" },
-};
+const SOURCE_TYPES = new Set(["trade", "news", "blog", "forum"]);
+const TOPIC_IDS = new Set<string>(NEWS_TOPICS.map((topic) => topic.id));
 
-export default async function NewsPage() {
-  const items = await getDatabase().then((db) => listNews(db, 80)).catch((error) => {
-    reportError({ kind: "news-unavailable", message: "The news feed could not be read.", context: { error: String(error) } });
-    return null;
-  });
+/** searchParams are attacker-controlled. Seed the client only with values it could have produced. */
+function asList(value: string | string[] | undefined, allowed: Set<string>) {
+  const raw = value === undefined ? [] : Array.isArray(value) ? value : [value];
+  return Array.from(new Set(raw.filter((item) => allowed.has(item))));
+}
+
+export default async function NewsPage({ searchParams }: { searchParams: Promise<{ q?: string; source?: string | string[]; topic?: string | string[] }> }) {
+  const [params, items] = await Promise.all([
+    searchParams,
+    getDatabase().then((db) => listNews(db, 200)).catch((error) => {
+      reportError({ kind: "news-unavailable", message: "The news feed could not be read.", context: { error: String(error) } });
+      return null;
+    }),
+  ]);
   if (!items) return <DataUnavailable surface="the news feed" />;
 
   return (
@@ -51,40 +55,12 @@ export default async function NewsPage() {
         {items.length === 0 ? (
           <p className="ink rounded-[20px] bg-white px-6 py-16 text-center text-sm font-medium text-[var(--muted)]">No news on record yet.</p>
         ) : (
-          <ol className="space-y-3">
-            {items.map((n) => {
-              const meta = SOURCE_META[n.source_type] ?? SOURCE_META.news;
-              return (
-                <li key={n.id} className="ink-1 hard rounded-[18px] bg-white p-5 sm:p-6">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`ink-1 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${meta.cls}`}>{meta.label}</span>
-                    {n.news_date && <span className="text-[11px] font-bold tabular-nums text-[var(--muted)]">{n.news_date}</span>}
-                    {n.publisher && <span className="text-[11px] font-semibold text-[var(--muted)]">· {n.publisher}</span>}
-                    {/* vendor_name comes from a LEFT JOIN, so it is null exactly when we do not
-                        hold that vendor. Linking on the SLUG alone published a dead link on the
-                        DOJ guilty-plea item — the single entry on this page whose credibility
-                        matters most. Name it either way; only link when there is a page to reach. */}
-                    {n.vendor_slug && n.vendor_name && (
-                      <Link href={`/vendors/${n.vendor_slug}`} className="ink-1 ml-auto inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#111214] transition hover:-translate-y-0.5">
-                        {n.vendor_name} <ArrowUpRight className="size-3" />
-                      </Link>
-                    )}
-                    {n.vendor_slug && !n.vendor_name && (
-                      <span className="ink-1 ml-auto inline-flex items-center rounded-full bg-[#f7f7f4] px-2.5 py-1 text-[11px] font-bold text-[var(--muted)]" title="Named in this record. We do not track this vendor.">
-                        {n.vendor_slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="mt-3 text-xl font-extrabold leading-6 tracking-[-.02em]">{n.title}</h2>
-                  <p className="mt-2 text-sm font-medium leading-6 text-black/70">{n.summary}</p>
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-semibold text-[var(--muted)]">{meta.note}</span>
-                    <a href={n.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-black/45 hover:text-black">source <ExternalLink className="size-3" /></a>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+          <NewsFeed
+            items={items}
+            initialQuery={typeof params.q === "string" ? params.q.slice(0, 120) : ""}
+            initialSourceTypes={asList(params.source, SOURCE_TYPES)}
+            initialTopics={asList(params.topic, TOPIC_IDS) as NewsTopicId[]}
+          />
         )}
       </section>
     </>

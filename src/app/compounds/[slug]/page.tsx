@@ -107,7 +107,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
               <div className="mt-6 flex flex-wrap gap-2">
                 {compound.aliases.map((alias) => <span key={alias} className="ink-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#111214]/70">{alias}</span>)}
               </div>
-              <div className="mt-6"><FollowButton entityType="compound" entitySlug={slug} initialFollowed={followed} authenticated={Boolean(principal)} /></div>
+              <div className="mt-6"><FollowButton entityType="compound" entitySlug={slug} entityName={compound.name} initialFollowed={followed} /></div>
             </div>
             <div className="ink hard-lg rounded-[22px] bg-white p-6">
               <div className="flex items-start justify-between gap-4">

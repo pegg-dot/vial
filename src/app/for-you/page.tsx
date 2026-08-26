@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, Bell, Bookmark, Clock3, History, Search, Sparkles } from "lucide-react";
+import { ArrowUpRight, Bell, BellPlus, Bookmark, Clock3, History, Search, Sparkles } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
+import { FollowingPanel, type FollowedEntity } from "@/components/following-panel";
 import { requirePrincipal } from "@/server/auth/principal";
 import { getPersonalizedMarket, generateMarketChangeSummary, syncWatchlistNotifications } from "@/server/consumer-intelligence/service";
 
@@ -23,6 +24,23 @@ export default async function ForYouPage() {
   const unread = data.notifications.filter((item) => item.status === "unread").length;
   const firstName = principal.displayName.split(" ")[0];
 
+  // Resolve each follow against the catalogue so the list reads as names and live context rather
+  // than slugs. A follow whose entity has left the catalogue is dropped rather than rendered as a
+  // dead row pointing at a 404.
+  const compoundBySlug = new Map(data.catalog.compounds.map((item) => [item.slug, item]));
+  const vendorBySlug = new Map(data.catalog.vendors.map((item) => [item.slug, item]));
+  const following: FollowedEntity[] = data.follows.flatMap((follow): FollowedEntity[] => {
+    if (follow.entityType === "compound") {
+      const compound = compoundBySlug.get(follow.entitySlug);
+      return compound ? [{ entityType: "compound" as const, entitySlug: compound.slug, name: compound.name, detail: `${compound.listings} listings · median $${compound.medianPrice}` }] : [];
+    }
+    if (follow.entityType === "vendor") {
+      const vendor = vendorBySlug.get(follow.entitySlug);
+      return vendor ? [{ entityType: "vendor" as const, entitySlug: vendor.slug, name: vendor.name, detail: `${vendor.productCount} products · ${vendor.documentationCurrent}% documented` }] : [];
+    }
+    return [];
+  });
+
   return (
     <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12">
       {/* Header */}
@@ -32,7 +50,8 @@ export default async function ForYouPage() {
           <h1 className="mt-3 text-[clamp(2.2rem,5vw,3.5rem)] font-extrabold leading-[.95] tracking-[-.05em]">Welcome back, {firstName}.</h1>
           <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">The compounds and vendors you follow, what changed since you last looked, and why each pick is here.</p>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
+          <Metric icon={BellPlus} value={following.length} label="Following" />
           <Metric icon={Bookmark} value={data.watchlist.length} label="Watched" />
           <Metric icon={Search} value={data.savedSearches.length} label="Searches" />
           <Metric icon={Bell} value={unread} label="Unread" />
@@ -65,6 +84,20 @@ export default async function ForYouPage() {
           </div>
         </section>
       )}
+
+      {/* Following — the entities the user explicitly subscribed to, and the one place they can
+          see or undo that decision. */}
+      <section className="mt-12">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#6d5dfc]">Following</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">What you asked to hear about</h2>
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Reviewed price moves and evidence changes on these reach your alerts.</p>
+          </div>
+          <Link href="/account/notifications" className="ink hard-sm press inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold">Alert settings</Link>
+        </div>
+        <div className="mt-7"><FollowingPanel initial={following} /></div>
+      </section>
 
       {/* Picked for you */}
       <section className="mt-12">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -69,8 +69,16 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
               <span className="ink-1 absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-[#2b31d8] text-[10px] font-bold text-white">{watchlist.length}</span>
             )}
           </Link>
-          <Link href={authenticated ? "/account" : "/login"} className="ink hard-sm press hidden rounded-full bg-[#111214] px-5 py-2.5 text-sm font-bold text-white sm:block">
-            {authenticated ? "Account" : "Sign in"}
+          {/* Visible at every width. It was `hidden sm:block`, so a signed-out phone visitor had no
+              sign-in control in the header — and the account button is exactly what the dismissed
+              sign-in prompt hands off to. Below `sm` it collapses to the icon to keep the bar. */}
+          <Link
+            href={authenticated ? "/account" : "/login"}
+            aria-label={authenticated ? "Account" : "Sign in"}
+            className="ink hard-sm press grid size-10 place-items-center rounded-full bg-[#111214] text-sm font-bold text-white sm:block sm:size-auto sm:px-5 sm:py-2.5"
+          >
+            <UserRound className="size-4 sm:hidden" />
+            <span className="hidden sm:inline">{authenticated ? "Account" : "Sign in"}</span>
           </Link>
           <button
             onClick={() => setMobileOpen((value) => !value)}

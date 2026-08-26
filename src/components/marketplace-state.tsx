@@ -5,7 +5,8 @@ import { displayProductTitle } from "@/lib/product-title";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { AUTH_PROMPT_DELAY_MS, AuthPromptOverlay, markAuthPromptDismissed, readAuthPromptDismissed, readAuthPromptDismissedOnServer, shouldAutoPrompt, subscribeAuthPromptDismissed, type AuthPromptRequest } from "./auth-prompt";
 
 interface MarketplaceContextValue {
   // Deliberately the LITE projection, not the full snapshot: this value rides in the HTML of
@@ -21,6 +22,12 @@ interface MarketplaceContextValue {
   clearCompare: () => void;
   openSearch: () => void;
   authenticated: boolean;
+  /**
+   * Ask the visitor to make an account, then run `onAuthenticated`. Callers use this instead of
+   * redirecting to /login so the thing the visitor was doing survives the sign-up. Calling it while
+   * already authenticated runs the callback immediately and shows nothing.
+   */
+  promptSignIn: (request: AuthPromptRequest) => void;
 }
 
 const MarketplaceContext = createContext<MarketplaceContextValue | null>(null);
@@ -50,6 +57,10 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   const [compare, setCompare] = useState<string[]>(initialCompare);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [authPrompt, setAuthPrompt] = useState<AuthPromptRequest | null>(null);
+  // Persisted, so "not now" means not again — the brief is explicit that the prompt asks once and
+  // then leaves the account button in the header to do the job.
+  const promptDismissed = useSyncExternalStore(subscribeAuthPromptDismissed, readAuthPromptDismissed, readAuthPromptDismissedOnServer);
   const pathname = usePathname();
   // The provider survives client-side transitions (e.g. the login redirect), so its
   // state can be stale [] while `authenticated` flips true. Only sync the comparison
@@ -80,6 +91,33 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   }, [authenticated, initialWatchlist]);
 
   useEffect(() => { if (hydrated && !authenticated) window.localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist)); }, [authenticated, hydrated, watchlist]);
+
+  // The delayed ask. It fires once per page the visitor settles on, only while the tab is actually
+  // in front of them — a timer that burns down in a background tab would surface the dialog on a
+  // page the visitor has no memory of opening.
+  useEffect(() => {
+    if (!shouldAutoPrompt({ pathname, authenticated, dismissed: promptDismissed })) return;
+    let timer = 0;
+    const arm = () => {
+      window.clearTimeout(timer);
+      if (document.visibilityState !== "visible") return;
+      timer = window.setTimeout(() => setAuthPrompt((current) => current ?? {}), AUTH_PROMPT_DELAY_MS);
+    };
+    arm();
+    document.addEventListener("visibilitychange", arm);
+    return () => { window.clearTimeout(timer); document.removeEventListener("visibilitychange", arm); };
+  }, [authenticated, pathname, promptDismissed]);
+
+  const promptSignIn = useCallback((request: AuthPromptRequest) => {
+    // Already signed in: there is nothing to ask, so just do the thing.
+    if (authenticated) { void request.onAuthenticated?.(); return; }
+    setAuthPrompt(request);
+  }, [authenticated]);
+
+  const closeAuthPrompt = useCallback((dismissedForever: boolean) => {
+    setAuthPrompt(null);
+    if (dismissedForever) markAuthPromptDismissed();
+  }, []);
   useEffect(() => {
     if (!hydrated) return;
     if (authenticated) {
@@ -168,11 +206,13 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
     clearCompare: () => { compareDirty.current = true; setCompare([]); },
     openSearch: () => setSearchOpen(true),
     authenticated,
-  }), [authenticated, catalog, compare, toggleCompare, toggleWatchlist, watchlist]);
+    promptSignIn,
+  }), [authenticated, catalog, compare, promptSignIn, toggleCompare, toggleWatchlist, watchlist]);
 
   return <MarketplaceContext.Provider value={value}>
     {children}
     {searchOpen && <SearchOverlay catalog={catalog} onClose={() => setSearchOpen(false)} />}
+    {authPrompt && !authenticated && <AuthPromptOverlay request={authPrompt} onClose={closeAuthPrompt} />}
     {pathname !== "/compare" && <CompareDock products={catalog.products} selected={compare} onClear={() => { compareDirty.current = true; setCompare([]); }} />}
   </MarketplaceContext.Provider>;
 }

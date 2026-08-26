@@ -272,7 +272,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                   {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> Founded {vendor.founded}</span>}
                   {vendor.lastObserved && <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>}
                 </div>
-                <div className="mt-6"><FollowButton entityType="vendor" entitySlug={slug} initialFollowed={followed} authenticated={Boolean(principal)} /></div>
+                <div className="mt-6"><FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} tone="dark" /></div>
               </div>
             </div>
 
