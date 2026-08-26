@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import type { CatalogSnapshot, EvidenceLevel } from "@/lib/types";
 import { ProductCard } from "@/components/product-card";
-import { shelfForCompound } from "@/lib/market-taxonomy";
+import { countListingsByShelf, shelfForCompound } from "@/lib/market-taxonomy";
 import { compoundTrustTier } from "@/lib/curation";
 import { MarketFilterBar, type MarketFilters } from "./market-filter-bar";
 
@@ -32,6 +32,9 @@ export function MarketBrowser({ catalog, shelf, onShelfChange }: { catalog: Cata
 
   const compoundBySlug = useMemo(() => new Map(compounds.map((c) => [c.slug, c])), [compounds]);
   const vendorBySlug = useMemo(() => new Map(vendors.map((v) => [v.slug, v])), [vendors]);
+  // Counted over the unfiltered catalog, matching the rail above: the point is to hide shelves the
+  // market never holds, not to churn the option list on every other facet the reader touches.
+  const shelfCounts = useMemo(() => countListingsByShelf(compounds, products), [compounds, products]);
 
   const filtered = useMemo(() => {
     const q = filters.query.trim().toLowerCase();
@@ -68,7 +71,7 @@ export function MarketBrowser({ catalog, shelf, onShelfChange }: { catalog: Cata
 
   return (
     <div>
-      <MarketFilterBar filters={filters} onChange={(next) => { handleChange(next); setVisible(PAGE); }} />
+      <MarketFilterBar filters={filters} shelfCounts={shelfCounts} onChange={(next) => { handleChange(next); setVisible(PAGE); }} />
       <div className="mb-6 flex items-center justify-between gap-4">
         <p data-testid="market-count" className="text-sm font-medium text-[var(--muted)]">
           <span className="font-extrabold text-black">{filtered.length}</span> listings

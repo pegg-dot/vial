@@ -35,7 +35,7 @@ function Select({ value, onChange, label, children }: { value: string; onChange:
   );
 }
 
-export function MarketFilterBar({ filters, onChange }: { filters: MarketFilters; onChange: (next: MarketFilters) => void }) {
+export function MarketFilterBar({ filters, onChange, shelfCounts }: { filters: MarketFilters; onChange: (next: MarketFilters) => void; shelfCounts: Map<string, number> }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const set = <K extends keyof MarketFilters>(key: K, value: MarketFilters[K]) => onChange({ ...filters, [key]: value });
   const activeCount = [filters.shelf !== "all", filters.tier !== "all", filters.availability !== "all", filters.testedOnly, filters.priceMax != null].filter(Boolean).length;
@@ -59,7 +59,13 @@ export function MarketFilterBar({ filters, onChange }: { filters: MarketFilters;
       <div className={`${mobileOpen ? "grid" : "hidden"} gap-3 lg:flex lg:flex-wrap lg:items-center`}>
         <Select value={filters.shelf} onChange={(v) => set("shelf", v)} label="Category">
           <option value="all">All categories</option>
-          {SHELVES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          {/* Nine shelves are hard-coded in the taxonomy; the catalog stocks fewer. Offering an
+              unstocked one gave the reader a choice that always emptied the grid, which reads as a
+              contradiction with the other filters rather than as an empty shelf. A native option
+              cannot hold a styled count span, so the number rides in the label text. */}
+          {SHELVES.filter((s) => (shelfCounts.get(s.key) ?? 0) > 0).map((s) => (
+            <option key={s.key} value={s.key}>{s.label} ({shelfCounts.get(s.key)})</option>
+          ))}
         </Select>
         <Select value={filters.tier} onChange={(v) => set("tier", v)} label="Verification">
           <option value="all">Any verification</option>

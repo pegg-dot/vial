@@ -168,6 +168,30 @@ function toNotification(row:NotificationRow):UserNotification{return{id:row.id,c
 export async function listUserNotifications(userId:string,input:{status?:string;limit?:number}={},connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query<NotificationRow>(`SELECT un.* FROM user_notifications un LEFT JOIN user_notification_preferences p ON p.user_id=un.user_id WHERE un.user_id=$1 AND un.deliver_after<=NOW() AND un.relevance_score>=COALESCE(p.relevance_threshold,0) AND ($2::text IS NULL OR un.status=$2) ORDER BY CASE un.status WHEN 'unread' THEN 0 ELSE 1 END,un.relevance_score DESC,un.created_at DESC LIMIT $3`,[userId,input.status??null,input.limit??100]);return result.rows.map(toNotification)}
 function minuteValue(value:string){const [hour,minute]=value.split(":").map(Number);return Number.isFinite(hour)&&Number.isFinite(minute)?hour*60+minute:0}
 async function quietDeliveryTime(userId:string,now:Date,db:SqlConnection){const row=(await db.query<{quiet_hours_start:string;quiet_hours_end:string;timezone:string}>(`SELECT quiet_hours_start,quiet_hours_end,timezone FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0];if(!row)return now;let parts:Intl.DateTimeFormatPart[];try{parts=new Intl.DateTimeFormat("en-US",{timeZone:row.timezone,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(now)}catch{return now}const hour=Number(parts.find(part=>part.type==="hour")?.value??0),minute=Number(parts.find(part=>part.type==="minute")?.value??0),current=hour*60+minute,start=minuteValue(row.quiet_hours_start),end=minuteValue(row.quiet_hours_end);const active=start===end?false:start<end?current>=start&&current<end:current>=start||current<end;if(!active)return now;const minutesUntilEnd=start<end?end-current:current<end?end-current:24*60-current+end;return new Date(now.getTime()+Math.max(1,minutesUntilEnd)*60_000)}
+/**
+ * Whether a push may go out right now, and above what relevance.
+ *
+ * The inbox row already honours both settings — `upsertUserNotification` defers `deliver_after`
+ * through `quietDeliveryTime`, and `listUserNotifications` filters on `relevance_threshold`. The
+ * PUSH did neither: it fired immediately and unconditionally inside the same loop. So quiet hours
+ * of 22:00–08:00 silenced the inbox and did nothing about the phone buzzing at 3am, and a reader
+ * who dragged relevance to 100% got an empty inbox and a full lock screen.
+ *
+ * A push cannot be deferred — there is no scheduler to hand it to — so during quiet hours it is
+ * dropped. The notification itself is still written and still waiting in the inbox afterwards,
+ * which is what "quiet" should mean.
+ */
+export async function getPushDeliveryGate(userId:string,now=new Date(),connection?:SqlConnection){
+  const db=connection??await getDatabase();
+  const deliverAt=await quietDeliveryTime(userId,now,db);
+  const row=(await db.query<{relevance_threshold:string|number}>(`SELECT relevance_threshold FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0];
+  return{
+    inQuietHours:deliverAt.getTime()>now.getTime(),
+    // No row means the reader never opened preferences; COALESCE to 0 exactly as the inbox query does.
+    relevanceThreshold:row?Number(row.relevance_threshold):0,
+  };
+}
+
 export async function upsertUserNotification(userId:string,input:{category:string;title:string;body:string;actionHref?:string;relevanceScore:number;dedupeKey:string;deliverAfter?:Date},connection?:SqlConnection){const db=connection??await getDatabase();const deliverAfter=input.deliverAfter??await quietDeliveryTime(userId,new Date(),db);await db.query(`INSERT INTO user_notifications(id,user_id,category,title,body,action_href,relevance_score,dedupe_key,deliver_after) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(user_id,dedupe_key) DO UPDATE SET title=EXCLUDED.title,body=EXCLUDED.body,action_href=EXCLUDED.action_href,relevance_score=GREATEST(user_notifications.relevance_score,EXCLUDED.relevance_score),deliver_after=LEAST(user_notifications.deliver_after,EXCLUDED.deliver_after)`,[newId("notification"),userId,input.category,input.title,input.body,input.actionHref??null,input.relevanceScore,input.dedupeKey,deliverAfter])}
 export async function updateNotificationStatus(userId:string,id:string,status:UserNotification["status"],connection?:SqlConnection){const db=connection??await getDatabase();const result=await db.query(`UPDATE user_notifications SET status=$3,read_at=CASE WHEN $3='read' THEN NOW() ELSE read_at END WHERE user_id=$1 AND id=$2 RETURNING id`,[userId,id,status]);return Boolean(result.rows[0])}
 

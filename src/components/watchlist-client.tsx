@@ -27,13 +27,17 @@ export function WatchlistClient({ products }: { products: Product[] }) {
   const { watchlist, authenticated } = useMarketplace();
   const saved = useMemo(() => products.filter((product) => watchlist.includes(product.slug)), [products, watchlist]);
   const [alerts, setAlerts] = useState<ListingAlert[]>([]);
+  // The header counted every alert and the list rendered eight of them, with nothing in between
+  // saying so — 23 alerts read as "23" above a list of 8. Page it instead.
+  const ALERT_PAGE = 8;
+  const [visibleAlerts, setVisibleAlerts] = useState(ALERT_PAGE);
 
   useEffect(() => {
     if (!watchlist.length) return;
     const controller = new AbortController();
     fetch(`/api/v1/alerts?slugs=${encodeURIComponent(watchlist.join(","))}`, { signal: controller.signal, cache: "no-store" })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("Alert request failed")))
-      .then((payload: { alerts?: ListingAlert[] }) => setAlerts(payload.alerts ?? []))
+      .then((payload: { alerts?: ListingAlert[] }) => { setAlerts(payload.alerts ?? []); setVisibleAlerts(ALERT_PAGE); })
       .catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) setAlerts([]); });
     return () => controller.abort();
   }, [watchlist]);
@@ -43,7 +47,8 @@ export function WatchlistClient({ products }: { products: Product[] }) {
   return <div>
     <section className="ink hard-blue rounded-[20px] bg-[#111214] p-5 text-white sm:p-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[#8fa2ff]">Reviewed change feed</p><h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">What changed across your records</h2><p className="mt-2 max-w-xl text-sm font-medium leading-6 text-white/50">Alerts are created only after a reviewed publication enters the causal event graph.</p></div><div className="rounded-[14px] border border-white/20 bg-white/10 px-4 py-3 text-right"><p className="text-2xl font-extrabold tabular-nums">{alerts.length}</p><p className="text-[9px] uppercase tracking-[.12em] text-white/50">change alerts</p></div></div>
-      <div className="mt-6 space-y-2">{alerts.slice(0,8).map((alert) => <Link href={`/products/${alert.listingSlug}`} key={alert.id} className="group flex flex-col gap-3 rounded-[12px] border border-white/15 bg-white/[.06] p-4 transition hover:bg-white/[.1] sm:flex-row sm:items-center"><span className={`grid size-9 shrink-0 place-items-center rounded-[10px] ${alert.severity === "warning" ? "bg-amber-400/20 text-amber-300" : "bg-violet-400/20 text-violet-300"}`}>{alert.severity === "warning" ? <CircleAlert className="size-4" /> : <Bell className="size-4" />}</span><div className="min-w-0 flex-1"><p className="text-sm font-bold">{alert.title}</p><p className="mt-1 text-xs leading-5 text-white/50">{alert.message}</p></div><div className="flex shrink-0 items-center gap-3 text-[10px] text-white/40"><span className="inline-flex items-center gap-1"><Clock3 className="size-3" />{new Date(alert.createdAt).toLocaleString()}</span><GitBranch className="size-3 transition group-hover:text-white" /></div></Link>)}{alerts.length === 0 && <div className="rounded-[12px] border border-dashed border-white/20 p-6 text-center text-sm font-medium text-white/50">No reviewed changes have been published for these records yet.</div>}</div>
+      <div className="mt-6 space-y-2">{alerts.slice(0,visibleAlerts).map((alert) => <Link href={`/products/${alert.listingSlug}`} key={alert.id} className="group flex flex-col gap-3 rounded-[12px] border border-white/15 bg-white/[.06] p-4 transition hover:bg-white/[.1] sm:flex-row sm:items-center"><span className={`grid size-9 shrink-0 place-items-center rounded-[10px] ${alert.severity === "warning" ? "bg-amber-400/20 text-amber-300" : "bg-violet-400/20 text-violet-300"}`}>{alert.severity === "warning" ? <CircleAlert className="size-4" /> : <Bell className="size-4" />}</span><div className="min-w-0 flex-1"><p className="text-sm font-bold">{alert.title}</p><p className="mt-1 text-xs leading-5 text-white/50">{alert.message}</p></div><div className="flex shrink-0 items-center gap-3 text-[10px] text-white/40"><span className="inline-flex items-center gap-1"><Clock3 className="size-3" />{new Date(alert.createdAt).toLocaleString()}</span><GitBranch className="size-3 transition group-hover:text-white" /></div></Link>)}{alerts.length === 0 && <div className="rounded-[12px] border border-dashed border-white/20 p-6 text-center text-sm font-medium text-white/50">No reviewed changes have been published for these records yet.</div>}</div>
+      {alerts.length > visibleAlerts && <div className="mt-4 flex flex-col items-center gap-2"><button onClick={() => setVisibleAlerts((current) => current + ALERT_PAGE)} className="ink-1 rounded-full border-white/25 bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/20">Show {Math.min(ALERT_PAGE, alerts.length - visibleAlerts)} more</button><p className="text-[11px] font-medium tabular-nums text-white/40">Showing {visibleAlerts} of {alerts.length}</p></div>}
     </section>
     <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{saved.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
   </div>;

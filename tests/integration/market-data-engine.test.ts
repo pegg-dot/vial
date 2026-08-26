@@ -10,6 +10,29 @@ beforeEach(async()=>{process.env.VIALGRADE_PGLITE_MEMORY="true";process.env.VIAL
 describe("VIAL 2.0 market data engine",()=>{
  it("builds a canonical graph and resolves aliases",async()=>{const summary=await getEntityGraphSummary();expect(summary.types.reduce((s,r)=>s+r.count,0)).toBeGreaterThan(25);const resolution=await resolveEntityLabel("BPC157","compound");expect(resolution.best?.entity.canonical_key).toBe("bpc-157");expect(resolution.best?.score).toBeGreaterThan(.95);const caseResult=await createResolutionCase({subjectType:"source-label",subjectId:"fixture",rawLabel:"Epithalon",entityType:"compound"});expect(caseResult.best?.entity.canonical_key).toBe("epitalon");});
  it("runs benchmark contracts against a golden set",async()=>{const run=await runParserBenchmark("catalog");expect(run.exampleCount).toBeGreaterThanOrEqual(5);expect(run.f1).toBeGreaterThan(.85);const dashboard=await getBenchmarkDashboard();expect(dashboard.contracts.some(contract=>contract.profile_key==="catalog")).toBe(true);expect(dashboard.runs.length).toBeGreaterThan(0);});
+ // /search rendered `results.length` as the result total while searchMarket capped `results` at
+ // 30, so a query matching 200 records reported "30 results". totalMatches is the count BEFORE the
+ // page cap; results is what fits on the page.
+ it("reports matches found, not matches shown",async()=>{
+   const wide=await searchMarket({query:"peptide",limit:200,log:false});
+   expect(wide.totalMatches).toBe(wide.results.length);
+   expect(wide.totalMatches).toBeGreaterThan(1);
+
+   const capped=await searchMarket({query:"peptide",limit:1,log:false});
+   expect(capped.results.length).toBe(1);
+   // The cap must not move the total. This is the whole defect.
+   expect(capped.totalMatches).toBe(wide.totalMatches);
+   expect(capped.totalMatches).toBeGreaterThan(capped.results.length);
+ });
+
+ // The engine is deliberately typo-tolerant, so nonsense still scores above the cutoff — an empty
+ // query is the only path that really returns nothing, and it is its own early return.
+ it("reports zero matches for an empty query",async()=>{
+   const none=await searchMarket({query:"   ",log:false});
+   expect(none.results).toEqual([]);
+   expect(none.totalMatches).toBe(0);
+ });
+
  it("searches aliases and typo variants with evaluated ranking",async()=>{const compact=await searchMarket({query:"bpc157",log:false});expect(compact.results[0]?.entityId).toBe("cmp:bpc-157");const vendor=await searchMarket({query:"northstar",log:false});expect(vendor.results.some(result=>result.entityId==="org:northstar-research")).toBe(true);const typo=await searchMarket({query:"epithalon",log:false});expect(typo.results.some(result=>result.entityId==="cmp:epitalon")).toBe(true);const quality=await getSearchQualityDashboard();expect(quality.evaluations).toBeGreaterThanOrEqual(6);expect(quality.mrr).toBeGreaterThan(.7);});
  it("tracks field freshness, corrections, pilots, and source reliability",async()=>{const db=await getDatabase();const listing=(await db.query<{id:string}>(`SELECT id FROM listings ORDER BY id LIMIT 1`)).rows[0];expect(listing).toBeTruthy();await recordCorrection({subjectType:"listing",subjectId:listing!.id,type:"normalization",previousValue:"2 to 4 days",correctedValue:"2-4 business days",reason:"Normalized dash while preserving meaning",reviewer:"integration-test"});await recomputeSourceReliability();const dashboard=await getDataQualityDashboard();expect(dashboard.freshness.reduce((s,r)=>s+r.count,0)).toBeGreaterThan(0);expect(dashboard.corrections).toBeGreaterThan(0);expect(dashboard.pilots.some(pilot=>pilot.status==="sandbox")).toBe(true);expect(dashboard.reliability.length).toBeGreaterThan(0);});
 });

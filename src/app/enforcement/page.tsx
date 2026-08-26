@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { enforcementEmptyState } from "@/lib/enforcement-copy";
 import Link from "next/link";
 import { Gavel, ExternalLink, ShieldAlert, Landmark, Scale } from "lucide-react";
 import { listEnforcementPage, getRegulatoryStats, type EnforcementFilter } from "@/server/regulatory/repository";
@@ -21,23 +22,32 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
   const sp = await searchParams;
   // Default to the records that touch a vendor a buyer might actually use. The openFDA feed is
   // mostly recalls naming companies we do not track — real, but not what someone is here for.
-  const filter: EnforcementFilter = sp.filter === "all" ? "all" : sp.filter === "severe" ? "severe" : "matched";
+  const requested: EnforcementFilter = sp.filter === "all" ? "all" : sp.filter === "severe" ? "severe" : "matched";
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
   const perPage = 50;
   const loaded = await Promise.all([
-    listEnforcementPage({ filter, page, perPage }),
+    listEnforcementPage({ filter: requested, page, perPage }),
     getRegulatoryStats(),
   ]).catch((error) => {
     reportError({ kind: "enforcement-unavailable", message: "The enforcement record could not be read.", context: { error: String(error) } });
     return null;
   });
   if (!loaded) return <DataUnavailable surface="the enforcement record" />;
-  const [feed, stats] = loaded;
+  let [feed] = loaded;
+  const [, stats] = loaded;
+  // The default filter can be dead on arrival: a corpus of only unmatched openFDA recalls means
+  // "matched" is empty, and the landing page was then blank while "Everything on record" had
+  // content. Only falls back when the reader did NOT choose the filter themselves.
+  const fellBack = !sp.filter && feed.total === 0 && stats.total > 0;
+  if (fellBack) feed = await listEnforcementPage({ filter: "all", page: 1, perPage });
+  const filter: EnforcementFilter = fellBack ? "all" : requested;
   const actions = feed.items;
   const pages = Math.max(1, Math.ceil(feed.total / perPage));
   const from = feed.total === 0 ? 0 : (page - 1) * perPage + 1;
   const to = Math.min(page * perPage, feed.total);
   const href = (f: EnforcementFilter, p: number) => `/enforcement?filter=${f}${p > 1 ? `&page=${p}` : ""}`;
+  // One decision, used by both the count line and the empty block — they used to disagree.
+  const empty = enforcementEmptyState({ corpusTotal: stats.total, filteredTotal: feed.total });
   return <div>
     <section className="border-b-2 border-[#111214]"><div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24">
       <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#d3372c]">Enforcement record</p>
@@ -61,7 +71,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
         })}
       </div>
       <p className="mt-4 text-sm font-medium text-[var(--muted)]">
-        {feed.total === 0 ? "Nothing on record for this filter." : <>Showing {from}&ndash;{to} of {feed.total}.</>}
+        {empty.kind === "results" ? <>Showing {from}&ndash;{to} of {feed.total}.</> : empty.kind === "filter-empty" ? empty.message : ""}
       </p>
       <div className="mt-6 space-y-3">{actions.map((a) => {
         const severe = a.severity === "severe";
@@ -78,7 +88,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
           <a href={a.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#d3372c] underline underline-offset-2">Read the official record <ExternalLink className="size-3" /></a>
         </div>;
       })}</div>
-      {actions.length === 0 && <p className="text-sm font-medium text-[var(--muted)]">No enforcement records ingested yet.</p>}
+      {empty.kind === "corpus-empty" && <p className="text-sm font-medium text-[var(--muted)]">{empty.message}</p>}
+      {empty.kind === "filter-empty" && <p className="text-sm font-medium text-[var(--muted)]">{empty.message} <Link href={href("all", 1)} className="font-bold text-[#111214] underline underline-offset-2">See everything on record</Link>.</p>}
       <div className="ink mt-10 rounded-[20px] bg-[#111214] p-7 text-white shadow-[5px_5px_0_0_#d3372c]"><Scale className="size-5 text-[#ff9b8f]" />
         <h2 className="mt-5 text-2xl font-extrabold">A record is a fact, not a verdict on the product.</h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">An FDA warning letter usually means a seller marketed unapproved drugs &mdash; it doesn&rsquo;t always mean the specific product you&rsquo;re looking at is impure. We show the record and the source so you can judge; we distinguish a proven criminal outcome from a mere charge, and a warning letter from a conviction. We never infer guilt VialGrade cannot source.</p>

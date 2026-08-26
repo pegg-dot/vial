@@ -122,6 +122,15 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
     return rankVendors(filtered, priority);
   }, [entries, kind, priority]);
 
+  // A chip that no vendor answers to is a dead control: it empties the grid and reads as "we lost
+  // your vendors" rather than "we hold none of that kind". Keyed on `vendor.kind` exactly as the
+  // filter above is, so the number on the chip is the number of cards clicking it yields.
+  const kindCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of entries) counts.set(e.vendor.kind, (counts.get(e.vendor.kind) ?? 0) + 1);
+    return counts;
+  }, [entries]);
+
   const shown = ranked.slice(0, visible);
 
   return (
@@ -154,10 +163,12 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
       {/* Kind filter + count */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          {KINDS.map((k) => (
+          {/* "Everyone" always renders — it is the only way back to the unfiltered directory. */}
+          {KINDS.filter((k) => k.key === "all" || (kindCounts.get(k.key) ?? 0) > 0).map((k) => (
             <button key={k.key} type="button" onClick={() => { setKind(k.key); setVisible(PAGE); }} aria-pressed={kind === k.key}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${kind === k.key ? "ink-1 bg-[#39414e] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
               {k.key === "storefront" ? <Store className="size-3.5" /> : k.key === "manufacturer" ? <Factory className="size-3.5" /> : null}{k.label}
+              {k.key !== "all" && <span className="tabular-nums opacity-60">{kindCounts.get(k.key)}</span>}
             </button>
           ))}
         </div>

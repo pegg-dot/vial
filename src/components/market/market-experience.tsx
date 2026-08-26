@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import type { CatalogSnapshot, Compound } from "@/lib/types";
 import { ProductCard } from "@/components/product-card";
 import { trending, mostVerified, bestValue, newest } from "@/lib/curation";
+import { countListingsByShelf } from "@/lib/market-taxonomy";
 import { STACKS, resolveStack, type ResolvedStack } from "@/lib/stacks";
 import { CategoryRail } from "./category-rail";
 import { CollectionRow } from "./collection-row";
@@ -26,6 +27,8 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
   const browseRef = useRef<HTMLDivElement>(null);
 
   const trend = useMemo(() => trending(compounds, 10), [compounds]);
+  // Counted in listings, not compounds, because that is what the rail scrolls you to.
+  const shelfCounts = useMemo(() => countListingsByShelf(compounds, products), [compounds, products]);
   const verified = useMemo(() => mostVerified(compounds, 10), [compounds]);
   const value = useMemo(() => bestValue(products, 8), [products]);
   const fresh = useMemo(() => newest(products.filter((p) => p.origin === "live"), 8), [products]);
@@ -44,7 +47,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
 
   return (
     <div>
-      <CategoryRail activeKey={browseShelf === "all" ? null : browseShelf} onSelect={selectShelf} />
+      <CategoryRail counts={shelfCounts} activeKey={browseShelf === "all" ? null : browseShelf} onSelect={selectShelf} />
 
       {trend.length > 0 && (
         <CollectionRow eyebrow="Most looked-up" title="Trending now" blurb="What buyers are researching most across the market right now.">

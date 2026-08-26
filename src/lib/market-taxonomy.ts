@@ -30,6 +30,25 @@ export function shelfForCompound(compound: Pick<Compound, "slug" | "category">):
   return OTHER_SHELF;
 }
 
+/**
+ * Listings per shelf key — what a shelf facet will actually hand back if it is selected.
+ *
+ * A product whose compound is not in `compounds` is skipped, exactly as the market browser's own
+ * filter skips it, so a facet can never advertise more rows than selecting it produces. Shared by
+ * the category rail and the category select on the same page so the two cannot disagree about
+ * which shelves exist.
+ */
+export function countListingsByShelf(compounds: Compound[], products: Array<{ compoundSlug: string }>): Map<string, number> {
+  const shelfBySlug = new Map(compounds.map((c) => [c.slug, shelfForCompound(c).key]));
+  const counts = new Map<string, number>();
+  for (const p of products) {
+    const key = shelfBySlug.get(p.compoundSlug);
+    if (!key) continue;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
 export function groupByShelf(compounds: Compound[]): Array<{ shelf: Shelf; compounds: Compound[] }> {
   const buckets = new Map<string, Compound[]>();
   for (const c of compounds) {

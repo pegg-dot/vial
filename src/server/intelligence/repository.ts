@@ -107,17 +107,34 @@ export async function getOpportunitySignals(input: { status?: string; limit?: nu
   return result.rows.map(toOpportunity);
 }
 
+const PUBLIC_SIGNAL_WHERE = `WHERE os.status IN ('open','watching')
+       AND os.signal_type IN ('price-dispersion','thin-availability','compound-evidence-gap','vendor-evidence-gap','source-coverage-gap','supply-concentration','issuer-concentration')`;
+
 export async function getPublicSignals(limit = 12) {
   const db = await getDatabase();
   const result = await db.query<OpportunityRow>(
     `${opportunitySelect}
-     WHERE os.status IN ('open','watching')
-       AND os.signal_type IN ('price-dispersion','thin-availability','compound-evidence-gap','vendor-evidence-gap','source-coverage-gap','supply-concentration','issuer-concentration')
+     ${PUBLIC_SIGNAL_WHERE}
      ORDER BY os.score DESC, os.updated_at DESC
      LIMIT $1`,
     [limit],
   );
   return result.rows.map(toOpportunity);
+}
+
+/**
+ * How many public signals actually exist, independent of the page size.
+ *
+ * /signals rendered `getPublicSignals(18).length` under the label "active public signals". That is
+ * the LIMIT, not a count: a database holding 400 open signals stated "18" with total confidence.
+ * The count reuses PUBLIC_SIGNAL_WHERE so it cannot drift from what the page lists.
+ */
+export async function countPublicSignals() {
+  const db = await getDatabase();
+  const result = await db.query<{ total: string | number }>(
+    `SELECT COUNT(*) total FROM opportunity_signals os ${PUBLIC_SIGNAL_WHERE}`,
+  );
+  return Number(result.rows[0]?.total ?? 0);
 }
 
 export async function setOpportunityStatus(input: { id: string; status: OpportunitySignal["status"]; note?: string }) {

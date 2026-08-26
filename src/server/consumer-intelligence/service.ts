@@ -9,6 +9,7 @@ import {
   getVisitState,
   listDecisionEvents,
   getNotificationChannelPreferences,
+  getPushDeliveryGate,
   listFollowedListingSlugs,
   listFollows,
   listMarketChangeSummaries,
@@ -96,10 +97,11 @@ export async function generateMarketChangeSummary(userId:string,connection?:SqlC
  * /account since the preferences panel shipped, and no code has ever read it.
  */
 export async function syncWatchlistNotifications(userId:string){
-  const [watchedSlugs,followed,channels]=await Promise.all([
+  const [watchedSlugs,followed,channels,pushGate]=await Promise.all([
     getWatchlistSlugs(userId),
     listFollowedListingSlugs(userId),
     getNotificationChannelPreferences(userId),
+    getPushDeliveryGate(userId),
   ]);
   const followedListings=channels.followedEntityAlerts?followed:[];
   const reasonBySlug=new Map(followedListings.map(item=>[item.listingSlug,item.reason]));
@@ -125,7 +127,11 @@ export async function syncWatchlistNotifications(userId:string){
       relevanceScore:relevance,
       dedupeKey:`alert:${alert.id}`,
     });
-    try{await sendPushToUser(userId,{title:alert.title,body:alert.message,url:`/products/${alert.listingSlug}`,tag:`alert:${alert.id}`});}catch{/* best-effort: push must never break notification creation */}
+    // Push honours the same two settings the inbox does. Anything dropped here is still written
+    // above, so a quiet-hours or below-threshold alert is waiting when the reader next looks.
+    if(!pushGate.inQuietHours&&relevance>=pushGate.relevanceThreshold){
+      try{await sendPushToUser(userId,{title:alert.title,body:alert.message,url:`/products/${alert.listingSlug}`,tag:`alert:${alert.id}`});}catch{/* best-effort: push must never break notification creation */}
+    }
   }
   return listUserNotifications(userId,{limit:100});
 }

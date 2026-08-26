@@ -16,7 +16,15 @@ test("market shows curated rows, filters, and quick-view paging", async ({ page 
   // Category rail + always-present curated rows (Trending needs only ≥1 compound; Stacks
   // resolve from the recovery compounds always seeded). "Independently verified" is NOT
   // asserted — it renders only when the dataset has independent COAs (honest by design).
-  await expect(page.getByRole("button", { name: /Weight & Metabolic/i })).toBeVisible();
+  //
+  // This asserted the "Weight & Metabolic" pill by name. That shelf holds zero listings in this
+  // fixture, and the assertion passed only because the rail used to render all nine shelves
+  // regardless of stock — i.e. the test was holding a dead filter in place. The rail is now gated
+  // on stock, so assert its shape instead of a label that depends on what happens to be seeded.
+  // tests/e2e/browse-surfaces.spec.ts proves every rendered pill returns listings.
+  const rail = page.locator(".scroll-fade-x").first();
+  await expect(rail.getByRole("button", { name: /^All/ })).toBeVisible();
+  expect(await rail.getByRole("button").count()).toBeGreaterThan(1);
   await expect(page.getByRole("heading", { name: /Trending now/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Stacks & blends/i })).toBeVisible();
 
