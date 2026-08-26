@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, Database, FlaskConical, KeyRound, Link2, MousePointerClick, ShieldAlert, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CheckCircle2, Database, FlaskConical, KeyRound, Link2, MousePointerClick, ShieldAlert, Users } from "lucide-react";
+import { deriveSystemHealth } from "@/lib/system-health";
+import { checkReadiness } from "@/server/health/readiness";
+import { getRefreshMetrics } from "@/server/refresh/repository";
+import { getIntelligenceMetrics } from "@/server/intelligence/repository";
+import { getCollectionMetrics, isKeepingUp, describeWait, LATENESS_DEGRADED } from "@/server/collect/metrics";
+import { getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/server/notifications/sweep";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { getAttributionOverview } from "@/server/outbound/partner-report";
 import { getDataFreshness, getBrokenCollectors } from "@/server/health/data-health";
@@ -31,6 +37,24 @@ export default async function AdminPage() {
   if (!principal || principal.accountType !== "staff") redirect("/admin/login?next=%2Fadmin");
 
   const db = await getDatabase();
+  // System health, first — the owner reads this page and would otherwise have to remember to open
+  // /status. Every one of these degrades to null rather than throwing: an admin page that 500s
+  // because a health probe failed is worse than one that says a probe failed.
+  const [readiness, refreshMetrics, intelMetrics, collectMetrics, sweepHealth] = await Promise.all([
+    checkReadiness().catch(() => null),
+    getRefreshMetrics().catch(() => null),
+    getIntelligenceMetrics().catch(() => null),
+    getCollectionMetrics().catch(() => null),
+    getNotificationSweepHealth().catch(() => null),
+  ]);
+  const health = deriveSystemHealth({
+    readiness: readiness ?? { status: "not_ready", schema: { expected: 0, actual: null } },
+    collectors: collectMetrics ? { enabled: collectMetrics.enabled, overdue: collectMetrics.overdue, failing: collectMetrics.failing, oldestOverdueMinutes: collectMetrics.oldestOverdueMinutes, keepingUp: isKeepingUp(collectMetrics) } : null,
+    refresh: refreshMetrics ? { enabled: refreshMetrics.enabled, failed: refreshMetrics.failed, worstLateness: refreshMetrics.worstLateness, behind: refreshMetrics.worstLateness !== null && refreshMetrics.worstLateness >= LATENESS_DEGRADED } : null,
+    intelligenceReporting: Boolean(intelMetrics),
+    sweep: sweepHealth ? { lastRanAt: sweepHealth.lastRanAt, lastOk: sweepHealth.lastOk, backlogReaders: sweepHealth.backlogReaders, healthy: isSweepHealthy(sweepHealth), keepingUp: isSweepKeepingUp(sweepHealth) } : null,
+  });
+
   const [attribution, visitors, people, freshness, broken, counts, collectors] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getVisitorSummary({ days: 30 }),
@@ -70,7 +94,72 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
-      <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Admin</p>
+      {/* Health first, because the owner will not remember to go and look for it. Loud when
+          something is wrong, quiet but present when nothing is — a band that only ever appears on
+          a bad day is a band nobody learns to read. */}
+      <section
+        aria-label="System health"
+        data-testid="admin-system-health"
+        className={`ink ${health.level === "operational" ? "hard-mint" : "hard"} rounded-[20px] p-6 sm:p-7 ${health.level === "operational" ? "bg-[#111214] text-white" : health.level === "outage" ? "bg-[#fff1f0]" : "bg-[#fff8e8]"}`}
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            {health.level === "operational"
+              ? <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[#8fffd6]" />
+              : <AlertTriangle className={`mt-0.5 size-5 shrink-0 ${health.level === "outage" ? "text-[#d3372c]" : "text-[#b26a00]"}`} />}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[.16em] opacity-60">System health</p>
+              <p className="mt-1.5 text-base font-extrabold leading-6">{health.headline}</p>
+            </div>
+          </div>
+          <Link
+            href="/status"
+            className={`ink-1 hard-sm press inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold ${health.level === "operational" ? "border-white/25 bg-white text-[#111214]" : "bg-white text-[#111214]"}`}
+          >
+            Full status <ArrowUpRight className="size-3.5" />
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          <HealthSignal
+            dark={health.level === "operational"}
+            label="Database"
+            value={readiness ? (readiness.status === "ready" ? "Ready" : readiness.status === "degraded" ? "Schema behind" : "Unreachable") : "Not reporting"}
+            detail={readiness ? `schema ${readiness.schema.actual ?? "?"} of ${readiness.schema.expected}` : "the probe itself failed"}
+          />
+          <HealthSignal
+            dark={health.level === "operational"}
+            label="Collectors"
+            value={collectMetrics ? `${collectMetrics.enabled} enabled` : "Not reporting"}
+            detail={
+              !collectMetrics
+                ? "the probe itself failed"
+                : collectMetrics.overdue === 0
+                  ? "every source within its schedule"
+                  : `${collectMetrics.overdue} waiting · ${collectMetrics.failing > 0 ? `${collectMetrics.failing} failing` : "none failing, draining"}`
+            }
+          />
+          <HealthSignal
+            dark={health.level === "operational"}
+            label="Refresh queue"
+            value={refreshMetrics ? `${refreshMetrics.enabled} enabled` : "Not reporting"}
+            detail={refreshMetrics ? `${refreshMetrics.queued} queued · ${refreshMetrics.failed} failed` : "the probe itself failed"}
+          />
+          <HealthSignal
+            dark={health.level === "operational"}
+            label="Alerts going out"
+            value={!sweepHealth ? "Not reporting" : sweepHealth.lastRanAt === null ? "Never run" : `${sweepHealth.lastSweptUsers} readers`}
+            detail={
+              !sweepHealth
+                ? "the probe itself failed"
+                : sweepHealth.lastRanAt === null
+                  ? "nobody is being told anything while away"
+                  : `last ran ${describeWait(Math.round((sweepHealth.hoursSinceLastRun ?? 0) * 60))} ago`
+            }
+          />
+        </div>
+      </section>
+
+      <p className="mt-10 text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Admin</p>
       <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Traffic you can prove you sent</h1>
       <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
         Last 30 days. Read it in order: readers <strong>arrive</strong>, some <strong>click through</strong> to a
@@ -324,6 +413,16 @@ export default async function AdminPage() {
         Listings checked in the last 14 days: {freshness.listings.fresh} fresh · {freshness.listings.aging} aging · {freshness.listings.stale} stale.
         Lab tests: {freshness.coas.fresh} fresh · {freshness.coas.stale} stale.
       </p>
+    </div>
+  );
+}
+
+function HealthSignal({ label, value, detail, dark }: { label: string; value: string; detail: string; dark: boolean }) {
+  return (
+    <div className={`ink-1 rounded-[14px] p-3.5 ${dark ? "border-white/20 bg-white/[.07]" : "bg-white"}`}>
+      <p className={`text-[9px] font-bold uppercase tracking-[.14em] ${dark ? "text-white/50" : "text-[var(--muted)]"}`}>{label}</p>
+      <p className="mt-1.5 text-sm font-extrabold">{value}</p>
+      <p className={`mt-0.5 text-[11px] font-medium leading-4 ${dark ? "text-white/50" : "text-[var(--muted)]"}`}>{detail}</p>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { deriveSystemHealth } from "@/lib/system-health";
 import { SWEEP_STALE_HOURS, getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/server/notifications/sweep";
 import { AlertTriangle, BellRing, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, XCircle } from "lucide-react";
 import { getRefreshMetrics } from "@/server/refresh/repository";
@@ -48,36 +49,20 @@ export default async function StatusPage() {
   // arithmetic having been right.
   const refreshBehind = refresh ? refresh.worstLateness !== null && refresh.worstLateness >= LATENESS_DEGRADED : false;
 
-  const banner =
-    readiness.status === "not_ready"
-      ? { Icon: XCircle, tone: "#ff9d94", shadow: "hard", text: "Major outage — the database is unreachable" }
-      : readiness.status === "degraded"
-        ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — database schema is at ${readiness.schema.actual}, expected ${readiness.schema.expected}` }
-        : !(refresh && intel && collect && sweep)
-          ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — one or more subsystems are not reporting" }
-          : collect.enabled === 0
-            ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — no collectors are registered, so nothing is being gathered" }
-            : collectorsBehind
-              ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — collectors are behind; the oldest source has waited ${describeWait(collect.oldestOverdueMinutes ?? 0)} past its schedule` }
-              : refresh.enabled === 0
-                ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: "Degraded — no sources are enabled, so nothing is being refreshed" }
-                : refreshBehind
-                  ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — the refresh queue is behind; the worst source is ${Math.round(refresh.worstLateness ?? 0)}x its own interval late` }
-                  // A card reading "25 failed" under a green "All systems operational" banner is the
-                  // precise contradiction this page exists to prevent — it used to hardcode the
-                  // headline while querying for the cards, and could only ever claim there was no
-                  // outage. The headline has to move with the numbers.
-                  : refresh.failed > 0
-                    ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — ${refresh.failed} refresh ${refresh.failed === 1 ? "job has" : "jobs have"} failed` }
-                    : !isSweepHealthy(sweep)
-                      ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: sweep.lastRanAt === null ? "Degraded — the alert sweep has never run, so nobody is being notified while they are away" : !sweep.lastOk ? "Degraded — the alert sweep failed on one or more readers" : "Degraded — the alert sweep has not completed on schedule" }
-                      // Not a fault, and it must not be phrased as one: the sweep ran, succeeded,
-                      // and is simply too small for the number of readers now subscribed. Stopping
-                      // on the budget USED to be recorded as a failure, so this page announced a
-                      // broken sweep on every healthy tick. The honest complaint is coverage.
-                      : !isSweepKeepingUp(sweep)
-                        ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — the alert sweep is behind; ${sweep.backlogReaders} subscribed readers were not reached on its last tick` }
-                : { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" };
+  // Derived by the same function /admin uses, so the owner's page and the public page cannot
+  // disagree about whether the system is well.
+  const health = deriveSystemHealth({
+    readiness: { status: readiness.status, schema: readiness.schema },
+    collectors: collect ? { enabled: collect.enabled, overdue: collect.overdue, failing: collect.failing, oldestOverdueMinutes: collect.oldestOverdueMinutes, keepingUp: !collectorsBehind } : null,
+    refresh: refresh ? { enabled: refresh.enabled, failed: refresh.failed, worstLateness: refresh.worstLateness, behind: refreshBehind } : null,
+    intelligenceReporting: Boolean(intel),
+    sweep: sweep ? { lastRanAt: sweep.lastRanAt, lastOk: sweep.lastOk, backlogReaders: sweep.backlogReaders, healthy: isSweepHealthy(sweep), keepingUp: isSweepKeepingUp(sweep) } : null,
+  });
+  const banner = health.level === "outage"
+    ? { Icon: XCircle, tone: "#ff9d94", shadow: "hard", text: health.headline }
+    : health.level === "degraded"
+      ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: health.headline }
+      : { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: health.headline };
 
   return (
     <div className="mx-auto max-w-[1000px] px-5 py-16 sm:px-8 sm:py-24">
