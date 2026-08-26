@@ -12,19 +12,21 @@ export const maxDuration = 120;
 // channel that could reach someone who was not looking — fired inside that same user-initiated
 // loop, so it could only notify a reader who was already on the page.
 //
-// Daily rather than hourly: the catalogue collectors run hourly and the reviewed changes they
-// produce are what this reports on, so a faster tick would mostly re-read a database that has not
-// moved.
+// Every six hours, and the reason is quiet hours rather than freshness.
 //
-// The TIME matters, and the obvious choice is wrong. A sweep scheduled overnight lands inside the
-// default quiet hours (22:00-08:00 America/New_York), and the policy correctly refuses to push
-// during them — so an overnight cron would write inbox rows every night and never once buzz a
-// phone. Push has no scheduler of its own to hand a deferred notification to, so if the sweep is
-// asleep when the reader is, the channel is dead in practice.
+// Push has no scheduler of its own — this sweep IS the scheduler. So a tick has to land outside a
+// reader's quiet window or they are never pushed at all, and no single daily slot can do that for
+// everyone: 15:30 UTC clears both US coasts and Europe, and is 23:30 in Shanghai, 00:30 in Tokyo
+// and 03:30 in Auckland — permanently inside the default 22:00-08:00 window. Push was dead by
+// construction for those readers, with no symptom anywhere.
 //
-// 15:30 UTC is 11:30 in New York and 08:30 in Los Angeles: past the default quiet window on both
-// US coasts, and off the hour so it does not contend with the collectors at :00 or the provenance
-// sweep at :15/:30.
+// Four ticks a day gives every timezone one outside its quiet hours, and anything held back by one
+// tick is delivered by the next: `user_notifications.pushed_at` records what has actually gone out,
+// so deferral is recoverable instead of silently permanent. Offset to :30 so it does not contend
+// with the collectors at :00 or the provenance sweep at :15/:45.
+//
+// Cost: pure SQL plus an in-process search, no model calls, and per-reader work is bounded — four
+// cheap ticks beat one that reaches a fraction of the audience.
 function authorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET?.trim();
   if (!secret) {

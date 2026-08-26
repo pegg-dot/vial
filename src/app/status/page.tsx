@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SWEEP_STALE_HOURS, getNotificationSweepHealth, isSweepHealthy } from "@/server/notifications/sweep";
+import { SWEEP_STALE_HOURS, getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/server/notifications/sweep";
 import { AlertTriangle, BellRing, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, XCircle } from "lucide-react";
 import { getRefreshMetrics } from "@/server/refresh/repository";
 import { getIntelligenceMetrics } from "@/server/intelligence/repository";
@@ -70,7 +70,13 @@ export default async function StatusPage() {
                   : refresh.failed > 0
                     ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — ${refresh.failed} refresh ${refresh.failed === 1 ? "job has" : "jobs have"} failed` }
                     : !isSweepHealthy(sweep)
-                      ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: sweep.lastRanAt === null ? "Degraded — the alert sweep has never run, so nobody is being notified while they are away" : "Degraded — the alert sweep has not completed on schedule" }
+                      ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: sweep.lastRanAt === null ? "Degraded — the alert sweep has never run, so nobody is being notified while they are away" : !sweep.lastOk ? "Degraded — the alert sweep failed on one or more readers" : "Degraded — the alert sweep has not completed on schedule" }
+                      // Not a fault, and it must not be phrased as one: the sweep ran, succeeded,
+                      // and is simply too small for the number of readers now subscribed. Stopping
+                      // on the budget USED to be recorded as a failure, so this page announced a
+                      // broken sweep on every healthy tick. The honest complaint is coverage.
+                      : !isSweepKeepingUp(sweep)
+                        ? { Icon: AlertTriangle, tone: "#ffd479", shadow: "hard", text: `Degraded — the alert sweep is behind; ${sweep.backlogReaders} subscribed readers were not reached on its last tick` }
                 : { Icon: CheckCircle2, tone: "#8fffd6", shadow: "hard-mint", text: "All systems operational" };
 
   return (
@@ -143,12 +149,16 @@ export default async function StatusPage() {
               : sweep.lastRanAt === null
                 ? "The nightly sweep has never run — nobody is being told anything while they are away"
                 : !sweep.lastOk
-                  ? `Last sweep did not finish cleanly, ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
+                  ? `Last sweep failed on one or more readers, ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
                   : (sweep.hoursSinceLastRun ?? 0) >= SWEEP_STALE_HOURS
                     ? `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago — past its daily schedule`
-                    : `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
+                    // A backlog is what a budget stop actually costs, so it is said as a number of
+                    // people rather than hidden inside a red mark on a tick that did its job.
+                    : sweep.backlogReaders > 0
+                      ? `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago · ${sweep.backlogReaders} readers queued for the next tick`
+                      : `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
           }
-          ok={sweep !== null && isSweepHealthy(sweep)}
+          ok={sweep !== null && isSweepHealthy(sweep) && isSweepKeepingUp(sweep)}
         />
         <Card
           icon={ShieldCheck}

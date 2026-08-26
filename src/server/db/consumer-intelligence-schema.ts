@@ -108,6 +108,18 @@ ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS quiet_hours_e
 ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'America/New_York';
 ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS relevance_threshold NUMERIC(5,4) NOT NULL DEFAULT 0.45;
 ALTER TABLE user_notification_preferences ADD COLUMN IF NOT EXISTS availability_alerts BOOLEAN NOT NULL DEFAULT TRUE;
+-- When this notification's push actually went out. NULL means it never has.
+--
+-- Gating push on "was this row just INSERTED" looked equivalent and is not: a notification first
+-- written during quiet hours is inserted with push withheld, and every later tick then sees it as
+-- an update and never pushes it at all. Deferral has to be recoverable, so the ledger records
+-- delivery rather than novelty.
+ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS pushed_at TIMESTAMPTZ;
+-- When the scheduled sweep last CONSIDERED this reader, which is not the same as when it last had
+-- something to tell them. Ordering the queue by their newest notification meant a reader with
+-- nothing to report never advanced, sat at the head of the queue forever, and starved everyone
+-- behind the per-tick cap — the exact failure the sweep's own comment claimed to prevent.
+ALTER TABLE user_visit_state ADD COLUMN IF NOT EXISTS notification_swept_at TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_saved_searches_user ON saved_searches(user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_comparisons_user ON comparison_sessions(user_id, updated_at DESC);

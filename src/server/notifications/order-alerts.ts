@@ -7,7 +7,7 @@
 
 import type { SqlConnection } from "@/server/db/client";
 import { getDatabase } from "@/server/db/client";
-import { getNotificationChannelPreferences, upsertUserNotification } from "@/server/consumer-intelligence/repository";
+import { getNotificationChannelPreferences, markNotificationPushed, upsertUserNotification } from "@/server/consumer-intelligence/repository";
 import { sendPushToUser } from "@/server/push/delivery";
 import { decideDelivery } from "./policy";
 
@@ -41,8 +41,10 @@ export async function notifyOrderShipped(input: { orderId: string; trackingCode?
       : partial ? "The rest is still with the seller." : "The seller has handed it to the carrier.";
     const href = `/orders/${input.orderId}/confirmation`;
 
+    const dedupeKey = `order:${input.orderId}:${order.status}`;
+    let alreadyPushed = false;
     if (decision.inApp) {
-      await upsertUserNotification(order.customer_key, {
+      ({ alreadyPushed } = await upsertUserNotification(order.customer_key, {
         category: "order",
         title,
         body,
@@ -50,12 +52,13 @@ export async function notifyOrderShipped(input: { orderId: string; trackingCode?
         relevanceScore: 0.95,
         // Keyed on the status too, so a partial shipment and the final one are two events rather
         // than one overwritten row.
-        dedupeKey: `order:${input.orderId}:${order.status}`,
+        dedupeKey,
         deliverAfter: decision.deliverAfter,
-      }, db);
+      }, db));
     }
-    if (decision.push) {
+    if (decision.push && !alreadyPushed) {
       await sendPushToUser(order.customer_key, { title, body, url: href, tag: `order:${input.orderId}` }).catch(() => null);
+      await markNotificationPushed(order.customer_key, dedupeKey, db).catch(() => null);
     }
     return { notified: true, reason: null };
   } catch (error) {

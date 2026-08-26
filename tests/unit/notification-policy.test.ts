@@ -172,3 +172,96 @@ describe("category mapping", () => {
     expect(decideDelivery({ category: asAlertCategory("brand-new"), source: "watchlist", relevance: 1, preferences: allOff, now: NOON_UTC }).inApp).toBe(true);
   });
 });
+
+// Both of these were found by an adversarial audit AFTER the policy shipped, and both were proven
+// by running the real function rather than reasoned about.
+describe("delivery rules the first version got wrong", () => {
+  it("does not let a market-news digest delay a transactional order notification", () => {
+    // A reader who chose "weekly digest" made their own shipment notification invisible for seven
+    // days and never got the push. A digest is a preference about market news.
+    for (const digestFrequency of ["daily", "weekly"] as const) {
+      const decision = decideDelivery({
+        category: null, source: "order", relevance: 0.95,
+        preferences: prefs({ digestFrequency }), now: NOON_UTC,
+      });
+      expect(decision.deliverAfter.getTime(), `${digestFrequency} delayed an order update`).toBe(NOON_UTC.getTime());
+      expect(decision.push, `${digestFrequency} silenced an order push`).toBe(true);
+    }
+    // A market alert is still batched — the bypass is for transactional events only.
+    expect(decide({ preferences: prefs({ digestFrequency: "weekly" }) }).deliverAfter.getTime()).toBeGreaterThan(NOON_UTC.getTime());
+  });
+
+  it("still defers an order notification during quiet hours", () => {
+    // Bypassing the digest must not also bypass quiet hours — those are about when a phone may buzz.
+    const quiet = prefs({ quietHoursStart: "11:00", quietHoursEnd: "13:00", digestFrequency: "weekly" });
+    const decision = decideDelivery({ category: null, source: "order", relevance: 0.95, preferences: quiet, now: NOON_UTC });
+    expect(decision.deliverAfter.getTime()).toBeGreaterThan(NOON_UTC.getTime());
+    expect(decision.push).toBe(false);
+  });
+
+  it("never reports a push it expects the caller to suppress", () => {
+    // The control says "Everything below still needs this on", so a decision with inApp:false must
+    // not claim push:true and rely on every caller knowing to drop it.
+    const decision = decide({ preferences: prefs({ inAppEnabled: false }) });
+    expect(decision.inApp).toBe(false);
+    expect(decision.push).toBe(false);
+  });
+});
+
+// H6: push has no scheduler of its own — the sweep IS the scheduler — so a reader is only ever
+// pushed if a tick lands outside their quiet hours. A single daily tick cannot do that for
+// everyone, and the one originally chosen (15:30 UTC) was inside the default window for every
+// reader east of about UTC+7. That was permanent and produced no symptom anywhere.
+describe("the sweep schedule can actually reach every reader", () => {
+  const CRON_PATH = "/api/internal/cron/notifications";
+
+  /** The tick times the deployed schedule actually produces, read from vercel.json. */
+  async function scheduledUtcHours(): Promise<number[]> {
+    const { readFileSync } = await import("node:fs");
+    const config = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8")) as {
+      crons?: { path: string; schedule: string }[];
+    };
+    const entry = config.crons?.find((c) => c.path === CRON_PATH);
+    expect(entry, `${CRON_PATH} is not scheduled at all`).toBeTruthy();
+    const [, hourField] = entry!.schedule.split(" ");
+    if (hourField === "*") return Array.from({ length: 24 }, (_, i) => i);
+    const step = /^\*\/(\d+)$/.exec(hourField);
+    if (step) {
+      const n = Number(step[1]);
+      return Array.from({ length: Math.ceil(24 / n) }, (_, i) => i * n);
+    }
+    return hourField.split(",").map(Number);
+  }
+
+  // Spread deliberately across the globe, including the zones the first schedule silently excluded.
+  const ZONES = [
+    "America/Los_Angeles", "America/New_York", "Europe/London", "Europe/Berlin",
+    "Africa/Lagos", "Asia/Kolkata", "Asia/Shanghai", "Asia/Tokyo",
+    "Australia/Sydney", "Pacific/Auckland",
+  ];
+
+  it("gives every timezone at least one tick outside the default quiet hours", async () => {
+    const hours = await scheduledUtcHours();
+    expect(hours.length).toBeGreaterThan(0);
+    const defaults = { quietHoursStart: DEFAULT_NOTIFICATION_PREFERENCES.quietHoursStart, quietHoursEnd: DEFAULT_NOTIFICATION_PREFERENCES.quietHoursEnd };
+
+    const unreachable = ZONES.filter((timezone) =>
+      hours.every((hour) => isWithinQuietHours(new Date(Date.UTC(2026, 7, 26, hour, 30)), { ...defaults, timezone })),
+    );
+    expect(
+      unreachable,
+      `push is dead by construction for these zones — every scheduled tick lands inside their default quiet hours: ${unreachable.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("would fail if the sweep went back to a single daily tick", async () => {
+    // Positive control: the guard above must be capable of failing, and this is the exact schedule
+    // it was written to reject.
+    const defaults = { quietHoursStart: DEFAULT_NOTIFICATION_PREFERENCES.quietHoursStart, quietHoursEnd: DEFAULT_NOTIFICATION_PREFERENCES.quietHoursEnd };
+    const singleDailyTick = [15];
+    const unreachable = ZONES.filter((timezone) =>
+      singleDailyTick.every((hour) => isWithinQuietHours(new Date(Date.UTC(2026, 7, 26, hour, 30)), { ...defaults, timezone })),
+    );
+    expect(unreachable.length, "a single 15:30 UTC tick used to exclude the whole Asia-Pacific region").toBeGreaterThan(0);
+  });
+});

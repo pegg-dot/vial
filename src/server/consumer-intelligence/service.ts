@@ -12,6 +12,7 @@ import {
   getNotificationChannelPreferences,
   listFollowedListingSlugs,
   listFollows,
+  markNotificationPushed,
   listMarketChangeSummaries,
   listSavedSearches,
   listUserNotifications,
@@ -172,7 +173,7 @@ export async function getPersonalizedMarket(userId: string) {
   return {catalog,preferences,watchlist,follows,savedSearches,history,notifications,summaries,recommendations,previousVisit};
 }
 
-export async function runSavedSearch(userId:string,id:string){const searches=await listSavedSearches(userId);const saved=searches.find(item=>item.id===id);if(!saved)return null;const types=Array.isArray(saved.filters.types)?saved.filters.types.filter((value):value is string=>typeof value==="string"):undefined;const result=await searchMarket({query:saved.query,types,limit:30,actorKey:userId});await updateSavedSearchResult(userId,id,result.results.length);await recordDecisionEvent(userId,{eventType:"saved_search_run",subjectType:"saved_search",subjectId:id,metadata:{query:saved.query,resultCount:result.results.length}});return result;}
+export async function runSavedSearch(userId:string,id:string){const searches=await listSavedSearches(userId);const saved=searches.find(item=>item.id===id);if(!saved)return null;const types=Array.isArray(saved.filters.types)?saved.filters.types.filter((value):value is string=>typeof value==="string"):undefined;const result=await searchMarket({query:saved.query,types,limit:30,actorKey:userId});await updateSavedSearchResult(userId,id,result.totalMatches);await recordDecisionEvent(userId,{eventType:"saved_search_run",subjectType:"saved_search",subjectId:id,metadata:{query:saved.query,resultCount:result.totalMatches,shown:result.results.length}});return result;}
 
 function periodKey(start:Date,end:Date){return `${start.toISOString().slice(0,10)}:${end.toISOString().slice(0,10)}`;}
 export async function generateMarketChangeSummary(userId:string,connection?:SqlConnection){const db=connection??await getDatabase();
@@ -234,9 +235,9 @@ export async function syncWatchlistNotifications(userId:string,now=new Date()){
       preferences,
       now,
     });
-    if(!decision.inApp&&!decision.push)continue;
+    if(!decision.inApp)continue;
     const reason=reasonBySlug.get(alert.listingSlug);
-    if(decision.inApp)await upsertUserNotification(userId,{
+    const written=await upsertUserNotification(userId,{
       category:alert.category,
       title:alert.title,
       // Why this reached you. A notification that cannot say that is indistinguishable from spam.
@@ -246,8 +247,11 @@ export async function syncWatchlistNotifications(userId:string,now=new Date()){
       dedupeKey:`alert:${alert.id}`,
       deliverAfter:decision.deliverAfter,
     });
-    if(decision.push){
-      try{await sendPushToUser(userId,{title:alert.title,body:alert.message,url:`/products/${alert.listingSlug}`,tag:`alert:${alert.id}`});}catch{/* best-effort: push must never break notification creation */}
+    if(decision.push&&!written.alreadyPushed){
+      try{
+        await sendPushToUser(userId,{title:alert.title,body:alert.message,url:`/products/${alert.listingSlug}`,tag:`alert:${alert.id}`});
+        await markNotificationPushed(userId,`alert:${alert.id}`);
+      }catch{/* best-effort: push must never break notification creation */}
     }
   }
   return listUserNotifications(userId,{limit:100});

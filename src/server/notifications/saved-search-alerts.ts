@@ -21,6 +21,32 @@ import {
 
 export type AlertMode = "off" | "important" | "all";
 
+/**
+ * How many saved searches one reader may cost a single tick.
+ *
+ * Every search here runs `searchMarket`, which reads `search_documents` whole and scores it in JS.
+ * Nothing caps how many saved searches an account may hold, so before this constant one reader with
+ * a few thousand of them could spend the sweep's entire budget alone, be killed before the receipt
+ * was written, and silently un-notify every reader queued behind them — a denial of the whole
+ * notification system available to any authenticated customer for the price of a for-loop.
+ *
+ * 25 is a ceiling on cost, not a judgement about how many searches someone may save: the rest are
+ * deferred to the next tick, not dropped, because the queue is ordered least-recently-run first.
+ */
+export const SAVED_SEARCH_ALERTS_PER_USER = 25;
+
+export interface SavedSearchAlertRun {
+  /** Saved searches actually re-run this tick. */
+  checked: number;
+  alerted: number;
+  /** Active, non-"off" searches this reader holds — the work that was ASKED for. */
+  eligible: number;
+  /** Eligible searches this tick did not reach. Silence here would read as "covered everything". */
+  dropped: number;
+  /** True when the sweep's own budget, not the per-reader cap, ended the work. */
+  stoppedEarly: boolean;
+}
+
 export function asAlertMode(raw: string | null | undefined): AlertMode {
   return raw === "off" || raw === "all" ? raw : "important";
 }
@@ -60,19 +86,36 @@ export function describeResultChange(input: { name: string; previousCount: numbe
  * quiet hours, the digest window and the relevance threshold all apply — the per-search `alertMode`
  * narrows on top of the account-level switch rather than bypassing it.
  */
-export async function runSavedSearchAlerts(userId: string, now = new Date(), connection?: SqlConnection) {
+export async function runSavedSearchAlerts(
+  userId: string,
+  now = new Date(),
+  connection?: SqlConnection,
+  options: { maxSearches?: number; deadlineAt?: number } = {},
+): Promise<SavedSearchAlertRun> {
   const db = connection ?? (await getDatabase());
+  const maxSearches = Math.max(1, options.maxSearches ?? SAVED_SEARCH_ALERTS_PER_USER);
   const preferences: NotificationPreferences = await getNotificationChannelPreferences(userId, db);
   const searches = await listSavedSearches(userId, db);
   let checked = 0;
   let alerted = 0;
+  let stoppedEarly = false;
 
-  for (const saved of searches) {
-    if (!saved.active) continue;
+  // Decide eligibility BEFORE the cap so an inactive or "off" search cannot consume a slot that a
+  // search the reader is actually waiting on would have used. "off" still never runs a query.
+  const eligible = searches
+    .filter((saved) => saved.active && asAlertMode(saved.alertMode) !== "off")
+    // Least-recently-run first, never-run before that. The cap has to rotate: ordering by the
+    // repository's default (updated_at DESC) would re-run the same top slice every night and the
+    // tail would never run at all — the same starvation the sweep's own queue had.
+    .sort((a, b) => (a.lastRunAt ? Date.parse(a.lastRunAt) : 0) - (b.lastRunAt ? Date.parse(b.lastRunAt) : 0));
+
+  for (const saved of eligible) {
+    // Two independent stops. The cap bounds one reader's cost; the deadline is the SWEEP's budget,
+    // visible in here so a reader holding a lot of searches can be interrupted mid-reader instead
+    // of running the whole tick over its ceiling and being killed before it can leave a receipt.
+    if (checked >= maxSearches) break;
+    if (options.deadlineAt !== undefined && Date.now() > options.deadlineAt) { stoppedEarly = true; break; }
     const mode = asAlertMode(saved.alertMode);
-    // Skip the query entirely when the reader asked for no alerts — running it would cost a search
-    // and move last_run_at for no reason anyone can see.
-    if (mode === "off") continue;
 
     const types = Array.isArray(saved.filters.types)
       ? saved.filters.types.filter((value): value is string => typeof value === "string")
@@ -104,5 +147,15 @@ export async function runSavedSearchAlerts(userId: string, now = new Date(), con
     alerted += 1;
   }
 
-  return { checked, alerted };
+  const dropped = eligible.length - checked;
+  if (dropped > 0) {
+    // Say it out loud. Truncating in silence reports the same shape as "this reader had nothing",
+    // and a reader whose alerts are being skipped every night would look identical to a quiet one.
+    console.warn(
+      `[saved-search-alerts] ${userId}: ran ${checked} of ${eligible.length} saved searches (` +
+        `${stoppedEarly ? "sweep budget expired" : `per-reader cap ${maxSearches}`}); ${dropped} deferred to the next tick`,
+    );
+  }
+
+  return { checked, alerted, eligible: eligible.length, dropped, stoppedEarly };
 }

@@ -93,7 +93,7 @@ export function ConsumerPreferencesForm({initial,compounds,vendors}:{initial:Con
       </div>
       <div className="ink hard rounded-[20px] bg-white p-6">
         <h3 className="text-xl font-extrabold">Required evidence level</h3>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">A hard limit, not a nudge: a record that meets none of the levels you pick is removed from your feed rather than ranked lower. Pick nothing to keep every record visible.</p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">A hard limit, not a nudge: anything weaker than the lowest level you pick is removed from your feed rather than ranked lower. Picking more than one sets the bar at the weakest of them. Pick nothing to keep every record visible.</p>
         <div className="mt-5 flex flex-wrap gap-2">{evidenceLevelOptions.map(option=>
           <button type="button" key={option.key} onClick={()=>toggleRequiredLevel(option.key)} title={option.hint} aria-pressed={value.requiredEvidenceLevels.includes(option.key)} className={`ink-1 rounded-full px-3 py-2 text-xs font-bold ${value.requiredEvidenceLevels.includes(option.key)?"bg-[#2b31d8] text-white":"bg-white text-[#111214]"}`}>{option.label}</button>)}
         </div>

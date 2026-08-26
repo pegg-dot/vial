@@ -108,6 +108,20 @@ export default async function ForYouPage() {
           </div>
           <Link href="/account/preferences" className="ink hard-sm press inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold">Adjust preferences</Link>
         </div>
+        {data.recommendations.length === 0 ? (
+          /* Required evidence levels and hidden vendors are HARD filters, so a reader can empty
+             this section themselves. Every other panel on this page has an empty state; without one
+             here their own setting produced a blank grid and no explanation. */
+          <div className="ink hard mt-7 rounded-[18px] bg-white p-6">
+            <p className="text-sm font-bold">Nothing clears the bar you set.</p>
+            <p className="mt-2 max-w-lg text-sm font-medium leading-6 text-[var(--muted)]">
+              {data.preferences.requiredEvidenceLevels.length > 0 || data.preferences.hiddenVendorSlugs.length > 0
+                ? "Your required evidence level or your hidden vendors are excluding every listing we hold. That is the filter working, not an empty market."
+                : "No listing matches your current preferences. Widening your price range or shipping window usually brings results back."}
+            </p>
+            <Link href="/account/preferences" className="ink hard-sm press mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#111214] px-4 py-2.5 text-sm font-bold text-white">Adjust preferences <ArrowUpRight className="size-3.5" /></Link>
+          </div>
+        ) : (
         <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {data.recommendations.map((item) => (
             <div key={item.product.slug} className="flex flex-col gap-2.5">
@@ -123,6 +137,7 @@ export default async function ForYouPage() {
             </div>
           ))}
         </div>
+        )}
       </section>
 
       {/* Supporting panels */}

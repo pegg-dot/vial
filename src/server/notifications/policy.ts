@@ -163,7 +163,10 @@ export function decideDelivery(input: {
     if (!prefs[toggle]) return blocked(toggle);
   }
 
-  const digestMs = digestDelayMs(prefs.digestFrequency);
+  // A digest is a preference about MARKET NEWS. Applying it to a transactional event meant a
+  // reader who chose "weekly" made their own shipment notification invisible for seven days and
+  // never got the push — an order update is not something they asked to have batched.
+  const digestMs = input.source === "order" ? 0 : digestDelayMs(prefs.digestFrequency);
   const quietMs = isWithinQuietHours(now, prefs) ? minutesUntilQuietEnds(now, prefs) * 60_000 : 0;
   const deliverAfter = new Date(now.getTime() + Math.max(digestMs, quietMs));
   const dueNow = deliverAfter.getTime() <= now.getTime();
@@ -181,9 +184,13 @@ export function decideDelivery(input: {
 
   return {
     inApp: prefs.inAppEnabled,
-    // Push is a "now" channel with no scheduler behind it, so it goes only when the notification is
-    // due now. Anything held back — by quiet hours or by a digest — waits in the inbox instead.
-    push: dueNow && meetsRelevance,
+    // Push goes only when the notification is due NOW; anything held back by quiet hours or a
+    // digest waits, and a later sweep pushes it once it comes due (see `pushed_at`).
+    //
+    // It also requires the in-app switch, because that is what the control says: "Everything below
+    // still needs this on." Reporting push:true under inApp:false would leave the decision object
+    // describing a delivery that the caller then has to know to suppress.
+    push: prefs.inAppEnabled && dueNow && meetsRelevance,
     // No mail transport exists in this application: no provider dependency, no credentials, no send
     // path anywhere in src/. The toggle stored a value that could never do anything. Until a
     // transport is chosen this stays false whatever the reader set, and the UI says so.

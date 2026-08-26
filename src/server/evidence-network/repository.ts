@@ -319,6 +319,21 @@ export async function getPublicLaboratory(slug: string) { await ensureEvidenceNe
 // grid nobody scrolls to the end of. The page filters and pages client-side, so the cap is what
 // the reader can plausibly work through, not what the table holds. The ORDER BY puts live records
 // with the strongest evidence first, so a cap truncates the tail rather than the useful head.
+/**
+ * How many published passports exist, independent of the page cap.
+ *
+ * `listPublicPassports` caps at 200 and the page filters client-side, so the loaded set is NOT the
+ * corpus. Rendering its length as the total is the same defect this codebase fixed on /signals and
+ * /search — a page size stated as a count — except here it also drives the empty state, which
+ * claims a batch "has not been tested by anyone we hold results from". That is a factual claim
+ * about evidence, and it must not be made about rows we simply did not load.
+ */
+export async function countPublicPassports(): Promise<number> {
+  await ensureEvidenceNetworkSeed();
+  const db = await getDatabase();
+  return Number((await db.query<{ n: string | number }>(`SELECT COUNT(*) n FROM batch_passports WHERE status='published'`)).rows[0]?.n ?? 0);
+}
+
 export async function listPublicPassports(limit = 200): Promise<PassportRow[]> {
   await ensureEvidenceNetworkSeed();
   const db = await getDatabase();

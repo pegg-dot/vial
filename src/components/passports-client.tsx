@@ -25,8 +25,14 @@ function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-export function PassportsClient({ passports, initialQuery = "", initialOrigins = [], initialEvidence = [] }: {
+export function PassportsClient({ passports, total, initialQuery = "", initialOrigins = [], initialEvidence = [] }: {
   passports: PassportRow[];
+  /**
+   * How many published passports EXIST. `passports` is capped by the server query, so its length is
+   * a page size — and this page makes factual claims about the evidence corpus ("no batch on record
+   * matches that"), which may only rest on the real count. Null when the count could not be read.
+   */
+  total: number | null;
   initialQuery?: string;
   initialOrigins?: PassportOriginId[];
   initialEvidence?: PassportEvidenceId[];
@@ -35,6 +41,10 @@ export function PassportsClient({ passports, initialQuery = "", initialOrigins =
   const [origins, setOrigins] = useState<PassportOriginId[]>(initialOrigins);
   const [evidence, setEvidence] = useState<PassportEvidenceId[]>(initialEvidence);
   const [visible, setVisible] = useState(PAGE);
+
+  // The server caps the query, so anything it did not send is invisible to every filter on this
+  // page. Saying so is the difference between "we hold no such batch" and "we did not load it".
+  const truncated = total !== null && total > passports.length;
 
   const filters = useMemo(() => ({ query, origins, evidence }), [query, origins, evidence]);
   const results = useMemo(() => filterPassports(passports, filters), [passports, filters]);
@@ -119,6 +129,7 @@ export function PassportsClient({ passports, initialQuery = "", initialOrigins =
           <p className="text-sm font-bold tabular-nums" data-testid="passport-count">
             {results.length} batch{results.length === 1 ? "" : "es"}
             {active && <span className="font-medium text-[var(--muted)]"> of {passports.length}</span>}
+            {truncated && <span className="font-medium text-[var(--muted)]"> · newest {passports.length} of {total} loaded</span>}
           </p>
           {active && (
             <button onClick={reset} className="ink-1 press inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold">
@@ -133,8 +144,12 @@ export function PassportsClient({ passports, initialQuery = "", initialOrigins =
           <p className="text-lg font-extrabold">No batch on record matches that.</p>
           <p className="mx-auto mt-2 max-w-md text-sm font-medium leading-6 text-[var(--muted)]">
             A batch only appears here once a lab test for it is on the record, so this list is
-            deliberately narrower than any vendor&rsquo;s catalogue. A code that is missing has not been
-            tested by anyone we hold results from &mdash; it does not mean the batch failed.
+            deliberately narrower than any vendor&rsquo;s catalogue.{" "}
+            {truncated
+              ? <>This page holds the newest {passports.length} of {total} records, so a missing code may
+                simply be older than those &mdash; check it directly on <Link href="/verify" className="font-bold text-[#111214] underline underline-offset-2">Verify</Link>.</>
+              : <>A code that is missing has not been tested by anyone we hold results from &mdash; it does not
+                mean the batch failed.</>}
           </p>
           <button onClick={reset} className="ink hard-sm press mt-6 rounded-full bg-[#111214] px-5 py-2.5 text-sm font-bold text-white">Clear filters</button>
         </div>
@@ -186,7 +201,9 @@ export function PassportsClient({ passports, initialQuery = "", initialOrigins =
               <p className="text-xs font-medium tabular-nums text-[var(--muted)]">Showing {shown.length} of {results.length}</p>
             </div>
           ) : (
-            results.length > PAGE && <p className="mt-8 text-center text-xs font-medium text-[var(--muted)]">That is every batch we hold a test for{active ? " under this filter" : ""}.</p>
+            results.length > PAGE && <p className="mt-8 text-center text-xs font-medium text-[var(--muted)]">{truncated
+              ? <>That is the newest {passports.length} of {total} records we hold{active ? " under this filter" : ""}.</>
+              : <>That is every batch we hold a test for{active ? " under this filter" : ""}.</>}</p>
           )}
         </>
       )}

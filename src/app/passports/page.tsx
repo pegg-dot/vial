@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle, BadgeCheck, ScanLine } from "lucide-react";
-import { listPublicPassports } from "@/server/evidence-network/repository";
+import { countPublicPassports, listPublicPassports } from "@/server/evidence-network/repository";
 import { reportError } from "@/server/observability/alerts";
 import { DataUnavailable } from "@/components/home-data-unavailable";
 import { PassportsClient } from "@/components/passports-client";
@@ -32,12 +32,15 @@ function asList(value: string | string[] | undefined, allowed: Set<string>) {
 export default async function Page({ searchParams }: { searchParams: Promise<{ q?: string; origin?: string | string[]; evidence?: string | string[] }> }) {
   // Degrade rather than 500, and never to an empty grid that reads as "no batches have ever been
   // tested" — that is a false claim about the evidence corpus, which is the whole product.
-  const [params, passports] = await Promise.all([
+  const [params, passports, total] = await Promise.all([
     searchParams,
     listPublicPassports().catch((error) => {
       reportError({ kind: "passports-unavailable", message: "The batch passport list could not be read.", context: { error: String(error) } });
       return null;
     }),
+    // The list is capped, so its length is a page size. This page makes factual claims about the
+    // evidence corpus ("no batch on record matches that"), and those may only rest on the real count.
+    countPublicPassports().catch(() => null),
   ]);
   if (!passports) return <DataUnavailable surface="the batch test records" />;
 
@@ -75,6 +78,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
         ) : (
           <PassportsClient
             passports={passports}
+            total={total}
             initialQuery={typeof params.q === "string" ? params.q.slice(0, 120) : ""}
             initialOrigins={asList(params.origin, ORIGIN_IDS) as PassportOriginId[]}
             initialEvidence={asList(params.evidence, EVIDENCE_IDS) as PassportEvidenceId[]}
