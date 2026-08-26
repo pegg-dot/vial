@@ -79,24 +79,31 @@ describe("describeResultChange", () => {
 // people who are NOT looking is the one nobody would notice had stopped, so /status has to be able
 // to say "never run" — and that has to be distinguishable from "ran and found nobody".
 describe("sweep health", () => {
-  it("treats a sweep that has never run as unhealthy", async () => {
+  it("treats a sweep that has never run as unhealthy WHEN readers are waiting", async () => {
     const { isSweepHealthy } = await import("@/server/notifications/sweep");
-    expect(isSweepHealthy({ lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null })).toBe(false);
+    expect(isSweepHealthy({ lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null, waitingReaders: 12 })).toBe(false);
+  });
+
+  it("does not cry degraded on a fresh deployment with nobody subscribed", async () => {
+    const { isSweepHealthy } = await import("@/server/notifications/sweep");
+    // Nobody is waiting, so nobody is being failed. A status page that reports degraded on day one
+    // teaches its reader to stop looking, which costs more than it saves.
+    expect(isSweepHealthy({ lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null, waitingReaders: 0 })).toBe(true);
   });
 
   it("treats a recent clean tick that swept nobody as HEALTHY", async () => {
     const { isSweepHealthy } = await import("@/server/notifications/sweep");
     // Zero readers swept is a legitimate answer; it must not read as an outage.
-    expect(isSweepHealthy({ lastRanAt: "2026-08-25T00:00:00.000Z", lastSweptUsers: 0, lastOk: true, hoursSinceLastRun: 6 })).toBe(true);
+    expect(isSweepHealthy({ lastRanAt: "2026-08-25T00:00:00.000Z", lastSweptUsers: 0, lastOk: true, hoursSinceLastRun: 6, waitingReaders: 0 })).toBe(true);
   });
 
   it("treats a stale tick as unhealthy even though it succeeded", async () => {
     const { isSweepHealthy, SWEEP_STALE_HOURS } = await import("@/server/notifications/sweep");
-    expect(isSweepHealthy({ lastRanAt: "2026-08-01T00:00:00.000Z", lastSweptUsers: 40, lastOk: true, hoursSinceLastRun: SWEEP_STALE_HOURS + 1 })).toBe(false);
+    expect(isSweepHealthy({ lastRanAt: "2026-08-01T00:00:00.000Z", lastSweptUsers: 40, lastOk: true, hoursSinceLastRun: SWEEP_STALE_HOURS + 1, waitingReaders: 40 })).toBe(false);
   });
 
   it("treats a recent failed tick as unhealthy", async () => {
     const { isSweepHealthy } = await import("@/server/notifications/sweep");
-    expect(isSweepHealthy({ lastRanAt: "2026-08-25T00:00:00.000Z", lastSweptUsers: 3, lastOk: false, hoursSinceLastRun: 1 })).toBe(false);
+    expect(isSweepHealthy({ lastRanAt: "2026-08-25T00:00:00.000Z", lastSweptUsers: 3, lastOk: false, hoursSinceLastRun: 1, waitingReaders: 3 })).toBe(false);
   });
 });

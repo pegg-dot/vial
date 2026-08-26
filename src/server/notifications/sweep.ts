@@ -101,6 +101,8 @@ export interface SweepHealth {
   lastSweptUsers: number;
   lastOk: boolean;
   hoursSinceLastRun: number | null;
+  /** Readers currently subscribed to something. Nobody waiting means nobody is being failed. */
+  waitingReaders: number;
 }
 
 /**
@@ -112,20 +114,30 @@ export interface SweepHealth {
  */
 export async function getNotificationSweepHealth(now = new Date()): Promise<SweepHealth> {
   const db = await getDatabase();
-  const row = (await db.query<{ ran_at: string; items: string | number; ok: boolean }>(
-    `SELECT ran_at::text, items, ok FROM collector_runs WHERE collector='notification-sweep' ORDER BY ran_at DESC LIMIT 1`,
-  )).rows[0];
-  if (!row) return { lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null };
+  const [row, waiting] = await Promise.all([
+    db.query<{ ran_at: string; items: string | number; ok: boolean }>(
+      `SELECT ran_at::text, items, ok FROM collector_runs WHERE collector='notification-sweep' ORDER BY ran_at DESC LIMIT 1`,
+    ).then((r) => r.rows[0]),
+    // Cheap: it only needs to know whether anyone is waiting, not who.
+    db.query<{ n: string | number }>(
+      `SELECT COUNT(*) n FROM auth_users u WHERE u.status='active' AND (
+         EXISTS (SELECT 1 FROM user_watchlists w WHERE w.user_id=u.id)
+         OR EXISTS (SELECT 1 FROM entity_follows f WHERE f.user_id=u.id)
+         OR EXISTS (SELECT 1 FROM saved_searches s WHERE s.user_id=u.id AND s.active=TRUE AND s.alert_mode<>'off'))`,
+    ).then((r) => Number(r.rows[0]?.n ?? 0)).catch(() => 0),
+  ]);
+  if (!row) return { lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null, waitingReaders: waiting };
   const ranAt = new Date(row.ran_at);
   // `new Date(junk).toISOString()` throws RangeError, and this runs on /status — the one page whose
   // entire job is to still render when something underneath it is wrong. An unreadable timestamp is
   // a result ("we cannot tell when it last ran"), not an exception.
-  if (Number.isNaN(ranAt.getTime())) return { lastRanAt: null, lastSweptUsers: Number(row.items) || 0, lastOk: false, hoursSinceLastRun: null };
+  if (Number.isNaN(ranAt.getTime())) return { lastRanAt: null, lastSweptUsers: Number(row.items) || 0, lastOk: false, hoursSinceLastRun: null, waitingReaders: waiting };
   return {
     lastRanAt: ranAt.toISOString(),
     lastSweptUsers: Number(row.items),
     lastOk: Boolean(row.ok),
     hoursSinceLastRun: (now.getTime() - ranAt.getTime()) / 3_600_000,
+    waitingReaders: waiting,
   };
 }
 
@@ -133,7 +145,10 @@ export async function getNotificationSweepHealth(now = new Date()): Promise<Swee
 export const SWEEP_STALE_HOURS = 48;
 
 export function isSweepHealthy(health: SweepHealth) {
-  if (health.lastRanAt === null) return false;
+  // A sweep that has never run is only a FAULT if somebody is waiting on it. On a fresh deployment
+  // with nobody subscribed to anything, nobody is being failed — and a status page that cries
+  // degraded on day one teaches its reader to stop looking, which costs more than it saves.
+  if (health.lastRanAt === null) return health.waitingReaders === 0;
   if (!health.lastOk) return false;
   return (health.hoursSinceLastRun ?? Infinity) < SWEEP_STALE_HOURS;
 }

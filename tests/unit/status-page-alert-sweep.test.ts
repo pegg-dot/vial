@@ -23,7 +23,7 @@ vi.mock("@/server/collect/metrics", async (importOriginal) => ({
 }));
 vi.mock("@/server/notifications/sweep", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/server/notifications/sweep")>()),
-  getNotificationSweepHealth: vi.fn(async () => ({ lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null })),
+  getNotificationSweepHealth: vi.fn(async () => ({ lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null, waitingReaders: 12 })),
 }));
 
 const { getNotificationSweepHealth } = await import("@/server/notifications/sweep");
@@ -54,7 +54,7 @@ describe("/status reports the alert sweep", () => {
 
   it("says so when the sweep has stopped running on schedule", async () => {
     vi.mocked(getNotificationSweepHealth).mockResolvedValueOnce({
-      lastRanAt: "2026-08-01T00:00:00.000Z", lastSweptUsers: 40, lastOk: true, hoursSinceLastRun: 200,
+      lastRanAt: "2026-08-01T00:00:00.000Z", lastSweptUsers: 40, lastOk: true, hoursSinceLastRun: 200, waitingReaders: 40,
     });
     const text = strings(await StatusPage()).join(" | ");
     expect(text).toContain("has not completed on schedule");
@@ -65,7 +65,7 @@ describe("/status reports the alert sweep", () => {
     // Zero readers is a legitimate answer on a young deployment. "Ran and found nobody" must not
     // read as an outage, or the signal becomes noise and stops being watched.
     vi.mocked(getNotificationSweepHealth).mockResolvedValueOnce({
-      lastRanAt: "2026-08-26T00:00:00.000Z", lastSweptUsers: 0, lastOk: true, hoursSinceLastRun: 2,
+      lastRanAt: "2026-08-26T00:00:00.000Z", lastSweptUsers: 0, lastOk: true, hoursSinceLastRun: 2, waitingReaders: 0,
     });
     const text = strings(await StatusPage()).join(" | ");
     expect(text).toContain("All systems operational");

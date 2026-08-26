@@ -30,7 +30,7 @@ vi.mock("@/server/collect/metrics", async (importOriginal) => ({
 vi.mock("@/server/notifications/sweep", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/server/notifications/sweep")>()),
   getNotificationSweepHealth: vi.fn(async () => ({
-    lastRanAt: "2026-08-26T00:00:00.000Z", lastSweptUsers: 31, lastOk: true, hoursSinceLastRun: 3,
+    lastRanAt: "2026-08-26T00:00:00.000Z", lastSweptUsers: 31, lastOk: true, hoursSinceLastRun: 3, waitingReaders: 31,
   })),
 }));
 

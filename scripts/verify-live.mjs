@@ -43,14 +43,29 @@ export function renderedText(html) {
     .replace(/\s+/g, " ").trim();
 }
 
+/** Titles that can follow a card on /status. Used only as terminators, never as assertions. */
+const STATUS_CARD_TITLES = ["Alerts going out", "Intelligence graph", "Refresh engine", "Catalog", "What this page covers"];
+
 /** Parse the Collectors card. Returns null when the card is absent — absent is not zero. */
 export function parseCollectors(text) {
-  const m = /Collectors\s+(\d+)\s+enabled\s+(.{0,80}?)(?:\s+Intelligence graph|$)/.exec(text);
+  const m = new RegExp(`Collectors\\s+(\\d+)\\s+enabled\\s+(.{0,120}?)(?:\\s+(?:${STATUS_CARD_TITLES.join("|")})|$)`).exec(text);
   if (!m) return null;
   const enabled = Number(m[1]);
   const rest = m[2];
   const waiting = /(\d+)\s+waiting/.exec(rest);
   return { enabled, waiting: waiting ? Number(waiting[1]) : 0, detail: rest.trim() };
+}
+
+/** Parse the "Alerts going out" card. Absent is a failure, not a zero — see the note at its use. */
+export function parseAlertSweep(text) {
+  const m = new RegExp(`Alerts going out\\s+(.{0,180}?)(?:\\s+(?:${STATUS_CARD_TITLES.filter((t) => t !== "Alerts going out").join("|")})|$)`).exec(text);
+  if (!m) return null;
+  const detail = m[1].trim();
+  return {
+    detail,
+    neverRun: /Never run/i.test(detail),
+    stopped: /has not completed on schedule|past its daily schedule|did not finish cleanly/i.test(detail),
+  };
 }
 
 export function bannerOf(text) {
@@ -74,6 +89,27 @@ function selfTest() {
   t("parseCollectors reads a real card",
     parseCollectors("Collectors 99 enabled 71 waiting · oldest 10d past due Intelligence graph 223 traces")?.waiting === 71);
   t("parseCollectors reads a zero card", parseCollectors("Collectors 0 enabled Nothing is being gathered")?.enabled === 0);
+  // The regression that produced this line: the terminator used to be the literal title of the card
+  // that happened to sit next on the page, so inserting "Alerts going out" between Collectors and
+  // Intelligence graph made the verifier report the Collectors card ABSENT — a false alarm about
+  // the one surface that makes starvation visible.
+  t("parseCollectors survives a new card being inserted after it",
+    (() => {
+      const r = parseCollectors("Collectors 99 enabled 71 waiting · oldest 10d past due Alerts going out 31 readers Last ran 3h ago");
+      return r?.waiting === 71 && !/Alerts going out/.test(r.detail);
+    })());
+
+  // parseAlertSweep must return null (not a healthy-looking object) when the card is missing.
+  t("parseAlertSweep invents a card", parseAlertSweep("Collectors 4 enabled Intelligence graph 12 traces") === null);
+  t("parseAlertSweep sees a sweep that never ran",
+    parseAlertSweep("Alerts going out Never run The nightly sweep has never run — nobody is being told anything while they are away Intelligence graph")?.neverRun === true);
+  t("parseAlertSweep sees a stopped sweep",
+    parseAlertSweep("Alerts going out 31 readers Last ran 4d ago — past its daily schedule Intelligence graph")?.stopped === true);
+  t("parseAlertSweep calls a recent tick healthy",
+    (() => { const r = parseAlertSweep("Alerts going out 31 readers Last ran 3h ago Intelligence graph"); return r !== null && !r.neverRun && !r.stopped; })());
+  // Zero readers swept is a legitimate answer on a young deployment and must not read as a fault.
+  t("parseAlertSweep does not treat zero readers as a fault",
+    (() => { const r = parseAlertSweep("Alerts going out 0 readers Last ran 2h ago Intelligence graph"); return r !== null && !r.neverRun && !r.stopped; })());
 
   t("bannerOf misses a degraded banner",
     bannerOf("Degraded — collectors are behind; waited 10d System status")?.startsWith("Degraded"));
@@ -129,6 +165,12 @@ for (const path of ["/admin", "/admin/sources", "/admin/ingest", "/admin/review"
   // ticks are not draining it, whatever the tick logs say.
   if (c && c.waiting >= 87) fail("collector backlog draining", `${c.waiting} waiting — at or above the 87 measured when the fix shipped`);
   else if (c) pass("collector backlog draining", `${c.waiting} waiting (was 87 at fix time)`);
+
+  const sweep = parseAlertSweep(text);
+  if (!sweep) fail("status: alert sweep card", "card absent — a dead notification cron would be invisible again");
+  else if (sweep.neverRun) fail("status: alert sweep", "has never run — nobody is being notified while they are away");
+  else if (sweep.stopped) fail("status: alert sweep", `card reports it stopped: ${sweep.detail}`);
+  else pass("status: alert sweep", sweep.detail);
 }
 
 // ── 4. Readiness endpoint and the page cannot disagree ──────────────────────────────────────────
