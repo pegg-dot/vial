@@ -3,7 +3,6 @@ import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import {
   getNotificationChannelPreferences,
   listFollowedListingSlugs,
-  listUserNotifications,
   setFollow,
 } from "@/server/consumer-intelligence/repository";
 import { syncWatchlistNotifications } from "@/server/consumer-intelligence/service";
