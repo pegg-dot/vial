@@ -24,9 +24,11 @@ const TIER: Record<TrustTier["tier"], { cls: string; Icon: typeof ShieldCheck }>
   none: { cls: "text-[var(--muted)]", Icon: CircleHelp },
 };
 
-function evidenceLine(tier: TrustTier, compound: Compound): string {
-  if (tier.tier === "independent" && compound.medianPurity != null) return `${tier.label} · ${compound.medianPurity.toFixed(1)}% pure`;
-  return tier.label;
+// Purity sits at the right end of the evidence line in its own slot rather than inside the label,
+// so on a 248px tile "Independently tested · 99.7% pure" cannot truncate to "99.7% …" — the label
+// gives way (it ends in an ellipsis), the number never does.
+function purityLabel(tier: TrustTier, compound: Compound): string | null {
+  return tier.tier === "independent" && compound.medianPurity != null ? `${compound.medianPurity.toFixed(1)}% pure` : null;
 }
 
 export function CompoundTickerCard({
@@ -44,6 +46,7 @@ export function CompoundTickerCard({
   const range = compoundPriceRange(compound.slug, products);
   const tier = compoundTrustTier(compound);
   const { cls, Icon } = TIER[tier.tier];
+  const purity = purityLabel(tier, compound);
 
   const body = (
     <>
@@ -76,7 +79,8 @@ export function CompoundTickerCard({
 
       <p className={`mt-3.5 flex items-center gap-1.5 border-t-2 border-[#111214]/10 pt-3 text-[12px] font-bold ${cls}`} title={tier.reasons.join(" · ")}>
         <Icon className="size-3.5 shrink-0" aria-hidden />
-        <span className="truncate">{evidenceLine(tier, compound)}</span>
+        <span className="min-w-0 flex-1 truncate">{tier.label}</span>
+        {purity && <span className="shrink-0 tabular-nums">{purity}</span>}
       </p>
     </>
   );
