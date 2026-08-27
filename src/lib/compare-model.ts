@@ -94,3 +94,40 @@ export function differingKeys(entries: CompareEntry[], dims: CompareDim[] = COMP
   }
   return out;
 }
+
+// The comparison table is capped at four columns: past that it stops being readable on any screen a
+// buyer actually has, and the per-column cells shrink to the point where the winner marking is the
+// only thing legible. The cap is real and worth keeping — but a reader who selected six listings
+// and is shown four has been told something false unless the page says so. This is the arithmetic
+// behind saying so, kept pure so the page cannot drift from it.
+export const COMPARE_LIMIT = 4;
+
+export interface ComparePlan {
+  /** The slugs that get a column, in order. */
+  shown: string[];
+  /** The slugs the reader selected that this render is NOT showing. Never silently dropped. */
+  hidden: string[];
+  truncated: boolean;
+  limit: number;
+}
+
+/**
+ * The reader's selection, ordered for display: anything they explicitly asked to see first, then
+ * the rest in selection order. Duplicates collapse (a repeated slug would render two identical
+ * columns), and a promotion for a slug no longer selected is discarded rather than resurrecting it.
+ */
+export function orderComparison(selected: string[], promoted: string[] = []): string[] {
+  const unique = [...new Set(selected)];
+  const inSet = new Set(unique);
+  const front = [...new Set(promoted)].filter((slug) => inSet.has(slug));
+  const frontSet = new Set(front);
+  return [...front, ...unique.filter((slug) => !frontSet.has(slug))];
+}
+
+/** Split an ordered selection into the columns shown and the ones held back. */
+export function planComparison(selected: string[], promoted: string[] = [], limit = COMPARE_LIMIT): ComparePlan {
+  const order = orderComparison(selected, promoted);
+  const shown = order.slice(0, Math.max(0, limit));
+  const hidden = order.slice(Math.max(0, limit));
+  return { shown, hidden, truncated: hidden.length > 0, limit };
+}

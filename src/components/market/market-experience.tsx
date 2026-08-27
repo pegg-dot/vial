@@ -2,7 +2,7 @@
 import { useMemo, useRef, useState } from "react";
 import type { CatalogSnapshot, Compound } from "@/lib/types";
 import { ProductCard } from "@/components/product-card";
-import { trending, mostVerified, bestValue, newest } from "@/lib/curation";
+import { trending, mostVerified, bestValue, newest, hasIndependentEvidence, hasPerMgPrice } from "@/lib/curation";
 import { countListingsByShelf } from "@/lib/market-taxonomy";
 import { STACKS, resolveStack, type ResolvedStack } from "@/lib/stacks";
 import { CategoryRail } from "./category-rail";
@@ -31,7 +31,15 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
   const shelfCounts = useMemo(() => countListingsByShelf(compounds, products), [compounds, products]);
   const verified = useMemo(() => mostVerified(compounds, 10), [compounds]);
   const value = useMemo(() => bestValue(products, 8), [products]);
-  const fresh = useMemo(() => newest(products.filter((p) => p.origin === "live"), 8), [products]);
+  const live = useMemo(() => products.filter((p) => p.origin === "live"), [products]);
+  const fresh = useMemo(() => newest(live, 8), [live]);
+
+  // What each row is a top OF. Counted from the same predicates the ranking uses (exported from
+  // curation.ts), never from a second filter written here, so the denominator cannot drift away
+  // from the set the row is actually drawn from. Rows below say this out loud: a top-8 rendered as
+  // if it were the whole market is a claim about the market that isn't true.
+  const verifiedTotal = useMemo(() => compounds.filter(hasIndependentEvidence).length, [compounds]);
+  const valueTotal = useMemo(() => products.filter(hasPerMgPrice).length, [products]);
   const stacks = useMemo(
     () => STACKS.map((s) => resolveStack(s, compounds)).filter((r): r is ResolvedStack => r !== null),
     [compounds],
@@ -50,7 +58,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       <CategoryRail counts={shelfCounts} activeKey={browseShelf === "all" ? null : browseShelf} onSelect={selectShelf} />
 
       {trend.length > 0 && (
-        <CollectionRow eyebrow="Most looked-up" title="Trending now" blurb="What buyers are researching most across the market right now.">
+        <CollectionRow eyebrow="Most looked-up" title="Trending now" blurb="What buyers are researching most across the market right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }} seeAllHref="/compounds" seeAllLabel="All compounds">
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[280px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} metric={{ label: "listings", value: String(c.listings) }} onQuickView={() => openRow(trend, i)} />
@@ -60,7 +68,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       )}
 
       {verified.length > 0 && (
-        <CollectionRow eyebrow="Most independent evidence" title="Independently verified" blurb="Compounds with the most third-party lab certificates on record — the strongest evidence a batch was real.">
+        <CollectionRow eyebrow="Most independent evidence" title="Independently verified" blurb="Compounds with the most third-party lab certificates on record — the strongest evidence a batch was real." extent={{ shown: verified.length, total: verifiedTotal, noun: "compounds with an independent certificate on record" }} seeAllHref="/compounds" seeAllLabel="All compounds">
           {verified.map((c, i) => (
             <div key={c.slug} className="w-[280px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} metric={{ label: "lab tests", value: String(c.coaCount) }} onQuickView={() => openRow(verified, i)} />
@@ -70,7 +78,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       )}
 
       {value.length > 0 && (
-        <CollectionRow eyebrow="Cheapest real cost" title="Lowest cost per mg" blurb="Ranked by what a milligram actually costs. Suspiciously-cheap listings are flagged, not hidden.">
+        <CollectionRow eyebrow="Cheapest real cost" title="Lowest cost per mg" blurb="Ranked by what a milligram actually costs. Suspiciously-cheap listings are flagged, not hidden." extent={{ shown: value.length, total: valueTotal, noun: "listings we can price per mg" }} seeAllHref="/market#browse" seeAllLabel="Browse every listing">
           {value.map((p) => (
             <div key={p.slug} className="w-[300px] shrink-0 snap-start">
               <ProductCard product={p} />
@@ -86,7 +94,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       )}
 
       {fresh.length > 0 && (
-        <CollectionRow eyebrow="Just added" title="New on VialGrade" blurb="The most recently checked live listings — the market history that keeps growing.">
+        <CollectionRow eyebrow="Just added" title="New on VialGrade" blurb="The most recently checked live listings — the market history that keeps growing." extent={{ shown: fresh.length, total: live.length, noun: "live listings" }} seeAllHref="/market#browse" seeAllLabel="Browse every listing">
           {fresh.map((p) => (
             <div key={p.slug} className="w-[300px] shrink-0 snap-start">
               <ProductCard product={p} />
@@ -95,7 +103,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
         </CollectionRow>
       )}
 
-      <div ref={browseRef} className="scroll-mt-24 pt-8">
+      <div id="browse" ref={browseRef} className="scroll-mt-24 pt-8">
         <div className="mb-6">
           <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#0e8f80]">Every listing</p>
           <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">Browse everything</h2>

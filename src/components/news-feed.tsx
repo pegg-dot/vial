@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, ExternalLink, Filter, Search, X } from "lucide-react";
 import {
   NEWS_TOPICS,
+  SOURCE_META,
   classifyNewsTopics,
   filterNews,
   hasActiveNewsFilters,
@@ -16,15 +17,6 @@ import {
 // whether the thread is worth following, and asks for more. Rendering all 80 at once made the page
 // a wall and gave no way to answer "has anything happened to MY vendor".
 const PAGE = 10;
-
-// Source-type honesty: government/court/trade records are primary and high-confidence; blogs/forums
-// are industry chatter and clearly marked as such so a reader weights them accordingly.
-export const SOURCE_META: Record<string, { label: string; cls: string; note: string }> = {
-  trade: { label: "Official record", cls: "bg-[#e6fbf6] text-[#0e8f80]", note: "Primary government, court, or regulatory document" },
-  news: { label: "News", cls: "bg-[#eaf3ff] text-[#2b31d8]", note: "Reported by an established news outlet" },
-  blog: { label: "Industry blog", cls: "bg-[#fff6e6] text-[#b26a00]", note: "Industry tracker/blog — not independently verified" },
-  forum: { label: "Forum", cls: "bg-[#fff6e6] text-[#b26a00]", note: "Community/forum report — treat as unconfirmed" },
-};
 
 const SOURCE_ORDER = ["trade", "news", "blog", "forum"];
 

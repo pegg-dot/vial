@@ -25,6 +25,17 @@ export interface NewsRow {
   vendor_name?: string | null;
 }
 
+// Source-type honesty: government/court/trade records are primary and high-confidence; blogs/forums
+// are industry chatter and clearly marked as such so a reader weights them accordingly. Lives here,
+// beside the topic table, because the /news feed is not the only surface that shows a news item —
+// a vendor page shows that vendor's own coverage, and both must weight a forum post identically.
+export const SOURCE_META: Record<string, { label: string; cls: string; note: string }> = {
+  trade: { label: "Official record", cls: "bg-[#e6fbf6] text-[#0e8f80]", note: "Primary government, court, or regulatory document" },
+  news: { label: "News", cls: "bg-[#eaf3ff] text-[#2b31d8]", note: "Reported by an established news outlet" },
+  blog: { label: "Industry blog", cls: "bg-[#fff6e6] text-[#b26a00]", note: "Industry tracker/blog \u2014 not independently verified" },
+  forum: { label: "Forum", cls: "bg-[#fff6e6] text-[#b26a00]", note: "Community/forum report \u2014 treat as unconfirmed" },
+};
+
 export type NewsTopicId = "recall" | "enforcement" | "lawsuit" | "vendor-exit" | "glp1" | "policy" | "contamination";
 
 export interface NewsTopic {

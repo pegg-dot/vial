@@ -14,10 +14,12 @@ import {
   saveDefaultComparison,
   setFollow,
   updateConsumerPreferences,
+  getNotificationChannelPreferences,
   updateNotificationStatus,
   upsertUserNotification,
 } from "@/server/consumer-intelligence/repository";
 import { generateMarketChangeSummary, getPersonalizedMarket, runSavedSearch } from "@/server/consumer-intelligence/service";
+import { decideDelivery } from "@/server/notifications/policy";
 
 process.env.VIALGRADE_PGLITE_MEMORY="true";
 process.env.VIALGRADE_SEED_FIXTURES="true";
@@ -88,8 +90,17 @@ describe("VIAL 3.0 consumer intelligence",()=>{
     const end=(currentMinutes+2)%1440;
     const fmt=(minutes:number)=>`${String(Math.floor(minutes/60)).padStart(2,"0")}:${String(minutes%60).padStart(2,"0")}`;
     await db.query(`UPDATE user_notification_preferences SET quiet_hours_start=$2,quiet_hours_end=$3,timezone=$4,relevance_threshold=0 WHERE user_id=$1`,[userId,fmt(start),fmt(end),timezone]);
-    await upsertUserNotification(userId,{category:"test",title:"Quiet notification",body:"Deferred by quiet hours",relevanceScore:1,dedupeKey:"quiet-hours-test"});
+
+    // 1. The policy defers, reading the same preference row the reader just set.
+    const preferences=await getNotificationChannelPreferences(userId);
+    const decision=decideDelivery({category:"price-change",source:"watchlist",relevance:1,preferences,now});
+    expect(decision.deliverAfter.getTime(),"the policy did not defer inside the reader's quiet hours").toBeGreaterThan(now.getTime()+30_000);
+    expect(decision.push,"quiet hours must withhold the push, which has no scheduler to defer to").toBe(false);
+
+    // 2. The repository stores exactly what it was given, rather than re-deciding.
+    await upsertUserNotification(userId,{category:"test",title:"Quiet notification",body:"Deferred by quiet hours",relevanceScore:1,dedupeKey:"quiet-hours-test",deliverAfter:decision.deliverAfter});
     const row=(await db.query<{deliver_after:Date|string}>(`SELECT deliver_after FROM user_notifications WHERE user_id=$1 AND dedupe_key='quiet-hours-test'`,[userId])).rows[0];
+    expect(new Date(row!.deliver_after).getTime()).toBe(decision.deliverAfter.getTime());
     expect(new Date(row!.deliver_after).getTime()).toBeGreaterThan(now.getTime()+30_000);
   });
 });

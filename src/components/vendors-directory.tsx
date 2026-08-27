@@ -1,19 +1,16 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Factory, FlaskConical, Info, ShieldAlert, ShieldCheck, Store, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Factory, Filter, FlaskConical, Info, Search, ShieldAlert, ShieldCheck, Store, TrendingDown, TrendingUp, X } from "lucide-react";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { VialGradePill } from "@/components/vial-grade-card";
 import { PRIORITIES, rankVendors, type VendorDirectoryEntry } from "@/lib/vendor-ranking";
+import { filterVendorEntries, hasActiveVendorFilters, offeredVendorKinds } from "@/lib/vendor-directory-filter";
 import { vendorClaimLabelShort } from "@/lib/vendor-copy";
 
 const PAGE = 18;
-const KINDS = [
-  { key: "all", label: "Everyone" },
-  { key: "storefront", label: "Shops you can buy from" },
-  { key: "manufacturer", label: "Upstream makers" },
-] as const;
+
 
 // One badge, tone from the composed verdict (red = avoid, amber = caution) so the directory and the
 // vendor page always agree on how serious a vendor is. Label picks the most specific known reason.
@@ -114,24 +111,35 @@ function Mini({ value, label }: { value: string; label: string }) { return <div>
 export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] }) {
   const [priority, setPriority] = useState("reliable");
   const [kind, setKind] = useState<string>("all");
+  const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(PAGE);
   const active = PRIORITIES.find((p) => p.key === priority)!;
 
-  const ranked = useMemo(() => {
-    const filtered = entries.filter((e) => kind === "all" || e.vendor.kind === kind);
-    return rankVendors(filtered, priority);
-  }, [entries, kind, priority]);
+  const filters = useMemo(() => ({ query, kind }), [query, kind]);
+  const ranked = useMemo(() => rankVendors(filterVendorEntries(entries, filters), priority), [entries, filters, priority]);
 
-  // A chip that no vendor answers to is a dead control: it empties the grid and reads as "we lost
-  // your vendors" rather than "we hold none of that kind". Keyed on `vendor.kind` exactly as the
-  // filter above is, so the number on the chip is the number of cards clicking it yields.
-  const kindCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const e of entries) counts.set(e.vendor.kind, (counts.get(e.vendor.kind) ?? 0) + 1);
-    return counts;
-  }, [entries]);
+  // Counts are taken over the WHOLE directory, not the current results, so a chip's number never
+  // shifts under the pointer. `offeredVendorKinds` drops any kind that matches nothing (a dead
+  // control that empties the grid and reads as "we lost your vendors") and any kind that matches
+  // everything (a button whose only effect is to redraw the same page).
+  const kindOptions = useMemo(() => offeredVendorKinds(entries), [entries]);
 
+  // Every filter change re-pages from the top. Done in the mutators rather than an effect so the
+  // reset lands in the same render as the filter change — leaving `visible` where it was would
+  // silently show a reader the 40th match of a fresh search. (This repo's eslint bans
+  // setState-in-effect, and it is right to.)
+  function applyQuery(next: string) { setQuery(next); setVisible(PAGE); }
+  function applyKind(next: string) { setKind(next); setVisible(PAGE); }
+  function applyPriority(next: string) { setPriority(next); setVisible(PAGE); }
+
+  const filtered = hasActiveVendorFilters(filters);
   const shown = ranked.slice(0, visible);
+
+  function reset() {
+    setQuery("");
+    setKind("all");
+    setVisible(PAGE);
+  }
 
   return (
     <div>
@@ -140,13 +148,13 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
         <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#39414e]">What matters most to you?</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {PRIORITIES.map((p) => (
-            <button key={p.key} type="button" onClick={() => { setPriority(p.key); setVisible(PAGE); }} aria-pressed={priority === p.key}
+            <button key={p.key} type="button" onClick={() => applyPriority(p.key)} aria-pressed={priority === p.key}
               className={`ink-1 press rounded-full px-4 py-2.5 text-sm font-bold transition ${priority === p.key ? "bg-[#111214] text-white" : "bg-white text-[#111214]"}`}>
               {p.label}
             </button>
           ))}
         </div>
-        <p className="mt-4 text-lg font-extrabold tracking-[-.02em]">“{active.question}”</p>
+        <p className="mt-4 text-lg font-extrabold tracking-[-.02em]">&ldquo;{active.question}&rdquo;</p>
         <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">{active.blurb}</p>
       </div>
 
@@ -155,33 +163,84 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
         <div className="ink-1 mt-4 flex items-start gap-3 rounded-[16px] bg-[#eef0ff] p-4">
           <Info className="mt-0.5 size-4 shrink-0 text-[#2b31d8]" />
           <p className="text-[13px] font-medium leading-6 text-[#111214]">
-            <span className="font-extrabold">New to this?</span> Three rules: a vendor should show a batch-matched third-party lab certificate (not their own claim); a price far below everyone else is a warning, not a deal; and these are sold research-use-only — no pharmacist or clinician stands behind them. Rankings use verifiable facts only, never who a product is “for.”
+            <span className="font-extrabold">New to this?</span> Three rules: a vendor should show a batch-matched third-party lab certificate (not their own claim); a price far below everyone else is a warning, not a deal; and these are sold research-use-only &mdash; no pharmacist or clinician stands behind them. Rankings use verifiable facts only, never who a product is &ldquo;for.&rdquo;
           </p>
         </div>
       )}
 
+      {/* Keyword search. A buyer who arrives knowing the name — from a forum, a friend, a receipt —
+          was previously made to page through the directory 18 at a time to answer "is this the one
+          that scams people?", which is the question this page is headlined with. */}
+      <div className="mt-6 flex items-center gap-3 rounded-[14px] border-[1.5px] border-[#111214] bg-white px-4 py-3 focus-within:shadow-[3px_3px_0_#39414e]">
+        <Search className="size-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+        <input
+          value={query}
+          onChange={(event) => applyQuery(event.target.value)}
+          placeholder="Search a vendor by name or where it ships from"
+          aria-label="Search vendors"
+          className="min-w-0 flex-1 bg-transparent text-[15px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--muted)]"
+        />
+        {query && (
+          <button type="button" onClick={() => applyQuery("")} aria-label="Clear search" className="ink-1 rounded-full bg-white p-1.5 text-[var(--muted)] transition hover:text-[#111214]">
+            <X className="size-3.5" />
+          </button>
+        )}
+      </div>
+      <p className="mt-2 text-[11px] font-medium text-[var(--muted)]">
+        Names match with or without their spacing &mdash; &ldquo;swisschems&rdquo; finds Swiss Chems. Search does not read vendor marketing copy, only the name, the URL, and the stated location.
+      </p>
+
       {/* Kind filter + count */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {/* "Everyone" always renders — it is the only way back to the unfiltered directory. */}
-          {KINDS.filter((k) => k.key === "all" || (kindCounts.get(k.key) ?? 0) > 0).map((k) => (
-            <button key={k.key} type="button" onClick={() => { setKind(k.key); setVisible(PAGE); }} aria-pressed={kind === k.key}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${kind === k.key ? "ink-1 bg-[#39414e] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
-              {k.key === "storefront" ? <Store className="size-3.5" /> : k.key === "manufacturer" ? <Factory className="size-3.5" /> : null}{k.label}
-              {k.key !== "all" && <span className="tabular-nums opacity-60">{kindCounts.get(k.key)}</span>}
+          <button type="button" onClick={() => applyKind("all")} aria-pressed={kind === "all"}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${kind === "all" ? "ink-1 bg-[#39414e] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
+            Everyone
+          </button>
+          {kindOptions.map((option) => (
+            <button key={option.id} type="button" onClick={() => applyKind(option.id)} aria-pressed={kind === option.id} title={option.note}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${kind === option.id ? "ink-1 bg-[#39414e] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
+              {option.id === "storefront" ? <Store className="size-3.5" /> : <Factory className="size-3.5" />}{option.label}
+              <span className="tabular-nums opacity-60">{option.count}</span>
             </button>
           ))}
         </div>
-        <p className="text-sm font-medium text-[var(--muted)]"><span className="font-extrabold text-black">{ranked.length}</span> vendors</p>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* The bare "N vendors" stays its own element: it is the honest headline count, and the
+              "of N" qualifier sits beside it rather than inside it. */}
+          <p className="text-sm font-medium text-[var(--muted)]">
+            <span data-testid="vendor-count"><span className="font-extrabold text-black tabular-nums">{ranked.length}</span> vendor{ranked.length === 1 ? "" : "s"}</span>
+            {filtered && <span className="tabular-nums"> of {entries.length}</span>}
+          </p>
+          {filtered && (
+            <button type="button" onClick={reset} className="ink-1 press inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold">
+              <Filter className="size-3" /> Clear filters
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {shown.map((entry, i) => <VendorRankCard key={entry.vendor.slug} entry={entry} priority={priority} rank={i + 1} />)}
-      </div>
-      {ranked.length > visible && (
-        <div className="mt-8 flex justify-center">
-          <button onClick={() => setVisible((v) => v + PAGE)} className="ink hard press rounded-full bg-white px-6 py-3 text-sm font-bold">Show {Math.min(PAGE, ranked.length - visible)} more</button>
+      {ranked.length === 0 ? (
+        <div className="ink hard mt-5 rounded-[20px] bg-white px-6 py-16 text-center">
+          <p className="text-lg font-extrabold">No vendor on record matches that.</p>
+          <p className="mx-auto mt-2 max-w-md text-sm font-medium leading-6 text-[var(--muted)]">
+            We only list sellers we hold a record for, so the directory is deliberately narrower than the market. Finding nothing here is a fact about our coverage, not a verdict on the vendor.
+          </p>
+          <button type="button" onClick={reset} className="ink hard-sm press mt-6 rounded-full bg-[#111214] px-5 py-2.5 text-sm font-bold text-white">Clear filters</button>
         </div>
+      ) : (
+        <>
+          <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {shown.map((entry, i) => <VendorRankCard key={entry.vendor.slug} entry={entry} priority={priority} rank={i + 1} />)}
+          </div>
+          {ranked.length > visible && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <button onClick={() => setVisible((v) => v + PAGE)} className="ink hard press rounded-full bg-white px-6 py-3 text-sm font-bold">Show {Math.min(PAGE, ranked.length - visible)} more</button>
+              <p className="text-xs font-medium tabular-nums text-[var(--muted)]">Showing {shown.length} of {ranked.length}</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

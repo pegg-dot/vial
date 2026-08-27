@@ -48,6 +48,22 @@ const RULES: Rule[] = [
     table: "operational_metric_snapshots", column: "observed_at", days: 30,
     why: "Pre-existing rule, kept here so every retention decision is visible in one place.",
   },
+  {
+    table: "market_change_summaries", column: "generated_at", days: 90,
+    why:
+      "One row per reader per sweep, forever. The dedupe key embeds the period end, so a scheduled " +
+      "sweep running four times a day mints a fresh key every day and the ON CONFLICT never fires. " +
+      "/for-you only ever reads the most recent few, so a summary from three months ago is a row " +
+      "nobody will read again — and before the cron existed this table only grew on a page load.",
+  },
+  {
+    table: "user_notifications", column: "created_at", days: 180,
+    // Deliberately longer than the summaries: this IS the reader's history, and the relevance
+    // threshold filters it at READ time so lowering the slider is expected to bring old rows back.
+    // Six months is the point past which "bring it back" stops being a real request.
+    why: "The reader's own alert history. Kept long because the relevance filter is applied on read, so old rows must survive a threshold change.",
+    where: "status = 'dismissed' OR read_at IS NOT NULL",
+  },
 ];
 
 export interface RetentionResult { table: string; deleted: number; days: number }

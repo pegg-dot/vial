@@ -12,8 +12,10 @@ import type { SqlConnection } from "@/server/db/client";
 import { getDatabase } from "@/server/db/client";
 import { searchMarket } from "@/server/search/engine";
 import { decideDelivery, type NotificationPreferences } from "./policy";
+import { sendPushToUser } from "@/server/push/delivery";
 import {
   getNotificationChannelPreferences,
+  markNotificationPushed,
   listSavedSearches,
   updateSavedSearchResult,
   upsertUserNotification,
@@ -127,23 +129,37 @@ export async function runSavedSearchAlerts(
     // report "no change" for a search that went from 40 matches to 400.
     const currentCount = result.totalMatches;
     const previousCount = saved.lastRunAt ? saved.lastResultCount : null;
-    await updateSavedSearchResult(userId, saved.id, currentCount, db);
 
-    if (!shouldAlertOnResultChange({ mode, previousCount, currentCount })) continue;
+    if (!shouldAlertOnResultChange({ mode, previousCount, currentCount })) {
+      await updateSavedSearchResult(userId, saved.id, currentCount, db);
+      continue;
+    }
 
     const copy = describeResultChange({ name: saved.name, previousCount: previousCount!, currentCount });
     const decision = decideDelivery({ category: null, source: "saved-search", relevance: 0.7, preferences, now });
-    if (!decision.inApp) continue;
-    await upsertUserNotification(userId, {
+    if (!decision.inApp) {
+      await updateSavedSearchResult(userId, saved.id, currentCount, db);
+      continue;
+    }
+    // One notification per search per day, so a search that churns cannot flood the inbox.
+    const dedupeKey = `saved-search:${saved.id}:${now.toISOString().slice(0, 10)}`;
+    const written = await upsertUserNotification(userId, {
       category: "saved-search",
       title: copy.title,
       body: copy.body,
       actionHref: `/saved-searches`,
       relevanceScore: 0.7,
-      // One notification per search per day, so a search that churns cannot flood the inbox.
-      dedupeKey: `saved-search:${saved.id}:${now.toISOString().slice(0, 10)}`,
+      dedupeKey,
       deliverAfter: decision.deliverAfter,
     }, db);
+    // Only now is it true that the reader has been told, so only now may the baseline move.
+    await updateSavedSearchResult(userId, saved.id, currentCount, db);
+    if (decision.push && !written.alreadyPushed) {
+      try {
+        await sendPushToUser(userId, { title: copy.title, body: copy.body, url: "/saved-searches", tag: dedupeKey });
+        await markNotificationPushed(userId, dedupeKey, db);
+      } catch { /* best-effort: a push failure must never cost the inbox row */ }
+    }
     alerted += 1;
   }
 

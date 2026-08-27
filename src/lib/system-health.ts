@@ -15,7 +15,7 @@ export interface SystemHealthInputs {
   collectors: { enabled: number; overdue: number; failing: number; oldestOverdueMinutes: number | null; keepingUp: boolean } | null;
   refresh: { enabled: number; failed: number; worstLateness: number | null; behind: boolean } | null;
   intelligenceReporting: boolean;
-  sweep: { lastRanAt: string | null; lastOk: boolean; backlogReaders: number; healthy: boolean; keepingUp: boolean } | null;
+  sweep: { lastRanAt: string | null; lastOk: boolean; backlogReaders: number | null; healthy: boolean; keepingUp: boolean } | null;
 }
 
 export interface SystemHealth {
@@ -63,7 +63,11 @@ export function deriveSystemHealth(input: SystemHealthInputs): SystemHealth {
   // Not a fault, and it must not be phrased as one: the sweep ran, succeeded, and is simply too
   // small for the number of readers now subscribed. The honest complaint is coverage.
   if (!sweep.keepingUp) {
-    return degraded(`Degraded — the alert sweep is behind; ${sweep.backlogReaders} subscribed readers were not reached on its last tick`);
+    return degraded(
+      sweep.backlogReaders === null
+        ? "Degraded — the alert sweep is behind, and the number of readers waiting could not be read"
+        : `Degraded — the alert sweep is behind; ${sweep.backlogReaders} subscribed readers were not reached on its last tick`,
+    );
   }
   return { level: "operational", headline: "All systems operational" };
 }

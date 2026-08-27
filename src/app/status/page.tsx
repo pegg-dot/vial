@@ -141,7 +141,7 @@ export default async function StatusPage() {
                     ? `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago — past its daily schedule`
                     // A backlog is what a budget stop actually costs, so it is said as a number of
                     // people rather than hidden inside a red mark on a tick that did its job.
-                    : sweep.backlogReaders > 0
+                    : (sweep.backlogReaders ?? 0) > 0
                       ? `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago · ${sweep.backlogReaders} readers queued for the next tick`
                       : `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
           }

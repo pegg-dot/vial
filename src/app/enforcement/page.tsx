@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { enforcementEmptyState } from "@/lib/enforcement-copy";
 import Link from "next/link";
-import { Gavel, ExternalLink, ShieldAlert, Landmark, Scale } from "lucide-react";
+import { Gavel, ExternalLink, ShieldAlert, Landmark, Scale, Search, X } from "lucide-react";
 import { listEnforcementPage, getRegulatoryStats, type EnforcementFilter } from "@/server/regulatory/repository";
 import { DataUnavailable } from "@/components/home-data-unavailable";
 import { reportError } from "@/server/observability/alerts";
@@ -18,15 +18,18 @@ const FILTERS: { key: EnforcementFilter; label: string }[] = [
   { key: "all", label: "Everything on record" },
 ];
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ filter?: string; page?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ filter?: string; page?: string; q?: string }> }) {
   const sp = await searchParams;
   // Default to the records that touch a vendor a buyer might actually use. The openFDA feed is
   // mostly recalls naming companies we do not track — real, but not what someone is here for.
   const requested: EnforcementFilter = sp.filter === "all" ? "all" : sp.filter === "severe" ? "severe" : "matched";
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
+  // Capped before it reaches SQL: a search box is not a place to accept unbounded input, and no
+  // real company name is 120 characters long.
+  const q = (sp.q ?? "").trim().slice(0, 120);
   const perPage = 50;
   const loaded = await Promise.all([
-    listEnforcementPage({ filter: requested, page, perPage }),
+    listEnforcementPage({ filter: requested, page, perPage, q }),
     getRegulatoryStats(),
   ]).catch((error) => {
     reportError({ kind: "enforcement-unavailable", message: "The enforcement record could not be read.", context: { error: String(error) } });
@@ -37,17 +40,23 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
   const [, stats] = loaded;
   // The default filter can be dead on arrival: a corpus of only unmatched openFDA recalls means
   // "matched" is empty, and the landing page was then blank while "Everything on record" had
-  // content. Only falls back when the reader did NOT choose the filter themselves.
-  const fellBack = !sp.filter && feed.total === 0 && stats.total > 0;
-  if (fellBack) feed = await listEnforcementPage({ filter: "all", page: 1, perPage });
+  // content. Only falls back when the reader did NOT choose the filter themselves. The search is
+  // carried through the fallback — it is the reader's own input, not a default we picked.
+  const fellBack = !sp.filter && feed.total === 0 && feed.all > 0;
+  if (fellBack) feed = await listEnforcementPage({ filter: "all", page: 1, perPage, q });
   const filter: EnforcementFilter = fellBack ? "all" : requested;
   const actions = feed.items;
   const pages = Math.max(1, Math.ceil(feed.total / perPage));
   const from = feed.total === 0 ? 0 : (page - 1) * perPage + 1;
   const to = Math.min(page * perPage, feed.total);
-  const href = (f: EnforcementFilter, p: number) => `/enforcement?filter=${f}${p > 1 ? `&page=${p}` : ""}`;
+  const href = (f: EnforcementFilter, p: number, term = q) =>
+    `/enforcement?filter=${f}${p > 1 ? `&page=${p}` : ""}${term ? `&q=${encodeURIComponent(term)}` : ""}`;
   // One decision, used by both the count line and the empty block — they used to disagree.
   const empty = enforcementEmptyState({ corpusTotal: stats.total, filteredTotal: feed.total });
+  // A search that returns nothing is NOT the same statement as a filter that returns nothing: it
+  // is a claim about one named company. It gets its own sentence, and the corpus-empty case still
+  // wins over both, because that is the only case entitled to talk about the corpus.
+  const searchEmpty = Boolean(q) && feed.total === 0 && stats.total > 0;
   return <div>
     <section className="border-b-2 border-[#111214]"><div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24">
       <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#d3372c]">Enforcement record</p>
@@ -61,9 +70,39 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
       </div>
     </div></section>
     <section className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
+      {/* The single most likely reason to open this page is one company name. Searched server-side
+          against the same query that pages the list, so the count under it is the real count and
+          not a count of one page. A plain GET form: this page is a server component, and the
+          filtering it already does is URL-driven. */}
+      <form method="get" action="/enforcement" role="search" className="mb-5">
+        <input type="hidden" name="filter" value={filter} />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="ink-1 flex min-w-0 flex-1 items-center gap-3 rounded-[14px] bg-white px-4 py-3 focus-within:shadow-[3px_3px_0_#d3372c]">
+            <Search className="size-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={q}
+              maxLength={120}
+              placeholder="Search a company or the title of an action"
+              aria-label="Search the enforcement record"
+              className="min-w-0 flex-1 bg-transparent text-[15px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--muted)]"
+            />
+            {q && (
+              <Link href={href(filter, 1, "")} aria-label="Clear search" className="ink-1 rounded-full bg-white p-1.5 text-[var(--muted)] transition hover:text-[#111214]">
+                <X className="size-3.5" />
+              </Link>
+            )}
+          </div>
+          <button type="submit" className="ink hard-sm press rounded-full bg-[#111214] px-5 py-3 text-sm font-bold text-white">Search the record</button>
+        </div>
+        <p className="mt-2 text-[11px] font-medium text-[var(--muted)]">Matches the company as the agency named it, the company as we know it, and the title of the action. A company that is absent from this record has not been cleared &mdash; it has not been acted against in the records we hold.</p>
+      </form>
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => {
-          const count = f.key === "matched" ? feed.matched : f.key === "severe" ? feed.severe : stats.total;
+          // Every chip's number is scoped to the active search, so it is exactly what clicking it
+          // returns. A whole-corpus number beside a search would send a reader to an empty page.
+          const count = f.key === "matched" ? feed.matched : f.key === "severe" ? feed.severe : feed.all;
           const active = f.key === filter;
           return <Link key={f.key} href={href(f.key, 1)} className={`ink-1 press rounded-full px-4 py-2 text-sm font-bold ${active ? "bg-[#111214] text-white" : "bg-white"}`}>
             {f.key === "matched" ? "Affects a vendor we track" : f.key === "severe" ? "Proven & severe" : "Everything on record"} <span className={active ? "text-white/60" : "text-[var(--muted)]"}>{count}</span>
@@ -71,7 +110,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
         })}
       </div>
       <p className="mt-4 text-sm font-medium text-[var(--muted)]">
-        {empty.kind === "results" ? <>Showing {from}&ndash;{to} of {feed.total}.</> : empty.kind === "filter-empty" ? empty.message : ""}
+        {empty.kind === "results"
+          ? <>Showing {from}&ndash;{to} of {feed.total}{q ? <> matching &ldquo;{q}&rdquo;</> : null}.</>
+          : searchEmpty ? <>Nothing on record names &ldquo;{q}&rdquo;{filter === "all" ? "" : " under this filter"}.</>
+          : empty.kind === "filter-empty" ? empty.message : ""}
       </p>
       <div className="mt-6 space-y-3">{actions.map((a) => {
         const severe = a.severity === "severe";
@@ -89,7 +131,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
         </div>;
       })}</div>
       {empty.kind === "corpus-empty" && <p className="text-sm font-medium text-[var(--muted)]">{empty.message}</p>}
-      {empty.kind === "filter-empty" && <p className="text-sm font-medium text-[var(--muted)]">{empty.message} <Link href={href("all", 1)} className="font-bold text-[#111214] underline underline-offset-2">See everything on record</Link>.</p>}
+      {searchEmpty && <p className="text-sm font-medium text-[var(--muted)]">No public record we hold names &ldquo;{q}&rdquo;. That is a statement about the records we have gathered, not a clearance of the company. <Link href={href("all", 1, "")} className="font-bold text-[#111214] underline underline-offset-2">Clear the search</Link>.</p>}
+      {!searchEmpty && empty.kind === "filter-empty" && <p className="text-sm font-medium text-[var(--muted)]">{empty.message} <Link href={href("all", 1)} className="font-bold text-[#111214] underline underline-offset-2">See everything on record</Link>.</p>}
       <div className="ink mt-10 rounded-[20px] bg-[#111214] p-7 text-white shadow-[5px_5px_0_0_#d3372c]"><Scale className="size-5 text-[#ff9b8f]" />
         <h2 className="mt-5 text-2xl font-extrabold">A record is a fact, not a verdict on the product.</h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">An FDA warning letter usually means a seller marketed unapproved drugs &mdash; it doesn&rsquo;t always mean the specific product you&rsquo;re looking at is impure. We show the record and the source so you can judge; we distinguish a proven criminal outcome from a mere charge, and a warning letter from a conviction. We never infer guilt VialGrade cannot source.</p>

@@ -109,8 +109,3 @@ export async function getCompoundRegulatory(compoundSlug: string, connection?: S
   return (await db.query<{ regulatory_status: string | null; evidence_summary: string | null; fda_approved_drug_exists: boolean | null }>(`SELECT regulatory_status, evidence_summary, fda_approved_drug_exists FROM compounds WHERE slug=$1`, [compoundSlug])).rows[0] ?? null;
 }
 
-// ── Cross-vendor / market-wide reads (for the news feed) ─────────────────────────────────────────
-export async function listAllOffers(connection?: SqlConnection): Promise<Array<VendorOffer & { vendor_name: string | null }>> {
-  const db = connection ?? (await getDatabase());
-  return (await db.query<VendorOffer & { vendor_name: string | null }>(`SELECT vo.vendor_slug, vo.code, vo.description, vo.discount_pct, vo.free_shipping_threshold, vo.source_url, vo.seen_on_vendor_site, o.display_name vendor_name FROM vendor_offers vo LEFT JOIN organizations o ON o.slug=vo.vendor_slug ORDER BY vo.discount_pct DESC NULLS LAST`)).rows;
-}

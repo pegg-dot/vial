@@ -152,6 +152,21 @@ function haystack(row: PassportRow) {
 const collapse = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 /**
+ * The words a reader typed, in the order they typed them.
+ *
+ * A search is not one string to find, it is a set of things the record has to be. "northstar bpc"
+ * used to return nothing: the haystack joins vendor_name, vendor_slug and product_name in that
+ * order, so the vendor SLUG sat between the two words the reader had put side by side, and a
+ * substring test could never bridge it. Everything a person knows a batch by lives in a different
+ * column — the seller in one, the product in another — so the interesting queries are exactly the
+ * ones that span columns, and those were the ones that failed.
+ *
+ * Each word must appear SOMEWHERE in the record (an AND across words), which is what makes typing
+ * a second word narrow the result the way a reader expects, rather than widen it or empty it.
+ */
+const words = (query: string) => query.split(/\s+/).filter(Boolean);
+
+/**
  * A batch code is transcribed off a vial label or a COA, so a reader will not reproduce its
  * punctuation reliably. Codes and slugs therefore also match with separators removed. This is
  * deliberately NOT applied to the whole haystack: collapsing the joined fields would run words
@@ -170,6 +185,7 @@ function codeMatch(row: PassportRow, collapsedQuery: string) {
  */
 export function filterPassports(rows: PassportRow[], filters: PassportFilters): PassportRow[] {
   const query = filters.query?.trim().toLowerCase() ?? "";
+  const queryWords = words(query);
   const collapsedQuery = collapse(query);
   const origins = filters.origins ?? [];
   const evidence = filters.evidence ?? [];
@@ -179,7 +195,11 @@ export function filterPassports(rows: PassportRow[], filters: PassportFilters): 
   return rows.filter((row) => {
     if (originFacets.length && !originFacets.some((facet) => facet.match(row))) return false;
     if (evidenceFacets.length && !evidenceFacets.some((facet) => facet.match(row))) return false;
-    if (query && !haystack(row).includes(query) && !codeMatch(row, collapsedQuery)) return false;
-    return true;
+    if (!query) return true;
+    // Either every word is somewhere in the record, or the whole query collapses onto a batch code
+    // or slug. The second path stays whole-query on purpose: a batch code is one token to a reader
+    // even when they type it with spaces, and splitting it would match three unrelated fragments.
+    const text = haystack(row);
+    return queryWords.every((word) => text.includes(word)) || codeMatch(row, collapsedQuery);
   });
 }

@@ -39,10 +39,11 @@ import { VendorReviewsPanel } from "@/components/vendor-reviews-panel";
 import { getVendorReview } from "@/server/verify/vendor-reviews";
 import { VendorStatusBanner } from "@/components/vendor-status-banner";
 import { getVendorStatus } from "@/server/verify/vendor-status";
-import { getVendorAggregatorRatings, getVendorSignals, getVendorOffers } from "@/server/external/repository";
+import { getVendorAggregatorRatings, getVendorSignals, getVendorOffers, getVendorNews } from "@/server/external/repository";
 import { AggregatorRatingsPanel } from "@/components/aggregator-ratings-panel";
 import { VendorSignalsPanel } from "@/components/vendor-signals-panel";
 import { VendorOffersPanel } from "@/components/vendor-offers-panel";
+import { VendorNewsPanel } from "@/components/vendor-news-panel";
 import { SectionHead, JumpNav } from "@/components/vendor-report-chrome";
 import { JsonLd } from "@/components/json-ld";
 import { vendorSchema } from "@/lib/structured-data";
@@ -115,8 +116,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 // derived from a cookie would serve one visitor's session state to another.
 const loadVendorPublicData = unstable_cache(
   async (slug: string) => {
-    const [listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers] = await Promise.all([getProductsByVendorSlug(slug), getCatalogSnapshot(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db)), getDatabase().then((db) => getVendorAggregatorRatings(slug, db)), getDatabase().then((db) => getVendorSignals(slug, db)), getDatabase().then((db) => getVendorOffers(slug, db))]);
-    return { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers };
+    const [listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers, vendorNews] = await Promise.all([getProductsByVendorSlug(slug), getCatalogSnapshot(), getVendorReputationBySlug(slug), getDatabase().then((db) => getStoredCommunitySignal(db, slug)), getDatabase().then((db) => getLabTestsForVendor(db, slug, 24)), getDatabase().then((db) => getVendorFlags(db, slug)), getDatabase().then((db) => getVendorLinks(db, slug)), getDatabase().then((db) => getVendorReview(db, slug)), getDatabase().then((db) => getVendorStatus(db, slug)), getDatabase().then((db) => getVendorRegulatoryActions(slug, db)), getDatabase().then((db) => getVendorAggregatorRatings(slug, db)), getDatabase().then((db) => getVendorSignals(slug, db)), getDatabase().then((db) => getVendorOffers(slug, db)), getDatabase().then((db) => getVendorNews(slug, db))]);
+    return { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers, vendorNews };
   },
   ["vendor-page"],
   { tags: [CATALOG_CACHE_TAG], revalidate: 21600 },
@@ -127,7 +128,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
   const [publicData, principal] = await Promise.all([loadVendorPublicData(slug), getCurrentPrincipal()]);
-  const { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers } = publicData;
+  const { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers, vendorNews } = publicData;
   // How this vendor's per-mg pricing sits against the market (the "are they a good deal?" stat).
   const priceIndex = vendorPriceIndex(listings, catalog.products);
   // Best value first — same market-consistent ordering as the rest of the app.
@@ -238,6 +239,9 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
     { id: "signals", label: "Storefront" },
     { id: "reviews", label: "Buyers" },
     { id: "enforcement", label: "Regulators" },
+    // Conditional for the same reason the alert chip is: most vendors have no coverage on file, and
+    // a chip that scrolls to nothing is worse than no chip.
+    vendorNews.length > 0 ? { id: "news", label: "In the news" } : null,
     { id: "network", label: "Who owns it" },
     { id: "catalog", label: "Catalog" },
     { id: "history", label: "History" },
@@ -467,6 +471,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         )}
       </section>
 
+      <VendorNewsPanel items={vendorNews} vendorName={vendor.name} vendorSlug={vendor.slug} />
       {vendorOffers.length > 0 && <VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} />}
       <div id="network" className="scroll-mt-24"><VendorLinksPanel links={vendorLinks} vendorName={vendor.name} /></div>
 

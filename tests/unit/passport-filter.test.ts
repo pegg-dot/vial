@@ -37,6 +37,9 @@ const CORPUS: PassportRow[] = [
   row({ id: "c", slug: "jn-sema-9931", declared_batch_code: "JN/SEMA/9931", sampling_level: "S2", origin: "live", evidence_links: "3", open_conflicts: "0", vendor_name: "Nordic Peptides", vendor_slug: "nordic-peptides", compound_name: "Semaglutide", compound_slug: "semaglutide", product_name: null }),
   row({ id: "d", slug: "jn-reta-4402", declared_batch_code: "RETA4402", sampling_level: "S4", origin: "live", evidence_links: "0", open_conflicts: "2", vendor_name: null, vendor_slug: null, compound_name: "Retatrutide", compound_slug: "retatrutide", product_name: null }),
   row({ id: "e", slug: "jn-ipa-7715", declared_batch_code: "IPA-7715", sampling_level: "D0", origin: "live", evidence_links: 1, open_conflicts: 0, vendor_name: "Coastal Research", vendor_slug: "coastal-research", compound_name: "Ipamorelin", compound_slug: "ipamorelin", product_name: null }),
+  // The shape the substring search could not answer: the reader knows the SELLER and the PRODUCT,
+  // and those live in two columns with a third (the vendor slug) joined between them.
+  row({ id: "f", slug: "ns-bpc-3310", declared_batch_code: "NS-BPC-3310", sampling_level: "S2", origin: "live", evidence_links: 1, open_conflicts: 0, vendor_name: "Northstar Peptides", vendor_slug: "northstar-peptides-labs", compound_name: "BPC-157", compound_slug: "bpc-157", product_name: "BPC-157 10mg" }),
 ];
 
 describe("filterPassports", () => {
@@ -75,13 +78,56 @@ describe("filterPassports", () => {
     expect(filterPassports(CORPUS, { query: "///" })).toEqual([]);
   });
 
+  // THE BUG. `haystack` joins the fields in a fixed order — declared_batch_code, vendor_name,
+  // vendor_slug, product_name, ... — so a reader who typed the two things they actually know, the
+  // seller and the product, was searching for a string that only exists if the vendor slug happens
+  // to fall between them. "northstar bpc" returned nothing while the row was sitting right there.
+  it("matches a query whose words live in different columns", () => {
+    expect(filterPassports(CORPUS, { query: "northstar bpc" }).map((r) => r.id)).toEqual(["f"]);
+    expect(filterPassports(CORPUS, { query: "bpc northstar" }).map((r) => r.id)).toEqual(["f"]);
+    expect(filterPassports(CORPUS, { query: "helix tb-500" }).map((r) => r.id)).toEqual(["b"]);
+  });
+
+  it("narrows as words are added, never widens", () => {
+    // Every word must be somewhere in the record. Adding one can only remove rows — the opposite
+    // behaviour (an OR across words) would make a longer, more specific query return MORE.
+    const one = filterPassports(CORPUS, { query: "bpc" }).map((r) => r.id);
+    const two = filterPassports(CORPUS, { query: "bpc northstar" }).map((r) => r.id);
+    expect(one).toEqual(["a", "f"]);
+    expect(two.length).toBeLessThan(one.length);
+    for (const id of two) expect(one).toContain(id);
+  });
+
+  it("returns nothing when only one of the words is on the record", () => {
+    expect(filterPassports(CORPUS, { query: "northstar retatrutide" })).toEqual([]);
+    expect(filterPassports(CORPUS, { query: "helix semaglutide" })).toEqual([]);
+  });
+
+  it("collapses extra whitespace between words rather than searching for it", () => {
+    expect(filterPassports(CORPUS, { query: "  northstar   bpc  " }).map((r) => r.id)).toEqual(["f"]);
+  });
+
+  // The word-splitting must not weaken the two behaviours that were already deliberate.
+  it("still collapses a spaced-out batch code onto the code itself", () => {
+    // "hx bpc 2607" is one transcribed code, not three search words — and it must still land on
+    // exactly the batch that carries it, not on every row containing "bpc".
+    expect(filterPassports(CORPUS, { query: "hx bpc 2607" }).map((r) => r.id)).toEqual(["a"]);
+    expect(filterPassports(CORPUS, { query: "jn sema 9931" }).map((r) => r.id)).toEqual(["c"]);
+    expect(filterPassports(CORPUS, { query: "ns bpc 3310" }).map((r) => r.id)).toEqual(["f"]);
+  });
+
+  it("still refuses a punctuation-only query, whatever its word count", () => {
+    expect(filterPassports(CORPUS, { query: "/// ///" })).toEqual([]);
+    expect(filterPassports(CORPUS, { query: "??? !!!" })).toEqual([]);
+  });
+
   it("filters by origin", () => {
-    expect(filterPassports(CORPUS, { origins: ["live"] }).map((r) => r.id)).toEqual(["c", "d", "e"]);
+    expect(filterPassports(CORPUS, { origins: ["live"] }).map((r) => r.id)).toEqual(["c", "d", "e", "f"]);
     expect(filterPassports(CORPUS, { origins: ["demo"] }).map((r) => r.id)).toEqual(["a", "b"]);
   });
 
   it("unions the selected chips inside one dimension", () => {
-    expect(filterPassports(CORPUS, { origins: ["live", "demo"] }).map((r) => r.id)).toEqual(["a", "b", "c", "d", "e"]);
+    expect(filterPassports(CORPUS, { origins: ["live", "demo"] }).map((r) => r.id)).toEqual(["a", "b", "c", "d", "e", "f"]);
   });
 
   it("filters to passports whose results still disagree", () => {

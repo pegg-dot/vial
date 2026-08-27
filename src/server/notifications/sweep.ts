@@ -191,14 +191,19 @@ export interface SweepHealth {
   /** Whether the last tick FAILED. A tick that stopped on its budget is not a failure. */
   lastOk: boolean;
   hoursSinceLastRun: number | null;
-  /** Readers currently subscribed to something. Nobody waiting means nobody is being failed. */
-  waitingReaders: number;
+  /**
+   * Readers currently subscribed to something. Nobody waiting means nobody is being failed.
+   * Null when the count could not be read — which is not the same as zero, and must not be
+   * treated as the reassuring answer.
+   */
+  waitingReaders: number | null;
   /**
    * Subscribed readers the last tick did not reach — its cost, stated as coverage rather than as a
    * fault. A sweep can be perfectly healthy and still be too small for its audience, and those are
    * different problems that need different words.
    */
-  backlogReaders: number;
+  /** Readers NOT reached on the last tick. Null when the waiting count could not be read. */
+  backlogReaders: number | null;
 }
 
 /**
@@ -220,7 +225,7 @@ export async function getNotificationSweepHealth(now = new Date()): Promise<Swee
          EXISTS (SELECT 1 FROM user_watchlists w WHERE w.user_id=u.id)
          OR EXISTS (SELECT 1 FROM entity_follows f WHERE f.user_id=u.id)
          OR EXISTS (SELECT 1 FROM saved_searches s WHERE s.user_id=u.id AND s.active=TRUE AND s.alert_mode<>'off'))`,
-    ).then((r) => Number(r.rows[0]?.n ?? 0)).catch(() => 0),
+    ).then((r) => Number(r.rows[0]?.n ?? 0)).catch((error) => { console.error("[notification-sweep] could not count waiting readers:", error); return null; }),
   ]);
   if (!row) return { lastRanAt: null, lastSweptUsers: 0, lastOk: false, hoursSinceLastRun: null, waitingReaders: waiting, backlogReaders: waiting };
   const ranAt = new Date(row.ran_at);
@@ -229,7 +234,7 @@ export async function getNotificationSweepHealth(now = new Date()): Promise<Swee
   // a result ("we cannot tell when it last ran"), not an exception.
   if (Number.isNaN(ranAt.getTime())) {
     const swept = Number(row.items) || 0;
-    return { lastRanAt: null, lastSweptUsers: swept, lastOk: false, hoursSinceLastRun: null, waitingReaders: waiting, backlogReaders: Math.max(0, waiting - swept) };
+    return { lastRanAt: null, lastSweptUsers: swept, lastOk: false, hoursSinceLastRun: null, waitingReaders: waiting, backlogReaders: waiting === null ? null : Math.max(0, waiting - swept) };
   }
   const swept = Number(row.items) || 0;
   return {
@@ -240,7 +245,7 @@ export async function getNotificationSweepHealth(now = new Date()): Promise<Swee
     waitingReaders: waiting,
     // Derived rather than stored: one tick's own "I stopped early" flag cannot say whether the
     // backlog is being cleared or growing, and this is the number a reader is actually waiting in.
-    backlogReaders: Math.max(0, waiting - swept),
+    backlogReaders: waiting === null ? null : Math.max(0, waiting - swept),
   };
 }
 
@@ -258,6 +263,9 @@ export function isSweepHealthy(health: SweepHealth) {
   // A sweep that has never run is only a FAULT if somebody is waiting on it. On a fresh deployment
   // with nobody subscribed to anything, nobody is being failed — and a status page that cries
   // degraded on day one teaches its reader to stop looking, which costs more than it saves.
+  //
+  // An UNREADABLE count is not nobody: `null` must not buy a never-run sweep a clean bill of
+  // health, or the check reports health precisely because it failed.
   if (health.lastRanAt === null) return health.waitingReaders === 0;
   if (!health.lastOk) return false;
   return (health.hoursSinceLastRun ?? Infinity) < SWEEP_STALE_HOURS;
@@ -273,5 +281,8 @@ export function isSweepHealthy(health: SweepHealth) {
  * clean success. That is worth saying out loud, and it is a different sentence from "it is broken".
  */
 export function isSweepKeepingUp(health: SweepHealth) {
+  // An unknown backlog is not a small one. Answering "keeping up" because the count failed is the
+  // same lie as answering "healthy" because a probe failed.
+  if (health.backlogReaders === null) return false;
   return health.backlogReaders <= NOTIFICATION_SWEEP_USERS;
 }

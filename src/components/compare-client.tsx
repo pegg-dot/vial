@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Crown, Info, X } from "lucide-react";
+import { ArrowLeftRight, Crown, Info, X } from "lucide-react";
 import { useMarketplace } from "./marketplace-state";
 import { ProductPhoto } from "./product-photo";
 import { formatCurrency } from "@/lib/format";
 import { displayProductName } from "@/lib/product-title";
-import { COMPARE_DIMS, GROUP_LABEL, differingKeys, type CompareEntry, type CompareCell, type DimGroup } from "@/lib/compare-model";
+import { COMPARE_DIMS, GROUP_LABEL, differingKeys, planComparison, type CompareEntry, type CompareCell, type DimGroup } from "@/lib/compare-model";
 
 const PRIORITIES = [
   { key: "all", label: "Overview" },
@@ -24,12 +24,30 @@ export function CompareClient() {
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [priority, setPriority] = useState("all");
   const [diffOnly, setDiffOnly] = useState(false);
+  // Which held-back listings the reader has asked to see. Kept as a view choice here rather than
+  // reordering `compare`, so looking at a fifth listing never edits what they actually saved.
+  const [promoted, setPromoted] = useState<string[]>([]);
 
   // When nothing is picked, show a real example: the 3 most-tested live listings.
   const exampleSlugs = useMemo(() => catalog.products.filter((p) => p.origin === "live").slice(0, 3).map((p) => p.slug), [catalog.products]);
   const isExample = compare.length === 0;
-  const slugs = compare.length ? compare.slice(0, 4) : exampleSlugs;
+  // The table caps at four columns, which is a real constraint — past that the cells shrink to
+  // nothing. It used to take the first four with `compare.slice(0, 4)` and say NOTHING, so a
+  // reader who selected six saw four and was never told which two were missing. planComparison
+  // names what is held back so the page can show it and offer a swap.
+  const plan = useMemo(() => planComparison(compare, promoted), [compare, promoted]);
+  const slugs = isExample ? exampleSlugs : plan.shown;
   const key = slugs.join(",");
+
+  // Held-back listings are named from the lite catalog, which is the same projection the compare
+  // dock reads. A slug we cannot resolve is still listed — as the slug — rather than dropped.
+  const nameFor = useMemo(() => {
+    const bySlug = new Map(catalog.products.map((product) => [product.slug, product]));
+    return (slug: string) => {
+      const product = bySlug.get(slug);
+      return product ? `${displayProductName(product.name)} ${product.quantity}`.trim() : slug;
+    };
+  }, [catalog.products]);
 
   // Derive loading from whether the current entries correspond to the requested slugs,
   // so the effect never sets state synchronously in its body.
@@ -71,6 +89,30 @@ export function CompareClient() {
   return (
     <div>
       {isExample && <div className="ink-1 mb-5 rounded-[14px] bg-[#f0edff] px-4 py-3 text-sm font-semibold text-[#6d5dfc]">Showing an example. Add listings from the market to build your own comparison.</div>}
+
+      {/* Truncation, stated. Presenting four columns as the whole set when the reader picked six is
+          the same defect as a silent cap anywhere else on this site: the number on screen has to be
+          the number they chose, or the difference has to be named and recoverable. */}
+      {plan.truncated && (
+        <div className="ink-1 mb-5 rounded-[16px] bg-[#fff4e0] p-4" data-testid="compare-truncated">
+          <p className="text-sm font-extrabold text-[#111214]">Showing {plan.shown.length} of the {compare.length} listings you selected.</p>
+          <p className="mt-1 max-w-3xl text-[13px] font-medium leading-6 text-[#111214]/75">
+            A side-by-side stops being readable past {plan.limit} columns, so {plan.hidden.length === 1 ? "this one is" : `these ${plan.hidden.length} are`} held back. Nothing was removed from your selection &mdash; swap one in to give it a column.
+          </p>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {plan.hidden.map((slug) => (
+              <li key={slug}>
+                <button type="button" onClick={() => setPromoted((current) => [slug, ...current])}
+                  className="ink-1 press inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold">
+                  <ArrowLeftRight className="size-3" aria-hidden="true" /> {nameFor(slug)}
+                  <span className="font-medium text-[var(--muted)]">swap in</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] font-medium text-[#111214]/60">Swapping one in moves the last column out. It stays selected, and it stays listed here.</p>
+        </div>
+      )}
 
       {/* Bottom line first — the comparison decides, it doesn't just list. */}
       {entries.length > 1 && (

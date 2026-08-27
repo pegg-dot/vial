@@ -75,7 +75,7 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
   return (
     <div>
       {trend.length > 0 && (
-        <CollectionRow eyebrow="Most looked-up" title="Trending compounds" blurb="The compounds buyers are researching most right now.">
+        <CollectionRow eyebrow="Most looked-up" title="Trending compounds" blurb="The compounds buyers are researching most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[280px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} metric={{ label: "vendors", value: vendorCount(c.slug) }} onQuickView={() => openRow(trend, i)} />

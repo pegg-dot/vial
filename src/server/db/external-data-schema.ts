@@ -61,6 +61,12 @@ CREATE TABLE IF NOT EXISTS news_items (
 );
 CREATE INDEX IF NOT EXISTS idx_news_vendor ON news_items(vendor_slug, news_date DESC);
 
+-- The /news feed is force-dynamic and reads ORDER BY news_date DESC NULLS LAST LIMIT $1 on every
+-- render, with no vendor_slug to lead with, so idx_news_vendor above cannot serve it and every
+-- visit sorted the whole table. NULLS LAST is part of the index, not decoration: a plain DESC
+-- index is NULLS FIRST in PostgreSQL and would not match the ordering the query asks for.
+CREATE INDEX IF NOT EXISTS idx_news_date ON news_items(news_date DESC NULLS LAST);
+
 CREATE TABLE IF NOT EXISTS compound_research (
   id TEXT PRIMARY KEY,
   compound_slug TEXT NOT NULL,

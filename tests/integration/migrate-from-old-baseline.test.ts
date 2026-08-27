@@ -24,6 +24,19 @@ const REQUIRED_COLUMNS: Array<{ table: string; column: string; why: string }> = 
   { table: "user_visit_state", column: "notification_swept_at", why: "stops the sweep queue starving" },
 ];
 
+/**
+ * Indexes the running code depends on that were added to an already-applied migration module.
+ *
+ * Same trap as the columns above, and just as invisible: `externalDataSchemaSql` is registered at
+ * version 30. Adding `idx_news_date` to that module creates it on every database built from zero —
+ * which is every test and every new deployment — and never on production, which recorded version 30
+ * long ago. A missing index does not throw, so nothing anywhere would have said a word: /news is
+ * force-dynamic and would simply sort the whole table on every render, forever.
+ */
+const REQUIRED_INDEXES: Array<{ table: string; index: string; why: string }> = [
+  { table: "news_items", index: "idx_news_date", why: "serves /news, which orders every render by news_date DESC NULLS LAST" },
+];
+
 /** The narrow slice of SqlConnection runMigrations actually uses, typed so `db` is not self-referential. */
 interface MigrationDb {
   query<T>(text: string, params?: unknown[]): Promise<{ rows: T[]; rowCount: number }>;
@@ -42,6 +55,14 @@ async function freshDb() {
     dialect: "postgres",
   };
   return { pg, db };
+}
+
+async function indexExists(db: MigrationDb, table: string, index: string) {
+  const rows = (await db.query<{ n: string }>(
+    `SELECT COUNT(*) n FROM pg_indexes WHERE tablename=$1 AND indexname=$2`,
+    [table, index],
+  )).rows;
+  return Number(rows[0]?.n ?? 0) > 0;
 }
 
 async function columnExists(db: MigrationDb, table: string, column: string) {
@@ -65,6 +86,10 @@ describe("a database that already ran an older migration set still catches up", 
         await db.query(`ALTER TABLE ${table} DROP COLUMN IF EXISTS ${column}`);
         expect(await columnExists(db, table, column), `${table}.${column} should be gone for this simulation`).toBe(false);
       }
+      for (const { table, index } of REQUIRED_INDEXES) {
+        await db.query(`DROP INDEX IF EXISTS ${index}`);
+        expect(await indexExists(db, table, index), `${index} should be gone for this simulation`).toBe(false);
+      }
 
       // Deploy today's code against it.
       await runMigrations(db as never);
@@ -73,6 +98,13 @@ describe("a database that already ran an older migration set still catches up", 
         expect(
           await columnExists(db, table, column),
           `${table}.${column} is missing after migrating an old database — it ${why}, and the code that reads it will throw in production. It was added to a schema module whose migration version had already been applied, so it needs a NEW version registered in migrations.ts.`,
+        ).toBe(true);
+      }
+
+      for (const { table, index, why } of REQUIRED_INDEXES) {
+        expect(
+          await indexExists(db, table, index),
+          `${index} on ${table} is missing after migrating an old database — it ${why}. Unlike a missing column this fails SILENTLY: the query still returns the right rows, just by sorting the whole table every time. It was added to a schema module whose migration version had already been applied, so it needs a NEW version registered in migrations.ts.`,
         ).toBe(true);
       }
     } finally {

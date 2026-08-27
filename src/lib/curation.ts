@@ -45,9 +45,19 @@ export function trending(compounds: Compound[], limit = 10): Compound[] {
   return [...compounds].sort((a, b) => trendScore(b) - trendScore(a) || a.slug.localeCompare(b.slug)).slice(0, limit);
 }
 
+/**
+ * Who is ELIGIBLE for each curated row, exported so a caller can count the pool it is drawing from.
+ *
+ * A curated row shows a top-N. It has to be able to say what N is a top of, and the only honest
+ * denominator is the set the ranking actually ran over — not the whole catalog, which would
+ * overstate it, and not a second hand-written filter, which would drift away from this one.
+ */
+export const hasIndependentEvidence = (c: Pick<Compound, "coaCount">) => c.coaCount > 0;
+export const hasPerMgPrice = (p: Pick<Product, "pricePerMg">) => Boolean(p.pricePerMg && p.pricePerMg > 0);
+
 export function mostVerified(compounds: Compound[], limit = 10): Compound[] {
   return [...compounds]
-    .filter((c) => c.coaCount > 0)
+    .filter(hasIndependentEvidence)
     .sort((a, b) => b.coaCount - a.coaCount || (b.medianPurity ?? 0) - (a.medianPurity ?? 0) || a.slug.localeCompare(b.slug))
     .slice(0, limit);
 }
@@ -58,7 +68,7 @@ export function newest(products: Product[], limit = 12): Product[] {
 
 export function bestValue(products: Product[], limit = 8): Product[] {
   return products
-    .filter((p) => p.pricePerMg && p.pricePerMg > 0)
+    .filter(hasPerMgPrice)
     .sort((a, b) => a.pricePerMg! - b.pricePerMg!)
     .slice(0, limit);
 }

@@ -1,5 +1,6 @@
 import type { QueryResultRow } from "pg";
 import { getDatabase } from "@/server/db/client";
+import { publicSignalWhereSql } from "@/server/intelligence/signal-kinds";
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (value == null) return fallback;
@@ -107,8 +108,10 @@ export async function getOpportunitySignals(input: { status?: string; limit?: nu
   return result.rows.map(toOpportunity);
 }
 
-const PUBLIC_SIGNAL_WHERE = `WHERE os.status IN ('open','watching')
-       AND os.signal_type IN ('price-dispersion','thin-availability','compound-evidence-gap','vendor-evidence-gap','source-coverage-gap','supply-concentration','issuer-concentration')`;
+// Built from PUBLIC_SIGNAL_KINDS rather than restated here. The literal list that used to live on
+// this line named seven of the thirteen types the /signals page has labels for, so six kinds of
+// signal were written, counted as open, and never shown to anybody.
+const PUBLIC_SIGNAL_WHERE = publicSignalWhereSql("os");
 
 export async function getPublicSignals(limit = 12) {
   const db = await getDatabase();
