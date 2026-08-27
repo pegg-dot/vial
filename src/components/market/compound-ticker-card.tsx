@@ -1,16 +1,34 @@
 "use client";
 import Link from "next/link";
-import { ArrowUpRight, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowUpRight, CircleHelp, FlaskConical, ShieldCheck } from "lucide-react";
 import type { Compound, Product } from "@/lib/types";
 import { shelfForCompound } from "@/lib/market-taxonomy";
-import { compoundPriceRange, compoundTrustTier } from "@/lib/curation";
+import { compoundPriceRange, compoundTrustTier, type TrustTier } from "@/lib/curation";
 import { formatCurrency } from "@/lib/format";
 import { DataOriginBadge } from "@/components/data-origin-badge";
-import { TrustTierChip } from "./trust-tier-chip";
 
-// A scannable compound "ticker" tile: one labeled canonical number (from $X), the
-// observed price-change delta (a fact), the decomposable trust tier, and — when the
-// card sits in a ranked row — that row's own ranking metric.
+// A compound ticker tile — the same six things in the same six places on every tile, so a row
+// of ten reads as one board rather than ten cards of different heights:
+//   stamp · shelf · live ↗  /  name  /  lowest price + the row's own metric  /  one evidence line.
+//
+// What is deliberately NOT here any more:
+//   • The price-change delta. `compounds.price_change` is a median of per-listing moves computed
+//     from `price_history`, and 685 of 904 live listings hold exactly one point while the rest
+//     hold placeholder junk (`[34.95, 150, 150]` on a listing whose price is $34.95). The
+//     "↗ 525.3%" that produced was a fact about a broken column, not about a market. The tile
+//     shows nothing it cannot stand behind; the delta returns when the history is real.
+//   • The tint pills. One evidence line, in the tier's colour, with an icon — never colour alone.
+const TIER: Record<TrustTier["tier"], { cls: string; Icon: typeof ShieldCheck }> = {
+  independent: { cls: "text-[#0e8f80]", Icon: ShieldCheck },
+  vendor: { cls: "text-[#b26a00]", Icon: FlaskConical },
+  none: { cls: "text-[var(--muted)]", Icon: CircleHelp },
+};
+
+function evidenceLine(tier: TrustTier, compound: Compound): string {
+  if (tier.tier === "independent" && compound.medianPurity != null) return `${tier.label} · ${compound.medianPurity.toFixed(1)}% pure`;
+  return tier.label;
+}
+
 export function CompoundTickerCard({
   compound,
   products,
@@ -25,59 +43,45 @@ export function CompoundTickerCard({
   const shelf = shelfForCompound(compound);
   const range = compoundPriceRange(compound.slug, products);
   const tier = compoundTrustTier(compound);
-  const delta = compound.priceChange ?? 0;
+  const { cls, Icon } = TIER[tier.tier];
 
   const body = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[11px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{shelf.label}</p>
-          {compound.origin === "live" && <DataOriginBadge origin="live" />}
-        </div>
-        <ArrowUpRight className="size-4 shrink-0 text-[#111214] transition group-hover:translate-x-0.5" aria-hidden />
-      </div>
-
-      <h3 className="mt-2 text-xl font-extrabold tracking-[-.03em]">{compound.name}</h3>
-      <p className="text-xs font-semibold text-[var(--muted)]">{compound.shorthand}</p>
-
-      <div className="mt-4 flex items-end justify-between gap-3">
-        <div>
-          <p className="text-lg font-extrabold tabular-nums tracking-[-.03em]">
-            {range.from != null ? <>from {formatCurrency(range.from)}</> : "—"}
-          </p>
-          <p className="text-[11px] font-semibold text-[var(--muted)]">
-            {compound.medianPrice > 0 ? <>median {formatCurrency(compound.medianPrice)} · </> : null}{range.vendors} vendor{range.vendors === 1 ? "" : "s"}
-          </p>
-        </div>
-        <span
-          className={`inline-flex items-center gap-1 text-sm font-extrabold tabular-nums ${
-            delta > 0 ? "text-[#0e8f80]" : delta < 0 ? "text-[#d3372c]" : "text-[var(--muted)]"
-          }`}
-        >
-          {delta > 0 ? <TrendingUp className="size-3.5" /> : delta < 0 ? <TrendingDown className="size-3.5" /> : null}
-          {delta === 0 ? "flat" : `${Math.abs(delta).toFixed(1)}%`}
+      <div className="flex items-center gap-2">
+        <span className="ink-1 inline-flex h-[22px] shrink-0 items-center rounded-[6px] bg-[#111214] px-1.5 text-[10px] font-extrabold uppercase tracking-[.1em] text-white">
+          {compound.shorthand}
         </span>
+        <span className="min-w-0 flex-1 truncate text-[10.5px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{shelf.label}</span>
+        {compound.origin === "live" && <DataOriginBadge origin="live" compact />}
+        <ArrowUpRight className="size-4 shrink-0 text-[#111214] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <TrustTierChip tier={tier} />
-        {compound.medianPurity != null && (
-          <span className="ink-1 inline-flex items-center rounded-full bg-[#e6fbf4] px-2.5 py-1 text-[11px] font-extrabold tabular-nums text-[#0e8f80]">
-            {compound.medianPurity.toFixed(1)}% pure
-          </span>
+      <h3 className="mt-3 truncate text-[18px] font-extrabold leading-tight tracking-[-.03em]">{compound.name}</h3>
+
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[26px] font-extrabold leading-none tabular-nums tracking-[-.04em]" title="Lowest priced listing on the market">{range.from != null ? formatCurrency(range.from) : "—"}</p>
+          <p className="mt-1.5 truncate text-[11px] font-semibold text-[var(--muted)]">
+            {range.from != null ? `${range.vendors} vendor${range.vendors === 1 ? "" : "s"}` : "no priced listing"}
+            {compound.medianPrice > 0 ? ` · median ${formatCurrency(compound.medianPrice)}` : ""}
+          </p>
+        </div>
+        {metric && (
+          <div className="shrink-0 text-right">
+            <p className="text-[26px] font-extrabold leading-none tabular-nums tracking-[-.04em]">{metric.value}</p>
+            <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
+          </div>
         )}
       </div>
 
-      {metric && (
-        <div className="ink-1 mt-4 rounded-xl bg-[var(--background)] p-3 text-center">
-          <p className="text-lg font-extrabold tabular-nums tracking-[-.03em]">{metric.value}</p>
-          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
-        </div>
-      )}
+      <p className={`mt-3.5 flex items-center gap-1.5 border-t-2 border-[#111214]/10 pt-3 text-[12px] font-bold ${cls}`} title={tier.reasons.join(" · ")}>
+        <Icon className="size-3.5 shrink-0" aria-hidden />
+        <span className="truncate">{evidenceLine(tier, compound)}</span>
+      </p>
     </>
   );
 
-  const className = "ink-1 hard press group flex w-full flex-col rounded-[20px] bg-white p-5 text-left";
+  const className = "ink-1 hard press group flex w-full flex-col rounded-[16px] bg-white p-4 text-left";
 
   if (onQuickView) {
     return (

@@ -9,7 +9,7 @@ import { formatCurrency, formatPricePerMg } from "@/lib/format";
 import { educationFor } from "@/lib/compound-education";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { GoalTags } from "@/components/goal-tags";
-import { PriceSparkline } from "@/components/price-sparkline";
+import { PriceSpread } from "./price-spread";
 import { TrustTierChip } from "./trust-tier-chip";
 
 function humanize(slug: string) {
@@ -68,8 +68,9 @@ export function QuickViewModal({
   const tier = compoundTrustTier(current);
   const bv = bestValue(productsFor, 1)[0];
   const vendors = [...new Set(productsFor.map((p) => p.vendorSlug))].slice(0, 3);
-  const cheapest = productsFor.filter((p) => p.priceHistory?.length).sort((a, b) => a.price - b.price)[0];
-  const history = cheapest?.priceHistory?.length ? cheapest.priceHistory : [current.medianPrice];
+  // Every priced listing on one line. Not a price history: 685 of 904 live listings hold a single
+  // point, and the sparkline this replaced drew one dot in an empty box. See price-spread.tsx.
+  const prices = productsFor.map((p) => p.price).filter((p) => p > 0);
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
@@ -138,9 +139,19 @@ export function QuickViewModal({
           </div>
         )}
 
-        <div className="ink-1 mt-4 rounded-2xl bg-white p-3">
-          <PriceSparkline values={history} accent="#12b3a6" />
-        </div>
+        {prices.length > 0 && (
+          <div className="ink-1 mt-4 rounded-2xl bg-white p-3">
+            <div className="flex items-center justify-between gap-3 px-1">
+              <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Every listing on one line</p>
+              <p className="text-[11px] font-semibold text-[var(--muted)]">
+                <span className="tabular-nums">{prices.length}</span> priced{bv ? " · black dot = best $/mg" : ""}
+              </p>
+            </div>
+            <div className="mt-2">
+              <PriceSpread prices={prices} median={current.medianPrice > 0 ? current.medianPrice : null} highlight={bv?.price ?? null} />
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">

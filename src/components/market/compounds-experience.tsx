@@ -77,7 +77,7 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
       {trend.length > 0 && (
         <CollectionRow eyebrow="Most looked-up" title="Trending compounds" blurb="The compounds buyers are researching most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
           {trend.map((c, i) => (
-            <div key={c.slug} className="w-[280px] shrink-0 snap-start">
+            <div key={c.slug} className="w-[248px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} metric={{ label: "vendors", value: vendorCount(c.slug) }} onQuickView={() => openRow(trend, i)} />
             </div>
           ))}
@@ -138,7 +138,7 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
                 <h3 className="text-2xl font-extrabold tracking-[-.03em]">{shelf.label}</h3>
                 <p className="mt-1 text-sm font-medium text-[var(--muted)]">{shelf.blurb}</p>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {shelfCompounds.map((c, i) => (
                   <CompoundTickerCard key={c.slug} compound={c} products={products} onQuickView={() => openRow(shelfCompounds, i)} />
                 ))}

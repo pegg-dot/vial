@@ -126,3 +126,23 @@ export function VialGradePill({ grade, vendorName }: { grade: GradeLike; vendorN
     </span>
   );
 }
+
+// The grade at card density: the letter in an ink box, nothing else. The pill's wash of band
+// colour was one more coloured thing on a tile already carrying three; the letter is the
+// information, the rationale rides in the tooltip, and the vendor page has the full block.
+// No letter → nothing: three quarters of vendors are unrated, and a "?" on three quarters of the
+// market is noise, not an unknown kept visible (the listing's own evidence line stays).
+export function VialGradeMark({ grade, vendorName }: { grade: GradeLike; vendorName?: string }) {
+  if (grade.letter === null || grade.letter === undefined || grade.band === "reference") return null;
+  const b = BAND[(grade.band as GradeBand) ?? "insufficient"];
+  return (
+    <span
+      className="ink-1 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-[5px] bg-white px-1 text-[10px] font-extrabold leading-none tabular-nums"
+      style={{ color: b.accent }}
+      title={`${vendorName ? `${vendorName} — ` : ""}VialGrade ${grade.letter}${grade.rationale ? `. ${grade.rationale}` : ""}`}
+      aria-label={`VialGrade ${grade.letter}`}
+    >
+      {grade.letter}
+    </span>
+  );
+}

@@ -60,7 +60,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       {trend.length > 0 && (
         <CollectionRow eyebrow="Most looked-up" title="Trending now" blurb="What buyers are researching most across the market right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }} seeAllHref="/compounds" seeAllLabel="All compounds">
           {trend.map((c, i) => (
-            <div key={c.slug} className="w-[280px] shrink-0 snap-start">
+            <div key={c.slug} className="w-[248px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} metric={{ label: "listings", value: String(c.listings) }} onQuickView={() => openRow(trend, i)} />
             </div>
           ))}
@@ -70,7 +70,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       {verified.length > 0 && (
         <CollectionRow eyebrow="Most independent evidence" title="Independently verified" blurb="Compounds with the most third-party lab certificates on record — the strongest evidence a batch was real." extent={{ shown: verified.length, total: verifiedTotal, noun: "compounds with an independent certificate on record" }} seeAllHref="/compounds" seeAllLabel="All compounds">
           {verified.map((c, i) => (
-            <div key={c.slug} className="w-[280px] shrink-0 snap-start">
+            <div key={c.slug} className="w-[248px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} metric={{ label: "lab tests", value: String(c.coaCount) }} onQuickView={() => openRow(verified, i)} />
             </div>
           ))}
@@ -80,7 +80,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       {value.length > 0 && (
         <CollectionRow eyebrow="Cheapest real cost" title="Lowest cost per mg" blurb="Ranked by what a milligram actually costs. Suspiciously-cheap listings are flagged, not hidden." extent={{ shown: value.length, total: valueTotal, noun: "listings we can price per mg" }} seeAllHref="/market#browse" seeAllLabel="Browse every listing">
           {value.map((p) => (
-            <div key={p.slug} className="w-[300px] shrink-0 snap-start">
+            <div key={p.slug} className="w-[248px] shrink-0 snap-start">
               <ProductCard product={p} />
             </div>
           ))}
@@ -96,7 +96,7 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
       {fresh.length > 0 && (
         <CollectionRow eyebrow="Just added" title="New on VialGrade" blurb="The most recently checked live listings — the market history that keeps growing." extent={{ shown: fresh.length, total: live.length, noun: "live listings" }} seeAllHref="/market#browse" seeAllLabel="Browse every listing">
           {fresh.map((p) => (
-            <div key={p.slug} className="w-[300px] shrink-0 snap-start">
+            <div key={p.slug} className="w-[248px] shrink-0 snap-start">
               <ProductCard product={p} />
             </div>
           ))}

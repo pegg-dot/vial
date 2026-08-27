@@ -495,7 +495,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                 <p className="mt-4 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
                   {listings.length} listing{listings.length === 1 ? "" : "s"} we have read from their store, cheapest per milligram first{priceIndex.medianPctVsMarket != null ? `, priced ${Math.abs(priceIndex.medianPctVsMarket)}% ${priceIndex.medianPctVsMarket < 0 ? "below" : priceIndex.medianPctVsMarket > 0 ? "above" : "at"} the market median across ${priceIndex.comparedCount} comparable listing${priceIndex.comparedCount === 1 ? "" : "s"}` : ", with too few priced peers to compare against the market"}. A price is not evidence of quality either way.
                 </p>
-                <div className="mt-7 grid gap-5 sm:grid-cols-2">{catalogSorted.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
+                <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{catalogSorted.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
               </>
             ) : (
               <>

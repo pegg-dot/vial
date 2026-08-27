@@ -166,7 +166,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Current market</p>
           <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">All {compound.name} listings</h2>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
       </section>
 
       {stacked.length ? (

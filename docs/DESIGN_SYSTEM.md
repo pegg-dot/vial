@@ -79,7 +79,19 @@ Restyle these and whole trees reskin at once:
 - Lab: `components/laboratory/laboratory-shell` + `laboratory-ui`
 
 ## Core components
-- **Product card** — product, quantity, vendor, price, evidence state, freshness, save/compare.
+- **Product card** — product, quantity, vendor, price, evidence state, freshness, save/compare —
+  at market density (2026-08-27): a fixed 148px photo box (a tile never grows with the image),
+  a two-line title, and ONE line per fact. The trust verdict is text with an icon (`TrustLine`),
+  not a pill; the evidence badge, trust chip and origin pill it replaced were all derived from
+  the same trust status. Live/Demo stays on every card as the compact `DataOriginBadge`. Goal
+  tags live on the compound page, not on tiles. Browse grids run four across at `xl`.
+- **Compound ticker tile** — the same six things in the same six places on every tile:
+  shorthand stamp · shelf · live ↗ / name / lowest price + the row's own metric / one evidence
+  line. No price-change delta until `price_history` is real (see compound-ticker-card.tsx).
+- **Price spread** (`market/price-spread.tsx`) — every priced listing for a compound on one
+  log-scale line, median as a dashed tick, best $/mg as the black dot. The quick view draws this
+  instead of a history sparkline because a listing price exists for every compound and a
+  history does not yet.
 - **Product photo / visual** — on a **Live** listing, show the vendor's **real product photo**
   (aggregated from their own product page's `og:image`, hotlinked with a graceful fallback);
   `ProductPhoto` renders it and falls back to the CSS-generated vial illustration

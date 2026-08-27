@@ -22,7 +22,7 @@ export function ProductVisual({
 
   return (
     <div
-      className={`product-visual relative isolate overflow-hidden ${compact ? "min-h-[210px]" : "min-h-[390px]"}`}
+      className={`product-visual relative isolate overflow-hidden ${compact ? "h-[148px]" : "min-h-[390px]"}`}
       style={style}
       aria-label={decorative ? undefined : `Stylized vial illustration for ${displayProductTitle(name, quantity)}`}
       aria-hidden={decorative ? true : undefined}
@@ -31,7 +31,7 @@ export function ProductVisual({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(255,255,255,.95),transparent_32%),linear-gradient(145deg,var(--accent-c),#fff_48%,color-mix(in_srgb,var(--accent-a)_14%,white))]" />
       <div className="absolute -right-[12%] -top-[16%] size-[68%] rounded-full bg-[var(--accent-b)] opacity-20 blur-3xl" />
       <div className="absolute -bottom-[28%] -left-[12%] size-[70%] rounded-full bg-[var(--accent-a)] opacity-15 blur-3xl" />
-      <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[46%] ${compact ? "scale-[.72]" : "scale-100"}`}>
+      <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[46%] ${compact ? "scale-[.55]" : "scale-100"}`}>
         <div className="relative h-[216px] w-[116px] drop-shadow-[0_28px_24px_rgba(16,18,24,.22)]">
           <div className="absolute left-1/2 top-0 h-[28px] w-[70px] -translate-x-1/2 rounded-t-[13px] rounded-b-[8px] border border-black/15 bg-[linear-gradient(180deg,#d9dde4,#8c939f_55%,#d9dde4)] shadow-[inset_0_1px_1px_rgba(255,255,255,.8)]" />
           <div className="absolute left-1/2 top-[22px] h-[188px] w-[104px] -translate-x-1/2 rounded-[20px_20px_25px_25px] border border-black/10 bg-[linear-gradient(90deg,rgba(255,255,255,.88),rgba(255,255,255,.46)_24%,rgba(255,255,255,.84)_74%,rgba(255,255,255,.38))] shadow-[inset_10px_0_18px_rgba(255,255,255,.7),inset_-8px_0_14px_rgba(10,20,40,.07)] backdrop-blur-sm" />
