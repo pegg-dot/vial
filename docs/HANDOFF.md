@@ -3,12 +3,20 @@
 **Read this top to bottom before touching anything.** The code is complete through v10.0 and
 backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth for the vision.
 
-> **Status, 2026-08-20.** Launched. Indexed by Google. The status block that sat here described a
-> site that was not yet deployed; it is replaced rather than appended, because a stale status
-> paragraph at the top of the START HERE doc is worse than none.
+> **Status, 2026-08-27.** Launched, indexed, and healthy. Replaced rather than appended, per the
+> rule this block already states: a stale status paragraph at the top of START HERE is worse than
+> none. (It was six days stale and claiming schema 49 when production was on 51.)
 >
 > - **Live** at `vialgrade.com`, Vercel project `vial`, Neon Postgres (paid plan — see the cost
->   note below). `/api/health/ready` reports **schema 49**. All 26 public pages serve.
+>   note below). `/api/health/ready` reports **schema 51**. All public pages serve.
+> - **Verify production before believing anything about it.** `/api/health/live` returns the baked
+>   `VERCEL_GIT_COMMIT_SHA` — compare it to `git rev-parse HEAD` to prove what is actually running.
+>   `/api/health/ready` reports `actual` as a real `MAX(version) FROM schema_migrations`, so it
+>   moves only when a migration truly applied. `npm run verify:live` is the standing check (23
+>   assertions); `--selftest` proves its parsers can still say no.
+> - **System health is on `/admin`**, above the traffic report, and on `/status`. Both render one
+>   shared verdict from `src/lib/system-health.ts` — never copy that logic, or the owner's page and
+>   the public page can disagree about whether the site is well.
 > - **Data is real and 100% live.** 82 vendors, 805 listings, 60 compounds, 279 COAs. **Zero demo
 >   records reach production** — fixture seeding is off there, so the seeded demo companies
 >   (northstar-research, helix-science and four more) exist only in a local dev database. If you
@@ -40,6 +48,28 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >    stale data because the only remediation was a script nobody ran. Ship repairs as migrations.
 > 5. **The cost canary.** `src/server/observability/cost-signals.ts` counts how often the uncached
 >    catalog path runs and alerts if caching silently breaks. A healthy day is single digits.
+>
+> ### ⚠️ A migration inside an already-applied version never runs
+>
+> On 2026-08-26 three commits shipped reading three columns production did not have. The
+> `ALTER TABLE`s went into `consumerIntelligenceSchemaSql`, which is registered as migration
+> **version 5** — applied to production months earlier — and `runMigrations` skips any version
+> already in `schema_migrations`. The code deployed, the build went green, and the columns simply
+> were not there: notification writes threw, the alert sweep died on its first query, and one
+> preference read as `undefined` for everyone.
+>
+> **The whole test suite was green throughout**, because every test builds its database from zero,
+> where version 5 runs *with* the new columns inside it. A suite that always starts from nothing is
+> structurally incapable of seeing a migration that failed to re-register.
+>
+> - **Editing a schema module means registering it at a NEW version.** Precedent:
+>   `vendorStatusSchemaSql` runs at both 21 and 50; the consumer-intelligence module now runs at 5
+>   and 51.
+> - `tests/integration/migrate-from-old-baseline.test.ts` guards it — migrates, rewinds
+>   `schema_migrations`, DROPs the columns, and requires today's set to catch up.
+> - Diagnostic worth knowing: **read the response body, not the status code.** A cron route
+>   answering `{"error":"Unauthorized"}` is the handler; `{"error":"Authentication required",
+>   "requestId":…}` is the perimeter. Same 401, opposite causes — this cost hours.
 >
 > ### What is still genuinely open
 >
