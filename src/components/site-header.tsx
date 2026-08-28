@@ -19,7 +19,8 @@ const nav = [
 export function SiteHeader({ authenticated = false }: { authenticated?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { openSearch, watchlist } = useMarketplace();
+  const { openSearch, watchlist, savedStacks } = useMarketplace();
+  const savedCount = watchlist.length + savedStacks.length;
   const items = authenticated ? [{ href: "/for-you", label: "For you" }, ...nav] : nav;
 
   return (
@@ -65,8 +66,8 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
             className="ink-1 relative hidden rounded-full bg-white/80 px-4 py-2.5 text-sm font-bold transition hover:-translate-y-0.5 hover:bg-white sm:block"
           >
             Saved
-            {watchlist.length > 0 && (
-              <span className="ink-1 absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-[#2b31d8] text-[10px] font-bold text-white">{watchlist.length}</span>
+            {savedCount > 0 && (
+              <span className="ink-1 absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-[#2b31d8] text-[10px] font-bold text-white">{savedCount}</span>
             )}
           </Link>
           {/* Visible at every width. It was `hidden sm:block`, so a signed-out phone visitor had no

@@ -6,6 +6,8 @@ import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { stackKey } from "@/lib/saved-stacks";
+import { stackBySlug } from "@/lib/stacks";
 import { AUTH_PROMPT_DELAY_MS, AuthPromptOverlay, markAuthPromptDismissed, readAuthPromptDismissed, readAuthPromptDismissedOnServer, shouldAutoPrompt, subscribeAuthPromptDismissed, type AuthPromptRequest } from "./auth-prompt";
 
 interface MarketplaceContextValue {
@@ -14,8 +16,13 @@ interface MarketplaceContextValue {
   // own server component (see /market, /compounds, /watchlist) rather than widening this.
   catalog: CatalogLite;
   watchlist: string[];
+  // Saved stacks (KLOW, GLOW …) — same store as the watchlist under a "stack:" key, split here so
+  // `watchlist` stays listing slugs for every surface that already reads it.
+  savedStacks: string[];
   compare: string[];
   isWatched: (slug: string) => boolean;
+  isStackSaved: (slug: string) => boolean;
+  toggleStackSave: (slug: string) => void;
   isCompared: (slug: string) => boolean;
   toggleWatchlist: (slug: string) => void;
   toggleCompare: (slug: string) => void;
@@ -32,6 +39,7 @@ interface MarketplaceContextValue {
 
 const MarketplaceContext = createContext<MarketplaceContextValue | null>(null);
 const WATCHLIST_KEY = "vial-watchlist-v1";
+const SAVED_STACKS_KEY = "vial-saved-stacks-v1";
 const COMPARE_KEY = "vial-compare-v1";
 
 function readStoredList(key: string) {
@@ -44,7 +52,7 @@ function readStoredList(key: string) {
   }
 }
 
-export function MarketplaceProvider({ children, catalog: catalogProp, initialWatchlist = [], initialCompare = [], authenticated = false }: { children: React.ReactNode; catalog: CatalogLite; initialWatchlist?: string[]; initialCompare?: string[]; authenticated?: boolean }) {
+export function MarketplaceProvider({ children, catalog: catalogProp, initialWatchlist = [], initialSavedStacks = [], initialCompare = [], authenticated = false }: { children: React.ReactNode; catalog: CatalogLite; initialWatchlist?: string[]; initialSavedStacks?: string[]; initialCompare?: string[]; authenticated?: boolean }) {
   // The provider (and its catalog prop) is captured once at hard load and frozen across soft
   // navigations, so every client surface — market grid, search, cards, compare dock — would
   // drift from the freshly server-rendered detail pages and the compare table whenever the
@@ -54,6 +62,7 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   const [fetchedCatalog, setFetchedCatalog] = useState<CatalogLite | null>(null);
   const catalog = fetchedCatalog && fetchedCatalog.generatedAt > catalogProp.generatedAt ? fetchedCatalog : catalogProp;
   const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
+  const [savedStacks, setSavedStacks] = useState<string[]>(initialSavedStacks);
   const [compare, setCompare] = useState<string[]>(initialCompare);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -71,9 +80,22 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (!authenticated) {
-        setWatchlist(readStoredList(WATCHLIST_KEY));
+        // Merge, never replace: a save clicked in the gap between React hydration and this frame
+        // was being overwritten by the stored list, so the button flipped, the badge counted it,
+        // and nothing was saved. Nothing can have been UN-saved that early, so a union is exact.
+        setWatchlist((current) => Array.from(new Set([...readStoredList(WATCHLIST_KEY), ...current])));
+        setSavedStacks((current) => Array.from(new Set([...readStoredList(SAVED_STACKS_KEY), ...current])));
         setCompare(readStoredList(COMPARE_KEY));
       } else {
+        // Same merge for stacks a guest saved before signing in.
+        const guestStacks = readStoredList(SAVED_STACKS_KEY).filter((slug) => !initialSavedStacks.includes(slug));
+        if (guestStacks.length) {
+          setSavedStacks((current) => Array.from(new Set([...current, ...guestStacks])));
+          for (const slug of guestStacks) {
+            void fetch("/api/v1/watchlist", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: stackKey(slug), watched: true }) });
+          }
+        }
+        window.localStorage.removeItem(SAVED_STACKS_KEY);
         // Merge any watchlist a guest saved BEFORE signing in/up — otherwise those
         // saves were silently dropped at exactly the moment the buyer committed.
         const guestSaves = readStoredList(WATCHLIST_KEY).filter((slug) => !initialWatchlist.includes(slug));
@@ -88,9 +110,10 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
       setHydrated(true);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [authenticated, initialWatchlist]);
+  }, [authenticated, initialWatchlist, initialSavedStacks]);
 
   useEffect(() => { if (hydrated && !authenticated) window.localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist)); }, [authenticated, hydrated, watchlist]);
+  useEffect(() => { if (hydrated && !authenticated) window.localStorage.setItem(SAVED_STACKS_KEY, JSON.stringify(savedStacks)); }, [authenticated, hydrated, savedStacks]);
 
   // The delayed ask. It fires once per page the visitor settles on, only while the tab is actually
   // in front of them — a timer that burns down in a background tab would surface the dialog on a
@@ -185,6 +208,18 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
       return next;
     });
   }, [authenticated, validSlugs]);
+  const toggleStackSave = useCallback((slug: string) => {
+    if (!stackBySlug(slug)) return;
+    setSavedStacks((current) => {
+      const saved = !current.includes(slug);
+      const next = saved ? [...current, slug] : current.filter((item) => item !== slug);
+      if (authenticated) {
+        void fetch("/api/v1/watchlist", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: stackKey(slug), watched: saved }) });
+        void fetch("/api/v1/decision-events", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ eventType: saved ? "stack_saved" : "stack_removed", subjectType: "stack", subjectId: slug }) });
+      }
+      return next;
+    });
+  }, [authenticated]);
   const toggleCompare = useCallback((slug: string) => {
     if (!validSlugs.has(slug)) return;
     compareDirty.current = true;
@@ -198,8 +233,11 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   const value = useMemo<MarketplaceContextValue>(() => ({
     catalog,
     watchlist,
+    savedStacks,
     compare,
     isWatched: (slug) => watchlist.includes(slug),
+    isStackSaved: (slug) => savedStacks.includes(slug),
+    toggleStackSave,
     isCompared: (slug) => compare.includes(slug),
     toggleWatchlist,
     toggleCompare,
@@ -207,7 +245,7 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
     openSearch: () => setSearchOpen(true),
     authenticated,
     promptSignIn,
-  }), [authenticated, catalog, compare, promptSignIn, toggleCompare, toggleWatchlist, watchlist]);
+  }), [authenticated, catalog, compare, promptSignIn, savedStacks, toggleCompare, toggleStackSave, toggleWatchlist, watchlist]);
 
   return <MarketplaceContext.Provider value={value}>
     {children}

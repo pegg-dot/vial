@@ -52,6 +52,33 @@ test("market shows curated rows, filters, and quick-view paging", async ({ page 
   await expect(page.getByRole("cell", { name: /^Combined$/ })).toBeVisible();
 });
 
+test("a stack can be saved like a listing, survives signing in, and shows up in Saved", async ({ page }) => {
+  await page.goto("/market");
+  await expect(page.getByRole("heading", { name: /Stacks & blends/i })).toBeVisible();
+  await page.getByRole("button", { name: /^Save Wolverine$/ }).click();
+  await expect(page.getByRole("button", { name: /Remove Wolverine from saved/ })).toBeVisible();
+  // The header's Saved badge counts it. /watchlist is customer-only in the perimeter, so a guest
+  // is sent to sign in — and the save has to come through the sign-in with them (it is merged into
+  // the account on the first authenticated load, exactly as a guest's saved listings are).
+  const savedLink = page.getByRole("link", { name: /^Saved\s*1$/ });
+  await expect(savedLink).toBeVisible();
+  await savedLink.click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fwatchlist$/);
+  await page.fill('input[name="email"]', "nora@example.test");
+  await page.fill('input[name="password"]', "VialGradeDemoCustomer!2026");
+  await page.getByRole("button", { name: /^Sign in$/ }).click();
+  await expect(page).toHaveURL(/\/watchlist$/);
+  await expect(page.getByRole("heading", { name: /^1 stack$/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Open the Wolverine stack/ })).toBeVisible();
+  // The account holds it under its own key, split out of the listing slugs.
+  const api = await page.request.get("/api/v1/watchlist");
+  expect(await api.json()).toEqual({ slugs: [], stacks: ["wolverine"] });
+  // Unsave from the Saved page; the section goes away and the account forgets it.
+  await page.getByRole("button", { name: /Remove Wolverine from saved/ }).click();
+  await expect(page.getByRole("heading", { name: /^1 stack$/ })).toHaveCount(0);
+  await expect.poll(async () => (await (await page.request.get("/api/v1/watchlist")).json()).stacks).toEqual([]);
+});
+
 test("compounds opens on shelves, with a shelf rail, and the terminal one click away", async ({ page }) => {
   await page.goto("/compounds");
   await expect(page.getByRole("heading", { name: /we track/i })).toBeVisible();

@@ -1,4 +1,5 @@
 import { getDatabase } from "@/server/db/client";
+import { splitWatchlist } from "@/lib/saved-stacks";
 import { DEFAULT_NOTIFICATION_PREFERENCES } from "@/server/notifications/policy";
 
 /**
@@ -30,7 +31,13 @@ function persistableRelevanceThreshold(value:unknown){
   return Math.min(1,Math.max(0,numeric));
 }
 
-export async function getWatchlistSlugs(userId:string){const db=await getDatabase();return(await db.query<{listing_slug:string}>(`SELECT listing_slug FROM user_watchlists WHERE user_id=$1 ORDER BY created_at DESC`,[userId])).rows.map(r=>r.listing_slug)}
+// `user_watchlists.listing_slug` also holds saved STACKS under a "stack:" key (src/lib/saved-stacks.ts),
+// so a saved stack gets the guest→account merge, the badge and the Saved page for free. The two
+// readers below split the one store; every existing caller of getWatchlistSlugs keeps getting
+// listing slugs only, so nothing downstream (personalisation, digests) has to learn the key.
+async function getWatchlistKeys(userId:string){const db=await getDatabase();return(await db.query<{listing_slug:string}>(`SELECT listing_slug FROM user_watchlists WHERE user_id=$1 ORDER BY created_at DESC`,[userId])).rows.map(r=>r.listing_slug)}
+export async function getWatchlistSlugs(userId:string){return splitWatchlist(await getWatchlistKeys(userId)).listings}
+export async function getSavedStackSlugs(userId:string){return splitWatchlist(await getWatchlistKeys(userId)).stacks}
 export async function setWatchlistItem(userId:string,slug:string,watched:boolean){const db=await getDatabase();if(watched)await db.query(`INSERT INTO user_watchlists(user_id,listing_slug) VALUES($1,$2) ON CONFLICT DO NOTHING`,[userId,slug]);else await db.query(`DELETE FROM user_watchlists WHERE user_id=$1 AND listing_slug=$2`,[userId,slug]);return getWatchlistSlugs(userId)}
 export async function getNotificationPreferences(userId:string){const db=await getDatabase();return(await db.query(`SELECT * FROM user_notification_preferences WHERE user_id=$1`,[userId])).rows[0]??null}
 export async function updateNotificationPreferences(userId:string,input:Record<string,unknown>){const db=await getDatabase();await db.query(`INSERT INTO user_notification_preferences(user_id,in_app_enabled,email_enabled,price_alerts,evidence_alerts,order_alerts,digest_frequency,saved_search_alerts,followed_entity_alerts,market_digest,quiet_hours_start,quiet_hours_end,timezone,relevance_threshold,availability_alerts,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW()) ON CONFLICT(user_id) DO UPDATE SET in_app_enabled=EXCLUDED.in_app_enabled,email_enabled=EXCLUDED.email_enabled,price_alerts=EXCLUDED.price_alerts,evidence_alerts=EXCLUDED.evidence_alerts,order_alerts=EXCLUDED.order_alerts,digest_frequency=EXCLUDED.digest_frequency,saved_search_alerts=EXCLUDED.saved_search_alerts,followed_entity_alerts=EXCLUDED.followed_entity_alerts,market_digest=EXCLUDED.market_digest,quiet_hours_start=EXCLUDED.quiet_hours_start,quiet_hours_end=EXCLUDED.quiet_hours_end,timezone=EXCLUDED.timezone,relevance_threshold=EXCLUDED.relevance_threshold,availability_alerts=EXCLUDED.availability_alerts,updated_at=NOW()`,[userId,Boolean(input.inAppEnabled),Boolean(input.emailEnabled),Boolean(input.priceAlerts),Boolean(input.evidenceAlerts),Boolean(input.orderAlerts),String(input.digestFrequency||"instant"),Boolean(input.savedSearchAlerts??true),Boolean(input.followedEntityAlerts??true),Boolean(input.marketDigest??true),String(input.quietHoursStart||"22:00"),String(input.quietHoursEnd||"08:00"),String(input.timezone||"America/New_York"),persistableRelevanceThreshold(input.relevanceThreshold),Boolean(input.availabilityAlerts??true)]);return getNotificationPreferences(userId)}

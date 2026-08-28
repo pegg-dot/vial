@@ -11,7 +11,7 @@ import { siteConfig } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { emptyCatalogLite, toCatalogLite } from "@/lib/catalog-lite";
 import { getCurrentPrincipal } from "@/server/auth/principal";
-import { getWatchlistSlugs } from "@/server/account/repository";
+import { getSavedStackSlugs, getWatchlistSlugs } from "@/server/account/repository";
 import { getDefaultComparison } from "@/server/consumer-intelligence/repository";
 import { MobileRetentionNav } from "@/components/mobile-retention-nav";
 import "./globals.css";
@@ -89,12 +89,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     }),
     getCurrentPrincipal().catch(() => null),
   ]);
-  const [watchlist, comparison] = principal
+  const [watchlist, comparison, savedStacks] = principal
     ? await Promise.all([
         getWatchlistSlugs(principal.id).catch(() => []),
         getDefaultComparison(principal.id).catch(() => null),
+        getSavedStackSlugs(principal.id).catch(() => []),
       ])
-    : [[], null];
+    : [[], null, []];
   // Whether this deployment actually holds any seeded demo records — drives the provenance copy so
   // an all-Live deployment never implies its data might be demo.
   const hasDemo = catalog.products.some((p) => p.origin === "demo") || catalog.vendors.some((v) => v.origin === "demo") || catalog.compounds.some((c) => c.origin === "demo");
@@ -104,7 +105,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* Site-wide identity. Lives in the layout so every page carries the publisher and site
             nodes that per-page schema references by @id, instead of each page redeclaring them. */}
         <JsonLd data={[organizationSchema(), webSiteSchema()]} />
-        <MarketplaceProvider catalog={catalog} initialWatchlist={watchlist} initialCompare={comparison?.listingSlugs ?? []} authenticated={Boolean(principal)}>
+        <MarketplaceProvider catalog={catalog} initialWatchlist={watchlist} initialSavedStacks={savedStacks} initialCompare={comparison?.listingSlugs ?? []} authenticated={Boolean(principal)}>
           <TrackView />
           <DisclosureBanner hasDemo={hasDemo} />
           <SiteHeader authenticated={Boolean(principal)} />

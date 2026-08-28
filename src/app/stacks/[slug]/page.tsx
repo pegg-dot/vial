@@ -15,6 +15,7 @@ import { ProductCard } from "@/components/product-card";
 import { StackCard } from "@/components/market/stack-card";
 import { TrustLine } from "@/components/listing-trust-chip";
 import { VialPlain } from "@/components/vial-art";
+import { SaveStackButton } from "@/components/save-stack-button";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +119,7 @@ export default async function StackPage({ params }: { params: Promise<{ slug: st
                   : `A recipe: ${size} compounds bought separately. Below is every vendor and price for each part, and the cheapest way to assemble the whole thing.`}{" "}
                 A commonly discussed research combination &mdash; not a protocol, not a dose, not a recommendation.
               </p>
+              <SaveStackButton slug={stack.slug} name={stack.name} variant="full" className="mt-5" />
             </div>
             <div className="flex items-center">
               {components.slice(0, 4).map((c) => (
