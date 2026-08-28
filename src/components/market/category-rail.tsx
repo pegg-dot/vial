@@ -1,12 +1,12 @@
 "use client";
 import { useMemo } from "react";
 import Link from "next/link";
-import { Atom, Brain, Flame, HeartPulse, Hourglass, LayoutGrid, ShieldPlus, Sparkles, Sun, TrendingUp } from "lucide-react";
-import { SHELVES } from "@/lib/market-taxonomy";
+import { Atom, Brain, Flame, FlaskConical, HeartPulse, Hourglass, LayoutGrid, ShieldPlus, Sparkles, Sun, TrendingUp } from "lucide-react";
+import { OTHER_SHELF, SHELVES } from "@/lib/market-taxonomy";
 
 const ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   metabolic: Flame, gh: TrendingUp, healing: HeartPulse, longevity: Hourglass, cognitive: Brain,
-  skin: Sparkles, tanning: Sun, immune: ShieldPlus, hormonal: Atom,
+  skin: Sparkles, tanning: Sun, immune: ShieldPlus, hormonal: Atom, other: FlaskConical,
 };
 
 // Browse-by-shelf rail. Client-filter mode when onSelect is given; otherwise deep-links
@@ -23,7 +23,9 @@ export function CategoryRail({ counts, activeKey, onSelect }: { counts: Map<stri
     const stocked: Array<{ key: string | null; label: string; Icon: React.ComponentType<{ className?: string }>; count: number | null }> = [
       { key: null, label: "All", Icon: LayoutGrid, count: null },
     ];
-    for (const s of SHELVES) {
+    // OTHER_SHELF is a real bucket in groupByShelf; a compound filed there was unreachable from
+    // a rail that only knew the nine named shelves.
+    for (const s of [...SHELVES, OTHER_SHELF]) {
       const count = counts.get(s.key) ?? 0;
       if (count > 0) stocked.push({ key: s.key, label: s.label, Icon: ICON[s.key] ?? Sparkles, count });
     }

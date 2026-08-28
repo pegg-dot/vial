@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { LayoutGrid, Search, Table2, X } from "lucide-react";
 import type { CatalogSnapshot, Compound } from "@/lib/types";
 import { trending } from "@/lib/curation";
 import { groupByShelf } from "@/lib/market-taxonomy";
+import { CategoryRail } from "./category-rail";
 import { STACKS, resolveStack, type ResolvedStack } from "@/lib/stacks";
 import { CollectionRow } from "./collection-row";
 import { CompoundTickerCard } from "./compound-ticker-card";
@@ -18,14 +19,24 @@ function matchesQuery(compound: Compound, needle: string): boolean {
   return [compound.name, compound.shorthand, compound.category, ...compound.aliases].join(" ").toLowerCase().includes(needle);
 }
 
-// The compound directory — VialGrade's "terminal". A ranked market table (default) or
-// category shelves, plus a trending strip and stacks, all with quick-view.
+// The compound directory. Category shelves (default) or the ranked market table ("terminal"),
+// plus a trending strip and stacks, all with quick-view.
+//
+// Shelves first, and eight per shelf: the shelves view rendered every compound of every category
+// in one scroll, so a reader after "Cognitive & Mood" — the fifth shelf — scrolled past forty
+// tiles to reach it. Now a shelf shows two rows and offers the rest, and the rail above filters
+// straight to one shelf. The table paginates the same way: fifteen rows, then more on request.
+const SHELF_PAGE = 8;
 // The catalog arrives as a prop from the /compounds server component rather than from
 // useMarketplace(): the market table and quick-view read whole records (price histories, purity,
 // research notes), and the provider carries only the lite projection the site chrome needs.
 export function CompoundsExperience({ catalog, initialShelf = null }: { catalog: CatalogSnapshot; initialShelf?: string | null }) {
   const { compounds, products } = catalog;
-  const [view, setView] = useState<"terminal" | "shelves">(initialShelf ? "shelves" : "terminal");
+  const [view, setView] = useState<"terminal" | "shelves">("shelves");
+  // The rail's filter. A ?shelf= deep-link lands filtered rather than scrolled — the section it used
+  // to scroll to now sits behind seven others' "show more" buttons, which scrolling cannot honour.
+  const [activeShelf, setActiveShelf] = useState<string | null>(initialShelf);
+  const [expandedShelves, setExpandedShelves] = useState<ReadonlySet<string>>(() => new Set());
   const [query, setQuery] = useState("");
   const [qv, setQv] = useState<{ items: Compound[]; index: number | null }>({ items: [], index: null });
 
@@ -57,20 +68,16 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
   }, [products]);
   const vendorCount = (slug: string) => String(vendorsPerCompound.get(slug)?.size ?? 0);
   const groups = useMemo(() => groupByShelf(results), [results]);
+  // Compounds per shelf over the WHOLE directory, so the rail's numbers are what selecting a pill
+  // shows before any search narrows it — the same denominator the count line uses.
+  const shelfCounts = useMemo(() => new Map(groupByShelf(compounds).map((g) => [g.shelf.key, g.compounds.length])), [compounds]);
+  const visibleGroups = useMemo(() => (activeShelf ? groups.filter((g) => g.shelf.key === activeShelf) : groups), [groups, activeShelf]);
+  const expandShelf = (key: string) => setExpandedShelves((prev) => new Set(prev).add(key));
   const stacks = useMemo(
     () => STACKS.map((s) => resolveStack(s, compounds)).filter((r): r is ResolvedStack => r !== null),
     [compounds],
   );
   const openRow = (items: Compound[], index: number) => setQv({ items, index });
-
-  // A ?shelf= deep-link opens the shelves view scrolled to that category section.
-  useEffect(() => {
-    if (!initialShelf || view !== "shelves") return;
-    const el = document.getElementById(`shelf-${initialShelf}`);
-    if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-  }, [initialShelf, view]);
 
   return (
     <div>
@@ -87,11 +94,11 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
       <div className="flex items-center justify-between gap-4 pt-6">
         <h2 className="text-3xl font-extrabold tracking-[-.045em]">Every compound</h2>
         <div className="ink-1 inline-flex gap-1 rounded-full bg-white p-1">
-          <button type="button" onClick={() => setView("terminal")} aria-pressed={view === "terminal"} className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${view === "terminal" ? "bg-[#111214] text-white" : "text-[var(--muted)]"}`}>
-            <Table2 className="size-3.5" /> Terminal
-          </button>
           <button type="button" onClick={() => setView("shelves")} aria-pressed={view === "shelves"} className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${view === "shelves" ? "bg-[#111214] text-white" : "text-[var(--muted)]"}`}>
             <LayoutGrid className="size-3.5" /> Shelves
+          </button>
+          <button type="button" onClick={() => setView("terminal")} aria-pressed={view === "terminal"} className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${view === "terminal" ? "bg-[#111214] text-white" : "text-[var(--muted)]"}`}>
+            <Table2 className="size-3.5" /> Terminal
           </button>
         </div>
       </div>
@@ -118,33 +125,63 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
         </p>
       </div>
 
-      {results.length === 0 ? (
+      {view === "shelves" && (
+        <div className="mt-4">
+          <CategoryRail counts={shelfCounts} activeKey={activeShelf} onSelect={setActiveShelf} />
+        </div>
+      )}
+
+      {results.length === 0 || (view === "shelves" && visibleGroups.length === 0) ? (
         /* Without this the table rendered its header over an empty tbody and the shelves view
            collapsed to nothing — a search that missed looked like the directory had broken. */
         <div className="ink mt-6 rounded-[20px] bg-white px-6 py-20 text-center">
-          <p className="text-xl font-extrabold tracking-[-0.03em]">No compounds match “{query.trim()}”</p>
+          <p className="text-xl font-extrabold tracking-[-0.03em]">
+            {results.length === 0 ? <>No compounds match “{query.trim()}”</> : <>Nothing on this shelf matches “{query.trim()}”</>}
+          </p>
           <p className="mt-2 text-sm font-medium text-[var(--muted)]">Try the shorthand printed on the vial, an older name, or a category.</p>
-          <button type="button" onClick={() => setQuery("")} className="ink hard press mt-6 rounded-full bg-[#2b31d8] px-5 py-3 text-sm font-bold text-white">Clear search</button>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {query && <button type="button" onClick={() => setQuery("")} className="ink hard press rounded-full bg-[#2b31d8] px-5 py-3 text-sm font-bold text-white">Clear search</button>}
+            {activeShelf && <button type="button" onClick={() => setActiveShelf(null)} className="ink hard-sm press rounded-full bg-white px-5 py-3 text-sm font-bold">All shelves</button>}
+          </div>
         </div>
       ) : view === "terminal" ? (
         <div className="mt-6">
           <CompoundMarketTable compounds={results} products={products} onOpen={openRow} />
         </div>
       ) : (
-        <div className="mt-6 space-y-12">
-          {groups.map(({ shelf, compounds: shelfCompounds }) => (
-            <section key={shelf.key} id={`shelf-${shelf.key}`} className="scroll-mt-24">
-              <div className="mb-5">
-                <h3 className="text-2xl font-extrabold tracking-[-.03em]">{shelf.label}</h3>
-                <p className="mt-1 text-sm font-medium text-[var(--muted)]">{shelf.blurb}</p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {shelfCompounds.map((c, i) => (
-                  <CompoundTickerCard key={c.slug} compound={c} products={products} onQuickView={() => openRow(shelfCompounds, i)} />
-                ))}
-              </div>
-            </section>
-          ))}
+        <div className="mt-6 space-y-10">
+          {visibleGroups.map(({ shelf, compounds: shelfCompounds }) => {
+            // A filtered shelf is the reader asking for that shelf: show all of it. Unfiltered, two
+            // rows and an honest count of what is behind the button.
+            const expanded = activeShelf === shelf.key || expandedShelves.has(shelf.key);
+            const shown = expanded ? shelfCompounds : shelfCompounds.slice(0, SHELF_PAGE);
+            const hidden = shelfCompounds.length - shown.length;
+            return (
+              <section key={shelf.key} id={`shelf-${shelf.key}`} className="scroll-mt-24">
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <h3 className="text-2xl font-extrabold tracking-[-.03em]">{shelf.label}</h3>
+                    <p className="mt-1 text-sm font-medium text-[var(--muted)]">{shelf.blurb}</p>
+                  </div>
+                  <p className="text-xs font-bold tabular-nums text-[var(--muted)]">
+                    {hidden > 0 ? <>Showing {shown.length} of {shelfCompounds.length}</> : <>{shelfCompounds.length} compound{shelfCompounds.length === 1 ? "" : "s"}</>}
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {shown.map((c, i) => (
+                    <CompoundTickerCard key={c.slug} compound={c} products={products} onQuickView={() => openRow(shown, i)} />
+                  ))}
+                </div>
+                {hidden > 0 && (
+                  <div className="mt-4 flex justify-center">
+                    <button type="button" onClick={() => expandShelf(shelf.key)} className="ink hard-sm press rounded-full bg-white px-5 py-2.5 text-sm font-bold">
+                      Show {hidden} more {shelf.label.toLowerCase()}
+                    </button>
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
 

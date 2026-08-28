@@ -11,6 +11,11 @@ import { TrustTierChip } from "./trust-tier-chip";
 
 type SortKey = "trending" | "price" | "purity" | "tests" | "change";
 
+// Fifteen rows first. The table rendered every compound at once — sixty rows before the stacks
+// below it were reachable. More on request, and the page resets whenever the list or sort changes
+// so "show more" never carries over onto a different list.
+const PAGE = 15;
+
 function HeaderCell({ label, sortKey, active, onSort, className = "" }: { label: string; sortKey?: SortKey; active: boolean; onSort: (k: SortKey) => void; className?: string }) {
   return (
     <th className={`px-4 py-3 font-bold ${className}`}>
@@ -29,6 +34,10 @@ function HeaderCell({ label, sortKey, active, onSort, className = "" }: { label:
 // VialGrade's Bloomberg-terminal expression. Scrolls horizontally rather than dropping evidence.
 export function CompoundMarketTable({ compounds, products, onOpen }: { compounds: Compound[]; products: Product[]; onOpen: (items: Compound[], index: number) => void }) {
   const [sort, setSort] = useState<SortKey>("trending");
+  // Pagination is remembered against the exact list + sort it was requested for; any other pair
+  // starts back at PAGE without an effect having to notice the change.
+  const [page, setPage] = useState<{ of: Compound[]; sort: SortKey; visible: number } | null>(null);
+  const visible = page && page.of === compounds && page.sort === sort ? page.visible : PAGE;
 
   // Sparkline uses the cheapest listing's history per compound (the one a buyer would pick).
   const historyBySlug = useMemo(() => {
@@ -60,8 +69,11 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
     }
     return arr;
   }, [compounds, sort, rangeBySlug]);
+  const shown = rows.slice(0, visible);
+  const hidden = rows.length - shown.length;
 
   return (
+    <div>
     <div className="ink hard overflow-x-auto rounded-[18px] bg-white">
       <table className="w-full min-w-[940px] text-left text-sm">
         <thead className="border-b-2 border-[#111214] bg-[#f7f7f4] text-[10px]">
@@ -79,16 +91,16 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
           </tr>
         </thead>
         <tbody className="divide-y divide-[#111214]/10">
-          {rows.map((c, i) => {
+          {shown.map((c, i) => {
             const range = rangeBySlug.get(c.slug) ?? { from: null, count: 0 };
             const delta = c.priceChange ?? 0;
             const history = historyBySlug.get(c.slug) ?? [c.medianPrice];
             return (
               <tr
                 key={c.slug}
-                onClick={() => onOpen(rows, i)}
+                onClick={() => onOpen(shown, i)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(rows, i); }
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(shown, i); }
                 }}
                 tabIndex={0}
                 role="button"
@@ -121,6 +133,15 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
           })}
         </tbody>
       </table>
+    </div>
+    <div className="mt-4 flex items-center justify-center gap-4">
+      <p className="text-xs font-bold tabular-nums text-[var(--muted)]">Showing {shown.length} of {rows.length}</p>
+      {hidden > 0 && (
+        <button type="button" onClick={() => setPage({ of: compounds, sort, visible: visible + PAGE })} className="ink hard-sm press rounded-full bg-white px-5 py-2.5 text-sm font-bold">
+          Show {Math.min(PAGE, hidden)} more
+        </button>
+      )}
+    </div>
     </div>
   );
 }

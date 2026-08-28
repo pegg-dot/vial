@@ -52,15 +52,24 @@ test("market shows curated rows, filters, and quick-view paging", async ({ page 
   await expect(page.getByRole("cell", { name: /^Combined$/ })).toBeVisible();
 });
 
-test("compounds shows the terminal table and a stack card", async ({ page }) => {
+test("compounds opens on shelves, with a shelf rail, and the terminal one click away", async ({ page }) => {
   await page.goto("/compounds");
   await expect(page.getByRole("heading", { name: /we track/i })).toBeVisible();
-  await expect(page.getByRole("table")).toBeVisible();
-  await expect(page.getByText(/Wolverine/i).first()).toBeVisible();
-  // The view toggle flips to category shelves. Healing & Recovery is guaranteed — the
-  // recovery compounds (BPC-157/KPV) are always seeded.
-  await page.getByRole("button", { name: /Shelves/i }).click();
+  // Shelves are the default view. Healing & Recovery is guaranteed — the recovery compounds
+  // (BPC-157/KPV) are always seeded — and the rail offers it as a filter without scrolling.
   await expect(page.getByRole("heading", { name: /Healing & Recovery/i })).toBeVisible();
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await expect(page.getByText(/Wolverine/i).first()).toBeVisible();
+  const rail = page.locator(".scroll-fade-x").filter({ has: page.getByRole("button", { name: /^All/ }) }).first();
+  await rail.getByRole("button", { name: /Healing & Recovery/ }).click();
+  await expect(page.getByRole("heading", { name: /Healing & Recovery/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Longevity/i })).toHaveCount(0);
+  await rail.getByRole("button", { name: /^All/ }).click();
+  // The toggle flips to the ranked table, which paginates (fifteen, then more on request).
+  await page.getByRole("button", { name: /Terminal/i }).click();
+  await expect(page.getByRole("table")).toBeVisible();
+  expect(await page.getByRole("table").getByRole("button", { name: /Quick view/i }).count()).toBeLessThanOrEqual(15);
+  await expect(page.getByText(/^Showing \d+ of \d+$/)).toBeVisible();
 });
 
 test("capture desktop + mobile screenshots", async ({ page }) => {
