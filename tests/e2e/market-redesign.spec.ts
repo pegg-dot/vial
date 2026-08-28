@@ -41,6 +41,15 @@ test("market shows curated rows, filters, and quick-view paging", async ({ page 
   await expect(page.getByTestId("market-count")).toBeVisible();
 
   expect(errors.filter((e) => !/favicon|manifest/i.test(e))).toEqual([]);
+
+  // Pressing a stack card opens THAT stack's page. It used to open whichever compound was first in
+  // the recipe, so "GLOW" and "KLOW" both landed on /compounds/ghk-cu. Wolverine is first and its
+  // components (BPC-157, TB-500) are always seeded.
+  await page.locator('a[href="/stacks/wolverine"]').first().click();
+  await expect(page).toHaveURL(/\/stacks\/wolverine$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Wolverine");
+  await expect(page.getByRole("heading", { name: /Cheapest way to buy/i })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /^Combined$/ })).toBeVisible();
 });
 
 test("compounds shows the terminal table and a stack card", async ({ page }) => {

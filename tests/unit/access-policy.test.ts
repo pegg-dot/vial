@@ -28,7 +28,7 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public catalog routes open to anonymous visitors", () => {
-    for (const path of ["/", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
+    for (const path of ["/", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }

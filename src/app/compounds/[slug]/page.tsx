@@ -30,6 +30,7 @@ import { CompoundResearchPanel } from "@/components/compound-research-panel";
 import { InnovatorNote } from "@/components/innovator-note";
 import { JsonLd } from "@/components/json-ld";
 import { compoundSchema } from "@/lib/structured-data";
+import { stacksContaining } from "@/lib/stacks";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +72,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const stacked = edu?.stackedWith?.length
     ? (await Promise.all(edu.stackedWith.map((s) => getCompoundBySlug(s)))).filter((c): c is NonNullable<typeof c> => Boolean(c))
     : [];
+  const inStacks = stacksContaining(slug);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "compound" && item.entitySlug === slug);
   const averageHistory = listings[0]?.priceHistory.map((_, index) => {
@@ -169,12 +171,22 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
       </section>
 
-      {stacked.length ? (
+      {stacked.length || inStacks.length ? (
         <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
           <div className="mb-7">
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Commonly researched together</p>
             <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Often stacked with {compound.name}</h2>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Compounds the research community frequently discusses alongside {compound.name}. Not a protocol or a recommendation — a starting point for what to read about next.</p>
+            {inStacks.length ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Part of</span>
+                {inStacks.map((s) => (
+                  <Link key={s.slug} href={`/stacks/${s.slug}`} className="ink-1 hard-sm press inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold">
+                    {s.name} <span className="font-semibold text-[var(--muted)]">· {s.kind}</span>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {stacked.map((c) => {

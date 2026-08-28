@@ -12,6 +12,7 @@ export function pageKind(path: string): string {
   if (path.startsWith("/products/")) return "product";
   if (path.startsWith("/vendors/")) return "vendor";
   if (path.startsWith("/compounds/")) return "compound";
+  if (path.startsWith("/stacks")) return "stack";
   if (path.startsWith("/market")) return "market";
   if (path.startsWith("/verify")) return "verify";
   if (path.startsWith("/enforcement") || path.startsWith("/news")) return "trust";

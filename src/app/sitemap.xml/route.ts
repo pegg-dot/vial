@@ -1,4 +1,5 @@
 import { siteUrl } from "@/lib/site";
+import { STACKS, resolveStack } from "@/lib/stacks";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { listSitemapPassportSlugs } from "@/server/evidence-network/repository";
 // Laboratories come from a static registry in code, NOT the laboratory_profiles table — /labs
@@ -28,7 +29,7 @@ export const dynamic = "force-dynamic";
 
 const STATIC_PAGES = [
   ["", "weekly", 1.0], ["/market", "daily", 0.9], ["/search", "daily", 0.85],
-  ["/compounds", "weekly", 0.8], ["/vendors", "weekly", 0.8], ["/research", "weekly", 0.75],
+  ["/compounds", "weekly", 0.8], ["/vendors", "weekly", 0.8], ["/stacks", "weekly", 0.7], ["/research", "weekly", 0.75],
   ["/passports", "daily", 0.8], ["/labs", "weekly", 0.75], ["/testing", "weekly", 0.7],
   ["/compare", "weekly", 0.6], ["/how-we-check", "monthly", 0.7], ["/grades", "monthly", 0.7],
   ["/reference-standard", "monthly", 0.6], ["/signals", "daily", 0.65], ["/verify", "monthly", 0.7],
@@ -62,6 +63,8 @@ export async function GET() {
     ...(catalog?.products ?? []).map((p) => urlEntry(`/products/${p.slug}`, "daily", 0.8, lastmod)),
     ...(catalog?.compounds ?? []).map((c) => urlEntry(`/compounds/${c.slug}`, "weekly", 0.75, lastmod)),
     ...(catalog?.vendors ?? []).map((v) => urlEntry(`/vendors/${v.slug}`, "weekly", 0.7, lastmod)),
+    // Only stacks whose components the catalog actually tracks — the page 404s otherwise.
+    ...STACKS.filter((s) => catalog && resolveStack(s, catalog.compounds) !== null).map((s) => urlEntry(`/stacks/${s.slug}`, "weekly", 0.65, lastmod)),
     ...passportSlugs.map((slug) => urlEntry(`/passports/${slug}`, "monthly", 0.65, lastmod)),
     ...labSlugs.map((slug) => urlEntry(`/labs/${slug}`, "monthly", 0.5, lastmod)),
   ];

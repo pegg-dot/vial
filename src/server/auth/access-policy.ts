@@ -21,7 +21,7 @@ const PUBLIC_PAGE_EXACT = new Set([
   // Well-known / PWA paths: crawlers and the service worker are unauthenticated by nature.
   "/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/sw.js",
 ]);
-const PUBLIC_PAGE_PREFIX = ["/compounds", "/vendors", "/products", "/legal", "/passports", "/labs"];
+const PUBLIC_PAGE_PREFIX = ["/compounds", "/vendors", "/products", "/legal", "/passports", "/labs", "/stacks"];
 
 // Surfaces retired from the product (moved to src/retired/). They no longer exist as routes, so
 // letting them through the perimeter means Next returns its own clean 404 — rather than a login

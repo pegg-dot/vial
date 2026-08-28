@@ -7,6 +7,8 @@ describe("page classification", () => {
     expect(pageKind("/products/chameleon-peptides-bpc-157")).toBe("product");
     expect(pageKind("/vendors/swiss-chems")).toBe("vendor");
     expect(pageKind("/compounds/bpc-157")).toBe("compound");
+    expect(pageKind("/stacks/wolverine")).toBe("stack");
+    expect(pageKind("/stacks")).toBe("stack");
     expect(pageKind("/market")).toBe("market");
     expect(pageKind("/enforcement")).toBe("trust");
     expect(pageKind("/legal/terms")).toBe("other");
