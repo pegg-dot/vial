@@ -23,9 +23,10 @@ export async function PUT(req: Request) {
   if (a.response) return a.response;
   const b = await req.json().catch(() => null) as { slug?: unknown; watched?: unknown } | null;
   const slug = String(b?.slug ?? "").trim();
-  if (!slug || slug.length > 160) return NextResponse.json({ error: "Invalid watchlist request" }, { status: 400 });
+  // `watched` was coerced with Boolean(), so the string "false" SAVED. A flag is a boolean or a 400.
+  if (!slug || slug.length > 160 || typeof b?.watched !== "boolean") return NextResponse.json({ error: "Invalid watchlist request" }, { status: 400 });
   // A stack key must name a stack we actually publish — the store has no other guard on it.
   if (isStackKey(slug) && !stackBySlug(stackSlugFromKey(slug))) return NextResponse.json({ error: "Unknown stack" }, { status: 400 });
-  await setWatchlistItem(a.principal.id, slug, Boolean(b?.watched));
+  await setWatchlistItem(a.principal.id, slug, b.watched);
   return NextResponse.json(await payload(a.principal.id));
 }

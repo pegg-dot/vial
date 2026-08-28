@@ -6,7 +6,7 @@ import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { stackKey } from "@/lib/saved-stacks";
+import { pruneStackSlugs, stackKey } from "@/lib/saved-stacks";
 import { stackBySlug } from "@/lib/stacks";
 import { AUTH_PROMPT_DELAY_MS, AuthPromptOverlay, markAuthPromptDismissed, readAuthPromptDismissed, readAuthPromptDismissedOnServer, shouldAutoPrompt, subscribeAuthPromptDismissed, type AuthPromptRequest } from "./auth-prompt";
 
@@ -76,17 +76,30 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   // to the server after the user actually changed it in this session — otherwise the
   // first authenticated render would overwrite the stored comparison with [].
   const compareDirty = useRef(false);
+  // Who the in-memory lists belong to. Sign-out is a soft navigation: `authenticated` flips false
+  // while the account's lists are still in state, and the guest persist effects below would write
+  // them into this device's storage — where the next person to sign in would inherit them. Guest
+  // storage is written only while the lists are guest-owned; the sign-out frame replaces them.
+  const owner = useRef<"guest" | "account">(authenticated ? "account" : "guest");
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (!authenticated) {
-        // Merge, never replace: a save clicked in the gap between React hydration and this frame
-        // was being overwritten by the stored list, so the button flipped, the badge counted it,
-        // and nothing was saved. Nothing can have been UN-saved that early, so a union is exact.
-        setWatchlist((current) => Array.from(new Set([...readStoredList(WATCHLIST_KEY), ...current])));
-        setSavedStacks((current) => Array.from(new Set([...readStoredList(SAVED_STACKS_KEY), ...current])));
+        if (owner.current === "account") {
+          // Just signed out: what is in state is the account's. Replace it with the device's own.
+          setWatchlist(readStoredList(WATCHLIST_KEY));
+          setSavedStacks(pruneStackSlugs(readStoredList(SAVED_STACKS_KEY)));
+        } else {
+          // Merge, never replace: a save clicked in the gap between React hydration and this frame
+          // was being overwritten by the stored list, so the button flipped, the badge counted it,
+          // and nothing was saved. Nothing can have been UN-saved that early, so a union is exact.
+          setWatchlist((current) => Array.from(new Set([...readStoredList(WATCHLIST_KEY), ...current])));
+          setSavedStacks((current) => pruneStackSlugs(Array.from(new Set([...readStoredList(SAVED_STACKS_KEY), ...current]))));
+        }
         setCompare(readStoredList(COMPARE_KEY));
+        owner.current = "guest";
       } else {
+        owner.current = "account";
         // Same merge for stacks a guest saved before signing in.
         const guestStacks = readStoredList(SAVED_STACKS_KEY).filter((slug) => !initialSavedStacks.includes(slug));
         if (guestStacks.length) {
@@ -112,8 +125,8 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
     return () => window.cancelAnimationFrame(frame);
   }, [authenticated, initialWatchlist, initialSavedStacks]);
 
-  useEffect(() => { if (hydrated && !authenticated) window.localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist)); }, [authenticated, hydrated, watchlist]);
-  useEffect(() => { if (hydrated && !authenticated) window.localStorage.setItem(SAVED_STACKS_KEY, JSON.stringify(savedStacks)); }, [authenticated, hydrated, savedStacks]);
+  useEffect(() => { if (hydrated && !authenticated && owner.current === "guest") window.localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist)); }, [authenticated, hydrated, watchlist]);
+  useEffect(() => { if (hydrated && !authenticated && owner.current === "guest") window.localStorage.setItem(SAVED_STACKS_KEY, JSON.stringify(savedStacks)); }, [authenticated, hydrated, savedStacks]);
 
   // The delayed ask. It fires once per page the visitor settles on, only while the tab is actually
   // in front of them — a timer that burns down in a background tab would surface the dialog on a

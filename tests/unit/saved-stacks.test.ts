@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isStackKey, splitWatchlist, stackKey, stackSlugFromKey } from "@/lib/saved-stacks";
+import { isStackKey, pruneStackSlugs, splitWatchlist, stackKey, stackSlugFromKey } from "@/lib/saved-stacks";
 
 // One store holds saved listings and saved stacks; the "stack:" key is the only thing that tells
 // them apart. If the split ever leaks a stack key into the listing slugs, personalisation and the
@@ -14,5 +14,12 @@ describe("saved stacks share the watchlist store", () => {
   it("splits one stored list into listing slugs and stack slugs, order kept", () => {
     expect(splitWatchlist(["a-listing", "stack:glow", "b-listing", "stack:klow"])).toEqual({ listings: ["a-listing", "b-listing"], stacks: ["glow", "klow"] });
     expect(splitWatchlist([])).toEqual({ listings: [], stacks: [] });
+  });
+});
+
+describe("only stacks that exist are ever counted", () => {
+  it("drops slugs no stack answers to, keeps order", () => {
+    expect(pruneStackSlugs(["ghost-stack", "wolverine", "", "klow", "KLOW"])).toEqual(["wolverine", "klow"]);
+    expect(pruneStackSlugs([])).toEqual([]);
   });
 });

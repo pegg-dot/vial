@@ -57,10 +57,14 @@ test("a stack can be saved like a listing, survives signing in, and shows up in 
   await expect(page.getByRole("heading", { name: /Stacks & blends/i })).toBeVisible();
   await page.getByRole("button", { name: /^Save Wolverine$/ }).click();
   await expect(page.getByRole("button", { name: /Remove Wolverine from saved/ })).toBeVisible();
+  // …and a listing, so the sign-in merge is proved for BOTH stores at once: the stack merge once
+  // cleared the listing key before the listing merge had read it.
+  await page.getByRole("button", { name: /Add to watchlist/ }).first().click();
+  await expect(page.getByRole("button", { name: /Remove from watchlist/ }).first()).toBeVisible();
   // The header's Saved badge counts it. /watchlist is customer-only in the perimeter, so a guest
   // is sent to sign in — and the save has to come through the sign-in with them (it is merged into
   // the account on the first authenticated load, exactly as a guest's saved listings are).
-  const savedLink = page.getByRole("link", { name: /^Saved\s*1$/ });
+  const savedLink = page.getByRole("link", { name: /^Saved\s*2$/ });
   await expect(savedLink).toBeVisible();
   await savedLink.click();
   await expect(page).toHaveURL(/\/login\?next=%2Fwatchlist$/);
@@ -70,13 +74,24 @@ test("a stack can be saved like a listing, survives signing in, and shows up in 
   await expect(page).toHaveURL(/\/watchlist$/);
   await expect(page.getByRole("heading", { name: /^1 stack$/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Open the Wolverine stack/ })).toBeVisible();
-  // The account holds it under its own key, split out of the listing slugs.
-  const api = await page.request.get("/api/v1/watchlist");
-  expect(await api.json()).toEqual({ slugs: [], stacks: ["wolverine"] });
+  // The account holds both, the stack under its own key, split out of the listing slugs.
+  // The demo account is shared with other runs, so assert what THIS run put there, then leave
+  // only that behind so the assertions below are exact.
+  const body = await (await page.request.get("/api/v1/watchlist")).json();
+  expect(body.stacks).toContain("wolverine");
+  expect(body.slugs).toHaveLength(1);
+  for (const slug of body.stacks.filter((s: string) => s !== "wolverine")) await page.request.put("/api/v1/watchlist", { data: { slug: `stack:${slug}`, watched: false } });
+  // The store refuses what it cannot vouch for: a stack that does not exist, and a flag that is
+  // not a boolean (Boolean("false") is true — the string once SAVED).
+  expect((await page.request.put("/api/v1/watchlist", { data: { slug: "stack:not-a-stack", watched: true } })).status()).toBe(400);
+  expect((await page.request.put("/api/v1/watchlist", { data: { slug: "stack:klow", watched: "false" } })).status()).toBe(400);
+  expect((await (await page.request.get("/api/v1/watchlist")).json()).stacks).toEqual(["wolverine"]);
   // Unsave from the Saved page; the section goes away and the account forgets it.
   await page.getByRole("button", { name: /Remove Wolverine from saved/ }).click();
   await expect(page.getByRole("heading", { name: /^1 stack$/ })).toHaveCount(0);
   await expect.poll(async () => (await (await page.request.get("/api/v1/watchlist")).json()).stacks).toEqual([]);
+  // Leave the demo account as it was found.
+  for (const slug of body.slugs) await page.request.put("/api/v1/watchlist", { data: { slug, watched: false } });
 });
 
 test("compounds opens on shelves, with a shelf rail, and the terminal one click away", async ({ page }) => {
