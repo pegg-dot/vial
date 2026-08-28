@@ -9,7 +9,8 @@ import { useMarketplace } from "./marketplace-state";
 // corner button — it stops the click before the card's own link sees it; `full` is the labelled
 // pill on the stack page, which also says where the save went.
 export function SaveStackButton({ slug, name, variant = "icon", className = "" }: { slug: string; name: string; variant?: "icon" | "full"; className?: string }) {
-  const { isStackSaved, toggleStackSave, authenticated } = useMarketplace();
+  const { isStackSaved, toggleStackSave, authenticated, saveIssue } = useMarketplace();
+  const issue = saveIssue?.slug === slug ? saveIssue : null;
   const pathname = usePathname();
   const saved = isStackSaved(slug);
   const signIn = `/login?next=${encodeURIComponent(pathname || `/stacks/${slug}`)}`;
@@ -28,6 +29,9 @@ export function SaveStackButton({ slug, name, variant = "icon", className = "" }
         className={`ink-1 grid size-8 shrink-0 place-items-center rounded-full transition ${saved ? "bg-[#111214] text-white" : "bg-white text-[#111214] hover:bg-[var(--background)]"} ${className}`}
       >
         <Bookmark className={`size-3.5 ${saved ? "fill-current" : ""}`} />
+        {/* The icon has no room for words; the reverted state is the visible signal and this is
+            the spoken one. */}
+        {issue && <span role="status" className="sr-only">{issue.kind === "signed-out" ? "Your session ended before that saved. Sign in again." : "That save did not go through. Try again."}</span>}
       </button>
     );
   }
@@ -44,8 +48,12 @@ export function SaveStackButton({ slug, name, variant = "icon", className = "" }
       </button>
       {/* A guest's save lives on this device until they sign in — say so, rather than pointing at a
           Saved page that will ask them to sign in when they get there. */}
-      <p className="mt-2 text-xs font-medium text-[var(--muted)]">
-        {authenticated && saved ? (
+      <p className="mt-2 text-xs font-medium text-[var(--muted)]" role={issue ? "status" : undefined}>
+        {issue?.kind === "signed-out" ? (
+          <span className="font-bold text-[#d3372c]">Your session ended before that saved. <Link href={signIn} className="underline underline-offset-2">Sign in</Link> to keep saving to your account.</span>
+        ) : issue?.kind === "failed" ? (
+          <span className="font-bold text-[#d3372c]">We couldn&rsquo;t save that. Try again in a moment.</span>
+        ) : authenticated && saved ? (
           <>It&rsquo;s in <Link href="/watchlist" className="inline-flex items-center gap-0.5 font-bold text-[#2b31d8] underline underline-offset-2">Saved<ArrowUpRight className="size-3" /></Link> with your listings.</>
         ) : authenticated ? (
           <>Keeps this stack in Saved, next to your listings.</>

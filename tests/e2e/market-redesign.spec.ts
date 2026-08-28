@@ -53,6 +53,7 @@ test("market shows curated rows, filters, and quick-view paging", async ({ page 
 });
 
 test("a stack can be saved like a listing, survives signing in, and shows up in Saved", async ({ page }) => {
+  test.slow(); // sign-in, two navigations and a simulated session expiry — three times the budget
   await page.goto("/market");
   await expect(page.getByRole("heading", { name: /Stacks & blends/i })).toBeVisible();
   await page.getByRole("button", { name: /^Save Wolverine$/ }).click();
@@ -92,6 +93,17 @@ test("a stack can be saved like a listing, survives signing in, and shows up in 
   await expect.poll(async () => (await (await page.request.get("/api/v1/watchlist")).json()).stacks).toEqual([]);
   // Leave the demo account as it was found.
   for (const slug of body.slugs) await page.request.put("/api/v1/watchlist", { data: { slug, watched: false } });
+
+  // The session ends underneath the open tab. A save used to flip, fire-and-forget a PUT that got a
+  // 401, and stay flipped until the next load. Now it reverts, says so, and the page turns
+  // signed-out — here that means the customer-only Saved page sends the tab to sign in.
+  await page.goto("/stacks");
+  await expect(page.getByRole("button", { name: /^Save Wolverine$/ })).toBeVisible();
+  await page.request.post("/api/v1/auth/logout");
+  await page.getByRole("button", { name: /^Save Wolverine$/ }).click();
+  await expect(page.getByRole("status").filter({ hasText: /session ended/i }).first()).toBeAttached();
+  await expect(page.getByRole("button", { name: /^Save Wolverine$/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Sign in$/ })).toBeVisible();
 });
 
 test("compounds opens on shelves, with a shelf rail, and the terminal one click away", async ({ page }) => {

@@ -74,6 +74,14 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 > ### What is still genuinely open
 >
 > - **Listing evidence coverage** — still the real product gap. See `docs/STOREFRONT-COA.md`.
+> - **Price history is not real yet (2026-08-28).** 685 of 904 live listings hold one price point
+>   and the rest hold placeholder junk (`[34.95, 150, 150]` on a $34.95 listing). `compounds.
+>   price_change` is a median over that column, so the Δ on `/compounds` (terminal table and the
+>   compound hero) and "Price trend" on `/products/[slug]` are not facts about the market. The
+>   market tiles no longer show a delta for this reason. Root cause: the live collect cron never
+>   calls `recordPriceObservation` — only hand-run scripts do (`scripts/ingest-market.mjs`,
+>   `backfill-prices-wayback.mjs`). Fix = record an observation per listing per collect run and
+>   repair the stored rows by migration; then the delta can return everywhere.
 > - **No outside monitoring.** The owner declined an uptime check and the alert webhook. In-app
 >   alerting (`src/server/observability/alerts.ts`) works and is throttled, but it cannot report the
 >   failure that actually happened: when the deployment itself is broken, the code that would send

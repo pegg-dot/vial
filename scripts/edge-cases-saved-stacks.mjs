@@ -140,6 +140,25 @@ await section("guest copy + in-place sign-in + second tab", async () => {
   await ctx.close();
 });
 
+await section("expired session", async () => {
+  await resetAccount();
+  const { page, ctx, errors } = await fresh();
+  await login(page, "/stacks/klow");
+  await page.waitForTimeout(700);
+  // The session dies underneath an open tab (revoked server-side; the cookie is cleared by the
+  // logout response in this context's jar). The page still believes it is signed in.
+  await page.request.post(`${base}/api/v1/auth/logout`);
+  const before = await page.getByRole("button", { name: /^Save stack$/ }).count();
+  await page.getByRole("button", { name: /^Save stack$/ }).click();
+  let seen = null;
+  for (let i = 0; i < 30; i += 1) { await page.waitForTimeout(400); const t = await page.getByRole("status").first().textContent().catch(() => null); if (t && /session ended/i.test(t)) { seen = t; break; } }
+  const revertedOrGuest = (await page.getByRole("button", { name: /^Save stack$/ }).count()) === 1;
+  const signedOutHeader = (await page.getByRole("link", { name: /^Sign in$/ }).count()) > 0;
+  check("E20 expired session: the save is reverted, explained, and the page turns signed-out", { hadButton: 1, explained: true, reverted: true, signedOutHeader: true }, { hadButton: before, explained: Boolean(seen), reverted: revertedOrGuest, signedOutHeader });
+  check("E-errors (expired session) no page errors", [], errors);
+  await ctx.close();
+});
+
 await section("guest API access", async () => {
   const { page, ctx } = await fresh();
   await page.goto(`${base}/market`, { waitUntil: "domcontentloaded", timeout: 90_000 });

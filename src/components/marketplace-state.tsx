@@ -4,7 +4,7 @@ import type { CatalogLite, ProductLite } from "@/lib/catalog-lite";
 import { displayProductTitle } from "@/lib/product-title";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { pruneStackSlugs, stackKey } from "@/lib/saved-stacks";
 import { stackBySlug } from "@/lib/stacks";
@@ -23,6 +23,12 @@ interface MarketplaceContextValue {
   isWatched: (slug: string) => boolean;
   isStackSaved: (slug: string) => boolean;
   toggleStackSave: (slug: string) => void;
+  /**
+   * The last save that did not reach the account, if any. A bookmark used to flip optimistically
+   * and fire-and-forget the PUT, so an expired session or a failed request left the button lying
+   * until the next page load. Now the flip is reverted and the surface can say why.
+   */
+  saveIssue: SaveIssue | null;
   isCompared: (slug: string) => boolean;
   toggleWatchlist: (slug: string) => void;
   toggleCompare: (slug: string) => void;
@@ -36,6 +42,8 @@ interface MarketplaceContextValue {
    */
   promptSignIn: (request: AuthPromptRequest) => void;
 }
+
+export interface SaveIssue { slug: string; kind: "signed-out" | "failed" }
 
 const MarketplaceContext = createContext<MarketplaceContextValue | null>(null);
 const WATCHLIST_KEY = "vial-watchlist-v1";
@@ -63,6 +71,14 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   const catalog = fetchedCatalog && fetchedCatalog.generatedAt > catalogProp.generatedAt ? fetchedCatalog : catalogProp;
   const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
   const [savedStacks, setSavedStacks] = useState<string[]>(initialSavedStacks);
+  const [saveIssue, setSaveIssue] = useState<SaveIssue | null>(null);
+  // Mirrors for the toggles, so a click reads the latest list and does its network work OUTSIDE
+  // the state updater — an updater is re-run by React (twice under StrictMode) and must be pure.
+  const watchlistRef = useRef(watchlist);
+  const savedStacksRef = useRef(savedStacks);
+  useEffect(() => { watchlistRef.current = watchlist; }, [watchlist]);
+  useEffect(() => { savedStacksRef.current = savedStacks; }, [savedStacks]);
+  const router = useRouter();
   const [compare, setCompare] = useState<string[]>(initialCompare);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -209,30 +225,49 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
   }, []);
 
   const validSlugs = useMemo(() => new Set(catalog.products.map((product) => product.slug)), [catalog.products]);
+
+  // Write one save to the account. On failure the optimistic flip is undone and the reason kept
+  // for the surface that asked. A 401 means the session ended underneath an open tab: refresh so
+  // every server component re-renders signed-out — the header, the Save copy, the badge — rather
+  // than leaving a page that still says "Account" while nothing it saves is kept.
+  const persist = useCallback(async (body: Record<string, unknown>, event: Record<string, unknown>, issueSlug: string, revert: () => void) => {
+    let status = 0;
+    try {
+      const response = await fetch("/api/v1/watchlist", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      status = response.status;
+      if (response.ok) {
+        setSaveIssue(null);
+        void fetch("/api/v1/decision-events", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(event) });
+        return;
+      }
+    } catch {
+      status = 0;
+    }
+    revert();
+    setSaveIssue({ slug: issueSlug, kind: status === 401 ? "signed-out" : "failed" });
+    if (status === 401) router.refresh();
+  }, [router]);
+
   const toggleWatchlist = useCallback((slug: string) => {
     if (!validSlugs.has(slug)) return;
-    setWatchlist((current) => {
-      const watched = !current.includes(slug);
-      const next = watched ? [...current, slug] : current.filter((item) => item !== slug);
-      if (authenticated) {
-        void fetch("/api/v1/watchlist", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, watched }) });
-        void fetch("/api/v1/decision-events", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ eventType: watched ? "listing_saved" : "listing_removed", subjectType: "listing", subjectId: slug }) });
-      }
-      return next;
-    });
-  }, [authenticated, validSlugs]);
+    const current = watchlistRef.current;
+    const watched = !current.includes(slug);
+    const next = watched ? [...current, slug] : current.filter((item) => item !== slug);
+    setWatchlist(next);
+    if (authenticated) {
+      void persist({ slug, watched }, { eventType: watched ? "listing_saved" : "listing_removed", subjectType: "listing", subjectId: slug }, slug, () => setWatchlist((now) => (watched ? now.filter((item) => item !== slug) : Array.from(new Set([...now, slug])))));
+    }
+  }, [authenticated, persist, validSlugs]);
   const toggleStackSave = useCallback((slug: string) => {
     if (!stackBySlug(slug)) return;
-    setSavedStacks((current) => {
-      const saved = !current.includes(slug);
-      const next = saved ? [...current, slug] : current.filter((item) => item !== slug);
-      if (authenticated) {
-        void fetch("/api/v1/watchlist", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: stackKey(slug), watched: saved }) });
-        void fetch("/api/v1/decision-events", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ eventType: saved ? "stack_saved" : "stack_removed", subjectType: "stack", subjectId: slug }) });
-      }
-      return next;
-    });
-  }, [authenticated]);
+    const current = savedStacksRef.current;
+    const saved = !current.includes(slug);
+    const next = saved ? [...current, slug] : current.filter((item) => item !== slug);
+    setSavedStacks(next);
+    if (authenticated) {
+      void persist({ slug: stackKey(slug), watched: saved }, { eventType: saved ? "stack_saved" : "stack_removed", subjectType: "stack", subjectId: slug }, slug, () => setSavedStacks((now) => (saved ? now.filter((item) => item !== slug) : Array.from(new Set([...now, slug])))));
+    }
+  }, [authenticated, persist]);
   const toggleCompare = useCallback((slug: string) => {
     if (!validSlugs.has(slug)) return;
     compareDirty.current = true;
@@ -251,6 +286,7 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
     isWatched: (slug) => watchlist.includes(slug),
     isStackSaved: (slug) => savedStacks.includes(slug),
     toggleStackSave,
+    saveIssue,
     isCompared: (slug) => compare.includes(slug),
     toggleWatchlist,
     toggleCompare,
@@ -258,7 +294,7 @@ export function MarketplaceProvider({ children, catalog: catalogProp, initialWat
     openSearch: () => setSearchOpen(true),
     authenticated,
     promptSignIn,
-  }), [authenticated, catalog, compare, promptSignIn, savedStacks, toggleCompare, toggleStackSave, toggleWatchlist, watchlist]);
+  }), [authenticated, catalog, compare, promptSignIn, saveIssue, savedStacks, toggleCompare, toggleStackSave, toggleWatchlist, watchlist]);
 
   return <MarketplaceContext.Provider value={value}>
     {children}

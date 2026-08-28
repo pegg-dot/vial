@@ -52,7 +52,7 @@ test("watchlist persists through navigation", async ({ page }) => {
   await page.goto("/market");
   await page.getByRole("button", { name: "Add to watchlist" }).first().click();
   await page.getByRole("link", { name: "Saved", exact: true }).first().click();
-  await expect(page.getByRole("heading", { name: "Your saved listings." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Your saved listings/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove from watchlist" })).toBeVisible();
 });
 
