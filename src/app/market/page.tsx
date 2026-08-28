@@ -34,7 +34,7 @@ export default async function MarketPage() {
           <VialBuddy className="gum-float-slow absolute right-[16%] bottom-[12%] hidden w-16 drop-shadow-[4px_4px_0_#111214] lg:block" liquid="#12b3a6" cap="#0e8f80" />
           <ArtDroplet className="gum-float-rev absolute right-[26%] top-[26%] hidden w-11 drop-shadow-[3px_3px_0_#111214] lg:block" fill="#12b3a6" />
         </div>
-        <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-14">
           <div className="max-w-3xl">
             <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]"><span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-[#12b3a6] opacity-60" /><span className="relative inline-flex size-2 rounded-full bg-[#12b3a6]" /></span> The market</p>
             <h1 className="mt-4 text-balance text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">The market, <span className="text-[#0e8f80]">on one screen.</span></h1>
@@ -43,11 +43,11 @@ export default async function MarketPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8">
+      <section className="mx-auto max-w-[1320px] px-5 pt-8 sm:px-8">
         <VialValueBand />
       </section>
 
-      <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12">
+      <section className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8 sm:py-8">
         {catalog ? <MarketExperience catalog={catalog} /> : <DataUnavailable surface="the market" />}
       </section>
     </>

@@ -50,7 +50,7 @@ export function ProductCard({ product }: { product: Product }) {
   const iconBtn = "ink-1 grid size-8 place-items-center rounded-full transition";
 
   return (
-    <article className="group ink-1 hard flex flex-col overflow-hidden rounded-[16px] bg-white transition duration-200 hover:-translate-y-0.5">
+    <article className="group ink-1 hard-sm flex flex-col overflow-hidden rounded-[14px] bg-white transition duration-200 hover:-translate-y-0.5">
       <div className="relative border-b-2 border-[#111214]/10">
         <Link href={href} aria-hidden="true" tabIndex={-1}>
           <ProductPhoto name={product.name} quantity={product.quantity} accent={product.accent} imageUrl={product.imageUrl} compact decorative />

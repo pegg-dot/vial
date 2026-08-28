@@ -103,8 +103,8 @@ export function MarketExperience({ catalog }: { catalog: CatalogSnapshot }) {
         </CollectionRow>
       )}
 
-      <div id="browse" ref={browseRef} className="scroll-mt-24 pt-8">
-        <div className="mb-6">
+      <div id="browse" ref={browseRef} className="scroll-mt-24 pt-4">
+        <div className="mb-4">
           <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#0e8f80]">Every listing</p>
           <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">Browse everything</h2>
           <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Filter the whole market by category, verification, price, and availability.</p>

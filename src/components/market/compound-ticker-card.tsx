@@ -51,7 +51,7 @@ export function CompoundTickerCard({
   const body = (
     <>
       <div className="flex items-center gap-2">
-        <span className="ink-1 inline-flex h-[22px] shrink-0 items-center rounded-[6px] bg-[#111214] px-1.5 text-[10px] font-extrabold uppercase tracking-[.1em] text-white">
+        <span className="ink-1 inline-flex h-5 shrink-0 items-center rounded-[5px] bg-white px-1.5 text-[10px] font-extrabold uppercase tracking-[.1em] text-[#111214]">
           {compound.shorthand}
         </span>
         <span className="min-w-0 flex-1 truncate text-[10.5px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{shelf.label}</span>
@@ -59,25 +59,25 @@ export function CompoundTickerCard({
         <ArrowUpRight className="size-4 shrink-0 text-[#111214] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
       </div>
 
-      <h3 className="mt-3 truncate text-[18px] font-extrabold leading-tight tracking-[-.03em]">{compound.name}</h3>
+      <h3 className="mt-2.5 truncate text-[17px] font-extrabold leading-tight tracking-[-.03em]">{compound.name}</h3>
 
-      <div className="mt-3 flex items-end justify-between gap-3">
+      <div className="mt-2.5 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[26px] font-extrabold leading-none tabular-nums tracking-[-.04em]" title="Lowest priced listing on the market">{range.from != null ? formatCurrency(range.from) : "—"}</p>
-          <p className="mt-1.5 truncate text-[11px] font-semibold text-[var(--muted)]">
+          <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em]" title="Lowest priced listing on the market">{range.from != null ? formatCurrency(range.from) : "—"}</p>
+          <p className="mt-1 truncate text-[11px] font-semibold text-[var(--muted)]">
             {range.from != null ? `${range.vendors} vendor${range.vendors === 1 ? "" : "s"}` : "no priced listing"}
             {compound.medianPrice > 0 ? ` · median ${formatCurrency(compound.medianPrice)}` : ""}
           </p>
         </div>
         {metric && (
           <div className="shrink-0 text-right">
-            <p className="text-[26px] font-extrabold leading-none tabular-nums tracking-[-.04em]">{metric.value}</p>
-            <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
+            <p className="text-[20px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]/70">{metric.value}</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
           </div>
         )}
       </div>
 
-      <p className={`mt-3.5 flex items-center gap-1.5 border-t-2 border-[#111214]/10 pt-3 text-[12px] font-bold ${cls}`} title={tier.reasons.join(" · ")}>
+      <p className={`mt-3 flex items-center gap-1.5 border-t-2 border-[#111214]/10 pt-2.5 text-[11px] font-bold ${cls}`} title={tier.reasons.join(" · ")}>
         <Icon className="size-3.5 shrink-0" aria-hidden />
         <span className="min-w-0 flex-1 truncate">{tier.label}</span>
         {purity && <span className="shrink-0 tabular-nums">{purity}</span>}
@@ -85,7 +85,7 @@ export function CompoundTickerCard({
     </>
   );
 
-  const className = "ink-1 hard press group flex w-full flex-col rounded-[16px] bg-white p-4 text-left";
+  const className = "ink-1 hard-sm press group flex w-full flex-col rounded-[14px] bg-white p-3.5 text-left";
 
   if (onQuickView) {
     return (
