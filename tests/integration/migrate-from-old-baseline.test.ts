@@ -22,6 +22,10 @@ const REQUIRED_COLUMNS: Array<{ table: string; column: string; why: string }> = 
   { table: "user_notification_preferences", column: "availability_alerts", why: "governs availability + shipping alerts" },
   { table: "user_notifications", column: "pushed_at", why: "stops the sweep re-pushing every alert forever" },
   { table: "user_visit_state", column: "notification_swept_at", why: "stops the sweep queue starving" },
+  { table: "price_observations", column: "available", why: "records out-of-stock as a state instead of a carried-forward price" },
+  { table: "price_observations", column: "currency", why: "is read by every price-series query" },
+  { table: "listings", column: "price_source", why: "tells the observation which writer set the price" },
+  { table: "compounds", column: "price_change_basis", why: "is what makes a compound Δ honest (k of n listings)" },
 ];
 
 /**
@@ -35,6 +39,7 @@ const REQUIRED_COLUMNS: Array<{ table: string; column: string; why: string }> = 
  */
 const REQUIRED_INDEXES: Array<{ table: string; index: string; why: string }> = [
   { table: "news_items", index: "idx_news_date", why: "serves /news, which orders every render by news_date DESC NULLS LAST" },
+  { table: "price_observations", index: "idx_price_obs_compound_day_cov", why: "serves the per-compound 30-day change over every observation row" },
 ];
 
 /** The narrow slice of SqlConnection runMigrations actually uses, typed so `db` is not self-referential. */

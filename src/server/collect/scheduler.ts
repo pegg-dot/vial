@@ -16,6 +16,7 @@ import { importShopifyCatalog } from "@/server/ingest/shopify-import";
 import { importWooCommerceCatalog } from "@/server/ingest/woocommerce-import";
 import { probeVendorStatus, recordVendorStatus } from "@/server/verify/vendor-status";
 import { recomputeCompoundStats } from "@/server/ingest/live-sources";
+import { recordTickPriceObservations, recomputeCompoundPriceChanges } from "@/server/ingest/price-history";
 import { recordLabTest } from "@/server/ingest/lab-tests";
 import { recomputeVendorStats } from "@/server/db/vendor-stats-repair";
 import { rebuildSearchIndex } from "@/server/search/engine";
@@ -136,7 +137,7 @@ export async function syncCollectionTargets(connection?: SqlConnection): Promise
 export async function retireUnseenListings(db: SqlConnection, vendorSlug: string, since: string | Date): Promise<number> {
   const result = await db.query<{ id: string }>(
     `UPDATE listings l
-     SET availability = 'Unavailable', updated_at = NOW()
+     SET availability = 'Unavailable', observed_at = NOW(), updated_at = NOW()
      FROM products p
      WHERE p.id = l.product_id AND p.vendor_id = $1 AND l.origin = 'live'
        AND l.availability <> 'Unavailable' AND l.observed_at < $2::timestamptz
@@ -327,6 +328,8 @@ async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome
 
 export interface TickResult {
   ran: { collector: string; target: string; items: number; ok: boolean; error?: string; retired?: number }[];
+  /** Live listings that received today's price observation in this tick. */
+  observed: number;
   budgetExhausted: boolean;
   reindexed: boolean;
   regraded: number;
@@ -346,6 +349,9 @@ export async function runCollectionTick(
   const budgetMs = options.budgetMs ?? 45_000;
   const db = options.connection ?? await getDatabase();
   await syncCollectionTargets(db);
+  // The database's clock: observed_at is written with NOW() by the importers, and the tick's
+  // observation statement selects on it.
+  const tickStartedAt = (await db.query<{ now: string }>(`SELECT NOW() AS now`)).rows[0]!.now;
 
   const ran: TickResult["ran"] = [];
   let budgetExhausted = false;
@@ -399,6 +405,11 @@ export async function runCollectionTick(
     }
   }
 
+  // Every live listing this tick touched becomes today's observation — one statement, the only
+  // writer of observation rows — and each compound's Δ is re-earned from those rows (spec D4/D6).
+  const observed = await recordTickPriceObservations(db, tickStartedAt);
+  await recomputeCompoundPriceChanges(db);
+
   // Newly imported listings are invisible to site search until the derived index is rebuilt, and
   // compound stats drive the market pages. Only pay for it when the catalog actually moved.
   let reindexed = false;
@@ -428,5 +439,5 @@ export async function runCollectionTick(
   // budget simply resumes where it stopped tomorrow.
   const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: 45_000, limit: 200 });
 
-  return { ran, budgetExhausted, reindexed, regraded: regrade.graded, durationMs: Date.now() - started };
+  return { ran, budgetExhausted, reindexed, observed, regraded: regrade.graded, durationMs: Date.now() - started };
 }

@@ -13,7 +13,9 @@ import { depthFor } from "@/lib/compound-depth";
 import { GoalTags } from "@/components/goal-tags";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { UsLegalNotice } from "@/components/us-legal-notice";
-import { PriceSparkline } from "@/components/price-sparkline";
+import { PriceSeries } from "@/components/price-series";
+import { describeCompoundBasis, formatPct } from "@/lib/price-trend";
+import { getCompoundDailyMedianSeries } from "@/server/ingest/price-history";
 import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
 import { DataOriginBadge } from "@/components/data-origin-badge";
@@ -52,8 +54,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 // and caching anything derived from it would leak one visitor's session state to another.
 const loadCompoundPublicData = unstable_cache(
   async (slug: string) => {
-    const [listings, labTests, research, regulatory, allPassports] = await Promise.all([getProductsByCompoundSlug(slug), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassportsForCompound(slug, 12)]);
-    return { listings, labTests, research, regulatory, allPassports };
+    const [listings, labTests, research, regulatory, allPassports, medianSeries] = await Promise.all([getProductsByCompoundSlug(slug), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassportsForCompound(slug, 12), getDatabase().then((db) => getCompoundDailyMedianSeries(db, slug))]);
+    return { listings, labTests, research, regulatory, allPassports, medianSeries };
   },
   ["compound-page"],
   { tags: [CATALOG_CACHE_TAG], revalidate: 21600 },
@@ -64,7 +66,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
   const [publicData, principal] = await Promise.all([loadCompoundPublicData(slug), getCurrentPrincipal()]);
-  const { listings, labTests, research, regulatory, allPassports } = publicData;
+  const { listings, labTests, research, regulatory, allPassports, medianSeries } = publicData;
   const passports = allPassports as unknown as PassportRow[];
   const edu = educationFor(slug);
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
@@ -75,10 +77,12 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const inStacks = stacksContaining(slug);
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "compound" && item.entitySlug === slug);
-  const averageHistory = listings[0]?.priceHistory.map((_, index) => {
-    const values = listings.map((item) => item.priceHistory[index]).filter((value): value is number => typeof value === "number");
-    return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-  }) ?? [compound.medianPrice];
+  // The hero chart is the DAILY in-stock median across listings, dated — not the old
+  // position-by-position average of undated arrays, which averaged different listings' Nth checks
+  // as if they were the same day. The pill is earned or absent (D6).
+  const medianPoints = medianSeries.map((p) => ({ day: p.day, price: p.median, available: true }));
+  const basisCopy = describeCompoundBasis(compound.priceChangeBasis);
+  const earned = compound.priceChangeBasis?.medianPct != null;
 
   return (
     <>
@@ -127,9 +131,10 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                     <p className="mt-1 text-xs font-semibold text-[var(--muted)]">No listings on record, so there is no observed price.</p>
                   )}
                 </div>
-                <span className={`ink-1 rounded-full px-2.5 py-1 text-xs font-extrabold ${compound.priceChange < 0 ? "bg-[#e6fbf6] text-[#0e8f80]" : "bg-[#ffecea] text-[#d3372c]"}`}>{compound.priceChange > 0 ? "+" : ""}{compound.priceChange}%</span>
+                <span className={`ink-1 rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums ${earned ? "bg-white text-[#111214]" : "bg-white text-[var(--muted)]"}`} title={basisCopy}>{earned ? `${formatPct(compound.priceChangeBasis!.medianPct!)} · 30d` : "Δ —"}</span>
               </div>
-              <div className="mt-5 h-28"><PriceSparkline values={averageHistory} accent={compound.accent[0]} height={94} /></div>
+              <div className="mt-5 h-28"><PriceSeries points={medianPoints} description={basisCopy} accent={compound.accent[0]} height={94} compact /></div>
+              <p className="mt-3 text-[11px] leading-4 text-black/60">{basisCopy}</p>
             </div>
           </div>
         </div>

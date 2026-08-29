@@ -87,7 +87,17 @@ Restyle these and whole trees reskin at once:
   tags live on the compound page, not on tiles. Browse grids run four across at `xl`.
 - **Compound ticker tile** — the same six things in the same six places on every tile:
   shorthand stamp · shelf · live ↗ / name / lowest price + the row's own metric / one evidence
-  line. No price-change delta until `price_history` is real (see compound-ticker-card.tsx).
+  line. No price-change delta on tiles (see compound-ticker-card.tsx).
+- **Price trend** (`lib/price-trend.ts`, `components/price-series.tsx`) — a listing's or a
+  compound's observed prices, dated. Exactly one of five states renders, and the sentence is the
+  chart's text alternative: *no history* ("Price checked once, on …"), *insufficient* ("N checks
+  since … too short a span for a 30-day change"), *trending* ("−8.2 % over 30 days · N checks ·
+  $a on … → $b on …. Observed, not projected."), *unavailable at last check*, and a *stale* suffix
+  past three days. A percentage appears only when earned (baseline ≤7 days before the window,
+  latest ≤2 days old, ≥14 days between; a compound needs three qualifying listings and prints
+  "k of n"). The chart is a STEP on a time axis — a price holds until the next check — with
+  unavailable days breaking the line. **Direction is never a colour**: rises and falls are both
+  ink; the sign and the arrow carry direction. No buy language anywhere.
 - **Price spread** (`market/price-spread.tsx`) — every priced listing for a compound on one
   log-scale line, median as a dashed tick, best $/mg as the black dot. The quick view draws this
   instead of a history sparkline because a listing price exists for every compound and a

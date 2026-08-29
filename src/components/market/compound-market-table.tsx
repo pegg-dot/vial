@@ -5,7 +5,8 @@ import type { Compound, Product } from "@/lib/types";
 import { shelfForCompound } from "@/lib/market-taxonomy";
 import { compoundPriceRange, compoundTrustTier, trending } from "@/lib/curation";
 import { formatCurrency } from "@/lib/format";
-import { PriceSparkline } from "@/components/price-sparkline";
+import { PriceSeries } from "@/components/price-series";
+import { describeCompoundBasis, formatPct } from "@/lib/price-trend";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { TrustTierChip } from "./trust-tier-chip";
 
@@ -39,16 +40,16 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
   const [page, setPage] = useState<{ of: Compound[]; sort: SortKey; visible: number } | null>(null);
   const visible = page && page.of === compounds && page.sort === sort ? page.visible : PAGE;
 
-  // Sparkline uses the cheapest listing's history per compound (the one a buyer would pick).
-  const historyBySlug = useMemo(() => {
+  // The trail is the cheapest listing's dated change points per compound (the one a buyer would pick).
+  const pointsBySlug = useMemo(() => {
     const cheapest = new Map<string, Product>();
     for (const p of products) {
-      if (!p.priceHistory?.length) continue;
+      if (!p.pricePoints?.length) continue;
       const held = cheapest.get(p.compoundSlug);
       if (!held || p.price < held.price) cheapest.set(p.compoundSlug, p);
     }
-    const map = new Map<string, number[]>();
-    for (const [slug, p] of cheapest) map.set(slug, p.priceHistory);
+    const map = new Map<string, { name: string; points: Product["pricePoints"] }>();
+    for (const [slug, p] of cheapest) map.set(slug, { name: p.name, points: p.pricePoints });
     return map;
   }, [products]);
 
@@ -87,14 +88,17 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
             <HeaderCell label="Purity" sortKey="purity" active={sort === "purity"} onSort={setSort} />
             <HeaderCell label="Tests" sortKey="tests" active={sort === "tests"} onSort={setSort} />
             <HeaderCell label="Verification" active={false} onSort={setSort} />
-            <HeaderCell label="7-pt" active={false} onSort={setSort} />
+            <HeaderCell label="Trail" active={false} onSort={setSort} />
           </tr>
         </thead>
         <tbody className="divide-y divide-[#111214]/10">
           {shown.map((c, i) => {
             const range = rangeBySlug.get(c.slug) ?? { from: null, count: 0 };
-            const delta = c.priceChange ?? 0;
-            const history = historyBySlug.get(c.slug) ?? [c.medianPrice];
+            const basis = c.priceChangeBasis;
+            const earned = basis?.medianPct != null;
+            const delta = earned ? (basis!.medianPct as number) : 0;
+            const trail = pointsBySlug.get(c.slug);
+            const basisCopy = describeCompoundBasis(basis);
             return (
               <tr
                 key={c.slug}
@@ -119,15 +123,17 @@ export function CompoundMarketTable({ compounds, products, onOpen }: { compounds
                 <td className="px-4 py-3 font-extrabold tabular-nums">{range.from != null ? formatCurrency(range.from) : "—"}</td>
                 <td className="px-4 py-3 font-bold tabular-nums text-[var(--muted)]">{c.medianPrice > 0 ? formatCurrency(c.medianPrice) : "—"}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center gap-0.5 font-bold tabular-nums ${delta > 0 ? "text-[#0e8f80]" : delta < 0 ? "text-[#d3372c]" : "text-[var(--muted)]"}`}>
-                    {delta > 0 ? <TrendingUp className="size-3" /> : delta < 0 ? <TrendingDown className="size-3" /> : null}
-                    {delta === 0 ? "—" : `${Math.abs(delta).toFixed(1)}%`}
+                  {/* Earned or absent (spec D6). Direction is the arrow; colour stays ink — a
+                      rising price is not "good" and a falling one is not "bad" here. */}
+                  <span className={`inline-flex items-center gap-0.5 font-bold tabular-nums ${earned ? "text-[#111214]" : "text-[var(--muted)]"}`} title={basisCopy}>
+                    {earned && delta > 0 ? <TrendingUp className="size-3" /> : earned && delta < 0 ? <TrendingDown className="size-3" /> : null}
+                    {earned ? formatPct(delta) : "—"}
                   </span>
                 </td>
                 <td className="px-4 py-3 tabular-nums">{c.medianPurity != null ? `${c.medianPurity.toFixed(1)}%` : <span className="text-[var(--muted)]">—</span>}</td>
                 <td className="px-4 py-3 font-bold tabular-nums">{c.coaCount || <span className="font-normal text-[var(--muted)]">—</span>}</td>
                 <td className="px-4 py-3"><TrustTierChip tier={compoundTrustTier(c)} /></td>
-                <td className="px-4 py-3"><div className="h-8 w-20"><PriceSparkline values={history} accent="#12b3a6" height={32} uid={c.slug} /></div></td>
+                <td className="px-4 py-3"><div className="h-8 w-20">{trail ? <PriceSeries points={trail.points} description={`${trail.name}: observed prices. ${basisCopy}`} accent="#111214" height={32} uid={c.slug} compact /> : <span className="text-[11px] text-[var(--muted)]">no checks yet</span>}</div></td>
               </tr>
             );
           })}

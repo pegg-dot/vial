@@ -17,7 +17,7 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 > - **System health is on `/admin`**, above the traffic report, and on `/status`. Both render one
 >   shared verdict from `src/lib/system-health.ts` — never copy that logic, or the owner's page and
 >   the public page can disagree about whether the site is well.
-> - **Data is real and 100% live.** 82 vendors, 805 listings, 60 compounds, 279 COAs. **Zero demo
+> - **Data is real and 100% live.** 83 vendors (16 with listings), ~900 listings, 60 compounds, 279 COAs. **Zero demo
 >   records reach production** — fixture seeding is off there, so the seeded demo companies
 >   (northstar-research, helix-science and four more) exist only in a local dev database. If you
 >   see them in `.data/pglite`, that is expected; if you ever see them on the site, something is
@@ -74,27 +74,44 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 > ### What is still genuinely open
 >
 > - **Listing evidence coverage** — still the real product gap. See `docs/STOREFRONT-COA.md`.
-> - **Price history is not real yet (2026-08-28).** 685 of 904 live listings hold one price point
->   and the rest hold placeholder junk (`[34.95, 150, 150]` on a $34.95 listing). `compounds.
->   price_change` is a median over that column, so the Δ on `/compounds` (terminal table and the
->   compound hero) and "Price trend" on `/products/[slug]` are not facts about the market. The
->   market tiles no longer show a delta for this reason. Root cause: the live collect cron never
->   calls `recordPriceObservation` — only hand-run scripts do (`scripts/ingest-market.mjs`,
->   `backfill-prices-wayback.mjs`). Fix = record an observation per listing per collect run and
->   repair the stored rows by migration; then the delta can return everywhere.
+> - **Price truth (2026-08-29) — see `docs/superpowers/specs/2026-08-29-vial-price-truth-design.md`.**
+>   The `[34.95, 150, 150]` histories were not placeholders: the page-scrape extractor fell back to
+>   the first "$" on a vendor page — a "free shipping over $150" banner — auto-triage approved
+>   any price in [10, 500], and the cascade pushed "$35 → $150" to watchers. 75 umbrella-labs
+>   listings showed "$100" ("ORDERS $100 OR MORE") the morning this was found. Fixed in phases,
+>   each gated and proven on production: **the vendor's structured catalogue feed is the price
+>   authority** (a scraped price is rejected with a receipt while the feed was read within 48 h,
+>   and is the fallback when it was not); a bare "$NNN" is never a price; material moves hold for
+>   a person; `price_observations` is the substrate (one row per listing per UTC day, written by
+>   ONE statement at the end of the collect tick, `listings.price_source` saying which writer set
+>   the price); migration **53** discarded the undated arrays, seeded one real observation per
+>   live listing on the day it was last observed, zeroed `compounds.price_change`, and marked the
+>   junk `price-change` alerts / `listing-price-outlier` signals superseded. A Δ is shown only
+>   when earned (`lib/price-trend.ts`, D6) — expect "—" everywhere for the first two weeks after
+>   2026-08-29; that is the honest state, not a bug. `price_history` on `listings` is dead: read
+>   `Product.pricePoints`. **Phase 3 (open):** collector price changes still bypass the claim
+>   path (they overwrite `listings.price` directly); routing them through a structured-source
+>   claim would restore receipts + cascade for real changes and re-enable truthful price alerts.
 > - **No outside monitoring.** The owner declined an uptime check and the alert webhook. In-app
 >   alerting (`src/server/observability/alerts.ts`) works and is throttled, but it cannot report the
 >   failure that actually happened: when the deployment itself is broken, the code that would send
 >   the alert never runs. Set `VIALGRADE_ALERT_WEBHOOK` (Discord/Slack URL) and point any uptime
 >   service at `/api/health/ready` — **not** the homepage, which now deliberately returns a friendly
 >   200 during an outage. See `docs/MONITORING.md`.
-> - **Catalog coverage gap.** `science-bio` and `certified-peptides` probe as `operating` but have
->   no organization row, so they are tracked and never imported. Six `vendor_status` rows have no
->   vendor for this reason; the other four are `blocked`/`parked`/`offline`, which explains itself.
->   Left in place deliberately — deleting real collected signal to tidy a table loses information.
-> - **Grade sweep is progressive.** Stored vendor grades refresh in the daily collect cron
->   (04:30 UTC), sized to cover the whole list in one run. A grading change is not visible on the
->   directory until it runs; vendor detail pages compute live and are correct immediately.
+> - **Catalog coverage gap — CLOSED 2026-08-29.** `science-bio` is a 200 titled "Permanently
+>   Closed" and `certifiedpep.com` is a domain-parking frame; both "probed as operating" only
+>   because the probe checked parking vocabulary alone. `classifyStorefrontBody` now recognises
+>   the closure family and parking-frame hosts (`closed` status, own banner). They are not a gap;
+>   they are gone. Promoting them would have published Live prices from defunct domains.
+> - **Cron topology (corrected 2026-08-29; the old "04:30 daily" line was stale).** `vercel.json`:
+>   collect **hourly** (`0 * * * *`, 8 targets per tick, catalogue collectors on a 6 h cadence),
+>   provenance every 15 min (refresh sweep + auto-triage; orphaned `running` jobs are reclaimed
+>   after 10 min), refresh housekeeping 05:30, notifications every 6 h (stale after 13 h). The
+>   grade sweep runs inside every collect tick. A catalogue read that finds zero products is a
+>   FAILED run (backs off, shows on `/status`, named on `/admin`); a disabled target is retried
+>   weekly; after a COMPLETE successful read, listings the feed no longer carries are retired to
+>   Unavailable in one statement. On 2026-08-29 28 % of listings were 8–24 days stale for want of
+>   exactly these four guards.
 > - **`sahepeptides` / `sh-peptide` were deliberately NOT merged.** They share a source, which is
 >   not proof of shared ownership. A wrong merge destroys a real distinction and is much harder to
 >   undo than a missed one.

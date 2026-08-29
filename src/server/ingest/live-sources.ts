@@ -363,7 +363,7 @@ export async function recordCatalogListing(
   const advertised = input.advertisedTesting ?? null;
   await db.query(
     `UPDATE listings
-     SET price = $2, availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
+     SET price = $2, price_source = 'catalogue', availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
          last_checked = 'just now', price_history = CASE WHEN price_history = '[]'::jsonb THEN $4::jsonb ELSE price_history END,
          image_url = COALESCE($5, image_url),
          report_issuer = CASE WHEN $6 THEN $8 ELSE report_issuer END,

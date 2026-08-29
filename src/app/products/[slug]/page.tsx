@@ -5,7 +5,7 @@ import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock3, ExternalLink, PackageCheck, Star, Truck } from "lucide-react";
 import { getCompoundBySlug, getProductBySlug, getProductsByCompoundSlug, getVendorBySlug } from "@/server/catalog/repository";
-import { formatCurrency } from "@/lib/format";
+import {  } from "@/lib/format";
 import { displayProductName, displayProductTitle, displaySize } from "@/lib/product-title";
 import { vendorClaimLabelShort } from "@/lib/vendor-copy";
 import { JsonLd } from "@/components/json-ld";
@@ -16,7 +16,7 @@ import { EvidenceMatrix } from "@/components/evidence-matrix";
 import { VialGradePill } from "@/components/vial-grade-card";
 import { deriveEvidenceDimensions } from "@/server/verify/evidence-dimensions";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
-import { PriceSparkline } from "@/components/price-sparkline";
+import { PriceSeries } from "@/components/price-series";
 import { ProductActions } from "@/components/product-actions";
 import { DecisionRecorder } from "@/components/decision-recorder";
 import { getCurrentPrincipal } from "@/server/auth/principal";
@@ -33,7 +33,8 @@ import { educationFor } from "@/lib/compound-education";
 import { depthFor } from "@/lib/compound-depth";
 import { PriceFlag } from "@/components/listing-trust-chip";
 import { UsLegalNotice } from "@/components/us-legal-notice";
-import { getListingPriceMeta } from "@/server/ingest/price-history";
+import { getListingObservations, getListingPriceMeta } from "@/server/ingest/price-history";
+import { computeListingTrend, describeListingTrend, formatObservedPrice, formatPct } from "@/lib/price-trend";
 import { ProductMarketStats } from "@/components/market/product-market-stats";
 import { listingMarketStats } from "@/lib/curation";
 import { PriceLeaderboard } from "@/components/price-leaderboard";
@@ -87,14 +88,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     reportIssuer: product.reportIssuer, reportConfirmed: product.reportConfirmed, advertisesTesting: product.advertisesTesting, batchCode: product.batchCode,
   });
   const priceMeta = await getListingPriceMeta(db, product.slug);
+  const priceTrend = computeListingTrend(await getListingObservations(db, product.slug), new Date(), priceMeta.days);
+  const priceTrendCopy = describeListingTrend(priceTrend);
   const compoundLabTests = await getLabTestsForCompound(db, product.compoundSlug);
   const education = educationFor(product.compoundSlug);
   const stackedBriefs = education?.stackedWith?.length
     ? (await db.query<{ slug: string; canonical_name: string }>(`SELECT slug, canonical_name FROM compounds WHERE slug = ANY($1)`, [education.stackedWith])).rows.map((r) => ({ slug: r.slug, name: r.canonical_name }))
     : [];
-  const priceStart = product.priceHistory[0];
-  const priceEnd = product.priceHistory.at(-1) ?? product.price;
-  const priceChange = ((priceEnd - priceStart) / priceStart) * 100;
 
   // Structured data for a listing we AGGREGATE. Three constraints shape it:
   //
@@ -255,19 +255,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="mt-5 grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
           <CoaCrossCheckPanel check={coaCheck} />
 
-          {product.priceHistory.length >= 2 ? (
+          {/* Exactly one of the five states (spec §5). A percentage appears only when it is earned:
+              a baseline near the window start, a fresh latest check, and at least two weeks between
+              them. Direction is carried by the sign, not by colour — a price moving is not good or
+              bad in an evidence product. */}
           <div className="ink hard rounded-[18px] bg-white p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Price trend</p>
-                <p className={`mt-1 text-lg font-extrabold ${priceChange <= 0 ? "text-[#0e8f80]" : "text-[#d3372c]"}`}>{priceChange > 0 ? "+" : ""}{priceChange.toFixed(1)}%</p>
+                {priceTrend.state === "trending"
+                  ? <p className="mt-1 text-lg font-extrabold tabular-nums">{formatPct(priceTrend.pct)} <span className="text-sm font-semibold text-[var(--muted)]">over {priceTrend.window} days</span></p>
+                  : <p className="mt-1 text-lg font-extrabold text-[var(--muted)]">—</p>}
               </div>
-              <p className="text-xs font-semibold text-[var(--muted)]">{formatCurrency(priceStart)} → {formatCurrency(priceEnd)}</p>
+              {priceTrend.state === "trending" ? <p className="text-xs font-semibold tabular-nums text-[var(--muted)]">{formatObservedPrice(priceTrend.base.price)} → {formatObservedPrice(priceTrend.latest.price)}</p> : null}
             </div>
-            <div className="mt-5 h-28"><PriceSparkline values={product.priceHistory} accent={product.accent[0]} height={94} /></div>
-            {priceMeta.days >= 2 && priceMeta.since ? <p className="mt-3 text-[11px] leading-4 text-black/45">{priceMeta.days} price checks since {new Date(priceMeta.since).toLocaleDateString()} — from live catalog fetches and archived catalog snapshots. Real observed prices, not a projection.</p> : null}
+            <div className="mt-5 h-28"><PriceSeries points={product.pricePoints} description={priceTrendCopy} accent={product.accent[0]} height={94} compact /></div>
+            <p className="mt-3 text-[11px] leading-4 text-black/60">{priceTrendCopy}</p>
           </div>
-          ) : null}
 
           {product.reportIssuer ? (
           <div className="ink hard rounded-[18px] bg-white p-5">

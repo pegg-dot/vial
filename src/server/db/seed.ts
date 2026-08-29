@@ -1,3 +1,4 @@
+import { recomputeCompoundPriceChanges } from "@/server/ingest/price-history";
 import type { SqlConnection } from "./client";
 import { compounds, products, vendors } from "@/lib/data";
 import { recomputeVendorStats } from "./vendor-stats-repair";
@@ -207,7 +208,24 @@ export async function seedDatabase(database: SqlConnection) {
         JSON.stringify(product.evidence),
       ],
     );
+    // The demo trail as dated observations — one every six days ending today, so a demo listing
+    // shows a real 30-day change in development and e2e. Demo-only and marked so; the collect
+    // tick and the v53 repair never write observations for origin <> 'live'.
+    const trail = product.priceHistory;
+    for (let index = 0; index < trail.length; index += 1) {
+      const daysAgo = (trail.length - 1 - index) * 6;
+      await database.query(
+        `INSERT INTO price_observations (id, listing_slug, vendor_slug, compound_slug, price, source, observed_day, observed_at, currency, available)
+         VALUES ($1, $2, $3, $4, $5, 'demo', CURRENT_DATE - $6::int, NOW() - ($6::text || ' days')::interval, 'USD', TRUE)
+         ON CONFLICT (listing_slug, observed_day) DO NOTHING`,
+        [`priceobs:${product.slug}:demo${index}`, product.slug, product.vendorSlug, product.compoundSlug, trail[index], daysAgo],
+      );
+    }
   }
+
+  // The demo trail above gives every demo compound a basis to speak from; without this the
+  // compound page would say "no checks on record" over a chart full of them until a tick ran.
+  await recomputeCompoundPriceChanges(database);
 
   for (const fixture of fixtureSources) {
     const sourceId = `src:fixture:${fixture.key}`;

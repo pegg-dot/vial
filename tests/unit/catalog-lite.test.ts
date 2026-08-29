@@ -18,7 +18,7 @@ import type { CatalogSnapshot, Compound, Product, Vendor } from "@/lib/types";
 // inherited into the payload every page pays for.
 const compound: Compound = {
   slug: "bpc-157", name: "BPC-157", shorthand: "BPC", category: "repair", description: "A long compound description that no page chrome renders.",
-  aliases: ["body protection compound"], listings: 12, medianPrice: 48, medianPricePerMg: 4.8, priceChange: -3,
+  aliases: ["body protection compound"], listings: 12, medianPrice: 48, medianPricePerMg: 4.8, priceChangeBasis: null, priceChange: -3,
   documentationCoverage: 62, coaCount: 7, medianPurity: 98.4, accent: ["#12b3a6", "#8fffd6", "#ffffff"],
   researchNote: "A long research note that no page chrome renders either.", origin: "live",
 };
@@ -37,7 +37,7 @@ const product: Product = {
   reportIssuer: "Janoshik", reportConfirmed: true, advertisesTesting: true, observedAt: "2026-08-01T00:00:00.000Z",
   batchCode: "NS-BPC-2607", batchLinked: true, sampleOrigin: "vendor-submitted", lastChecked: "2 days ago",
   rating: 4.6, reviewCount: 22, featured: true, checkoutMode: "outbound",
-  priceHistory: [61, 59, 60, 58, 58, 57, 54, 54], accent: ["#12b3a6", "#8fffd6", "#ffffff"],
+  pricePoints: [], priceHistory: [61, 59, 60, 58, 58, 57, 54, 54], accent: ["#12b3a6", "#8fffd6", "#ffffff"],
   evidence: [{ label: "Identity", status: "established", detail: "A long evidence detail string." }],
   origin: "live", externalUrl: "https://example.test/p", imageUrl: "https://example.test/p.jpg",
   trust: { status: "batch-verified", tone: "good", label: "Batch verified", detail: "A long trust detail string.", priceFlag: null, priceNote: null, compoundCoas: 7, compoundMedianPurity: 98.4, vendorFlagged: false, adjustedPricePerMg: 10.0, purityBasis: "vendor" },
@@ -64,7 +64,7 @@ describe("catalog lite projection", () => {
   it("drops the heavy per-record collections entirely", () => {
     const serialized = JSON.stringify(toCatalogLite(snapshot));
     // Matched as JSON keys, not bare substrings — `evidenceLabel` is kept and contains "evidence".
-    for (const field of ["priceHistory", "evidence", "researchNote", "description", "history", "summary", "headline", "reportIssuer", "batchCode", "trust", "medianPurity", "reviewCount", "priceChange"]) {
+    for (const field of ["priceHistory", "pricePoints", "priceChangeBasis", "evidence", "researchNote", "description", "history", "summary", "headline", "reportIssuer", "batchCode", "trust", "medianPurity", "reviewCount", "priceChange"]) {
       expect(serialized).not.toContain(`"${field}":`);
     }
   });

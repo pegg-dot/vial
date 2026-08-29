@@ -1,3 +1,4 @@
+import type { CompoundPriceBasis, PricePoint } from "./price-trend";
 export type EvidenceLevel =
   | "independent"
   | "issuer-confirmed"
@@ -26,7 +27,9 @@ export interface Compound {
   listings: number;
   medianPrice: number;
   medianPricePerMg: number | null;   // median $/mg across listings whose size we can read; null when too few
+  /** Median 30-day change over listings that earned one; 0 until `priceChangeBasis.medianPct` exists. */
   priceChange: number;
+  priceChangeBasis: CompoundPriceBasis | null;
   documentationCoverage: number;
   coaCount: number;         // independent lab certificates on record for this compound (self-published excluded)
   medianPurity: number | null;
@@ -131,7 +134,10 @@ export interface Product {
   reviewCount: number;
   featured?: boolean;
   checkoutMode: CheckoutMode;
+  /** Price-only projection of `pricePoints`, kept for the published API shape. */
   priceHistory: number[];
+  /** Dated change points from price_observations: first, every change, latest. */
+  pricePoints: PricePoint[];
   accent: [string, string, string];
   evidence: EvidenceDimension[];
   origin: DataOrigin;

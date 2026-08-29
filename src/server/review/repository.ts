@@ -128,19 +128,20 @@ async function applyApprovedClaim(tx: SqlConnection, listing: ListingRow, predic
     case "price": {
       const price = Number(value);
       if (!Number.isFinite(price) || price <= 0) throw new Error("Approved price must be a positive number");
-      const history = parseJsonArray<number>(listing.price_history);
-      history.push(price);
+      // The dated trail lives in price_observations now (migration 53): the collect tick records
+      // this publication as an observation with source 'page', keyed on observed_at. The undated
+      // price_history array is no longer written by anyone.
       await tx.query(
         `UPDATE listings
          SET previous_price = price,
              price = $2,
-             price_history = $3::jsonb,
+             price_source = 'page',
              last_checked = 'just now',
              evidence_label = CASE WHEN evidence_label = 'Awaiting first check' THEN 'Vendor page checked' ELSE evidence_label END,
              observed_at = NOW(),
              updated_at = NOW()
          WHERE id = $1`,
-        [listing.id, price, JSON.stringify(history.slice(-24))],
+        [listing.id, price],
       );
       break;
     }

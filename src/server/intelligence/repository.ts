@@ -251,7 +251,7 @@ export async function getAlertsForListingSlugs(slugs: string[], limit = 50) {
      JOIN listings l ON ae.entity_type='listing' AND l.id=ae.entity_id
      JOIN products p ON p.id=l.product_id
      JOIN organizations o ON o.id=p.vendor_id
-     WHERE l.slug IN (${placeholders})
+     WHERE l.slug IN (${placeholders}) AND NOT (ae.data_json ? 'superseded')
      ORDER BY ae.created_at DESC
      LIMIT ${Math.max(1, Math.min(limit, 200))}`,
     slugs,
