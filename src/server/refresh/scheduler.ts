@@ -2,7 +2,7 @@ import { runSourceIngestion } from "@/server/agents/pipeline";
 import { getDatabase, withTransaction } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { createAlert, createChildEvent, createDomainEvent, getEventRoot, recordMetric, upsertOpportunity } from "@/server/intelligence/events";
-import { getActiveFixture, claimNextRefreshJob, enqueueDueRefreshJobs, getRefreshPolicy } from "./repository";
+import { getActiveFixture, claimNextRefreshJob, enqueueDueRefreshJobs, getRefreshPolicy, reclaimStalledRefreshJobs } from "./repository";
 import { SafeFetchError, safeFetch } from "./safe-fetch";
 import type { RefreshJob } from "./types";
 
@@ -278,6 +278,8 @@ export async function processRefreshJob(jobId: string) {
 }
 
 export async function runRefreshSweep(limit = 10, budgetMs = 90_000) {
+  // First, anything a killed function left behind — otherwise its policy is never served again.
+  const reclaimed = await reclaimStalledRefreshJobs();
   const enqueued = await enqueueDueRefreshJobs();
   const results: Awaited<ReturnType<typeof processRefreshJob>>[] = [];
   // Jobs run one at a time and each is a network fetch against someone else's server, so a sweep
@@ -291,5 +293,5 @@ export async function runRefreshSweep(limit = 10, budgetMs = 90_000) {
     if (!next) break;
     results.push(await processClaimedRefreshJob(next));
   }
-  return { enqueued: enqueued.length, processed: results.length, results, budgetExhausted: Date.now() >= deadline };
+  return { reclaimed, enqueued: enqueued.length, processed: results.length, results, budgetExhausted: Date.now() >= deadline };
 }

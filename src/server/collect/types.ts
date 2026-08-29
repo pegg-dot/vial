@@ -11,4 +11,6 @@ export interface CollectorOutcome {
   items: number;
   ok: boolean;
   error?: string;
+  /** Listings marked Unavailable because a complete, successful read of the feed no longer contained them. */
+  retired?: number;
 }

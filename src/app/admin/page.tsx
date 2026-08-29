@@ -5,7 +5,7 @@ import { deriveSystemHealth } from "@/lib/system-health";
 import { checkReadiness } from "@/server/health/readiness";
 import { getRefreshMetrics } from "@/server/refresh/repository";
 import { getIntelligenceMetrics } from "@/server/intelligence/repository";
-import { getCollectionMetrics, isKeepingUp, describeWait, LATENESS_DEGRADED } from "@/server/collect/metrics";
+import { getCollectionMetrics, isKeepingUp, describeWait, LATENESS_DEGRADED, getUnhealthyCollectorTargets } from "@/server/collect/metrics";
 import { getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/server/notifications/sweep";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { getAttributionOverview } from "@/server/outbound/partner-report";
@@ -55,7 +55,7 @@ export default async function AdminPage() {
     sweep: sweepHealth ? { lastRanAt: sweepHealth.lastRanAt, lastOk: sweepHealth.lastOk, backlogReaders: sweepHealth.backlogReaders, healthy: isSweepHealthy(sweepHealth), keepingUp: isSweepKeepingUp(sweepHealth) } : null,
   });
 
-  const [attribution, visitors, people, freshness, broken, counts, collectors] = await Promise.all([
+  const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getVisitorSummary({ days: 30 }),
     getPeopleOverview({ recentDays: 7 }),
@@ -81,6 +81,9 @@ export default async function AdminPage() {
               MIN(next_due_at) AS next_due_at
        FROM collection_targets GROUP BY collector ORDER BY collector`,
     ).then(r => r.rows),
+    // By NAME. The per-kind table above collapses two failing vendors into one row, which is how
+    // "2 failing" on /status could not be turned into two names.
+    getUnhealthyCollectorTargets(db).catch(() => []),
   ]);
 
   const { totals, vendors } = attribution;
@@ -378,6 +381,34 @@ export default async function AdminPage() {
           sub={broken.length ? broken.map(b => b.target).slice(0, 3).join(", ") : "every source that yielded data still does"}
         />
       </div>
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Collectors needing attention</h2>
+      {unhealthy.length === 0 ? (
+        <p className="mt-3 text-sm font-medium text-[var(--muted)]">Every collector is enabled and its last run succeeded.</p>
+      ) : (
+        <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+          <table className="w-full min-w-[820px] text-left text-sm">
+            <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+              <tr>
+                <th className="px-5 py-3">Vendor / target</th><th className="px-5 py-3">Collector</th>
+                <th className="px-5 py-3">State</th><th className="px-5 py-3">Last run</th>
+                <th className="px-5 py-3">Next due</th><th className="px-5 py-3">Last error</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#111214]/10">
+              {unhealthy.map(t => (
+                <tr key={t.id} className={t.enabled ? "bg-[#fff1f0]" : "bg-[#f3f3f3]"}>
+                  <td className="px-5 py-3 font-bold">{t.target}</td>
+                  <td className="px-5 py-3 text-xs">{t.collector}</td>
+                  <td className="px-5 py-3 text-xs font-bold">{t.enabled ? `failing (${t.consecutiveFailures})` : "disabled — retried weekly"}</td>
+                  <td className="px-5 py-3 text-xs">{t.lastRunAt ? new Date(t.lastRunAt).toLocaleString() : "never"}</td>
+                  <td className="px-5 py-3 text-xs">{t.enabled && t.nextDueAt ? new Date(t.nextDueAt).toLocaleString() : "—"}</td>
+                  <td className="px-5 py-3 text-xs text-[var(--muted)]">{t.lastError?.slice(0, 120) ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Collectors</h2>
       <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
         <table className="w-full min-w-[820px] text-left text-sm">

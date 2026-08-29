@@ -9,7 +9,7 @@
 // measurement that matters is not "did the last tick work" but "how long has the oldest overdue
 // target been waiting, against the cadence it was promised".
 
-import { getDatabase } from "@/server/db/client";
+import { getDatabase, type SqlConnection } from "@/server/db/client";
 import type { QueryResultRow } from "pg";
 
 export interface CollectionMetrics {
@@ -90,4 +90,45 @@ export function describeWait(minutes: number): string {
   if (minutes < 90) return `${Math.round(minutes)}m`;
   if (minutes < 48 * 60) return `${Math.round(minutes / 60)}h`;
   return `${Math.round(minutes / (60 * 24))}d`;
+}
+
+export interface UnhealthyCollectorTarget {
+  id: string;
+  collector: string;
+  target: string;
+  enabled: boolean;
+  lastOk: boolean | null;
+  lastError: string | null;
+  consecutiveFailures: number;
+  lastRunAt: string | null;
+  nextDueAt: string | null;
+}
+
+/**
+ * Every (collector, target) that is disabled or currently failing, by name. The per-kind
+ * aggregate on /admin collapses two failing vendors of one kind into a single row with
+ * MAX(last_error) — which is how "2 failing" on /status could not be turned into two names.
+ */
+export async function getUnhealthyCollectorTargets(connection?: SqlConnection): Promise<UnhealthyCollectorTarget[]> {
+  const db = connection ?? (await getDatabase());
+  const result = await db.query<QueryResultRow & {
+    id: string; collector: string; target: string; enabled: boolean; last_ok: boolean | null; last_error: string | null;
+    consecutive_failures: string | number; last_run_at: Date | string | null; next_due_at: Date | string | null;
+  }>(
+    `SELECT id, collector, target, enabled, last_ok, last_error, consecutive_failures, last_run_at, next_due_at
+     FROM collection_targets
+     WHERE NOT enabled OR consecutive_failures > 0 OR last_ok = FALSE
+     ORDER BY enabled ASC, consecutive_failures DESC, collector, target`,
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    collector: row.collector,
+    target: row.target,
+    enabled: Boolean(row.enabled),
+    lastOk: row.last_ok === null ? null : Boolean(row.last_ok),
+    lastError: row.last_error,
+    consecutiveFailures: Number(row.consecutive_failures),
+    lastRunAt: row.last_run_at ? new Date(row.last_run_at).toISOString() : null,
+    nextDueAt: row.next_due_at ? new Date(row.next_due_at).toISOString() : null,
+  }));
 }

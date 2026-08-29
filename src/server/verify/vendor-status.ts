@@ -4,7 +4,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 
-export type VendorStatusKind = "operating" | "offline" | "redirected" | "parked" | "blocked" | "unknown";
+export type VendorStatusKind = "operating" | "offline" | "redirected" | "parked" | "closed" | "blocked" | "unknown";
 export interface VendorStatus { status: VendorStatusKind; httpCode: number | null; redirectHost: string | null; detail: string; checkedAt?: string | null; consecutiveFailures?: number }
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36";
@@ -14,7 +14,17 @@ function registrable(host: string): string {
   const parts = h.split(".");
   return parts.length <= 2 ? h : parts.slice(-2).join(".");
 }
-const PARKED = /this domain (is|may be) for sale|buy this domain|domain is parked|sedoparking|hugedomains|parked free|godaddy\.com\/domainsearch|afternic/i;
+const PARKED = /this domain (is|may be) for sale|buy this domain|domain is parked|sedoparking|hugedomains|parked free|godaddy\.com\/domainsearch|afternic|safeframe\.html|cdn-fileserver|findresultsquick/i;
+// A storefront that says so itself. science.bio served a 200 titled "Permanently Closed" and was
+// recorded as operating for weeks, because only the parking vocabulary was checked.
+const CLOSED = /permanently closed|ceased (?:operations|trading)|we have closed|closed for business|no longer (?:operating|in business|accepting orders)|discontinued? (?:the )?sale of/i;
+
+/** Pure classification of a 200 body, so the probe's judgement can be tested without a network. */
+export function classifyStorefrontBody(body: string): "operating" | "parked" | "closed" {
+  if (CLOSED.test(body)) return "closed";
+  if (body.length < 600 || PARKED.test(body)) return "parked";
+  return "operating";
+}
 
 /** Probe a vendor domain's operational status. Never throws — a failure is itself the signal. */
 export async function probeVendorStatus(domain: string): Promise<VendorStatus> {
@@ -26,7 +36,9 @@ export async function probeVendorStatus(domain: string): Promise<VendorStatus> {
     if (res.status >= 400) return { status: "offline", httpCode: res.status, redirectHost: null, detail: `Returns ${res.status} — the storefront isn't reachable.` };
     if (registrable(finalHost) !== registrable(domain)) return { status: "redirected", httpCode: res.status, redirectHost: finalHost, detail: `Now redirects to ${registrable(finalHost)} — a domain change or takeover; verify it's the same operator before trusting it.` };
     const body = (await res.text()).slice(0, 20000);
-    if (body.length < 600 || PARKED.test(body)) return { status: "parked", httpCode: res.status, redirectHost: null, detail: `Resolves to a parked or near-empty page, not a working storefront — a common exit-scam end state.` };
+    const kind = classifyStorefrontBody(body);
+    if (kind === "closed") return { status: "closed", httpCode: res.status, redirectHost: null, detail: `The storefront says it has permanently closed — orders placed here will not be fulfilled.` };
+    if (kind === "parked") return { status: "parked", httpCode: res.status, redirectHost: null, detail: `Resolves to a parked or near-empty page, not a working storefront — a common exit-scam end state.` };
     return { status: "operating", httpCode: res.status, redirectHost: null, detail: `Live storefront responding normally.` };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

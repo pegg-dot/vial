@@ -249,8 +249,12 @@ export async function getNotificationSweepHealth(now = new Date()): Promise<Swee
   };
 }
 
-/** Daily schedule, so anything past ~2 days is a stopped cron rather than a quiet one. */
-export const SWEEP_STALE_HOURS = 48;
+/**
+ * The cron runs every six hours (vercel.json). Thirteen hours is two missed ticks plus slack for
+ * one slow one; the old 48-hour horizon — written when the sweep was nightly — let eight missed
+ * ticks pass without a word.
+ */
+export const SWEEP_STALE_HOURS = 13;
 
 /**
  * Is the sweep FAULTED? Not "did it do all the work" — see `isSweepKeepingUp` for that.

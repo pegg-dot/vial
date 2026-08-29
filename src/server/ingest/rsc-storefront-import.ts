@@ -214,7 +214,7 @@ export async function importRscCatalog(
 ): Promise<ImportResult & { coas: (RscCoa & { compoundSlug: string; productUrl: string })[] }> {
   const fetcher = input.fetchProducts ?? fetchRscProducts;
   const result: ImportResult & { coas: (RscCoa & { compoundSlug: string; productUrl: string })[] } =
-    { vendor: input.vendorName, productsSeen: 0, matched: 0, imported: [], skipped: 0, coas: [] };
+    { vendor: input.vendorName, productsSeen: 0, matched: 0, imported: [], skipped: 0, complete: false, coas: [] };
 
   await upsertLiveVendor(db, {
     slug: input.vendorSlug, name: input.vendorName, domains: [input.domain],

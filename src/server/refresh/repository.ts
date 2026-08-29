@@ -256,6 +256,27 @@ export async function enqueueDueRefreshJobs(now = new Date()) {
   });
 }
 
+/**
+ * A refresh job left `running` by a function killed at its ceiling (120 s) blocks its policy
+ * forever: enqueueDueRefreshJobs skips any policy with a running job and claimNextRefreshJob never
+ * claims one. In production 48 policies sat "4× late" for four days for exactly this reason. Ten
+ * minutes is far past any legitimate run; the attempt counter already incremented on claim, so
+ * `max_attempts` still ends the loop.
+ */
+export const STALLED_JOB_MINUTES = 10;
+
+export async function reclaimStalledRefreshJobs(minutes = STALLED_JOB_MINUTES): Promise<number> {
+  const db = await getDatabase();
+  const result = await db.query<QueryResultRow & { id: string }>(
+    `UPDATE refresh_jobs
+     SET status = 'retrying', available_at = NOW(), last_error = COALESCE(last_error, 'reclaimed: ran past the function ceiling without settling')
+     WHERE status = 'running' AND started_at < NOW() - ($1::text || ' minutes')::interval
+     RETURNING id`,
+    [String(minutes)],
+  );
+  return result.rows.length;
+}
+
 export async function claimNextRefreshJob(jobId?: string) {
   return withTransaction(async (tx) => {
     const result = await tx.query<QueryResultRow & { id: string }>(

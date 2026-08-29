@@ -66,23 +66,26 @@ export class StorefrontUnreachableError extends Error {
   }
 }
 
-export async function fetchWooProducts(domain: string, maxPages = 6): Promise<WooProduct[] | null> {
+export async function fetchWooCatalog(domain: string, maxPages = 6): Promise<{ products: WooProduct[]; complete: boolean } | null> {
   let lastStatus: number | null = null;
   let reachedHost = false;
   for (const base of [`https://${domain}`, `https://www.${domain}`]) {
     const all: WooProduct[] = [];
+    // `complete` is true only when we saw the last page. A run cut off by maxPages or a mid-way
+    // error has NOT seen the whole catalogue and must not be allowed to retire what it missed.
+    let complete = false;
     for (let page = 1; page <= maxPages; page++) {
       try {
         const res = await fetch(`${base}/wp-json/wc/store/v1/products?per_page=100&page=${page}`, { headers: { "user-agent": UA, accept: "application/json" }, redirect: "follow" });
         reachedHost = true;
         if (!res.ok) { lastStatus = res.status; break; }
         const data = (await res.json()) as WooProduct[];
-        if (!Array.isArray(data) || data.length === 0) break;
+        if (!Array.isArray(data) || data.length === 0) { complete = true; break; }
         all.push(...data);
-        if (data.length < 100) break;
+        if (data.length < 100) { complete = true; break; }
       } catch { break; }
     }
-    if (all.length) return all;
+    if (all.length) return { products: all, complete };
   }
   // A refusal (403/401/429) or an unreachable host is a FAILURE, not an empty catalog. Only a
   // genuine 2xx that returned no products falls through to null.
@@ -90,6 +93,10 @@ export async function fetchWooProducts(domain: string, maxPages = 6): Promise<Wo
     throw new StorefrontUnreachableError(domain, lastStatus);
   }
   return null;
+}
+
+export async function fetchWooProducts(domain: string, maxPages = 6): Promise<WooProduct[] | null> {
+  return (await fetchWooCatalog(domain, maxPages))?.products ?? null;
 }
 
 /** Vendor's declared price in major units (dollars) from the Store API's minor-unit strings. */
@@ -252,8 +259,9 @@ export async function importWooCommerceCatalog(
     fetchVariation?: (origin: string, id: number) => Promise<WooVariation | null>;
   },
 ): Promise<ImportResult> {
-  const products = input.products ?? (await fetchWooProducts(input.domain));
-  const result: ImportResult = { vendor: input.vendorName, productsSeen: products?.length ?? 0, matched: 0, imported: [], skipped: 0 };
+  const catalog = input.products ? { products: input.products, complete: true } : await fetchWooCatalog(input.domain);
+  const products = catalog?.products ?? null;
+  const result: ImportResult = { vendor: input.vendorName, productsSeen: products?.length ?? 0, matched: 0, imported: [], skipped: 0, complete: catalog?.complete ?? false };
   if (!products) return result;
 
   await upsertLiveVendor(db, { slug: input.vendorSlug, name: input.vendorName, domains: [input.domain], location: input.location, description: input.description });

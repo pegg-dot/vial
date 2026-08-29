@@ -328,3 +328,148 @@ describe("a scheduled import enrols what it writes in the provenance pipeline", 
     expect(after).toBe(before);
   });
 });
+
+// ── Phase 1 of docs/superpowers/specs/2026-08-29-vial-price-truth-design.md ───────────────────────
+// On 2026-08-29, 250 of 904 live listings had not been observed in 8–24 days while showing
+// "In stock": bluum's /products.json had 404'd for eight days and every run was green with zero
+// items; behemoth's target had been disabled and nothing ever re-enabled it; purerawz had delisted
+// 74 products that VialGrade kept serving. Each is a separate guard below.
+
+import { afterEach, vi } from "vitest";
+
+const shopifyProducts = (products: { title: string; handle: string; price: string; available?: boolean }[]) =>
+  ({ products: products.map((p) => ({ title: p.title, handle: p.handle, variants: [{ title: "Default Title", price: p.price, available: p.available ?? true }] })) });
+
+function stubShopify(responder: (url: string) => Response) {
+  vi.stubGlobal("fetch", (async (input: RequestInfo | URL) => responder(String(input))) as unknown as typeof fetch);
+}
+
+async function onlyDue(db: Awaited<ReturnType<typeof getDatabase>>, id: string) {
+  await syncCollectionTargets(db);
+  await db.query(`UPDATE collection_targets SET next_due_at = NOW() + interval '1 day'`);
+  await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '1 hour', enabled = TRUE, consecutive_failures = 0 WHERE id = $1`, [id]);
+}
+
+async function availabilityOf(db: Awaited<ReturnType<typeof getDatabase>>, slug: string) {
+  return (await db.query<{ availability: string | null }>(`SELECT availability FROM listings WHERE slug = $1`, [slug])).rows[0]?.availability ?? null;
+}
+
+describe("a catalogue import that finds nothing is a failed run, not a green one", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const bluum = "ct:catalog-shopify:bluum-peptides";
+
+  it("marks a 2xx feed with zero products as failing so it backs off and shows on /status", async () => {
+    // Fails if runOne hard-codes ok:true for catalogue imports.
+    const db = await getDatabase();
+    await onlyDue(db, bluum);
+    stubShopify(() => new Response(JSON.stringify({ products: [] }), { status: 200, headers: { "content-type": "application/json" } }));
+    const result = await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+    const run = result.ran.find((r) => r.target === "bluum-peptides");
+    expect(run?.ok).toBe(false);
+    expect(run?.error).toMatch(/no products/i);
+    const row = await targetRow(bluum);
+    expect(row.last_ok).toBe(false);
+    expect(row.consecutive_failures).toBe(1);
+  });
+
+  it("treats a 404 from /products.json as a refusal, not an empty catalogue", async () => {
+    // Fails if fetchShopifyProducts swallows a non-2xx and returns null.
+    const db = await getDatabase();
+    await onlyDue(db, bluum);
+    stubShopify(() => new Response("<html>not shopify any more</html>", { status: 404 }));
+    const result = await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+    const run = result.ran.find((r) => r.target === "bluum-peptides");
+    expect(run?.ok).toBe(false);
+    expect(run?.error).toMatch(/404/);
+    expect((await targetRow(bluum)).last_ok).toBe(false);
+  });
+
+  it("stays green when the feed answers and simply matches no compound (control)", async () => {
+    const db = await getDatabase();
+    await onlyDue(db, bluum);
+    stubShopify(() => new Response(JSON.stringify(shopifyProducts([{ title: "Bacteriostatic Water 30ml", handle: "bac-water", price: "12.00" }])), { status: 200 }));
+    const result = await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+    expect(result.ran.find((r) => r.target === "bluum-peptides")?.ok).toBe(true);
+  });
+});
+
+describe("a disabled target is retried after a week, and a target the vendor list no longer declares is removed", () => {
+  it("re-enables a target disabled more than seven days ago so a recovered vendor is read again", async () => {
+    // Fails if syncCollectionTargets only ever upserts collector/target/cadence.
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    await db.query(`UPDATE collection_targets SET enabled = FALSE, consecutive_failures = 12, last_run_at = NOW() - interval '8 days' WHERE id = 'ct:catalog-woo:swiss-chems'`);
+    await db.query(`UPDATE collection_targets SET enabled = FALSE, consecutive_failures = 12, last_run_at = NOW() - interval '2 days' WHERE id = 'ct:catalog-woo:sports-technology-labs'`);
+    await syncCollectionTargets(db);
+    const revived = await targetRow("ct:catalog-woo:swiss-chems");
+    expect(revived.enabled).toBe(true);
+    expect(revived.consecutive_failures).toBe(0);
+    expect(new Date(revived.next_due_at).getTime()).toBeLessThanOrEqual(Date.now());
+    // Control: two days is not a week.
+    expect((await targetRow("ct:catalog-woo:sports-technology-labs")).enabled).toBe(false);
+  });
+
+  it("deletes a zombie row left behind by a platform flag flip, and only that", async () => {
+    // Fails if sync never deletes: swiss-chems is a WooCommerce vendor, so a Shopify target for it is a zombie.
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    await db.query(`INSERT INTO collection_targets(id,collector,target,cadence_minutes) VALUES ('ct:catalog-shopify:swiss-chems','catalog-shopify','swiss-chems',360)`);
+    await db.query(`INSERT INTO collection_targets(id,collector,target,cadence_minutes) VALUES ('ct:catalog-woo:ghost-vendor','catalog-woo','ghost-vendor',360)`);
+    await syncCollectionTargets(db);
+    const ids = (await db.query<{ id: string }>(`SELECT id FROM collection_targets WHERE id IN ('ct:catalog-shopify:swiss-chems','ct:catalog-woo:swiss-chems','ct:catalog-woo:ghost-vendor')`)).rows.map((r) => r.id).sort();
+    // The declared Woo target survives; a synthetic vendor outside the list is not ours to judge.
+    expect(ids).toEqual(["ct:catalog-woo:ghost-vendor", "ct:catalog-woo:swiss-chems"]);
+  });
+});
+
+describe("a complete, successful import retires the listings it no longer sees", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const bluum = "ct:catalog-shopify:bluum-peptides";
+  const two = shopifyProducts([{ title: "BPC-157 5mg", handle: "bpc-157-5mg", price: "34.95" }, { title: "Epitalon 10mg", handle: "epitalon-10mg", price: "48.00" }]);
+  const one = shopifyProducts([{ title: "BPC-157 5mg", handle: "bpc-157-5mg", price: "34.95" }]);
+
+  it("marks a listing Unavailable once a full read of the feed no longer contains it, and nothing else", async () => {
+    // Fails if imports only upsert — a delisted product stays "In stock" forever.
+    const db = await getDatabase();
+    await onlyDue(db, bluum);
+    stubShopify(() => new Response(JSON.stringify(two), { status: 200 }));
+    await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+    expect(await availabilityOf(db, "bluum-peptides-bpc-157")).toBe("In stock");
+    expect(await availabilityOf(db, "bluum-peptides-epitalon")).toBe("In stock");
+
+    await onlyDue(db, bluum);
+    stubShopify(() => new Response(JSON.stringify(one), { status: 200 }));
+    const result = await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+    expect(result.ran.find((r) => r.target === "bluum-peptides")?.retired).toBe(1);
+    expect(await availabilityOf(db, "bluum-peptides-epitalon")).toBe("Unavailable");
+    expect(await availabilityOf(db, "bluum-peptides-bpc-157")).toBe("In stock");
+  });
+
+  it("retires nothing when the read failed (control)", async () => {
+    const db = await getDatabase();
+    await onlyDue(db, bluum);
+    stubShopify(() => new Response(JSON.stringify(two), { status: 200 }));
+    await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+
+    await onlyDue(db, bluum);
+    stubShopify(() => new Response("gone", { status: 404 }));
+    await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+    expect(await availabilityOf(db, "bluum-peptides-epitalon")).toBe("In stock");
+  });
+});
+
+describe("the owner can see which collector needs attention", () => {
+  it("lists disabled and failing targets by name with their last error, and nothing healthy", async () => {
+    // Fails if the only view is the per-kind aggregate that collapses two failing vendors into one row.
+    const db = await getDatabase();
+    const { getUnhealthyCollectorTargets } = await import("@/server/collect/metrics");
+    await syncCollectionTargets(db);
+    await db.query(`UPDATE collection_targets SET last_ok = TRUE, consecutive_failures = 0`);
+    await db.query(`UPDATE collection_targets SET enabled = FALSE, last_error = 'disabled after 12 failures' WHERE id = 'ct:catalog-woo:swiss-chems'`);
+    await db.query(`UPDATE collection_targets SET last_ok = FALSE, consecutive_failures = 3, last_error = 'bluumpeptides.com refused the catalog request (HTTP 404)' WHERE id = 'ct:catalog-shopify:bluum-peptides'`);
+    const rows = await getUnhealthyCollectorTargets(db);
+    expect(rows.map((r) => r.id).sort()).toEqual(["ct:catalog-shopify:bluum-peptides", "ct:catalog-woo:swiss-chems"]);
+    expect(rows.find((r) => r.target === "bluum-peptides")).toMatchObject({ collector: "catalog-shopify", enabled: true, consecutiveFailures: 3, lastError: expect.stringContaining("404") });
+    expect(rows.find((r) => r.target === "swiss-chems")).toMatchObject({ enabled: false });
+  });
+});

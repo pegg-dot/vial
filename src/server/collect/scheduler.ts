@@ -109,7 +109,41 @@ export async function syncCollectionTargets(connection?: SqlConnection): Promise
       [`ct:${row.collector}:${row.target}`, row.collector, row.target, CADENCE_MINUTES[row.collector]],
     );
   }
+  // A target disabled after twelve failures was never looked at again: behemoth-labz answered
+  // its Store API for 24 days while its row sat disabled. Retry weekly — keyed on last_run_at,
+  // because the upsert above touches updated_at every tick.
+  await db.query(
+    `UPDATE collection_targets
+     SET enabled = TRUE, consecutive_failures = 0, next_due_at = NOW(), updated_at = NOW()
+     WHERE NOT enabled AND last_run_at < NOW() - INTERVAL '7 days'`,
+  );
+  // A platform flag flip (Shopify → RSC) leaves the old kind's row behind, still enabled, still
+  // failing. Remove rows for KNOWN vendors that this tick did not declare; a synthetic or unknown
+  // target is not ours to judge.
+  await db.query(
+    `DELETE FROM collection_targets WHERE target = ANY($1::text[]) AND NOT (id = ANY($2::text[]))`,
+    [vendors().map(v => v.slug), rows.map(row => `ct:${row.collector}:${row.target}`)],
+  );
   return { targets: rows.length };
+}
+
+/**
+ * After a COMPLETE, successful read of a vendor's feed, every live listing of that vendor the
+ * read did not touch is no longer for sale there. Imports upsert and never delete, which is how
+ * purerawz kept 154 listings "In stock" for a catalogue of 80. One statement, bounded by the
+ * vendor, guarded by `observed_at < run start` so nothing the run itself just wrote is touched.
+ */
+export async function retireUnseenListings(db: SqlConnection, vendorSlug: string, since: string | Date): Promise<number> {
+  const result = await db.query<{ id: string }>(
+    `UPDATE listings l
+     SET availability = 'Unavailable', updated_at = NOW()
+     FROM products p
+     WHERE p.id = l.product_id AND p.vendor_id = $1 AND l.origin = 'live'
+       AND l.availability <> 'Unavailable' AND l.observed_at < $2::timestamptz
+     RETURNING l.id`,
+    [`org:${vendorSlug}`, since],
+  );
+  return result.rows.length;
 }
 
 export interface DueTarget {
@@ -278,14 +312,21 @@ async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome
     return collectRscCatalog(db, { vendor, compounds, description: input.description });
   }
 
+  // The database's clock, not this process's: `observed_at` is written with NOW() by the import.
+  const startedAt = (await db.query<{ now: string }>(`SELECT NOW() AS now`)).rows[0]!.now;
   const result = t.collector === "catalog-shopify"
     ? await importShopifyCatalog(db, input)
     : await importWooCommerceCatalog(db, input);
-  return { items: result.imported.length, ok: true };
+  // A feed that answered with nothing is a broken feed, not a green run. Reporting it green kept
+  // bluum-peptides "healthy" for eight days of zero-item imports. Matching no compound is fine —
+  // the feed was read; that is what "fresh" means to the price authority in auto-triage.
+  if (result.productsSeen === 0) return { items: 0, ok: false, error: "storefront returned no products — the feed answered but was empty" };
+  const retired = result.complete ? await retireUnseenListings(db, vendor.slug, startedAt) : 0;
+  return { items: result.imported.length, ok: true, retired };
 }
 
 export interface TickResult {
-  ran: { collector: string; target: string; items: number; ok: boolean; error?: string }[];
+  ran: { collector: string; target: string; items: number; ok: boolean; error?: string; retired?: number }[];
   budgetExhausted: boolean;
   reindexed: boolean;
   regraded: number;
@@ -346,9 +387,9 @@ export async function runCollectionTick(
     try {
       // A collector reports a dead SOURCE in its return value, not by throwing — a throw here means
       // a defect in our own code, and the two must stay distinguishable in `collector_runs`.
-      const { items, ok, error } = await runOne(db, t);
+      const { items, ok, error, retired } = await runOne(db, t);
       await settle(db, t, ok, items, error);
-      ran.push({ collector: t.collector, target: t.target, items, ok, ...(error ? { error } : {}) });
+      ran.push({ collector: t.collector, target: t.target, items, ok, ...(error ? { error } : {}), ...(retired !== undefined ? { retired } : {}) });
       if (ok && (t.collector === "catalog-shopify" || t.collector === "catalog-woo")) catalogChanged = true;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

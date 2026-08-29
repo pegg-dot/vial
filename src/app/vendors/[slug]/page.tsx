@@ -170,7 +170,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   // or "unknown"). Keying the alert group off `status !== "operating"` instead used to open an empty
   // section — harmless while it was invisible, but the group now carries a heading that states what
   // is wrong, and a heading must never claim something the page then fails to show.
-  const statusAlert = vendorStatus && ["offline", "parked", "redirected"].includes(vendorStatus.status) ? vendorStatus : null;
+  const statusAlert = vendorStatus && ["offline", "parked", "closed", "redirected"].includes(vendorStatus.status) ? vendorStatus : null;
   const hasAlerts = Boolean(statusAlert) || vendorFlags.length > 0 || enforcement.length > 0;
 
   // If we can no longer read a storefront (a bot wall, a dead host), its prices freeze while still

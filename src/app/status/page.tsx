@@ -134,11 +134,11 @@ export default async function StatusPage() {
             !sweep
               ? "No figures available while this subsystem is unreadable"
               : sweep.lastRanAt === null
-                ? "The nightly sweep has never run — nobody is being told anything while they are away"
+                ? "The six-hourly sweep has never run — nobody is being told anything while they are away"
                 : !sweep.lastOk
                   ? `Last sweep failed on one or more readers, ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago`
                   : (sweep.hoursSinceLastRun ?? 0) >= SWEEP_STALE_HOURS
-                    ? `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago — past its daily schedule`
+                    ? `Last ran ${describeWait(Math.round((sweep.hoursSinceLastRun ?? 0) * 60))} ago — past its six-hourly schedule`
                     // A backlog is what a budget stop actually costs, so it is said as a number of
                     // people rather than hidden inside a red mark on a tick that did its job.
                     : (sweep.backlogReaders ?? 0) > 0

@@ -1,4 +1,5 @@
 // Shopify catalog importer — the breadth loophole.
+import { StorefrontUnreachableError } from "./woocommerce-import";
 //
 // Most research-peptide vendors run Shopify, which exposes EVERY product + variant + price
 // at /products.json (no HTML scraping, no bot-blocker). One fetch yields a vendor's whole
@@ -66,14 +67,26 @@ function shopifyImage(p: ShopifyProduct): string | undefined {
 
 const UA = "VialGrade-Catalog-Import/1.0 (+https://vial.local/how-we-check)";
 
+/** Shopify pages /products.json at 250; a full page means there may be more we did not read. */
+export const SHOPIFY_PAGE_SIZE = 250;
+
 export async function fetchShopifyProducts(domain: string): Promise<ShopifyProduct[] | null> {
+  let lastStatus: number | null = null;
+  let reachedHost = false;
   for (const base of [`https://${domain}`, `https://www.${domain}`]) {
     try {
-      const res = await fetch(`${base}/products.json?limit=250`, { headers: { "user-agent": UA, accept: "application/json" }, redirect: "follow" });
-      if (!res.ok) continue;
+      const res = await fetch(`${base}/products.json?limit=${SHOPIFY_PAGE_SIZE}`, { headers: { "user-agent": UA, accept: "application/json" }, redirect: "follow" });
+      reachedHost = true;
+      if (!res.ok) { lastStatus = res.status; continue; }
       const data = (await res.json()) as { products?: ShopifyProduct[] };
       if (Array.isArray(data.products) && data.products.length) return data.products;
     } catch { /* try next base */ }
+  }
+  // A 404 here means the store is no longer Shopify; a 403/429 means it refused us. Neither is
+  // an empty catalogue. bluum-peptides 404'd for eight days while every run reported green with
+  // zero items — because this function returned null and the collector called that success.
+  if (!reachedHost || (lastStatus !== null && lastStatus >= 400)) {
+    throw new StorefrontUnreachableError(domain, lastStatus);
   }
   return null;
 }
@@ -87,6 +100,8 @@ export interface ImportResult {
   matched: number;
   imported: { slug: string; compound: string; price: number }[];
   skipped: number;
+  /** True only when the run saw the vendor's WHOLE catalogue — the precondition for retiring what it did not see. */
+  complete: boolean;
 }
 
 // One matched (vendor, compound, size) offer, ready to record as a listing.
@@ -154,7 +169,7 @@ export async function importShopifyCatalog(
   input: { vendorSlug: string; vendorName: string; domain: string; location?: string; description: string; compounds: CompoundRef[]; products?: ShopifyProduct[] },
 ): Promise<ImportResult> {
   const products = input.products ?? (await fetchShopifyProducts(input.domain));
-  const result: ImportResult = { vendor: input.vendorName, productsSeen: products?.length ?? 0, matched: 0, imported: [], skipped: 0 };
+  const result: ImportResult = { vendor: input.vendorName, productsSeen: products?.length ?? 0, matched: 0, imported: [], skipped: 0, complete: Boolean(products) && (products?.length ?? 0) < SHOPIFY_PAGE_SIZE };
   if (!products) return result;
 
   await upsertLiveVendor(db, { slug: input.vendorSlug, name: input.vendorName, domains: [input.domain], location: input.location, description: input.description });
