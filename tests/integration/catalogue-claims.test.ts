@@ -107,6 +107,48 @@ describe("a changed feed price goes through the claim path", () => {
   });
 });
 
+describe("the feed outranks a scraped price whatever the size of the correction (D1)", () => {
+  it("publishes a six-fold correction when the price it replaces came from a page scrape", async () => {
+    // Production 23:03Z: 27 umbrella-labs listings stayed at the junk "$100" because their true
+    // price is under $20 and the >5× guard held the feed's correction. The guard exists for a
+    // broken FEED; a price set by a scrape is exactly what the feed is the authority over.
+    const db = await getDatabase();
+    stubShopify(feed([{ title: "BPC-157 5mg", handle: "bpc", price: "34.95" }]));
+    await tick(db);
+    await db.query(`UPDATE listings SET price = 100, price_source = 'page' WHERE slug = $1`, [bpc]);
+    stubShopify(feed([{ title: "BPC-157 5mg", handle: "bpc", price: "16" }]));
+    await tick(db);
+    expect((await listing(db, bpc))).toMatchObject({ price: "16.00", price_source: "catalogue" });
+    const found = await claims(db, bpc);
+    expect(found.at(-1)).toMatchObject({ review_status: "published", extractor_version: "catalogue-feed" });
+  });
+
+  it("still holds a six-fold move when the previous price came from the feed itself (control)", async () => {
+    const db = await getDatabase();
+    stubShopify(feed([{ title: "BPC-157 5mg", handle: "bpc", price: "100" }]));
+    await tick(db);
+    stubShopify(feed([{ title: "BPC-157 5mg", handle: "bpc", price: "16" }]));
+    await tick(db);
+    expect((await listing(db, bpc)).price).toBe("100.00");
+    expect((await claims(db, bpc)).at(-1)).toMatchObject({ review_status: "pending" });
+  });
+
+  it("auto-triage leaves a feed claim that was held for a person alone", async () => {
+    // Fails while triagePendingClaims picks up catalogue-feed claims and rejects them as
+    // "superseded by the feed" — they ARE the feed's, and a person was asked to decide.
+    const db = await getDatabase();
+    const { triagePendingClaims } = await import("@/server/refresh/auto-triage");
+    stubShopify(feed([{ title: "BPC-157 5mg", handle: "bpc", price: "100" }]));
+    await tick(db);
+    stubShopify(feed([{ title: "BPC-157 5mg", handle: "bpc", price: "16" }]));
+    await tick(db);
+    const outcome = await triagePendingClaims(db);
+    expect(outcome.rejected).toHaveLength(0);
+    expect(outcome.approved).toHaveLength(0);
+    expect((await claims(db, bpc)).at(-1)).toMatchObject({ review_status: "pending" });
+  });
+});
+
 describe("an approval no longer zeroes a basis-derived compound Δ", () => {
   it("keeps price_change where the tick put it when a claim publishes", async () => {
     // Fails while cascade.recomputeCompound recomputes price_change from the (now empty) arrays.

@@ -97,13 +97,17 @@ const cents = (value: number) => Math.round(value * 100) / 100;
  */
 export async function proposeCataloguePrice(
   db: SqlConnection,
-  input: { capture: FeedCapture; listingId: string; listingSlug: string; previous: number; next: number },
+  input: { capture: FeedCapture; listingId: string; listingSlug: string; previous: number; next: number; previousSource?: string },
 ): Promise<{ claimId: string; status: "published" | "held"; reason?: string }> {
   const previous = cents(input.previous);
   const next = cents(input.next);
   const ratio = previous > 0 ? next / previous : Number.POSITIVE_INFINITY;
   const move = previous > 0 ? Math.abs(next - previous) / previous : 1;
-  const extreme = ratio >= FEED_EXTREME_RATIO || ratio <= 1 / FEED_EXTREME_RATIO;
+  // The extreme-move guard is for a broken FEED: it compares against the last price the feed set.
+  // A price set by a page scrape is exactly what the feed is the authority over (spec D1); on
+  // 2026-08-29 27 junk "$100" listings sat unfixed because their true price was under $20 and
+  // the correction looked like a ÷5 move. A scrape-set price never holds off its own correction.
+  const extreme = input.previousSource !== "page" && (ratio >= FEED_EXTREME_RATIO || ratio <= 1 / FEED_EXTREME_RATIO);
   const hold = input.capture.suspect || extreme;
   const holdReason = input.capture.suspect
     ? input.capture.suspectReason ?? "the whole read is suspect"

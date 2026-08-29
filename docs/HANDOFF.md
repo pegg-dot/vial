@@ -93,7 +93,10 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >   listing is now an evidence claim against a compact feed capture (`ingest/catalogue-claims.ts`),
 >   approved in-band with the same receipt, cascade and `price-change` alert as every other value;
 >   held for a person when the move is beyond 5× or when most of a vendor's read lands on one
->   price. `cascade.recomputeCompound` no longer touches `price_change`.
+>   price — except that a price set by a page SCRAPE is overruled by the feed whatever the size
+>   (D1; 27 junk "$100" listings sat unfixed behind the guard until this was written). Held feed
+>   claims are a person's decision on `/admin/review`; auto-triage leaves them alone.
+>   `cascade.recomputeCompound` no longer touches `price_change`.
 > - **No outside monitoring.** The owner declined an uptime check and the alert webhook. In-app
 >   alerting (`src/server/observability/alerts.ts`) works and is throttled, but it cannot report the
 >   failure that actually happened: when the deployment itself is broken, the code that would send

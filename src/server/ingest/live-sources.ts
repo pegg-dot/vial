@@ -334,7 +334,9 @@ export async function recordCatalogListing(
   // A CHANGED price on a listing that already has one goes through the claim path (Phase 3), so
   // it gets a receipt, the cascade and a truthful alert. A first price is creation, set directly;
   // a caller without a feed capture (scripts, fixtures) keeps the direct write.
-  const current = Number((await db.query<{ price: string | number }>(`SELECT price FROM listings WHERE id = $1`, [listingId])).rows[0]?.price ?? 0);
+  const currentRow = (await db.query<{ price: string | number; price_source: string }>(`SELECT price, price_source FROM listings WHERE id = $1`, [listingId])).rows[0];
+  const current = Number(currentRow?.price ?? 0);
+  const currentSource = currentRow?.price_source;
   const changed = current > 0 && Math.round(current * 100) !== Math.round(input.price * 100);
   const viaClaim = Boolean(input.feed) && changed;
   // The source has two unique keys — its deterministic id (src:catalog:<listingSlug>) and its
@@ -385,7 +387,7 @@ export async function recordCatalogListing(
     [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null, hasCoa, input.coa?.batchCode ?? null, input.coa?.issuer ?? 'Janoshik', Boolean(advertised), advertised?.issuer ?? null, viaClaim],
   );
   if (viaClaim && input.feed) {
-    const priceClaim = await proposeCataloguePrice(db, { capture: input.feed, listingId, listingSlug: input.slug, previous: current, next: input.price });
+    const priceClaim = await proposeCataloguePrice(db, { capture: input.feed, listingId, listingSlug: input.slug, previous: current, next: input.price, previousSource: currentSource });
     return { productId, listingId, priceClaim };
   }
   return { productId, listingId };

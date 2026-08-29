@@ -120,6 +120,9 @@ export async function triagePendingClaims(
      JOIN products p ON p.id = l.product_id
      JOIN organizations o ON o.id = p.vendor_id
      WHERE ec.review_status = 'pending' AND l.origin = 'live'
+       -- A claim the catalogue feed itself raised and held is a person's decision; this policy
+       -- judges scraped pages against the feed and would "supersede" the feed with the feed.
+       AND ec.extractor_version <> 'catalogue-feed'
      ORDER BY ec.created_at ASC`,
   );
 
