@@ -15,12 +15,11 @@ function visibleText(html: string) {
   return $("body").text() || $.root().text();
 }
 
-function cleanText(value: string) {
+function cleanSegments(value: string) {
   return value
     .split(/(?:\n|[.!?]\s+)/)
     .map((part) => part.trim())
-    .filter((part) => part && !injectionNoise.test(part))
-    .join(" ");
+    .filter((part) => part && !injectionNoise.test(part));
 }
 
 function first(text: string, patterns: RegExp[]) {
@@ -46,16 +45,100 @@ function jsonLd(html: string) {
   return records;
 }
 
-function findOffer(records: unknown[]) {
+type Offer = Record<string, unknown>;
+
+/**
+ * Every offer object reachable from the JSON-LD, flattened. `offers` is a single Offer on a
+ * one-variant page, an ARRAY on a multi-variant page (Shopify/WooCommerce/Yoast), or an
+ * AggregateOffer that may itself carry the per-variant `offers`. The old finder returned whichever
+ * object it met first — including the array — and `Number(array.price)` is NaN, which silently handed
+ * the price to the text fallback and, through it, to whatever "$" the page showed first.
+ */
+function collectOffers(records: unknown[]): Offer[] {
+  const found: Offer[] = [];
   const stack = [...records];
   while (stack.length) {
     const current = stack.shift();
     if (!current || typeof current !== "object") continue;
-    const record = current as Record<string, unknown>;
-    if (record.offers && typeof record.offers === "object") return record.offers as Record<string, unknown>;
+    const record = current as Offer;
+    if (record.offers && typeof record.offers === "object") {
+      const offers = Array.isArray(record.offers) ? record.offers : [record.offers];
+      for (const offer of offers) {
+        if (!offer || typeof offer !== "object") continue;
+        const entry = offer as Offer;
+        if (Array.isArray(entry.offers)) stack.push(entry);
+        else found.push(entry);
+      }
+      continue;
+    }
     for (const value of Object.values(record)) {
       if (Array.isArray(value)) stack.push(...value);
       else if (value && typeof value === "object") stack.push(value);
+    }
+  }
+  return found;
+}
+
+function cents(value: unknown) {
+  const price = Number(value);
+  return Number.isFinite(price) && price > 0 ? Math.round(price * 100) / 100 : null;
+}
+
+/**
+ * The one price the structured offers agree on, or null. A page whose offers name two prices is a
+ * multi-variant page, and this listing is one variant of it — the extractor cannot know which, so it
+ * must not guess. An AggregateOffer with a range is the same ambiguity in one object.
+ */
+function resolveOfferPrice(offers: Offer[]): number | null {
+  const prices = new Set<number>();
+  for (const offer of offers) {
+    const spec = offer.priceSpecification && typeof offer.priceSpecification === "object" ? (offer.priceSpecification as Offer) : null;
+    const single = cents(offer.price ?? spec?.price);
+    if (single !== null) { prices.add(single); continue; }
+    const low = cents(offer.lowPrice);
+    const high = cents(offer.highPrice ?? offer.lowPrice);
+    if (low !== null) prices.add(low);
+    if (high !== null) prices.add(high);
+  }
+  return prices.size === 1 ? [...prices][0] : null;
+}
+
+/** "In stock" / "Unavailable" only when every offer says the same thing. */
+function resolveOfferAvailability(offers: Offer[]): "In stock" | "Unavailable" | null {
+  const states = new Set<"In stock" | "Unavailable">();
+  for (const offer of offers) {
+    if (typeof offer.availability !== "string") continue;
+    const availability = offer.availability.toLowerCase();
+    if (availability.includes("instock")) states.add("In stock");
+    else if (availability.includes("outofstock")) states.add("Unavailable");
+  }
+  return states.size === 1 ? [...states][0] : null;
+}
+
+/**
+ * Words that mean a dollar figure is a threshold or a saving, not the listing's price. Judged inside
+ * the amount's own block or sentence, never across the page, so a shipping banner in the header cannot
+ * veto a real "Price: $34.95" further down.
+ */
+const promotionalContext = /\b(?:orders?\s+(?:over|above|of)|over|above|minimum|min\.?|or\s+more|and\s+up|free\s+shipping|ships?\s+free|save|off|discount|coupon|spend|price\s+match)\b/i;
+const labeledPricePatterns = [
+  /sale\s+price\s*[:\-]?\s*\$\s*([0-9]+(?:\.[0-9]{1,2})?)/i,
+  /(?:current\s+price|price)\s*[:\-]?\s*\$\s*([0-9]+(?:\.[0-9]{1,2})?)/i,
+];
+
+/**
+ * A price from the visible text needs a label. The old bare `$NNN` fallback took the first dollar
+ * figure on the page, which on a storefront is usually "Free shipping over $150" — that single
+ * regex is where every `[34.95, 150, 150]` history came from. A sale price outranks a regular one.
+ */
+function labeledPrice(segments: string[]): number | null {
+  for (const pattern of labeledPricePatterns) {
+    for (const segment of segments) {
+      const match = segment.match(pattern);
+      if (!match?.[1]) continue;
+      if (promotionalContext.test(segment)) continue;
+      const price = cents(match[1]);
+      if (price !== null) return price;
     }
   }
   return null;
@@ -64,28 +147,26 @@ function findOffer(records: unknown[]) {
 export function extractClaimCandidates(rawInput: IngestionInput): ClaimCandidate[] {
   const input = ingestionInputSchema.parse(rawInput);
   const isHtml = input.contentType === "text/html" || /<\w+[\s>]/.test(input.rawContent);
-  const text = normalize(cleanText(isHtml ? visibleText(input.rawContent) : input.rawContent));
+  const segments = cleanSegments(isHtml ? visibleText(input.rawContent) : input.rawContent).map(normalize);
+  const text = normalize(segments.join(" "));
   const lower = text.toLowerCase();
   const candidates: ClaimCandidate[] = [];
   const allowCommerce = input.parserProfile !== "document";
 
   if (isHtml && allowCommerce) {
-    const offer = findOffer(jsonLd(input.rawContent));
-    if (offer) {
-      const price = Number(offer.price ?? offer.lowPrice);
-      if (Number.isFinite(price) && price > 0) candidates.push({ predicate: "price", value: price, confidence: 0.98, rationale: "Structured product offer exposed a numeric price.", riskLevel: "standard" });
-      if (typeof offer.availability === "string") {
-        const availability = offer.availability.toLowerCase();
-        if (availability.includes("instock")) candidates.push({ predicate: "availability", value: "In stock", confidence: 0.96, rationale: "Structured offer marked the listing in stock.", riskLevel: "standard" });
-        else if (availability.includes("outofstock")) candidates.push({ predicate: "availability", value: "Unavailable", confidence: 0.96, rationale: "Structured offer marked the listing out of stock.", riskLevel: "standard" });
-      }
+    const offers = collectOffers(jsonLd(input.rawContent));
+    if (offers.length) {
+      const price = resolveOfferPrice(offers);
+      if (price !== null) candidates.push({ predicate: "price", value: price, confidence: 0.98, rationale: "Structured product offers agreed on a single numeric price.", riskLevel: "standard" });
+      const availability = resolveOfferAvailability(offers);
+      if (availability === "In stock") candidates.push({ predicate: "availability", value: "In stock", confidence: 0.96, rationale: "Structured offers marked the listing in stock.", riskLevel: "standard" });
+      else if (availability === "Unavailable") candidates.push({ predicate: "availability", value: "Unavailable", confidence: 0.96, rationale: "Structured offers marked the listing out of stock.", riskLevel: "standard" });
     }
   }
 
   if (allowCommerce && !candidates.some((candidate) => candidate.predicate === "price")) {
-    const priceText = first(text, [/(?:current\s+price|sale\s+price|price)\s*[:\-]?\s*\$\s*([0-9]+(?:\.[0-9]{1,2})?)/i, /\$\s*([0-9]+(?:\.[0-9]{1,2})?)/]);
-    const price = priceText ? Number(priceText) : Number.NaN;
-    if (Number.isFinite(price) && price > 0) candidates.push({ predicate: "price", value: price, confidence: 0.86, rationale: "A labeled currency amount was extracted from the source text.", riskLevel: "standard" });
+    const price = labeledPrice(segments);
+    if (price !== null) candidates.push({ predicate: "price", value: price, confidence: 0.86, rationale: "A labeled currency amount was extracted from the source text.", riskLevel: "standard" });
   }
 
   if (allowCommerce && !candidates.some((candidate) => candidate.predicate === "availability")) {

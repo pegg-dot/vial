@@ -34,7 +34,23 @@ export const STOREFRONT_NOISE = new Set(["batchCode", "reportDate", "reportIssue
 export const PRICE_MIN = 10;
 export const PRICE_MAX = 500;
 
+/**
+ * How recently the vendor's structured catalogue feed must have been read for it to be the price
+ * authority. The catalogue collectors run on a 6 h cadence from an hourly tick; 48 h is eight missed
+ * reads — by then the feed is broken and the scraped page is the fallback that keeps prices moving.
+ */
+export const FEED_FRESH_HOURS = 48;
+
 export type TriageAction = "approve" | "reject" | "hold";
+
+export interface TriageContext {
+  /** `evidence_claims.risk_level` — "material" when the pipeline saw a >30 % move. */
+  riskLevel?: string | null;
+  confidence?: number | null;
+  /** When the vendor's catalogue collector last read the feed successfully; null when it has no feed or it is failing. */
+  feedReadAt?: Date | string | null;
+  now?: Date;
+}
 
 export interface TriageDecision {
   action: TriageAction;
@@ -48,14 +64,24 @@ export interface TriageDecision {
  * ingest script interleaved the two, so the only way to exercise the policy was to run a full
  * ingest, and it had no direct coverage at all.
  */
-export function triageClaim(predicate: string, value: unknown): TriageDecision {
+export function triageClaim(predicate: string, value: unknown, context: TriageContext = {}): TriageDecision {
   if (STOREFRONT_NOISE.has(predicate)) {
     return { action: "reject", reason: "Evidence claim scraped from a vendor storefront page — not a valid COA source." };
   }
   if (predicate === "price") {
     if (typeof value !== "number" || Number.isNaN(value)) return { action: "hold", reason: "price is not a number" };
+    // A scraped page is a lossy view of the vendor's own structured catalogue feed, which the
+    // collector reads directly and more often. While that feed is fresh the page can only add
+    // noise — in production it added promo banners ("ORDERS $100 OR MORE") as prices. The
+    // rejection is recorded as a review decision, so the receipt says exactly what superseded it.
+    const feedReadAt = context.feedReadAt ? new Date(context.feedReadAt) : null;
+    const now = context.now ?? new Date();
+    if (feedReadAt && !Number.isNaN(feedReadAt.getTime()) && now.getTime() - feedReadAt.getTime() <= FEED_FRESH_HOURS * 3_600_000) {
+      return { action: "reject", reason: `Superseded: the vendor's structured catalogue feed is the price authority for this listing and was read successfully at ${feedReadAt.toISOString()} (within ${FEED_FRESH_HOURS} h). A scraped page does not overrule it.` };
+    }
     if (value < PRICE_MIN || value > PRICE_MAX) return { action: "hold", reason: `price ${value} outside ${PRICE_MIN}-${PRICE_MAX} auto-approve band` };
-    return { action: "approve", reason: "price within the auto-approve band" };
+    if (context.riskLevel === "material") return { action: "hold", reason: `price ${value} is a material move (>30 %) from a scraped page — a person decides while the catalogue feed is stale` };
+    return { action: "approve", reason: "price within the auto-approve band, from a scraped page while the catalogue feed is stale or absent" };
   }
   if (predicate === "availability" || predicate === "shipping") {
     return { action: "approve", reason: `${predicate} is a routine commerce value` };
@@ -78,10 +104,21 @@ export async function triagePendingClaims(
 ): Promise<TriageOutcome> {
   const database = db ?? (await getDatabase());
   const actor = options.actor ?? "system:refresh-triage";
-  const pending = await database.query<{ id: string; predicate: string; value_json: string; subject_id: string }>(
-    `SELECT ec.id, ec.predicate, ec.value_json, ec.subject_id
+  // `feed_read_at` is when the vendor's catalogue collector last read its structured feed
+  // successfully — the price authority for this listing (spec D1). A subquery, not a join, so a
+  // vendor that somehow carries two catalogue targets cannot duplicate a claim row and make the
+  // second review attempt throw. Disabled or failing targets yield NULL: the feed is not being
+  // read, so the scraped page becomes the fallback.
+  const pending = await database.query<{ id: string; predicate: string; value_json: string; subject_id: string; risk_level: string | null; model_confidence: string | null; feed_read_at: Date | string | null }>(
+    `SELECT ec.id, ec.predicate, ec.value_json, ec.subject_id, ec.risk_level, ec.model_confidence,
+            (SELECT MAX(ct.last_run_at) FROM collection_targets ct
+              WHERE ct.target = o.slug
+                AND ct.collector IN ('catalog-shopify', 'catalog-woo', 'catalog-rsc')
+                AND ct.enabled AND ct.last_ok) AS feed_read_at
      FROM evidence_claims ec
      JOIN listings l ON l.id = ec.subject_id
+     JOIN products p ON p.id = l.product_id
+     JOIN organizations o ON o.id = p.vendor_id
      WHERE ec.review_status = 'pending' AND l.origin = 'live'
      ORDER BY ec.created_at ASC`,
   );
@@ -91,7 +128,11 @@ export async function triagePendingClaims(
   for (const claim of pending.rows) {
     let value: unknown;
     try { value = JSON.parse(claim.value_json); } catch { value = claim.value_json; }
-    const decision = triageClaim(claim.predicate, value);
+    const decision = triageClaim(claim.predicate, value, {
+      riskLevel: claim.risk_level,
+      confidence: claim.model_confidence === null ? null : Number(claim.model_confidence),
+      feedReadAt: claim.feed_read_at,
+    });
     const entry = { claimId: claim.id, predicate: claim.predicate, value };
 
     if (decision.action === "hold") { outcome.held.push({ ...entry, reason: decision.reason }); continue; }

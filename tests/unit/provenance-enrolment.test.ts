@@ -119,3 +119,55 @@ describe("enrolment", () => {
     expect(src.slice(recordAt)).toContain("await enrolListingForRefresh(db,");
   });
 });
+
+// Phase 0 of docs/superpowers/specs/2026-08-29-vial-price-truth-design.md (D1, D2). A scraped page
+// is a lossy view of the vendor's own structured catalogue feed, which the hourly collector reads
+// directly. While that feed is fresh, a page-scrape price claim can only add noise — or a promo
+// banner. When the feed is stale or failing, the scrape is the fallback and is judged on its merits.
+describe("a scraped price cannot overrule a fresh catalogue feed", () => {
+  const HOUR = 3_600_000;
+  const now = new Date("2026-08-29T18:00:00Z");
+  const ago = (hours: number) => new Date(now.getTime() - hours * HOUR);
+
+  it("rejects a scraped price while the vendor's catalogue feed is fresh, and says why", () => {
+    // Fails if triage ignores the feed — the umbrella-labs "$100" banner would be approved again.
+    const decision = triageClaim("price", 100, { riskLevel: "standard", feedReadAt: ago(1), now });
+    expect(decision.action).toBe("reject");
+    expect(decision.reason).toMatch(/catalogue feed/i);
+    expect(decision.reason).toContain(ago(1).toISOString());
+  });
+
+  it("rejects even an in-band, routine scraped price while the feed is fresh", () => {
+    // Fails if supersession is only applied to suspicious values.
+    expect(triageClaim("price", 89, { riskLevel: "standard", feedReadAt: ago(6), now }).action).toBe("reject");
+  });
+
+  it("holds a material scraped price move for a person when the feed is stale", () => {
+    // Fails if risk_level stays decorative (today any price in [10,500] is approved).
+    const decision = triageClaim("price", 150, { riskLevel: "material", feedReadAt: ago(72), now });
+    expect(decision.action).toBe("hold");
+    expect(decision.reason).toMatch(/material/i);
+  });
+
+  it("approves a routine scraped price when the feed is stale (control)", () => {
+    expect(triageClaim("price", 40, { riskLevel: "standard", feedReadAt: ago(72), now }).action).toBe("approve");
+  });
+
+  it("approves a routine scraped price for a listing with no catalogue feed at all (control)", () => {
+    expect(triageClaim("price", 40, { riskLevel: "standard", feedReadAt: null, now }).action).toBe("approve");
+  });
+
+  it("treats a feed read more than 48 hours ago as stale", () => {
+    // Fails if the freshness window drifts from FEED_FRESH_HOURS.
+    expect(triageClaim("price", 40, { riskLevel: "standard", feedReadAt: ago(47), now }).action).toBe("reject");
+    expect(triageClaim("price", 40, { riskLevel: "standard", feedReadAt: ago(49), now }).action).toBe("approve");
+  });
+
+  it("still holds a value that is not a price, whatever the feed says", () => {
+    expect(triageClaim("price", "100", { riskLevel: "standard", feedReadAt: ago(1), now }).action).toBe("hold");
+  });
+
+  it("leaves availability and shipping untouched by the price rule (control)", () => {
+    expect(triageClaim("availability", "In stock", { riskLevel: "standard", feedReadAt: ago(1), now }).action).toBe("approve");
+  });
+});
