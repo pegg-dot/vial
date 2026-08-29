@@ -321,6 +321,6 @@ export async function importWooCommerceCatalog(
 
     offer({ ...base, price, quantity: wooQuantity(product) });
   }
-  for (const rec of await recordAllSizes(db, input, [...bySize.values()])) result.imported.push(rec);
+  for (const rec of await recordAllSizes(db, { ...input, feedUrl: `https://${input.domain}/wp-json/wc/store/v1/products` }, [...bySize.values()])) result.imported.push(rec);
   return result;
 }

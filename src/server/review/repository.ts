@@ -123,9 +123,11 @@ function serializeListing(row: ListingRow): ListingProjection {
   };
 }
 
-async function applyApprovedClaim(tx: SqlConnection, listing: ListingRow, predicate: string, value: unknown) {
+async function applyApprovedClaim(tx: SqlConnection, listing: ListingRow, predicate: string, value: unknown, extractorVersion?: string) {
   switch (predicate) {
     case "price": {
+      // 'catalogue' when the vendor's structured feed declared it (Phase 3), 'page' when a scrape did.
+      const priceSource = extractorVersion === "catalogue-feed" ? "catalogue" : "page";
       const price = Number(value);
       if (!Number.isFinite(price) || price <= 0) throw new Error("Approved price must be a positive number");
       // The dated trail lives in price_observations now (migration 53): the collect tick records
@@ -135,13 +137,13 @@ async function applyApprovedClaim(tx: SqlConnection, listing: ListingRow, predic
         `UPDATE listings
          SET previous_price = price,
              price = $2,
-             price_source = 'page',
+             price_source = $3,
              last_checked = 'just now',
              evidence_label = CASE WHEN evidence_label = 'Awaiting first check' THEN 'Vendor page checked' ELSE evidence_label END,
              observed_at = NOW(),
              updated_at = NOW()
          WHERE id = $1`,
-        [listing.id, price],
+        [listing.id, price, priceSource],
       );
       break;
     }
@@ -369,7 +371,7 @@ export async function reviewClaim(input: {
 
     const before = serializeListing(listing);
     const proposedValue = parseJson(claim.value_json);
-    await applyApprovedClaim(tx, listing, claim.predicate, proposedValue);
+    await applyApprovedClaim(tx, listing, claim.predicate, proposedValue, claim.extractor_version);
 
     const afterResult = await tx.query<ListingRow>(
       `SELECT l.*, p.compound_id, p.vendor_id

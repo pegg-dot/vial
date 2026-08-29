@@ -1,5 +1,6 @@
 // Shopify catalog importer — the breadth loophole.
 import { StorefrontUnreachableError } from "./woocommerce-import";
+import { feedCapture } from "./catalogue-claims";
 //
 // Most research-peptide vendors run Shopify, which exposes EVERY product + variant + price
 // at /products.json (no HTML scraping, no bot-blocker). One fetch yields a vendor's whole
@@ -121,10 +122,16 @@ export function sizeFromName(name: string): string {
 // sizes get a `-<size>` suffix. Capped per compound so a stray variant list can't explode.
 export async function recordAllSizes(
   db: SqlConnection,
-  input: { vendorSlug: string; vendorName: string; domain: string },
+  input: { vendorSlug: string; vendorName: string; domain: string; feedUrl?: string },
   candidates: Candidate[],
 ): Promise<{ slug: string; compound: string; price: number }[]> {
   const byCompound = new Map<string, Candidate[]>();
+  // One capture per import: the compact record of what the feed declared, the lineage every
+  // price claim from this read points at, and the vendor-wide identical-price guard.
+  const feed = feedCapture({
+    vendorSlug: input.vendorSlug, vendorName: input.vendorName, feedUrl: input.feedUrl ?? `https://${input.domain}/`,
+    items: candidates.map((c) => ({ slug: c.url, price: c.price, available: c.available })),
+  });
   for (const c of candidates) {
     const arr = byCompound.get(c.compoundSlug);
     if (arr) arr.push(c); else byCompound.set(c.compoundSlug, [c]);
@@ -152,6 +159,7 @@ export async function recordAllSizes(
         availability: c.available ? "In stock" : "Unavailable",
         sourceUrl: c.url, sourceLabel: `${input.vendorName} — ${c.name.slice(0, 80)}`,
         imageUrl: c.image, coa: c.coa, advertisedTesting: c.advertisedTesting,
+        feed,
       });
       imported.push({ slug: listingSlug, compound: compoundSlug, price: c.price });
     }
@@ -228,6 +236,6 @@ export async function importShopifyCatalog(
     }
     if (!any) result.skipped += 1;
   }
-  for (const rec of await recordAllSizes(db, input, candidates)) result.imported.push(rec);
+  for (const rec of await recordAllSizes(db, { ...input, feedUrl: `https://${input.domain}/products.json` }, candidates)) result.imported.push(rec);
   return result;
 }

@@ -89,9 +89,11 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >   junk `price-change` alerts / `listing-price-outlier` signals superseded. A Δ is shown only
 >   when earned (`lib/price-trend.ts`, D6) — expect "—" everywhere for the first two weeks after
 >   2026-08-29; that is the honest state, not a bug. `price_history` on `listings` is dead: read
->   `Product.pricePoints`. **Phase 3 (open):** collector price changes still bypass the claim
->   path (they overwrite `listings.price` directly); routing them through a structured-source
->   claim would restore receipts + cascade for real changes and re-enable truthful price alerts.
+>   `Product.pricePoints`. **Phase 3 (done 2026-08-29):** a CHANGED feed price on an existing
+>   listing is now an evidence claim against a compact feed capture (`ingest/catalogue-claims.ts`),
+>   approved in-band with the same receipt, cascade and `price-change` alert as every other value;
+>   held for a person when the move is beyond 5× or when most of a vendor's read lands on one
+>   price. `cascade.recomputeCompound` no longer touches `price_change`.
 > - **No outside monitoring.** The owner declined an uptime check and the alert webhook. In-app
 >   alerting (`src/server/observability/alerts.ts`) works and is throttled, but it cannot report the
 >   failure that actually happened: when the deployment itself is broken, the code that would send

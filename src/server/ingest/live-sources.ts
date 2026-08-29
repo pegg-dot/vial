@@ -9,6 +9,7 @@
 // Safety: creating a LIVE http policy is gassed behind an explicit approval, mirroring
 // the commerce double-gate. Live fetching is intentional, never a silent default.
 
+import { proposeCataloguePrice, type FeedCapture } from "./catalogue-claims";
 import type { SqlConnection } from "@/server/db/client";
 import { mintRegistryId } from "@/server/registry/repository";
 
@@ -327,9 +328,15 @@ export async function enrolListingForRefresh(
 
 export async function recordCatalogListing(
   db: SqlConnection,
-  input: LiveListingInput & { price: number; availability: "In stock" | "Low stock" | "Unavailable"; sourceUrl: string; sourceLabel: string; imageUrl?: string },
-): Promise<{ productId: string; listingId: string }> {
+  input: LiveListingInput & { price: number; availability: "In stock" | "Low stock" | "Unavailable"; sourceUrl: string; sourceLabel: string; imageUrl?: string; feed?: FeedCapture },
+): Promise<{ productId: string; listingId: string; priceClaim?: { claimId: string; status: "published" | "held" } }> {
   const { productId, listingId } = await upsertLiveListing(db, input);
+  // A CHANGED price on a listing that already has one goes through the claim path (Phase 3), so
+  // it gets a receipt, the cascade and a truthful alert. A first price is creation, set directly;
+  // a caller without a feed capture (scripts, fixtures) keeps the direct write.
+  const current = Number((await db.query<{ price: string | number }>(`SELECT price FROM listings WHERE id = $1`, [listingId])).rows[0]?.price ?? 0);
+  const changed = current > 0 && Math.round(current * 100) !== Math.round(input.price * 100);
+  const viaClaim = Boolean(input.feed) && changed;
   // The source has two unique keys — its deterministic id (src:catalog:<listingSlug>) and its
   // canonical_location (the product URL). On re-ingest a vendor's product URL can change
   // (e.g. a platform move), so those two keys can point at different existing rows. Reuse
@@ -363,7 +370,9 @@ export async function recordCatalogListing(
   const advertised = input.advertisedTesting ?? null;
   await db.query(
     `UPDATE listings
-     SET price = $2, price_source = 'catalogue', availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
+     SET price = CASE WHEN $11::boolean THEN price ELSE $2 END,
+         price_source = CASE WHEN $11::boolean THEN price_source ELSE 'catalogue' END,
+         availability = $3, evidence_level = 'public-only', evidence_label = 'Vendor catalog',
          last_checked = 'just now', price_history = CASE WHEN price_history = '[]'::jsonb THEN $4::jsonb ELSE price_history END,
          image_url = COALESCE($5, image_url),
          report_issuer = CASE WHEN $6 THEN $8 ELSE report_issuer END,
@@ -373,7 +382,11 @@ export async function recordCatalogListing(
          advertised_issuer = CASE WHEN $9 THEN $10 ELSE NULL END,
          observed_at = NOW(), updated_at = NOW()
      WHERE id = $1`,
-    [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null, hasCoa, input.coa?.batchCode ?? null, input.coa?.issuer ?? 'Janoshik', Boolean(advertised), advertised?.issuer ?? null],
+    [listingId, input.price, input.availability, JSON.stringify([input.price]), input.imageUrl ?? null, hasCoa, input.coa?.batchCode ?? null, input.coa?.issuer ?? 'Janoshik', Boolean(advertised), advertised?.issuer ?? null, viaClaim],
   );
+  if (viaClaim && input.feed) {
+    const priceClaim = await proposeCataloguePrice(db, { capture: input.feed, listingId, listingSlug: input.slug, previous: current, next: input.price });
+    return { productId, listingId, priceClaim };
+  }
   return { productId, listingId };
 }
