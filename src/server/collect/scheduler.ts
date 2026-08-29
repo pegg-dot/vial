@@ -184,6 +184,26 @@ async function settle(db: SqlConnection, t: DueTarget, ok: boolean, items: numbe
   await recordCollectorRun(db, { collector: t.collector, target: t.target, items, ok });
 }
 
+/**
+ * Written BEFORE a target runs: the pessimistic outcome. If the function is killed at its ceiling
+ * mid-import, this is what remains — the target reads as failing with a reason, is backed off, and
+ * is not picked first again next tick to die the same way (umbrella-labs, hourly, for a day, taking
+ * every target queued behind it). settle() replaces it with the real outcome.
+ */
+export async function leaseTarget(db: SqlConnection, t: DueTarget): Promise<void> {
+  const failures = t.consecutive_failures + 1;
+  await db.query(
+    `UPDATE collection_targets
+     SET last_run_at=NOW(), last_ok=FALSE, last_error=$2, consecutive_failures=$3::int,
+         next_due_at = NOW() + ($4::text || ' minutes')::interval, updated_at=NOW()
+     WHERE id=$1`,
+    [t.id, "started but did not settle — the function was likely killed at its ceiling mid-run", failures, String(nextDelayMinutes(t.cadence_minutes, failures))],
+  );
+}
+
+/** The most one target may take of a tick; the function ceiling is 120 s and the tick 45 s. */
+export const TARGET_DEADLINE_MS = 40_000;
+
 async function compoundRefs(db: SqlConnection): Promise<CompoundRef[]> {
   return (await db.query<{ slug: string; canonical_name: string; aliases: unknown }>(
     `SELECT slug, canonical_name, aliases FROM compounds`,
@@ -258,7 +278,7 @@ export async function collectRscCatalog(
 }
 
 
-async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome> {
+async function runOne(db: SqlConnection, t: DueTarget, deadlineAt?: number): Promise<CollectorOutcome> {
   // Market-wide collectors have no vendor, and they report ok/not-ok themselves rather than
   // signalling a dead source by throwing.
   if (t.collector === "enforcement-openfda") return collectEnforcement(db);
@@ -317,7 +337,7 @@ async function runOne(db: SqlConnection, t: DueTarget): Promise<CollectorOutcome
   const startedAt = (await db.query<{ now: string }>(`SELECT NOW() AS now`)).rows[0]!.now;
   const result = t.collector === "catalog-shopify"
     ? await importShopifyCatalog(db, input)
-    : await importWooCommerceCatalog(db, input);
+    : await importWooCommerceCatalog(db, { ...input, ...(deadlineAt !== undefined ? { deadlineAt } : {}) });
   // A feed that answered with nothing is a broken feed, not a green run. Reporting it green kept
   // bluum-peptides "healthy" for eight days of zero-item imports. Matching no compound is fine —
   // the feed was read; that is what "fresh" means to the price authority in auto-triage.
@@ -393,7 +413,9 @@ export async function runCollectionTick(
     try {
       // A collector reports a dead SOURCE in its return value, not by throwing — a throw here means
       // a defect in our own code, and the two must stay distinguishable in `collector_runs`.
-      const { items, ok, error, retired } = await runOne(db, t);
+      await leaseTarget(db, t);
+      const deadlineAt = Date.now() + Math.min(TARGET_DEADLINE_MS, Math.max(1_000, budgetMs - (Date.now() - started)));
+      const { items, ok, error, retired } = await runOne(db, t, deadlineAt);
       await settle(db, t, ok, items, error);
       ran.push({ collector: t.collector, target: t.target, items, ok, ...(error ? { error } : {}), ...(retired !== undefined ? { retired } : {}) });
       if (ok && (t.collector === "catalog-shopify" || t.collector === "catalog-woo")) catalogChanged = true;
@@ -437,7 +459,7 @@ export async function runCollectionTick(
   // The budget still bounds it. maxDuration on this route is 120s and collection has already run
   // by this point, so 45s is headroom, not a gamble — and stale-first ordering means an exhausted
   // budget simply resumes where it stopped tomorrow.
-  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: 45_000, limit: 200 });
+  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: Math.min(45_000, Math.max(5_000, 110_000 - (Date.now() - started))), limit: 200 });
 
   return { ran, budgetExhausted, reindexed, observed, regraded: regrade.graded, durationMs: Date.now() - started };
 }

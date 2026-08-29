@@ -66,26 +66,65 @@ export class StorefrontUnreachableError extends Error {
   }
 }
 
-export async function fetchWooCatalog(domain: string, maxPages = 6): Promise<{ products: WooProduct[]; complete: boolean } | null> {
+async function pooled<T, R>(items: T[], limit: number, work: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (let i = next++; i < items.length; i = next++) out[i] = await work(items[i]);
+  }));
+  return out;
+}
+
+/** umbrella-labs lists more than 600 products; ten pages is a thousand. */
+export const WOO_MAX_PAGES = 10;
+const PAGE_CONCURRENCY = 4;
+
+/**
+ * The first page tells us how many there are (`x-wp-totalpages`); the rest are independent
+ * requests and are fetched together. umbrella-labs took 42 s sequentially at ~7 s a page — past
+ * the tick budget, so the function was killed mid-import every hour and the target never settled.
+ * Past `deadlineAt` no further page is requested and the read is marked incomplete.
+ *
+ * `complete` is true only when the last page was seen. A read cut off by the page cap, the
+ * deadline, or a failed page has NOT seen the whole catalogue and must not retire what it missed.
+ */
+export async function fetchWooCatalog(domain: string, maxPages = WOO_MAX_PAGES, options: { deadlineAt?: number } = {}): Promise<{ products: WooProduct[]; complete: boolean } | null> {
   let lastStatus: number | null = null;
   let reachedHost = false;
+  const pageUrl = (base: string, page: number) => `${base}/wp-json/wc/store/v1/products?per_page=100&page=${page}`;
+  const headers = { "user-agent": UA, accept: "application/json" };
   for (const base of [`https://${domain}`, `https://www.${domain}`]) {
-    const all: WooProduct[] = [];
-    // `complete` is true only when we saw the last page. A run cut off by maxPages or a mid-way
-    // error has NOT seen the whole catalogue and must not be allowed to retire what it missed.
-    let complete = false;
-    for (let page = 1; page <= maxPages; page++) {
+    let first: Response;
+    try {
+      first = await fetch(pageUrl(base, 1), { headers, redirect: "follow" });
+      reachedHost = true;
+    } catch { continue; }
+    if (!first.ok) { lastStatus = first.status; continue; }
+    let data: WooProduct[];
+    try { data = (await first.json()) as WooProduct[]; } catch { continue; }
+    if (!Array.isArray(data) || data.length === 0) continue;
+    const all: WooProduct[] = [...data];
+    if (data.length < 100) return { products: all, complete: true };
+    const declared = Number(first.headers.get("x-wp-totalpages") ?? "0");
+    const wanted = declared > 0 ? Math.min(declared, maxPages) : maxPages;
+    if (options.deadlineAt !== undefined && Date.now() >= options.deadlineAt) return { products: all, complete: false };
+    const rest = Array.from({ length: Math.max(0, wanted - 1) }, (_, i) => i + 2);
+    let sawEnd = declared > 0 && declared <= maxPages;
+    let failed = false;
+    const pages = await pooled(rest, PAGE_CONCURRENCY, async (page): Promise<WooProduct[] | null> => {
       try {
-        const res = await fetch(`${base}/wp-json/wc/store/v1/products?per_page=100&page=${page}`, { headers: { "user-agent": UA, accept: "application/json" }, redirect: "follow" });
-        reachedHost = true;
-        if (!res.ok) { lastStatus = res.status; break; }
-        const data = (await res.json()) as WooProduct[];
-        if (!Array.isArray(data) || data.length === 0) { complete = true; break; }
-        all.push(...data);
-        if (data.length < 100) { complete = true; break; }
-      } catch { break; }
+        const res = await fetch(pageUrl(base, page), { headers, redirect: "follow" });
+        if (!res.ok) return null;
+        const body = (await res.json()) as WooProduct[];
+        return Array.isArray(body) ? body : null;
+      } catch { return null; }
+    });
+    for (const page of pages) {
+      if (page === null) { failed = true; continue; }
+      all.push(...page);
+      if (page.length < 100) sawEnd = true;
     }
-    if (all.length) return { products: all, complete };
+    return { products: all, complete: sawEnd && !failed };
   }
   // A refusal (403/401/429) or an unreachable host is a FAILURE, not an empty catalog. Only a
   // genuine 2xx that returned no products falls through to null.
@@ -237,14 +276,6 @@ export async function fetchWooVariation(origin: string, id: number): Promise<Woo
   } catch { return null; }
 }
 
-async function pooled<T, R>(items: T[], limit: number, work: (item: T) => Promise<R>): Promise<R[]> {
-  const out: R[] = new Array(items.length);
-  let next = 0;
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
-    for (let i = next++; i < items.length; i = next++) out[i] = await work(items[i]);
-  }));
-  return out;
-}
 
 /**
  * Import a WooCommerce vendor's whole catalog: fetch the Store API, match each product to a
@@ -257,9 +288,11 @@ export async function importWooCommerceCatalog(
     compounds: CompoundRef[]; products?: WooProduct[];
     /** Injectable for tests and fixtures; defaults to the real Store API call. */
     fetchVariation?: (origin: string, id: number) => Promise<WooVariation | null>;
+    /** Epoch ms. Past it, no further page or variation is fetched; what is known is recorded and the read returns. */
+    deadlineAt?: number;
   },
 ): Promise<ImportResult> {
-  const catalog = input.products ? { products: input.products, complete: true } : await fetchWooCatalog(input.domain);
+  const catalog = input.products ? { products: input.products, complete: true } : await fetchWooCatalog(input.domain, WOO_MAX_PAGES, { deadlineAt: input.deadlineAt });
   const products = catalog?.products ?? null;
   const result: ImportResult = { vendor: input.vendorName, productsSeen: products?.length ?? 0, matched: 0, imported: [], skipped: 0, complete: catalog?.complete ?? false };
   if (!products) return result;
@@ -303,7 +336,8 @@ export async function importWooCommerceCatalog(
     // its own price, so ask for them and record one real offer per size (what the Shopify path
     // already does with variants). Bounded, and a failure just falls back to the product-level read.
     const variations = (product.variations ?? []).slice(0, MAX_VARIATIONS_PER_PRODUCT);
-    if (variations.length > 1 && wooVariationLabels(product).length > 1 && variationBudget >= variations.length) {
+    const inTime = input.deadlineAt === undefined || Date.now() < input.deadlineAt;
+    if (inTime && variations.length > 1 && wooVariationLabels(product).length > 1 && variationBudget >= variations.length) {
       variationBudget -= variations.length;
       let origin = "";
       try { origin = new URL(product.permalink).origin; } catch { origin = `https://${input.domain}`; }

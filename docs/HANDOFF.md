@@ -113,7 +113,14 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >   FAILED run (backs off, shows on `/status`, named on `/admin`); a disabled target is retried
 >   weekly; after a COMPLETE successful read, listings the feed no longer carries are retired to
 >   Unavailable in one statement. On 2026-08-29 28 % of listings were 8–24 days stale for want of
->   exactly these four guards.
+>   exactly these four guards. Same day, two more: a target is **leased as failing before it runs**
+>   ("started but did not settle") so a function killed at its 120 s ceiling mid-import cannot
+>   leave a vendor untouched and re-picked every hour (umbrella-labs, all day); and a Woo read
+>   fetches pages together under a **per-target deadline** (`TARGET_DEADLINE_MS`), recording what
+>   it has with `complete=false` rather than dying. Refresh "failing" on `/status` counts sources
+>   whose LATEST job failed (not every failed job ever) and degrades the verdict only past a
+>   quarter of sources (`refreshIsFailing`) — a few hosts refusing a fetch is a card fact, not an
+>   outage.
 > - **`sahepeptides` / `sh-peptide` were deliberately NOT merged.** They share a source, which is
 >   not proof of shared ownership. A wrong merge destroys a real distinction and is much harder to
 >   undo than a missed one.

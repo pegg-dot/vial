@@ -181,7 +181,12 @@ export async function getRefreshMetrics() {
        (SELECT COUNT(*) FROM source_refresh_policies WHERE enabled) AS enabled,
        (SELECT COUNT(*) FROM source_refresh_policies WHERE enabled AND next_run_at <= NOW()) AS due,
        (SELECT COUNT(*) FROM refresh_jobs WHERE status IN ('queued','retrying','running')) AS queued,
-       (SELECT COUNT(*) FROM refresh_jobs WHERE status = 'failed') AS failed,
+       -- Sources CURRENTLY failing: enabled policies whose most recent job failed. A count of every
+       -- failed job ever can only grow, and once final failures could be recorded at all (they could
+       -- not, until 54da53d) it would have read "Degraded" forever.
+       (SELECT COUNT(*) FROM source_refresh_policies rp
+          WHERE rp.enabled
+            AND (SELECT rj.status FROM refresh_jobs rj WHERE rj.policy_id = rp.id ORDER BY rj.created_at DESC, rj.id DESC LIMIT 1) = 'failed') AS failed,
        (SELECT COUNT(*) FROM source_refresh_policies WHERE last_succeeded_at IS NULL OR last_succeeded_at < NOW() - INTERVAL '24 hours') AS stale,
        (SELECT COUNT(*) FROM refresh_attempts) AS attempts,
        -- How far behind the worst policy is, measured against ITS OWN interval. A count of "due"

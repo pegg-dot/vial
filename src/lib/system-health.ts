@@ -18,6 +18,18 @@ export interface SystemHealthInputs {
   sweep: { lastRanAt: string | null; lastOk: boolean; backlogReaders: number | null; healthy: boolean; keepingUp: boolean } | null;
 }
 
+/**
+ * Refresh sources that refuse a fetch are a known limitation the card must show, not the engine
+ * being unwell: 48 of 431 provenance pages refuse us and the prices come from the feed anyway.
+ * The engine is degraded when a QUARTER of its sources fail — that is the shape of a broken
+ * extractor or a blocked egress, not of a few hostile hosts. One rule, used by the card and the
+ * verdict alike.
+ */
+export const REFRESH_FAILING_SHARE = 0.25;
+export function refreshIsFailing(refresh: { enabled: number; failed: number }): boolean {
+  return refresh.enabled > 0 && refresh.failed / refresh.enabled >= REFRESH_FAILING_SHARE;
+}
+
 export interface SystemHealth {
   level: HealthLevel;
   /** The single sentence both pages show. */
@@ -54,7 +66,7 @@ export function deriveSystemHealth(input: SystemHealthInputs): SystemHealth {
   }
   if (refresh.enabled === 0) return degraded("Degraded — no sources are enabled, so nothing is being refreshed");
   if (refresh.behind) return degraded(`Degraded — the refresh queue is behind; the worst source is ${Math.round(refresh.worstLateness ?? 0)}x its own interval late`);
-  if (refresh.failed > 0) return degraded(`Degraded — ${refresh.failed} refresh ${refresh.failed === 1 ? "job has" : "jobs have"} failed`);
+  if (refreshIsFailing(refresh)) return degraded(`Degraded — ${refresh.failed} of ${refresh.enabled} sources are failing to refresh`);
   if (!sweep.healthy) {
     if (sweep.lastRanAt === null) return degraded("Degraded — the alert sweep has never run, so nobody is being notified while they are away");
     if (!sweep.lastOk) return degraded("Degraded — the alert sweep failed on one or more readers");

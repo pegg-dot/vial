@@ -72,6 +72,21 @@ describe("a refresh job whose fetch fails settles as a retry instead of killing 
     expect(Number(stuck.n)).toBe(0);
   });
 
+  it("counts a source as failing only while its LATEST job failed — never cumulatively", async () => {
+    // Fails while getRefreshMetrics counts every failed job ever: the count could only ever grow.
+    const db = await m.getDatabase();
+    const { getRefreshMetrics } = await import("@/server/refresh/repository");
+    const before = await getRefreshMetrics();
+    expect(before.failed).toBe(1);
+    await db.query(
+      `INSERT INTO refresh_jobs (id, policy_id, trigger_type, status, priority, available_at, completed_at, attempt_count, idempotency_key, created_by)
+       VALUES ('job:recovered', $1, 'manual', 'succeeded', 100, NOW(), NOW(), 1, 'recovered', 'test')`,
+      [policyId],
+    );
+    const after = await getRefreshMetrics();
+    expect(after.failed).toBe(0);
+  });
+
   it("the sweep itself survives a failing job (control for the tick)", async () => {
     const db = await m.getDatabase();
     await db.query(`UPDATE refresh_jobs SET available_at = NOW() - INTERVAL '1 minute', status = 'retrying' WHERE policy_id = $1`, [policyId]);

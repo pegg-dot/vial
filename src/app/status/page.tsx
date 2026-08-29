@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { deriveSystemHealth } from "@/lib/system-health";
+import { deriveSystemHealth, refreshIsFailing } from "@/lib/system-health";
 import { SWEEP_STALE_HOURS, getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/server/notifications/sweep";
 import { AlertTriangle, BellRing, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, XCircle } from "lucide-react";
 import { getRefreshMetrics } from "@/server/refresh/repository";
@@ -104,10 +104,10 @@ export default async function StatusPage() {
                   // ran and failed — last_succeeded_at stays null either way. Those are opposite
                   // problems and the card could not tell them apart.
                   : refresh.failed > 0
-                    ? `${refresh.failed} failed · ${refresh.queued} queued · ${refresh.stale} stale`
+                    ? `${refresh.failed} failing · ${refresh.queued} queued · ${refresh.stale} stale`
                     : `${refresh.queued} queued · ${refresh.stale} stale`
           }
-          ok={refresh !== null && refresh.enabled > 0 && !refreshBehind && refresh.failed === 0}
+          ok={refresh !== null && refresh.enabled > 0 && !refreshBehind && !refreshIsFailing(refresh)}
         />
         <Card
           icon={Timer}

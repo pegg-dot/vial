@@ -48,6 +48,20 @@ describe("deriveSystemHealth", () => {
     expect(health.headline).toContain("not reporting");
   });
 
+  // 2026-08-29: once refresh failures could finally be RECORDED, the rung `failed > 0` on a
+  // cumulative count would have read "Degraded" forever. 48 of 431 provenance sources refusing a
+  // fetch is a known limitation the card must show; it is not the engine being unwell.
+  it("stays operational while a minority of refresh sources are failing", () => {
+    const health = deriveSystemHealth(healthy({ refresh: { enabled: 431, failed: 48, worstLateness: 0.2, behind: false } }));
+    expect(health.level).toBe("operational");
+  });
+
+  it("degrades when a quarter or more of refresh sources are failing, and says how many of how many", () => {
+    const health = deriveSystemHealth(healthy({ refresh: { enabled: 431, failed: 120, worstLateness: 0.2, behind: false } }));
+    expect(health.level).toBe("degraded");
+    expect(health.headline).toContain("120 of 431 sources are failing to refresh");
+  });
+
   it("attributes a collector backlog to failures when there are any", () => {
     const health = deriveSystemHealth(healthy({
       collectors: { enabled: 98, overdue: 36, failing: 12, oldestOverdueMinutes: 26 * 60, keepingUp: false },

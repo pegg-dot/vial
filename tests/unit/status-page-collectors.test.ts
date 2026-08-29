@@ -109,8 +109,17 @@ describe("/status can report a starving collection queue", () => {
     vi.mocked(getRefreshMetrics).mockResolvedValueOnce({ enabled: 25, due: 0, queued: 0, failed: 25, stale: 25, attempts: 25, worstLateness: null });
     metrics.value = { enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null };
     const text = await render();
-    expect(text).toContain("25 failed");
+    expect(text).toContain("25 failing");
     expect(text).not.toContain("All systems operational");
+  });
+
+  it("shows a minority of failing sources on the card without calling the site degraded", async () => {
+    const { getRefreshMetrics } = await import("@/server/refresh/repository");
+    vi.mocked(getRefreshMetrics).mockResolvedValueOnce({ enabled: 431, due: 0, queued: 0, failed: 48, stale: 48, attempts: 900, worstLateness: null });
+    metrics.value = { enabled: 99, disabled: 0, overdue: 0, oldestOverdueMinutes: null, worstLateness: null };
+    const text = await render();
+    expect(text).toContain("48 failing");
+    expect(text).toContain("All systems operational");
   });
 
   // The control: with collectors present and inside cadence, the page must still say so, or the

@@ -473,3 +473,36 @@ describe("the owner can see which collector needs attention", () => {
     expect(rows.find((r) => r.target === "swiss-chems")).toMatchObject({ enabled: false });
   });
 });
+
+describe("a target that starts and never settles is a failure, not a target that never ran", () => {
+  it("is leased as failing before it runs, and settle() replaces the lease with the real outcome", async () => {
+    // Fails while nothing is written between claiming a target and settling it: a function killed
+    // mid-import (umbrella-labs, hourly, for a day) left the row untouched — picked first again next
+    // tick, killed again, and every target queued behind it in that tick died with it.
+    const db = await getDatabase();
+    const { leaseTarget } = await import("@/server/collect/scheduler");
+    await syncCollectionTargets(db);
+    const id = "ct:catalog-woo:swiss-chems";
+    const before = (await db.query<{ cadence_minutes: number; consecutive_failures: number; collector: string; target: string }>(`SELECT cadence_minutes, consecutive_failures, collector, target FROM collection_targets WHERE id = $1`, [id])).rows[0];
+    await leaseTarget(db, { id, collector: before.collector as never, target: before.target, cadence_minutes: before.cadence_minutes, consecutive_failures: before.consecutive_failures });
+    const leased = await targetRow(id);
+    expect(leased.last_ok).toBe(false);
+    expect(leased.last_error).toMatch(/did not settle/i);
+    expect(leased.consecutive_failures).toBe(before.consecutive_failures + 1);
+    expect(new Date(leased.next_due_at).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("a completed tick leaves no lease behind (control)", async () => {
+    const db = await getDatabase();
+    await syncCollectionTargets(db);
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() + interval '1 day'`);
+    await db.query(`UPDATE collection_targets SET next_due_at = NOW() - interval '1 hour' WHERE id = 'ct:tracker-ratings:swiss-chems'`);
+    vi.stubGlobal("fetch", (async () => new Response("<html>not tracked</html>", { status: 404 })) as unknown as typeof fetch);
+    try {
+      await runCollectionTick({ budgetMs: 8_000, maxTargets: 1, connection: db });
+    } finally { vi.unstubAllGlobals(); }
+    const row = await targetRow("ct:tracker-ratings:swiss-chems");
+    expect(row.last_ok).toBe(true);
+    expect(row.last_error).toBeNull();
+  });
+});
