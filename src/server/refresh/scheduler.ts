@@ -226,11 +226,16 @@ async function processClaimedRefreshJob(job: RefreshJob) {
          WHERE id=$1`,
         [attemptId, Date.now() - startedAt, code, message],
       );
+      // Bind exactly the parameters each statement references. The failed-variant used to be
+      // bound three while referencing $1 and $3 only; Postgres refuses an unreferenced parameter
+      // (42P18 "could not determine data type of parameter $2"), so every job reaching its LAST
+      // attempt threw here, rolled back, and stayed `running` — which is how 48 policies came to
+      // sit "4× late" in production, and why the provenance tick 500'd whenever one was reclaimed.
       await tx.query(
         retry
-          ? `UPDATE refresh_jobs SET status='retrying', available_at=NOW()+($2 || ' seconds')::interval, last_error=$3 WHERE id=$1`
-          : `UPDATE refresh_jobs SET status='failed', completed_at=NOW(), last_error=$3 WHERE id=$1`,
-        [job.id, delaySeconds, message],
+          ? `UPDATE refresh_jobs SET status='retrying', available_at=NOW()+($2::text || ' seconds')::interval, last_error=$3 WHERE id=$1`
+          : `UPDATE refresh_jobs SET status='failed', completed_at=NOW(), last_error=$2 WHERE id=$1`,
+        retry ? [job.id, String(delaySeconds), message] : [job.id, message],
       );
       await tx.query(
         `UPDATE source_refresh_policies
