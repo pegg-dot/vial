@@ -140,16 +140,22 @@ export async function syncCollectionTargets(connection?: SqlConnection): Promise
  * read did not touch is no longer for sale there. Imports upsert and never delete, which is how
  * purerawz kept 154 listings "In stock" for a catalogue of 80. One statement, bounded by the
  * vendor, guarded by `observed_at < run start` so nothing the run itself just wrote is touched.
+ *
+ * `exemptUrls` are product pages the read did NOT evaluate (their sizes were cut by the deadline
+ * or the fetch budget). A read that never looked at a product cannot say its sizes are gone —
+ * that is how umbrella-labs' in-stock retatrutide, DSIP and tesamorelin vials read "Unavailable"
+ * on 2026-08-30 while carrying the junk price the feed was supposed to correct.
  */
-export async function retireUnseenListings(db: SqlConnection, vendorSlug: string, since: string | Date): Promise<number> {
+export async function retireUnseenListings(db: SqlConnection, vendorSlug: string, since: string | Date, exemptUrls: string[] = []): Promise<number> {
   const result = await db.query<{ id: string }>(
     `UPDATE listings l
      SET availability = 'Unavailable', observed_at = NOW(), updated_at = NOW()
      FROM products p
      WHERE p.id = l.product_id AND p.vendor_id = $1 AND l.origin = 'live'
        AND l.availability <> 'Unavailable' AND l.observed_at < $2::timestamptz
+       AND NOT (l.external_url = ANY($3::text[]))
      RETURNING l.id`,
-    [`org:${vendorSlug}`, since],
+    [`org:${vendorSlug}`, since, exemptUrls],
   );
   return result.rows.length;
 }
@@ -351,7 +357,7 @@ async function runOne(db: SqlConnection, t: DueTarget, deadlineAt?: number): Pro
   // bluum-peptides "healthy" for eight days of zero-item imports. Matching no compound is fine —
   // the feed was read; that is what "fresh" means to the price authority in auto-triage.
   if (result.productsSeen === 0) return { items: 0, ok: false, error: "storefront returned no products — the feed answered but was empty" };
-  const retired = result.complete ? await retireUnseenListings(db, vendor.slug, startedAt) : 0;
+  const retired = result.complete ? await retireUnseenListings(db, vendor.slug, startedAt, result.unevaluatedUrls ?? []) : 0;
   return { items: result.imported.length, ok: true, retired };
 }
 

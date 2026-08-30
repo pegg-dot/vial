@@ -149,6 +149,16 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >   whose LATEST job failed (not every failed job ever) and degrades the verdict only past a
 >   quarter of sources (`refreshIsFailing`) — a few hosts refusing a fetch is a card fact, not an
 >   outage.
+>   **Tail starvation (fixed 2026-08-30).** A Woo read is bounded (220 per-variation fetches, 40 s)
+>   and the feed's order is stable, so the same tail of sized products was cut on EVERY read —
+>   umbrella-labs lists 382 variation ids — and a "complete" page read then retired their size
+>   listings as no longer sold while the vendor had them in stock (in-stock retatrutide, DSIP,
+>   tesamorelin vials read "Unavailable" at a junk $100 no read could correct). Now a product whose
+>   sizes a read cannot look at is left exactly as it was — not rewritten as a range price, named in
+>   `ImportResult.unevaluatedUrls`, exempt from `retireUnseenListings` — and products are processed
+>   stalest-first from their own listings' `observed_at`, so what was cut last read goes first next
+>   read. Coverage converges by construction; watch umbrella's remaining "$100" count fall to 0 over
+>   its next few 6-hourly reads (21 at 06:04Z).
 > - **`sahepeptides` / `sh-peptide` were deliberately NOT merged.** They share a source, which is
 >   not proof of shared ownership. A wrong merge destroys a real distinction and is much harder to
 >   undo than a missed one.

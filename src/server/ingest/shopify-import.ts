@@ -103,6 +103,12 @@ export interface ImportResult {
   skipped: number;
   /** True only when the run saw the vendor's WHOLE catalogue — the precondition for retiring what it did not see. */
   complete: boolean;
+  /**
+   * Product pages whose sizes this read could NOT evaluate (their per-variation fetches were cut by
+   * the deadline or the fetch budget). Their listings were left exactly as they were — not refreshed,
+   * and never to be retired on the strength of a read that did not look at them.
+   */
+  unevaluatedUrls?: string[];
 }
 
 // One matched (vendor, compound, size) offer, ready to record as a listing.

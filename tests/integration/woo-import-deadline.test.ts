@@ -40,13 +40,26 @@ describe("importWooCommerceCatalog under a deadline", () => {
     expect(result.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-bpc-157", "slow-vendor-bpc-157-10mg", "slow-vendor-epitalon", "slow-vendor-epitalon-10mg"]);
   });
 
-  it("past its deadline, records the product-level price and returns instead of fetching variations", async () => {
-    // Fails while the importer has no deadline and fetches every variation regardless.
+  it("past its deadline, leaves the products it could not evaluate exactly as they were, names them, and returns", async () => {
+    // Fails while the importer has no deadline and fetches every variation regardless — and fails
+    // if it falls back to writing a product-level price for a sized product it did not look at:
+    // that fallback touched one listing and left the size listings to be retired by the same read.
     const db = await getDatabase();
     const t0 = Date.now();
     const result = await importWooCommerceCatalog(db, input(Date.now() - 1));
     expect(Date.now() - t0).toBeLessThan(400);
-    expect(result.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-bpc-157", "slow-vendor-epitalon"]);
-    expect(result.imported.every((r) => r.price === 34.95)).toBe(true);
+    expect(result.imported).toEqual([]);
+    expect(result.unevaluatedUrls?.sort()).toEqual(["https://slow.example/p/1", "https://slow.example/p/2"]);
+  });
+
+  it("names the sized products the fetch budget could not cover, and evaluates them first next read", async () => {
+    // Fails while products are read in feed order: the same tail is cut on every read, forever.
+    const db = await getDatabase();
+    const first = await importWooCommerceCatalog(db, { ...input(), variationBudget: 2 });
+    expect(first.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-bpc-157", "slow-vendor-bpc-157-10mg"]);
+    expect(first.unevaluatedUrls).toEqual(["https://slow.example/p/2"]);
+    const second = await importWooCommerceCatalog(db, { ...input(), variationBudget: 2 });
+    expect(second.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-epitalon", "slow-vendor-epitalon-10mg"]);
+    expect(second.unevaluatedUrls).toEqual(["https://slow.example/p/1"]);
   });
 });

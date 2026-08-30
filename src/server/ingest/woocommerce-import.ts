@@ -290,17 +290,36 @@ export async function importWooCommerceCatalog(
     fetchVariation?: (origin: string, id: number) => Promise<WooVariation | null>;
     /** Epoch ms. Past it, no further page or variation is fetched; what is known is recorded and the read returns. */
     deadlineAt?: number;
+    /** Per-variation fetches this read may spend. Injectable so the budget cut can be exercised without 220 fixtures. */
+    variationBudget?: number;
   },
 ): Promise<ImportResult> {
   const catalog = input.products ? { products: input.products, complete: true } : await fetchWooCatalog(input.domain, WOO_MAX_PAGES, { deadlineAt: input.deadlineAt });
   const products = catalog?.products ?? null;
-  const result: ImportResult = { vendor: input.vendorName, productsSeen: products?.length ?? 0, matched: 0, imported: [], skipped: 0, complete: catalog?.complete ?? false };
+  const result: ImportResult = { vendor: input.vendorName, productsSeen: products?.length ?? 0, matched: 0, imported: [], skipped: 0, complete: catalog?.complete ?? false, unevaluatedUrls: [] };
   if (!products) return result;
 
   await upsertLiveVendor(db, { slug: input.vendorSlug, name: input.vendorName, domains: [input.domain], location: input.location, description: input.description });
 
   const getVariation = input.fetchVariation ?? fetchWooVariation;
-  let variationBudget = MAX_VARIATION_FETCHES;
+  let variationBudget = input.variationBudget ?? MAX_VARIATION_FETCHES;
+
+  // Stalest first. The per-variation fetches are bounded (budget and deadline), and the feed's
+  // order is stable — so in feed order the same tail of variable products was cut on EVERY read.
+  // On 2026-08-30 umbrella-labs listed 382 variation ids against a budget of 220: the last ~40 %
+  // of its sized products had never been evaluated since the variation path shipped, and a
+  // "complete" page read then retired their size listings as no longer sold while the vendor
+  // had them in stock. Ordering by when each product's own listings were last observed (never
+  // seen → first) means whatever was cut last read is evaluated first this read, and coverage
+  // converges by construction rather than by luck. One query.
+  const lastSeen = new Map<string, number>();
+  for (const row of (await db.query<{ url: string; seen: string | Date }>(
+    `SELECT l.external_url AS url, MIN(l.observed_at) AS seen FROM listings l JOIN products p ON p.id = l.product_id
+     WHERE p.vendor_id = $1 AND l.origin = 'live' GROUP BY l.external_url`, [`org:${input.vendorSlug}`],
+  )).rows) lastSeen.set(row.url, new Date(row.seen).getTime());
+  const ordered = products.map((product, index) => ({ product, index, seen: lastSeen.get(product?.permalink ?? "") ?? Number.NEGATIVE_INFINITY }))
+    .sort((a, b) => (a.seen - b.seen) || (a.index - b.index))
+    .map((entry) => entry.product);
 
   // Cheapest sane candidate per compound (a vendor lists several sizes for one compound).
   // Keep the cheapest candidate per (compound, size) — a vendor sells the same compound in
@@ -311,7 +330,7 @@ export async function importWooCommerceCatalog(
     const prev = bySize.get(key);
     if (!prev || c.price < prev.price) bySize.set(key, c);
   };
-  for (const product of products) {
+  for (const product of ordered) {
     if (!product?.name) { result.skipped += 1; continue; }
     const compoundSlug = matchCompound(product.name, input.compounds);
     if (!compoundSlug) { result.skipped += 1; continue; }
@@ -336,8 +355,17 @@ export async function importWooCommerceCatalog(
     // its own price, so ask for them and record one real offer per size (what the Shopify path
     // already does with variants). Bounded, and a failure just falls back to the product-level read.
     const variations = (product.variations ?? []).slice(0, MAX_VARIATIONS_PER_PRODUCT);
+    const sized = variations.length > 1 && wooVariationLabels(product).length > 1;
     const inTime = input.deadlineAt === undefined || Date.now() < input.deadlineAt;
-    if (inTime && variations.length > 1 && wooVariationLabels(product).length > 1 && variationBudget >= variations.length) {
+    if (sized && (!inTime || variationBudget < variations.length)) {
+      // A product whose sizes this read cannot look at is left exactly as it was. Recording the
+      // product-level range price instead touched one listing and left the size listings to be
+      // retired by this same read as "no longer sold"; not touching it keeps its listings stalest,
+      // so it goes first next time, and names it so retirement leaves it alone.
+      result.unevaluatedUrls!.push(base.url);
+      continue;
+    }
+    if (sized) {
       variationBudget -= variations.length;
       let origin = "";
       try { origin = new URL(product.permalink).origin; } catch { origin = `https://${input.domain}`; }
