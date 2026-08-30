@@ -152,7 +152,7 @@ export const PRICE_CHANGE_MIN_LISTINGS = 3;
 export async function recomputeCompoundPriceChanges(db: SqlConnection): Promise<{ compounds: number; earned: number }> {
   const result = await db.query<{ slug: string; k: string | number }>(
     `WITH params AS (
-       SELECT CURRENT_DATE AS today, CURRENT_DATE - ${PRICE_CHANGE_WINDOW_DAYS} AS window_start
+       SELECT (NOW() AT TIME ZONE 'UTC')::date AS today, (NOW() AT TIME ZONE 'UTC')::date - ${PRICE_CHANGE_WINDOW_DAYS} AS window_start
      ),
      base AS (
        SELECT DISTINCT ON (o.listing_slug) o.listing_slug, o.compound_slug, o.price AS base_price, o.observed_day AS base_day
@@ -217,7 +217,7 @@ export async function getCompoundDailyMedianSeries(db: SqlConnection, compoundSl
             percentile_cont(0.5) WITHIN GROUP (ORDER BY price) AS median,
             MIN(price) AS low, MAX(price) AS high, COUNT(*) AS n
      FROM price_observations
-     WHERE compound_slug = $1 AND available AND price IS NOT NULL AND observed_day >= CURRENT_DATE - $2::int
+     WHERE compound_slug = $1 AND available AND price IS NOT NULL AND observed_day >= (NOW() AT TIME ZONE 'UTC')::date - $2::int
      GROUP BY observed_day ORDER BY observed_day`,
     [compoundSlug, days],
   )).rows;

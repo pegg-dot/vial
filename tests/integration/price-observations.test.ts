@@ -155,7 +155,7 @@ describe("migration 53 resets the undated arrays and seeds one real observation 
     await runMigrations(db);
 
     const obs = (await db.query<{ observed_day: string; price: string; available: boolean; source: string; days_ago: number }>(
-      `SELECT observed_day::text AS observed_day, price, available, source, (CURRENT_DATE - observed_day) AS days_ago FROM price_observations WHERE listing_slug = 'junk-vendor-bpc-157'`)).rows;
+      `SELECT observed_day::text AS observed_day, price, available, source, ((NOW() AT TIME ZONE 'UTC')::date - observed_day) AS days_ago FROM price_observations WHERE listing_slug = 'junk-vendor-bpc-157'`)).rows;
     expect(obs).toHaveLength(1);
     expect(obs[0]).toMatchObject({ price: "34.95", available: true, source: "catalogue" });
     expect(Number(obs[0].days_ago)).toBe(3);
