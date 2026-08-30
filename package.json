@@ -85,7 +85,7 @@
     "vitest": "^4.1.10"
   },
   "overrides": {
-    "postcss": "8.5.19"
+    "postcss": "8.5.26"
   },
   "description": "Evidence and laboratory network for the VIAL market platform",
   "engines": {
