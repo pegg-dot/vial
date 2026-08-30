@@ -205,13 +205,20 @@ export async function markCompoundLive(db: SqlConnection, compoundSlug: string):
  * Recompute every compound's listing_count / median_price / documentation_coverage from
  * its active listings. Catalog imports (recordCatalogListing) don't go through the publish
  * cascade, so their compound-level stats need a post-import recompute to stay coherent.
+ *
+ * The median is a CURRENT-offer figure: only listings a buyer can buy right now count toward it,
+ * the way a price-comparison site drops a delisted offer from "cheapest" the moment it is gone.
+ * Until 2026-08-30 it ranked every active listing, Unavailable ones included — so a retired
+ * listing carrying a scraped promo-banner "$100" kept pulling its compound's median for as long
+ * as the row existed. listing_count still counts every listing tracked; that is "who has sold
+ * it", a different fact the pages also show.
  */
 export async function recomputeCompoundStats(db: SqlConnection): Promise<void> {
   await db.query(`
     WITH stats AS (
       SELECT p.compound_id,
              COUNT(*) AS n,
-             percentile_cont(0.5) WITHIN GROUP (ORDER BY l.price) AS med,
+             percentile_cont(0.5) WITHIN GROUP (ORDER BY l.price) FILTER (WHERE l.availability <> 'Unavailable' AND l.price > 0) AS med,
              ROUND(100.0 * COUNT(*) FILTER (WHERE l.report_date <> '' AND l.report_date <> 'Not located') / COUNT(*)) AS docs
       FROM listings l JOIN products p ON p.id = l.product_id WHERE p.status = 'active'
       GROUP BY p.compound_id

@@ -69,8 +69,11 @@ async function emulateMigration53Default(db: Db, since: string) {
 }
 
 describe("migration 54 derives price_source from the receipts", () => {
-  it("is registered as the current schema version", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(54);
+  it("is registered as a migration that every fresh database applies", async () => {
+    expect(CURRENT_SCHEMA_VERSION).toBeGreaterThanOrEqual(54);
+    const db = await getDatabase();
+    const row = (await db.query<{ name: string }>(`SELECT name FROM schema_migrations WHERE version = 54`)).rows[0];
+    expect(row?.name).toBe("price-source-page-repair");
   });
 
   it("marks a listing 'page' when its latest published price claim came from a scrape, and the feed then overrules it whatever the size", async () => {

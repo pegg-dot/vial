@@ -122,6 +122,14 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >   from the receipts — a live listing is `'page'` when its latest published price claim came
 >   from a page extractor and that value is still its price. Observation days are compared on
 >   the UTC clock everywhere (`price-history.ts`); `CURRENT_DATE` is the session's local day.
+>   **Migration 55 + current-offer medians (2026-08-30):** a listing the feed no longer carries
+>   cannot have a scraped price corrected by the feed, so it kept the banner as its price — and
+>   that number ranked in its compound's median. Now: a delisted listing shows its last known
+>   FEED price (restored from the page claim's `previous_value_json`, the receipt of what the scrape
+>   replaced), the way a price-comparison site shows a delisted offer's last price with its date;
+>   and every median — `compounds.median_price`, the projection's sticker median and its per-mg
+>   median — counts only listings a buyer can buy now. `listing_count`/`listings` still count every
+>   listing tracked ("who has sold it"). Unavailable listings never counted toward Δ (D6) already.
 > - **No outside monitoring.** The owner declined an uptime check and the alert webhook. In-app
 >   alerting (`src/server/observability/alerts.ts`) works and is throttled, but it cannot report the
 >   failure that actually happened: when the deployment itself is broken, the code that would send
@@ -158,7 +166,12 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >   `ImportResult.unevaluatedUrls`, exempt from `retireUnseenListings` — and products are processed
 >   stalest-first from their own listings' `observed_at`, so what was cut last read goes first next
 >   read. Coverage converges by construction; watch umbrella's remaining "$100" count fall to 0 over
->   its next few 6-hourly reads (21 at 06:04Z).
+>   its next few 6-hourly reads (21 at 06:04Z, 13 at 14:45Z). Later the same day: "stalest" is now
+>   read from `catalogue_product_reads` (migration 56, one row per product page, when the collector
+>   last EVALUATED it) rather than from the listings a product produced — a product that is evaluated
+>   but outranked by a cheaper twin has no listing to date it by, read as never seen, and went first on
+>   every read while retatrutide's sizes (URL still in the feed) were never reached. Products carrying a
+>   page-scraped price go first of all: the feed is the authority over exactly those.
 > - **`sahepeptides` / `sh-peptide` were deliberately NOT merged.** They share a source, which is
 >   not proof of shared ownership. A wrong merge destroys a real distinction and is much harder to
 >   undo than a missed one.

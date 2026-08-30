@@ -304,22 +304,36 @@ export async function importWooCommerceCatalog(
   const getVariation = input.fetchVariation ?? fetchWooVariation;
   let variationBudget = input.variationBudget ?? MAX_VARIATION_FETCHES;
 
-  // Stalest first. The per-variation fetches are bounded (budget and deadline), and the feed's
-  // order is stable — so in feed order the same tail of variable products was cut on EVERY read.
-  // On 2026-08-30 umbrella-labs listed 382 variation ids against a budget of 220: the last ~40 %
-  // of its sized products had never been evaluated since the variation path shipped, and a
-  // "complete" page read then retired their size listings as no longer sold while the vendor
-  // had them in stock. Ordering by when each product's own listings were last observed (never
-  // seen → first) means whatever was cut last read is evaluated first this read, and coverage
-  // converges by construction rather than by luck. One query.
-  const lastSeen = new Map<string, number>();
-  for (const row of (await db.query<{ url: string; seen: string | Date }>(
-    `SELECT l.external_url AS url, MIN(l.observed_at) AS seen FROM listings l JOIN products p ON p.id = l.product_id
-     WHERE p.vendor_id = $1 AND l.origin = 'live' GROUP BY l.external_url`, [`org:${input.vendorSlug}`],
-  )).rows) lastSeen.set(row.url, new Date(row.seen).getTime());
-  const ordered = products.map((product, index) => ({ product, index, seen: lastSeen.get(product?.permalink ?? "") ?? Number.NEGATIVE_INFINITY }))
-    .sort((a, b) => (a.seen - b.seen) || (a.index - b.index))
+  // Least recently EVALUATED first. The per-variation fetches are bounded (budget and deadline)
+  // and the feed's order is stable, so in feed order the same tail of sized products was cut on
+  // EVERY read. On 2026-08-30 umbrella-labs listed 382 variation ids against a budget of 220: the
+  // last ~40 % of its sized products had never been evaluated since the variation path shipped,
+  // and a "complete" page read then retired their size listings as no longer sold while the
+  // vendor had them in stock. Ordering by when each product page was last evaluated (never →
+  // first; catalogue_product_reads, migration 56) means whatever was cut last read is evaluated
+  // first this read, and coverage converges by construction rather than by luck. Dating a product
+  // by the listings it produced was tried first and starves in its own way: a product that is
+  // evaluated but yields no listing (outranked by a cheaper one for the same compound and size)
+  // has nothing to date it by, reads as never seen, and goes first on every read.
+  //
+  // Before all of that: any product with a listing whose price a PAGE scrape set. The feed is the
+  // authority over exactly those (D1) and cannot overrule what it has not read.
+  const evaluatedAt = new Map<string, number>();
+  for (const row of (await db.query<{ product_url: string; evaluated_at: string | Date }>(
+    `SELECT product_url, evaluated_at FROM catalogue_product_reads WHERE vendor_slug = $1`, [input.vendorSlug],
+  )).rows) evaluatedAt.set(row.product_url, new Date(row.evaluated_at).getTime());
+  const scrapedUrls = new Set<string>();
+  for (const row of (await db.query<{ url: string }>(
+    `SELECT DISTINCT l.external_url AS url FROM listings l JOIN products p ON p.id = l.product_id
+     WHERE p.vendor_id = $1 AND l.origin = 'live' AND l.price_source = 'page'`, [`org:${input.vendorSlug}`],
+  )).rows) scrapedUrls.add(row.url);
+  const ordered = products.map((product, index) => {
+    const url = product?.permalink ?? "";
+    return { product, index, scraped: scrapedUrls.has(url) ? 0 : 1, seen: evaluatedAt.get(url) ?? Number.NEGATIVE_INFINITY };
+  })
+    .sort((a, b) => (a.scraped - b.scraped) || (a.seen - b.seen) || (a.index - b.index))
     .map((entry) => entry.product);
+  const evaluatedUrls: string[] = [];
 
   // Cheapest sane candidate per compound (a vendor lists several sizes for one compound).
   // Keep the cheapest candidate per (compound, size) — a vendor sells the same compound in
@@ -365,6 +379,7 @@ export async function importWooCommerceCatalog(
       result.unevaluatedUrls!.push(base.url);
       continue;
     }
+    evaluatedUrls.push(base.url);
     if (sized) {
       variationBudget -= variations.length;
       let origin = "";
@@ -384,5 +399,14 @@ export async function importWooCommerceCatalog(
     offer({ ...base, price, quantity: wooQuantity(product) });
   }
   for (const rec of await recordAllSizes(db, { ...input, feedUrl: `https://${input.domain}/wp-json/wc/store/v1/products` }, [...bySize.values()])) result.imported.push(rec);
+  // What this read looked at, dated — one statement — so the next read starts where this one left off.
+  if (evaluatedUrls.length) {
+    await db.query(
+      `INSERT INTO catalogue_product_reads (product_url, vendor_slug, evaluated_at)
+       SELECT url, $1, NOW() FROM unnest($2::text[]) AS u(url)
+       ON CONFLICT (product_url) DO UPDATE SET evaluated_at = NOW(), vendor_slug = EXCLUDED.vendor_slug`,
+      [input.vendorSlug, [...new Set(evaluatedUrls)]],
+    );
+  }
   return result;
 }

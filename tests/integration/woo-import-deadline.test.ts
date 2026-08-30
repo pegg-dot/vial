@@ -62,4 +62,35 @@ describe("importWooCommerceCatalog under a deadline", () => {
     expect(second.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-epitalon", "slow-vendor-epitalon-10mg"]);
     expect(second.unevaluatedUrls).toEqual(["https://slow.example/p/1"]);
   });
+
+  it("dates a product by when it was EVALUATED, not by the listings it produced (a listingless product is not 'never seen' forever)", async () => {
+    // Fails while staleness is derived from listings: a product that is evaluated but yields no
+    // listing — outranked by a cheaper twin for the same compound and sizes — reads as never seen,
+    // goes first on every read, and the genuinely unevaluated product behind it is cut every time.
+    const db = await getDatabase();
+    const twinA = variable(3, "Epitalon vial");
+    const twinB = variable(4, "Epitalon premium vial"); // same compound, same sizes, same prices → A keeps the listing, B yields none
+    const other = variable(2, "BPC-157 vial");
+    const feed = { ...input(), products: [twinA, twinB, other] as never };
+    const first = await importWooCommerceCatalog(db, { ...feed, variationBudget: 4 });
+    expect(first.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-epitalon", "slow-vendor-epitalon-10mg"]);
+    expect(first.unevaluatedUrls).toEqual(["https://slow.example/p/2"]);
+    // Read 2, budget for one product: the cut one goes first; the dated twins wait — listings or not.
+    const second = await importWooCommerceCatalog(db, { ...feed, variationBudget: 2 });
+    expect(second.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-bpc-157", "slow-vendor-bpc-157-10mg"]);
+    expect([...(second.unevaluatedUrls ?? [])].sort()).toEqual(["https://slow.example/p/3", "https://slow.example/p/4"]);
+  });
+
+  it("evaluates a product carrying a page-scraped price before anything else, however fresh it looks", async () => {
+    // Fails while staleness alone decides: a scrape that just touched the listing makes it look
+    // fresh, and the feed — the only thing allowed to overrule that price — never gets to it.
+    const db = await getDatabase();
+    await importWooCommerceCatalog(db, input());
+    // Epitalon's listing now carries a scraped price and was touched a moment ago; BPC-157 is older.
+    await db.query(`UPDATE listings SET price = 100, price_source = 'page', observed_at = NOW() WHERE slug LIKE 'slow-vendor-epitalon%'`);
+    await db.query(`UPDATE listings SET observed_at = NOW() - interval '2 days' WHERE slug LIKE 'slow-vendor-bpc-157%'`);
+    const read = await importWooCommerceCatalog(db, { ...input(), variationBudget: 2 });
+    expect(read.imported.map((r) => r.slug).sort()).toEqual(["slow-vendor-epitalon", "slow-vendor-epitalon-10mg"]);
+    expect(read.unevaluatedUrls).toEqual(["https://slow.example/p/1"]);
+  });
 });

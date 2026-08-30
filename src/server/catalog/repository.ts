@@ -23,7 +23,7 @@ async function queryCompounds(){ const db=await getDatabase(); return (await db.
   (SELECT COUNT(*) FROM lab_test_records t WHERE t.compound_slug=c.slug AND t.is_independent) real_coas,
   (SELECT array_agg(t.purity_pct) FROM lab_test_records t WHERE t.compound_slug=c.slug AND t.is_independent AND t.purity_pct IS NOT NULL) real_purities,
   (SELECT COUNT(*) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.compound_id=c.id AND p.status='active') real_listings,
-  (SELECT array_agg(l.price) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.compound_id=c.id AND p.status='active' AND l.price>0) real_prices
+  (SELECT array_agg(l.price) FROM listings l JOIN products p ON p.id=l.product_id WHERE p.compound_id=c.id AND p.status='active' AND l.price>0 AND l.availability<>'Unavailable') real_prices
   FROM compounds c ORDER BY c.canonical_name`)).rows.map(toCompound); }
 // `real_listings` is the number every vendor surface renders (card tile, product page, home rail),
 // and it is the same quantity organizations.product_count stores. It alone among the catalog
@@ -48,7 +48,8 @@ async function computeCatalogSnapshot():Promise<CatalogSnapshot>{ const [compoun
   // Live per-compound median $/mg, computed from the SAME parseTotalMg the cards use — not sticker
   // price. compoundMedianPerMg only counts readable sizes and returns null below the peer floor.
   const perMg=new Map<string,number[]>();
-  for(const p of products){ if(p.pricePerMg&&p.pricePerMg>0){ const a=perMg.get(p.compoundSlug); if(a) a.push(p.pricePerMg); else perMg.set(p.compoundSlug,[p.pricePerMg]); } }
+  // Current offers only: a delisted listing's last price is history, not a peer a buyer can pick.
+  for(const p of products){ if(p.availability!=="Unavailable"&&p.pricePerMg&&p.pricePerMg>0){ const a=perMg.get(p.compoundSlug); if(a) a.push(p.pricePerMg); else perMg.set(p.compoundSlug,[p.pricePerMg]); } }
   for(const c of compounds){ c.medianPricePerMg=compoundMedianPerMg(perMg.get(c.slug)??[]); }
   // Counted because this is the expensive path the cache exists to avoid. A healthy day is single
   // digits; thousands means something is bypassing the cache, which is exactly how the database
