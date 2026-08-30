@@ -59,7 +59,7 @@ export function dailyDemand(counts: TargetCounts): number {
   const perDay = (kind: CollectorKind) => MINUTES_PER_DAY / CADENCE_MINUTES[kind];
   const catalogue = counts.withCatalog * perDay("catalog-rsc"); // shopify/woo/rsc share a cadence
   const perVendor = counts.collected * (perDay("vendor-status") + perDay("domain-age") + perDay("tracker-ratings"));
-  const market = perDay("enforcement-openfda") + perDay("news-feeds");
+  const market = perDay("enforcement-openfda") + perDay("news-feeds") + perDay("lab-janoshik") + perDay("lab-janoshik-capture");
   return catalogue + perVendor + market;
 }
 

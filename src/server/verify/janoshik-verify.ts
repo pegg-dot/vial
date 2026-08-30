@@ -5,18 +5,33 @@
 // authoritative "Made By" the portal shows, and when we checked. A cert that was listed before and
 // is now absent (delisted) is surfaced as a trust change. Honest framing: same source as ingest, so
 // this is continued-listing / freshness, not third-party corroboration.
+//
+// The fetch identifies itself. It used to send a Chrome user-agent string; the portal's Cloudflare
+// edge refuses server-side clients regardless (403 "Attention Required" to the Chrome UA, to curl
+// and to this honest one alike, probed 2026-08-30), and a citable evidence pipeline does not wear a
+// browser's name to get past a door. When the lab's edge admits a server, it admits it as us.
 
 import type { SqlConnection } from "@/server/db/client";
 import { parseJanoshikFeed, type JanoshikEntry } from "@/server/ingest/lab-tests";
 
-const PORTAL_URL = "https://public.janoshik.com/";
-const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36";
+export const PORTAL_URL = "https://public.janoshik.com/";
+const UA = "VialGrade-Catalog-Import/1.0";
+
+/** The portal answered, but not with the feed. Carries the status so the queue can name it. */
+export class JanoshikPortalError extends Error {
+  constructor(readonly status: number) {
+    super(`Janoshik portal returned ${status}`);
+    this.name = "JanoshikPortalError";
+  }
+}
 
 /** Fetch and parse the live Janoshik public feed. Collector-only (live network). Returns the
- *  raw HTML too so collectors can refresh the on-disk snapshot the offline ingest reads. */
-export async function fetchJanoshikPortal(): Promise<{ html: string; entries: JanoshikEntry[] }> {
-  const res = await fetch(PORTAL_URL, { headers: { "user-agent": UA }, signal: AbortSignal.timeout(20000) });
-  if (!res.ok) throw new Error(`Janoshik portal returned ${res.status}`);
+ *  raw HTML too so the hand script can refresh its on-disk snapshot. `fetchImpl` is injectable so
+ *  the collector's refusal path can be exercised without the network. */
+export async function fetchJanoshikPortal(options: { fetchImpl?: typeof fetch } = {}): Promise<{ html: string; entries: JanoshikEntry[] }> {
+  const doFetch = options.fetchImpl ?? fetch;
+  const res = await doFetch(PORTAL_URL, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(20000) });
+  if (!res.ok) throw new JanoshikPortalError(res.status);
   const html = await res.text();
   return { html, entries: parseJanoshikFeed(html) };
 }

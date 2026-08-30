@@ -40,6 +40,9 @@ export function canonicalizeVendorSlug(slug: string): string {
   return s || slug;
 }
 
+const FREEMAIL = /^(gmail|googlemail|hotmail|outlook|live|msn|yahoo|ymail|protonmail|proton|pm|icloud|me|aol|mail|gmx|yandex|qq|163|126|foxmail|sina|zoho|tutanota)\./i;
+const EMAIL = /([a-z0-9._%+-]+)@((?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})/i;
+
 /** Clean one manufacturer/client string into a canonical vendor, or null if it's noise. */
 export function cleanVendorString(raw: string): DerivedVendor | null {
   let s = (raw ?? "").trim();
@@ -55,8 +58,22 @@ export function cleanVendorString(raw: string): DerivedVendor | null {
        .replace(/\s+/g, " ").trim();
   if (!s) return null;
 
-  // Pull a domain if one is present (full URL or a bare hostname).
+  // An address is how many clients sign a certificate ("admin@reta-peptide.com",
+  // "info@peptidegurus.com"). The person is not the vendor; the host is — usually the same host
+  // the manufacturer field carries, so the certificate lands on ONE profile instead of a ghost
+  // "admin-reta-peptide-com" beside "reta-peptide" (the 2026-08-30 capture would have minted
+  // six of those). A freemail host names nobody: it is noise, and the manufacturer decides.
   let domain: string | undefined;
+  const email = s.match(EMAIL);
+  if (email) {
+    const host = email[2].replace(/^www\./i, "").toLowerCase();
+    if (!FREEMAIL.test(host)) domain = host;
+    s = s.replace(email[0], " ").replace(/\s+/g, " ").trim();
+    if (!s && !domain) return null;
+  }
+
+  // Pull a domain if one is present (full URL or a bare hostname). An explicit URL outranks the
+  // address's host.
   const url = s.match(/https?:\/\/([^\s/|,，)]+)/i);
   if (url) domain = url[1].replace(/^www\./i, "").toLowerCase();
 

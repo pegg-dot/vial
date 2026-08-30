@@ -6,6 +6,14 @@ process.env.VIALGRADE_SEED_FIXTURES ||= "false"; // never re-seed demo fixtures 
 //                   (used to apply freshly vision-read purities after a live run)
 // Run with the dev server STOPPED (file-backed PGlite is single-writer).
 //
+// ⚠️ 2026-08-30: public.janoshik.com answers every server-side client with a Cloudflare 403, so
+// the live fetch below has been failing since at least 2026-08-29 (and no certificate had been
+// added since 07-22). Production runs this same loop from the collection queue
+// (src/server/collect/lab-janoshik.ts). The path that works today is a person's browser: save the
+// portal page, run `node --import tsx scripts/janoshik-capture-to-json.mjs <saved.html>`, commit
+// src/server/data/janoshik-feed-capture.json. `--offline` here still re-ingests the on-disk HTML
+// snapshot into a laptop database.
+//
 // The portal shows a bounded window of recent tests; certificates roll off but their verify
 // URLs stay valid. Each run captures what's currently listed before it rolls off, refreshes the
 // on-disk snapshot, ingests the tests we don't hold yet (minting any newly-named vendors), then
@@ -17,7 +25,7 @@ import { acquireStoreLock } from "../src/server/db/store-lock.ts";
 import { parseJanoshikFeed } from "../src/server/ingest/lab-tests.ts";
 import { ingestNewJanoshikTests, applyPurities, annotateTestTypes } from "../src/server/ingest/janoshik-discovery.ts";
 import { reconcileLabsFromRegistry } from "../src/server/ingest/lab-tests.ts";
-import { fetchJanoshikPortal, annotateJanoshikListings } from "../src/server/verify/janoshik-verify.ts";
+import { fetchJanoshikPortal, annotateJanoshikListings, JanoshikPortalError } from "../src/server/verify/janoshik-verify.ts";
 import { computeAndStoreLinkages } from "../src/server/verify/vendor-linkage.ts";
 import { recomputeCompoundStats } from "../src/server/ingest/live-sources.ts";
 import { projectLiveBatchPassports } from "../src/server/evidence-network/live-passports.ts";
@@ -36,7 +44,12 @@ if (offline) {
   entries = parseJanoshikFeed(readFileSync(snapshotFile, "utf8"));
 } else {
   console.log("Fetching the live Janoshik public feed…");
-  const portal = await fetchJanoshikPortal();
+  let portal;
+  try { portal = await fetchJanoshikPortal(); }
+  catch (error) {
+    if (error instanceof JanoshikPortalError) { console.error(`The portal refused this client (HTTP ${error.status}) — see the note at the top of this script for the browser-capture path.`); process.exit(1); }
+    throw error;
+  }
   entries = portal.entries;
   if (entries.length === 0) { console.error("Parsed 0 entries — portal layout may have changed; NOT overwriting the snapshot."); process.exit(1); }
   writeFileSync(snapshotFile, portal.html);

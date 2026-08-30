@@ -3,12 +3,14 @@
 **Read this top to bottom before touching anything.** The code is complete through v10.0 and
 backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth for the vision.
 
-> **Status, 2026-08-27.** Launched, indexed, and healthy. Replaced rather than appended, per the
+> **Status, 2026-08-30.** Launched, indexed, and healthy. Replaced rather than appended, per the
 > rule this block already states: a stale status paragraph at the top of START HERE is worse than
 > none. (It was six days stale and claiming schema 49 when production was on 51.)
 >
 > - **Live** at `vialgrade.com`, Vercel project `vial`, Neon Postgres (paid plan — see the cost
->   note below). `/api/health/ready` reports **schema 51**. All public pages serve.
+>   note below). `/api/health/ready` reports **schema 54**. All public pages serve. `next` 16.3.3;
+>   the `postcss` override in package.json is 8.5.26 (GHSA-fxqj-rqcc-2cmp closed 2026-08-30 —
+>   the old 8.5.19 pin was the fix for the previous advisory and had become the vulnerable one).
 > - **Verify production before believing anything about it.** `/api/health/live` returns the baked
 >   `VERCEL_GIT_COMMIT_SHA` — compare it to `git rev-parse HEAD` to prove what is actually running.
 >   `/api/health/ready` reports `actual` as a real `MAX(version) FROM schema_migrations`, so it
@@ -74,6 +76,23 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 > ### What is still genuinely open
 >
 > - **Listing evidence coverage** — still the real product gap. See `docs/STOREFRONT-COA.md`.
+>   **The Janoshik loop is on the queue (2026-08-30)** — `src/server/collect/lab-janoshik.ts`, two
+>   market-wide kinds, both daily inside the collect tick: `lab-janoshik` reads the live public
+>   feed (discovery + liveness, honest user-agent); `lab-janoshik-capture` ingests a snapshot a
+>   PERSON took in their own browser and committed (`src/server/data/janoshik-feed-capture.json`).
+>   ⚠️ `public.janoshik.com` answers every server-side client with a Cloudflare 403 — Chrome UA,
+>   curl and an honest UA alike (probed 2026-08-30; the 08-29 audit saw it too) — which is the
+>   real reason no certificate had been added since 2026-07-22: the hand scripts were dead and
+>   nothing said so. The live kind now settles that refusal where it can be seen (`/admin`
+>   "Collectors needing attention", disabled after three, retried weekly) and closes the loop by
+>   itself the day the lab's edge admits a server. To refresh evidence today: open the portal in
+>   a browser, save the page, run `node --import tsx scripts/janoshik-capture-to-json.mjs
+>   <saved.html>`, commit. A capture is discovery only — it never stamps "still listed", which is
+>   a statement about now. First capture 2026-08-30 03:06Z: 201 certificates, 161 the store had
+>   never seen (the feed window turns over completely in ~5 weeks; what rolled off stays held —
+>   moat A). An e-mail address in a client string now resolves to its host (`admin@reta-peptide.com`
+>   → `reta-peptide`), and a freemail address to nothing — the capture would otherwise have
+>   minted six ghost vendors.
 > - **Price truth (2026-08-29) — see `docs/superpowers/specs/2026-08-29-vial-price-truth-design.md`.**
 >   The `[34.95, 150, 150]` histories were not placeholders: the page-scrape extractor fell back to
 >   the first "$" on a vendor page — a "free shipping over $150" banner — auto-triage approved
@@ -96,7 +115,13 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 >   price — except that a price set by a page SCRAPE is overruled by the feed whatever the size
 >   (D1; 27 junk "$100" listings sat unfixed behind the guard until this was written). Held feed
 >   claims are a person's decision on `/admin/review`; auto-triage leaves them alone.
->   `cascade.recomputeCompound` no longer touches `price_change`.
+>   `cascade.recomputeCompound` no longer touches `price_change`. **Migration 54 (2026-08-30):**
+>   migration 53 had defaulted `price_source` to `'catalogue'` for every listing with no
+>   backfill, so the 27 scrape-set "$100" listings never matched the D1 exemption and were held
+>   again as a ÷6 move (verified on production at 02:43Z: still 27). The column is now derived
+>   from the receipts — a live listing is `'page'` when its latest published price claim came
+>   from a page extractor and that value is still its price. Observation days are compared on
+>   the UTC clock everywhere (`price-history.ts`); `CURRENT_DATE` is the session's local day.
 > - **No outside monitoring.** The owner declined an uptime check and the alert webhook. In-app
 >   alerting (`src/server/observability/alerts.ts`) works and is throttled, but it cannot report the
 >   failure that actually happened: when the deployment itself is broken, the code that would send

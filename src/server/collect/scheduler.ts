@@ -28,13 +28,14 @@ import { fetchDomainRegistrationDate, domainAgeNote } from "./domain-age";
 import { fetchShopRating, ratingForDomain, normalizeDomain } from "./tracker-ratings";
 import { recordDomainAge, recordAggregatorRating } from "@/server/external/repository";
 import { importRscCatalog, productUrlsFromSitemap } from "@/server/ingest/rsc-storefront-import";
+import { collectJanoshikLive, collectJanoshikCapture } from "./lab-janoshik";
 import type { CollectorOutcome } from "./types";
 
-export type CollectorKind = "catalog-shopify" | "catalog-woo" | "catalog-rsc" | "vendor-status" | "domain-age" | "tracker-ratings" | "enforcement-openfda" | "news-feeds";
+export type CollectorKind = "catalog-shopify" | "catalog-woo" | "catalog-rsc" | "vendor-status" | "domain-age" | "tracker-ratings" | "enforcement-openfda" | "news-feeds" | "lab-janoshik" | "lab-janoshik-capture";
 
 // Market-wide collectors run once per tick, not once per vendor. They share this target name.
 const MARKET_TARGET = "market";
-const MARKET_COLLECTORS: CollectorKind[] = ["enforcement-openfda", "news-feeds"];
+const MARKET_COLLECTORS: CollectorKind[] = ["enforcement-openfda", "news-feeds", "lab-janoshik", "lab-janoshik-capture"];
 
 interface KnownVendor {
   slug: string; name: string; domain: string;
@@ -64,6 +65,12 @@ export const CADENCE_MINUTES: Record<CollectorKind, number> = {
   "domain-age": 30 * 24 * 60,
   // Someone else's review corpus. Weekly is enough to track a trend without hammering their site.
   "tracker-ratings": 7 * 24 * 60,
+  // The lab's public feed is a bounded window of recent tests that turns over across days, not
+  // hours; a daily read captures everything before it rolls off and re-confirms what we hold.
+  // The committed browser capture only changes when a person commits a new one — daily is the
+  // longest it can wait to be applied, and it costs one read of a file in the bundle.
+  "lab-janoshik": 24 * 60,
+  "lab-janoshik-capture": 24 * 60,
 };
 
 const MAX_BACKOFF_MINUTES = 7 * 24 * 60;
@@ -283,6 +290,8 @@ async function runOne(db: SqlConnection, t: DueTarget, deadlineAt?: number): Pro
   // signalling a dead source by throwing.
   if (t.collector === "enforcement-openfda") return collectEnforcement(db);
   if (t.collector === "news-feeds") return collectNews(db);
+  if (t.collector === "lab-janoshik") return collectJanoshikLive(db);
+  if (t.collector === "lab-janoshik-capture") return collectJanoshikCapture(db);
 
   const vendor = vendors().find(v => v.slug === t.target);
   if (!vendor) throw new Error(`unknown vendor ${t.target}`);

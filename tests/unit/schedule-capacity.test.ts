@@ -62,6 +62,13 @@ describe("the collection schedule can serve the cadences it declares", () => {
     expect(() => ticksPerDay("0 4 * *")).toThrow(/5 fields/);
   });
 
+  // Every market-wide kind must be counted, or adding one silently eats headroom the arithmetic
+  // still reports as free. With no vendors at all the demand is exactly the market kinds:
+  // enforcement daily, news twice daily, the Janoshik feed daily, its browser capture daily.
+  it("counts every market-wide collector, including both Janoshik kinds", () => {
+    expect(dailyDemand({ withCatalog: 0, collected: 0 })).toBe(1 + 2 + 1 + 1);
+  });
+
   it("keeps the tick size the route uses and the one it scores identical", () => {
     const route = readFileSync(new URL("../../src/app/api/internal/cron/collect/route.ts", import.meta.url), "utf8");
     expect(route).toContain("maxTargets: TICK_MAX_TARGETS");

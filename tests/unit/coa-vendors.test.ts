@@ -31,6 +31,29 @@ describe("COA vendor derivation", () => {
     expect(cleanVendorString("Email: [email protected]")).toBeNull();
   });
 
+  it("resolves an e-mail address to its host, and a freemail address to nothing", () => {
+    // The feed's clients often sign with an address. The person is not the vendor; the host is —
+    // and it must land on the same profile the manufacturer field already names.
+    expect(cleanVendorString("admin@reta-peptide.com")).toMatchObject({ slug: "reta-peptide", domain: "reta-peptide.com" });
+    expect(cleanVendorString("RETA-PEPTIDE")?.slug).toBe("reta-peptide");
+    expect(cleanVendorString("www.reta-peptide.com")?.slug).toBe("reta-peptide");
+    expect(cleanVendorString("info@peptidegurus.com")?.slug).toBe("peptidegurus");
+    expect(cleanVendorString("PEPTIDEGURUS.COM")?.slug).toBe("peptidegurus");
+    expect(cleanVendorString("Acme Peptides sales@acme-peptides.com")).toMatchObject({ name: "Acme Peptides", domain: "acme-peptides.com" });
+    // A freemail address names nobody: noise, so the manufacturer decides.
+    expect(cleanVendorString("agoodpeptide@gmail.com")).toBeNull();
+    expect(cleanVendorString("nouvepen@protonmail.com")).toBeNull();
+    const { vendorByTestId, vendors } = deriveCoaVendors([
+      { testId: "1", client: "agoodpeptide@gmail.com", manufacturer: "www.agoodpeptide.com" },
+      { testId: "2", client: "admin@reta-peptide.com", manufacturer: "www.reta-peptide.com" },
+      { testId: "3", client: "RETA-PEPTIDE", manufacturer: "www.reta-peptide.com" },
+    ]);
+    expect(vendorByTestId.get("1")).toBe("agoodpeptide");
+    expect(vendorByTestId.get("2")).toBe("reta-peptide");
+    expect(vendorByTestId.get("3")).toBe("reta-peptide");
+    expect(vendors.map((v) => v.slug).sort()).toEqual(["agoodpeptide", "reta-peptide"]);
+  });
+
   it("only treats domain-or-keyword strings as vendors", () => {
     expect(looksLikeVendor({ name: "Cocer Peptides", slug: "cocer-peptides" })).toBe(true);
     expect(looksLikeVendor({ name: "Alpha", slug: "alpha", domain: "alpha.com" })).toBe(true);
