@@ -8,7 +8,7 @@ backed up at `github.com/pegg-dot/vial`. This doc is the single source of truth 
 > none. (It was six days stale and claiming schema 49 when production was on 51.)
 >
 > - **Live** at `vialgrade.com`, Vercel project `vial`, Neon Postgres (paid plan — see the cost
->   note below). `/api/health/ready` reports **schema 54**. All public pages serve. `next` 16.3.3;
+>   note below). `/api/health/ready` reports **schema 56**. All public pages serve. `next` 16.3.3;
 >   the `postcss` override in package.json is 8.5.26 (GHSA-fxqj-rqcc-2cmp closed 2026-08-30 —
 >   the old 8.5.19 pin was the fix for the previous advisory and had become the vulnerable one).
 > - **Verify production before believing anything about it.** `/api/health/live` returns the baked
