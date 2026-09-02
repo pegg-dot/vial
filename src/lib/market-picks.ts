@@ -1,9 +1,13 @@
 // Top-picks selection for a compound's market — the marketplace "buy box" logic.
 //
-// One place decides "cheapest", "best value", "highest tested purity", and "most tested vendor"
-// so the picks row and the leaderboard table can never disagree about the same listing (two
-// surfaces computing the same verdict independently WILL eventually diverge). The leaderboard
-// imports isSuspicious/independentPurityByVendor from here for exactly that reason.
+// One place decides the standout listings so the picks row and the leaderboard table can never
+// disagree about the same listing (two surfaces computing the same verdict independently WILL
+// eventually diverge). The leaderboard imports isSuspicious/independentPurityByVendor from here
+// for exactly that reason.
+//
+// Shape: up to four DISTINCT products, each carrying every category it won. When one listing is
+// both cheapest and best value, it shows once with both stamps and the freed slot goes to the
+// next honest category — the row fills without ever mislabeling a runner-up as "best".
 //
 // Pure data module: no server imports, unit-testable.
 
@@ -45,39 +49,48 @@ export function independentTestCountByVendor(tests: TestRowLike[]): Map<string, 
   return byVendor;
 }
 
-export interface TopPick {
-  key: "cheapest" | "best-value" | "purity" | "most-tested";
+export type PickKey = "cheapest" | "best-value" | "purity" | "most-tested" | "best-documented" | "freshest";
+
+export interface PickWin {
+  key: PickKey;
   label: string;
   why: string;
-  product: Product;
 }
 
-// Up to four distinct picks, in a fixed order. A product that wins several categories appears
-// once, under the first category it wins — fewer cards beats repeated ones.
+export interface TopPick {
+  product: Product;
+  wins: PickWin[];
+}
+
+const MAX_PICKS = 4;
+
 export function pickTopListings(listings: Product[], tests: TestRowLike[]): TopPick[] {
   const ranked = listings.filter((p) => p.pricePerMg != null && p.pricePerMg > 0).sort((a, b) => a.pricePerMg! - b.pricePerMg!);
   if (ranked.length === 0) return [];
 
-  const candidates: TopPick[] = [];
+  const purityByVendor = independentPurityByVendor(tests);
+  const countByVendor = independentTestCountByVendor(tests);
+
+  // Each category names its genuine winner over the WHOLE market (never a runner-up), in
+  // priority order. Wins for a product already on the board merge onto its card; a new product
+  // only joins while there is room.
+  const winners: { product: Product | undefined; win: Omit<PickWin, "why"> & { why: string } }[] = [];
 
   const cheapest = ranked.find((p) => !isSuspicious(p)) ?? ranked[0];
-  candidates.push({ key: "cheapest", label: "Cheapest", why: "Lowest price per mg that isn't flagged as suspiciously cheap", product: cheapest });
+  winners.push({ product: cheapest, win: { key: "cheapest", label: "Cheapest", why: "Lowest price per mg that isn't flagged as suspiciously cheap." } });
 
   const withReal = ranked.filter((p) => p.trust?.adjustedPricePerMg != null);
   if (withReal.length) {
     const bestValue = withReal.reduce((a, b) => (a.trust!.adjustedPricePerMg! <= b.trust!.adjustedPricePerMg! ? a : b));
-    candidates.push({ key: "best-value", label: "Best value", why: "Lowest real cost per active mg — price divided by measured purity", product: bestValue });
+    winners.push({ product: bestValue, win: { key: "best-value", label: "Best value", why: "Lowest real cost per active mg — price divided by measured purity." } });
   }
 
-  const purityByVendor = independentPurityByVendor(tests);
   const tested = ranked.filter((p) => purityByVendor.has(p.vendorSlug));
   if (tested.length) {
-    // Highest independently-tested purity; ties go to the cheaper per-mg listing (ranked order).
     const best = tested.reduce((a, b) => (purityByVendor.get(b.vendorSlug)! > purityByVendor.get(a.vendorSlug)! ? b : a));
-    candidates.push({ key: "purity", label: "Highest tested purity", why: `Independently tested at ${purityByVendor.get(best.vendorSlug)!.toFixed(1)}%`, product: best });
+    winners.push({ product: best, win: { key: "purity", label: "Highest tested purity", why: `Independently tested at ${purityByVendor.get(best.vendorSlug)!.toFixed(1)}%.` } });
   }
 
-  const countByVendor = independentTestCountByVendor(tests);
   if (countByVendor.size) {
     let topVendor: string | null = null;
     for (const [vendor, n] of countByVendor) {
@@ -86,10 +99,33 @@ export function pickTopListings(listings: Product[], tests: TestRowLike[]): TopP
     const fromVendor = ranked.find((p) => p.vendorSlug === topVendor);
     if (fromVendor) {
       const n = countByVendor.get(topVendor!)!;
-      candidates.push({ key: "most-tested", label: "Most tested vendor", why: `${n} independent lab test${n === 1 ? "" : "s"} on file for this vendor`, product: fromVendor });
+      winners.push({ product: fromVendor, win: { key: "most-tested", label: "Most tested vendor", why: `${n} independent lab test${n === 1 ? "" : "s"} on file for this vendor.` } });
     }
   }
 
-  const seen = new Set<string>();
-  return candidates.filter((c) => (seen.has(c.product.slug) ? false : (seen.add(c.product.slug), true)));
+  // Fallback categories that fill remaining slots honestly, from listing evidence alone.
+  const documented = ranked.filter((p) => p.evidenceLevel === "independent");
+  if (documented.length) {
+    const batchLinked = documented.filter((p) => p.batchLinked);
+    const best = (batchLinked.length ? batchLinked : documented)[0];
+    winners.push({ product: best, win: { key: "best-documented", label: "Best documented", why: best.batchLinked ? "Independent certificate linked to its exact batch." : "Independent certificate on file for this listing." } });
+  }
+
+  const dated = ranked.filter((p) => p.observedAt && !Number.isNaN(Date.parse(p.observedAt)));
+  if (dated.length) {
+    const freshest = dated.reduce((a, b) => (Date.parse(b.observedAt!) > Date.parse(a.observedAt!) ? b : a));
+    winners.push({ product: freshest, win: { key: "freshest", label: "Freshest check", why: "The most recently re-verified listing on this market." } });
+  }
+
+  const picks: TopPick[] = [];
+  for (const { product, win } of winners) {
+    if (!product) continue;
+    const existing = picks.find((p) => p.product.slug === product.slug);
+    if (existing) {
+      existing.wins.push(win);
+    } else if (picks.length < MAX_PICKS) {
+      picks.push({ product, wins: [win] });
+    }
+  }
+  return picks;
 }

@@ -22,6 +22,25 @@ const JUNK_PATTERNS: RegExp[] = [
   /\bbuy\s+(?:it\s+)?(?:online|now)\b/gi,
 ];
 
+// Scraped titles arrive with raw HTML entities in them — "BPC 157 &#8211; 50 VIALS" printed the
+// literal "&#8211;" on a live pick card. Decoded on the way to the screen only (stored data stays
+// exactly as the vendor published it, same as the boilerplate stripping below). Covers numeric
+// entities and the named ones that actually appear in commerce feeds; an unknown entity is left
+// alone rather than guessed at.
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  ndash: "\u2013", mdash: "\u2014", hellip: "\u2026",
+  lsquo: "\u2018", rsquo: "\u2019", ldquo: "\u201c", rdquo: "\u201d",
+  trade: "\u2122", reg: "\u00ae", copy: "\u00a9", deg: "\u00b0", micro: "\u00b5", plusmn: "\u00b1",
+};
+
+export function decodeHtmlEntities(value: string): string {
+  return (value ?? "")
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(Number(dec)))
+    .replace(/&([a-z]+);/gi, (m, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? m);
+}
+
 const squash = (value: string) => value.toLowerCase().replace(/\s+/g, "");
 
 function tidy(value: string): string {
@@ -36,11 +55,11 @@ function tidy(value: string): string {
 
 /** The product title with the vendor's sales boilerplate removed. */
 export function displayProductName(name: string): string {
-  let out = name ?? "";
+  let out = decodeHtmlEntities(name ?? "");
   for (const pattern of JUNK_PATTERNS) out = out.replace(pattern, " ");
   const cleaned = tidy(out);
   // Never hand back nothing: if a title was pure boilerplate, the original is still better.
-  return cleaned || (name ?? "");
+  return cleaned || decodeHtmlEntities(name ?? "");
 }
 
 /**

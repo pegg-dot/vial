@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayProductName, displayProductTitle, displaySize, titleStatesSize } from "@/lib/product-title";
+import { decodeHtmlEntities, displayProductName, displayProductTitle, displaySize, titleStatesSize } from "@/lib/product-title";
 
 describe("display titles — cleanup happens on the way to the screen, never in the data", () => {
   it("stops printing the size twice", () => {
@@ -32,5 +32,13 @@ describe("display titles — cleanup happens on the way to the screen, never in 
   it("never hands back an empty title", () => {
     expect(displayProductName("For Sale")).toBe("For Sale");
     expect(displayProductName("Semaglutide")).toBe("Semaglutide");
+  });
+
+  it("decodes HTML entities a feed left in the title (the literal '&#8211;' bug)", () => {
+    expect(displayProductName("BPC 157 &#8211; 50 VIALS AT 30 PERCENT OFF")).toBe("BPC 157 \u2013 50 VIALS AT 30 PERCENT OFF");
+    expect(displayProductName("Semaglutide &amp; Cagrilintide Blend")).toBe("Semaglutide & Cagrilintide Blend");
+    expect(decodeHtmlEntities("NAD&#x2b; &ndash; 500mg")).toBe("NAD+ \u2013 500mg");
+    // Unknown entities are left alone, never guessed at.
+    expect(decodeHtmlEntities("A &notreal; thing")).toBe("A &notreal; thing");
   });
 });
