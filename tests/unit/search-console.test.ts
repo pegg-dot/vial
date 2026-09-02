@@ -59,8 +59,35 @@ describe("summarizeSearchAnalytics", () => {
 });
 
 describe("configuration detection", () => {
-  it("is off without both env vars", () => {
-    // The test env deliberately carries neither variable.
-    expect(isSearchConsoleConfigured()).toBe(false);
+  // The environment is CONTROLLED here, never assumed: the first Vercel build after the owner
+  // added the real credentials carried them into the build's test run, this test (which assumed
+  // a bare env) went red, and the deploy gate refused the deployment — the fix itself blocked
+  // the owner from shipping the fix's own configuration.
+  const KEYS = ["VIALGRADE_GSC_CLIENT_EMAIL", "VIALGRADE_GSC_PRIVATE_KEY"] as const;
+
+  function withEnv(values: Partial<Record<(typeof KEYS)[number], string>>, fn: () => void) {
+    const saved = KEYS.map((k) => [k, process.env[k]] as const);
+    try {
+      for (const k of KEYS) delete process.env[k];
+      for (const [k, v] of Object.entries(values)) process.env[k] = v;
+      fn();
+    } finally {
+      for (const [k, v] of saved) {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      }
+    }
+  }
+
+  it("is off without both env vars, regardless of what the outer environment carries", () => {
+    withEnv({}, () => expect(isSearchConsoleConfigured()).toBe(false));
+    withEnv({ VIALGRADE_GSC_CLIENT_EMAIL: "svc@x.iam.gserviceaccount.com" }, () => expect(isSearchConsoleConfigured()).toBe(false));
+    withEnv({ VIALGRADE_GSC_PRIVATE_KEY: "key" }, () => expect(isSearchConsoleConfigured()).toBe(false));
+  });
+
+  it("is on with both env vars present", () => {
+    withEnv({ VIALGRADE_GSC_CLIENT_EMAIL: "svc@x.iam.gserviceaccount.com", VIALGRADE_GSC_PRIVATE_KEY: "key" }, () => {
+      expect(isSearchConsoleConfigured()).toBe(true);
+    });
   });
 });
