@@ -74,18 +74,25 @@ describe("pickTopListings", () => {
     expect(winner(picks, "freshest")?.product.slug).toBe("fresh");
   });
 
-  it("never shows more than four products", () => {
-    const many = [
-      listing({ slug: "a", vendor: "v1", perMg: 3 }),
-      listing({ slug: "b", vendor: "v2", perMg: 4, adjusted: 4.1 }),
-      listing({ slug: "c", vendor: "v3", perMg: 5, evidence: "independent", batchLinked: true }),
-      listing({ slug: "d", vendor: "v4", perMg: 6, observedAt: "2026-09-01T00:00:00Z" }),
-      listing({ slug: "e", vendor: "v5", perMg: 7 }),
-    ];
-    const picks = pickTopListings(many, [{ vendor_slug: "v5", purity_pct: 99, is_independent: true }]);
-    expect(picks.length).toBeLessThanOrEqual(4);
-    // Every card's stamps are genuine wins — no category appears on two products.
-    const keys = picks.flatMap((p) => p.wins.map((w) => w.key));
+  it("a deep market fills all five slots, backfilled with honest leaderboard ranks", () => {
+    const many = Array.from({ length: 8 }, (_, i) => listing({ slug: `l${i}`, vendor: `v${i}`, perMg: 3 + i }));
+    const picks = pickTopListings(many, []);
+    expect(picks).toHaveLength(5);
+    // Only "cheapest" wins a category here, so four slots backfill with rank stamps that state
+    // the listing's REAL position in the per-mg table.
+    const rankWins = picks.flatMap((p) => p.wins.filter((w) => w.key === "rank"));
+    expect(rankWins).toHaveLength(4);
+    expect(rankWins.map((w) => w.label)).toEqual(["#2 by price", "#3 by price", "#4 by price", "#5 by price"]);
+    expect(rankWins[0].why).toContain("of 8 listings");
+  });
+
+  it("never shows more than five products", () => {
+    const many = Array.from({ length: 12 }, (_, i) => listing({ slug: `l${i}`, vendor: `v${i}`, perMg: 3 + i, observedAt: `2026-08-${10 + i}T00:00:00Z`, evidence: i === 7 ? "independent" : undefined, batchLinked: i === 7 }));
+    const picks = pickTopListings(many, [{ vendor_slug: "v9", purity_pct: 99, is_independent: true }]);
+    expect(picks.length).toBeLessThanOrEqual(5);
+    // Every card's CATEGORY stamps are genuine wins — no category appears on two products.
+    // (Rank stamps are exempt: each states a distinct table position by construction.)
+    const keys = picks.flatMap((p) => p.wins.map((w) => w.key).filter((k) => k !== "rank"));
     expect(new Set(keys).size).toBe(keys.length);
   });
 

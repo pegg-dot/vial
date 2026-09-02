@@ -5,8 +5,10 @@ import { ShowMoreBlocks } from "./show-more-blocks";
 // Sourced scientific-literature findings for a compound. Educational and non-promotional: every claim
 // cites a real paper, human trials are visually separated from animal/in-vitro work, and safety notes
 // and evidence gaps are shown as prominently as any efficacy signal. No dosing, no recommendation.
-// The list is bounded — the first findings show, the rest sit behind one expander — so the research
-// section reads as a summary, not a second page.
+//
+// Findings render as ROWS of one flat card, not a stack of shadowed cards — a reference list, not
+// a wall. Safety notes are quiet inline amber text rather than boxed banners, the list is bounded
+// at three rows, and the expander is a flush footer matching the tables elsewhere on the page.
 const PREVIEW_FINDINGS = 3;
 
 const STUDY: Record<string, { label: string; cls: string; rank: number }> = {
@@ -58,16 +60,16 @@ export function CompoundResearchPanel({ findings, regulatoryStatus, evidenceSumm
   const renderFinding = (f: CompoundResearch) => {
     const s = STUDY[f.study_type ?? ""] ?? { label: f.study_type ?? "Study", cls: "bg-black/[.06] text-black/55", rank: 9 };
     return (
-      <div key={`${f.source_url}-${f.claim.slice(0, 24)}`} className="ink-1 hard rounded-[18px] bg-white p-5">
+      <div key={`${f.source_url}-${f.claim.slice(0, 24)}`} className="px-5 py-4 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${s.cls}`}><FlaskConical className="size-3" /> {s.label}</span>
-          {f.source_title && <span className="text-[11px] font-semibold text-[var(--muted)]">{f.source_title}</span>}
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${s.cls}`}><FlaskConical className="size-3" /> {s.label}</span>
+          {f.source_title && <span className="min-w-0 text-[11px] font-semibold leading-4 text-[var(--muted)]">{f.source_title}</span>}
         </div>
-        <p className="mt-3 text-sm font-medium leading-7 text-black/80">{f.claim}</p>
+        <p className="mt-2 max-w-4xl text-[13px] font-medium leading-6 text-black/75">{f.claim}</p>
         {f.safety_note && (
-          <p className="ink-1 mt-3 flex items-start gap-2 rounded-xl bg-[#fff6e6] px-3 py-2 text-[13px] font-medium leading-5 text-[#111214]/80"><ShieldAlert className="mt-0.5 size-3.5 shrink-0 text-[#b26a00]" /> {f.safety_note}</p>
+          <p className="mt-1.5 flex max-w-4xl items-start gap-1.5 text-[12px] font-medium leading-5 text-[#8a5200]"><ShieldAlert className="mt-0.5 size-3.5 shrink-0" /> {f.safety_note}</p>
         )}
-        <a href={f.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-black/45 hover:text-black">read the source <ExternalLink className="size-3" /></a>
+        <a href={f.source_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-black/40 hover:text-black">read the source <ExternalLink className="size-3" /></a>
       </div>
     );
   };
@@ -91,19 +93,24 @@ export function CompoundResearchPanel({ findings, regulatoryStatus, evidenceSumm
       )}
 
       {evidenceSummary && (
-        <div className="ink hard mb-5 rounded-[18px] bg-white p-5">
+        <div className="ink hard mb-4 rounded-[18px] bg-white p-5">
           <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#2b31d8]">Honest overall read</p>
           <p className="mt-1.5 text-base font-medium leading-7 text-black/80">{evidenceSummary}</p>
         </div>
       )}
 
-      <ShowMoreBlocks
-        className="space-y-3"
-        restCount={findings.length - PREVIEW_FINDINGS}
-        label={`Show all ${findings.length} findings`}
-        preview={findings.slice(0, PREVIEW_FINDINGS).map(renderFinding)}
-        rest={findings.slice(PREVIEW_FINDINGS).map(renderFinding)}
-      />
+      {findings.length > 0 && (
+        <div className="ink hard overflow-hidden rounded-[18px] bg-white">
+          <ShowMoreBlocks
+            className="divide-y divide-black/[.07]"
+            restCount={findings.length - PREVIEW_FINDINGS}
+            label={`Show all ${findings.length} findings`}
+            buttonClassName="flex w-full items-center gap-1.5 border-t-2 border-[#111214] bg-[#f7f7f4] px-5 py-3 text-left text-sm font-bold text-[#2b31d8] hover:underline sm:px-6"
+            preview={findings.slice(0, PREVIEW_FINDINGS).map(renderFinding)}
+            rest={findings.slice(PREVIEW_FINDINGS).map(renderFinding)}
+          />
+        </div>
+      )}
     </section>
   );
 }

@@ -5,9 +5,11 @@
 // eventually diverge). The leaderboard imports isSuspicious/independentPurityByVendor from here
 // for exactly that reason.
 //
-// Shape: up to four DISTINCT products, each carrying every category it won. When one listing is
+// Shape: up to five DISTINCT products, each carrying every category it won. When one listing is
 // both cheapest and best value, it shows once with both stamps and the freed slot goes to the
-// next honest category — the row fills without ever mislabeling a runner-up as "best".
+// next honest category — then any still-empty slots fill with the next listings in leaderboard
+// order, stamped with their real rank ("#4 by price"). A 48-listing market never shows a thin
+// row, and no runner-up is ever mislabeled as "best".
 //
 // Pure data module: no server imports, unit-testable.
 
@@ -49,7 +51,7 @@ export function independentTestCountByVendor(tests: TestRowLike[]): Map<string, 
   return byVendor;
 }
 
-export type PickKey = "cheapest" | "best-value" | "purity" | "most-tested" | "best-documented" | "freshest";
+export type PickKey = "cheapest" | "best-value" | "purity" | "most-tested" | "best-documented" | "freshest" | "rank";
 
 export interface PickWin {
   key: PickKey;
@@ -62,7 +64,7 @@ export interface TopPick {
   wins: PickWin[];
 }
 
-const MAX_PICKS = 4;
+const MAX_PICKS = 5;
 
 export function pickTopListings(listings: Product[], tests: TestRowLike[]): TopPick[] {
   const ranked = listings.filter((p) => p.pricePerMg != null && p.pricePerMg > 0).sort((a, b) => a.pricePerMg! - b.pricePerMg!);
@@ -126,6 +128,14 @@ export function pickTopListings(listings: Product[], tests: TestRowLike[]): TopP
     } else if (picks.length < MAX_PICKS) {
       picks.push({ product, wins: [win] });
     }
+  }
+
+  // Backfill: the next listings straight from leaderboard order, stamped with the rank they
+  // genuinely hold there. Honest by construction — the stamp IS the table position.
+  for (let i = 0; i < ranked.length && picks.length < MAX_PICKS; i++) {
+    const p = ranked[i];
+    if (picks.some((x) => x.product.slug === p.slug)) continue;
+    picks.push({ product: p, wins: [{ key: "rank", label: `#${i + 1} by price`, why: `Ranked #${i + 1} of ${ranked.length} listings by price per milligram.` }] });
   }
   return picks;
 }
