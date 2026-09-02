@@ -1,6 +1,7 @@
 import { ExternalLink, FileText, FlaskConical, BadgeCheck, EyeOff, ShieldCheck, AlertTriangle } from "lucide-react";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { checkContent } from "@/server/verify/content-check";
+import { ExpandableRows } from "./expandable-rows";
 
 // A COA whose link is a direct image can be shown as the actual document; a link to a lab's
 // verify page opens there instead.
@@ -20,7 +21,10 @@ const SAFETY_TYPES = new Set(["sterility", "endotoxin", "heavy-metals"]);
 // Surfaces real independent lab-test records (COAs). Purity, when present, was read from
 // the certificate image. This is evidence about a specific tested batch, never a claim
 // that every vial matches or an endorsement of the vendor.
-export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { tests: LabTestRow[]; heading?: string }) {
+// Long test histories are bounded: the first rows always show, the rest sit behind one expander.
+const PREVIEW_ROWS = 8;
+
+export function LabTestsPanel({ tests, heading = "Independent lab tests", id }: { tests: LabTestRow[]; heading?: string; id?: string }) {
   if (tests.length === 0) return null;
   // Headline stats reflect INDEPENDENT evidence only — a vendor's self-published purity never
   // becomes the top-line number, though its row still shows below (labeled).
@@ -28,7 +32,7 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
   const withPurity = independentTests.filter((t) => t.purity_pct != null);
   const blindCount = independentTests.filter((t) => t.is_blind).length;
   return (
-    <section className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
+    <section id={id} className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-10 sm:px-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Independent testing</p>
@@ -86,8 +90,8 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
               <th className="px-5 py-3 font-medium"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-black/[.06]">
-            {tests.map((t) => {
+          {(() => {
+            const renderRow = (t: LabTestRow) => {
               const isImg = isImageDoc(t.verify_url);
               return (
                 <tr key={t.verify_url}>
@@ -145,8 +149,18 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests" }: { te
                   </td>
                 </tr>
               );
-            })}
-          </tbody>
+            };
+            return (
+              <ExpandableRows
+                colSpan={7}
+                restCount={tests.length - PREVIEW_ROWS}
+                label={`Show all ${tests.length} test records`}
+                bodyClassName="divide-y divide-black/[.06]"
+                preview={tests.slice(0, PREVIEW_ROWS).map(renderRow)}
+                rest={tests.slice(PREVIEW_ROWS).map(renderRow)}
+              />
+            );
+          })()}
         </table>
       </div>
     </section>

@@ -16,13 +16,14 @@ import { UsLegalNotice } from "@/components/us-legal-notice";
 import { PriceSeries } from "@/components/price-series";
 import { describeCompoundBasis, formatPct } from "@/lib/price-trend";
 import { getCompoundDailyMedianSeries } from "@/server/ingest/price-history";
-import { ProductCard } from "@/components/product-card";
 import { FollowButton } from "@/components/follow-button";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { PassportCarousel, type PassportRow } from "@/components/passport-carousel";
 import { listPublicPassportsForCompound } from "@/server/evidence-network/repository";
 import { PriceLeaderboard } from "@/components/price-leaderboard";
+import { TopPicks } from "@/components/top-picks";
+import { SectionNav } from "@/components/section-nav";
 import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 import { getDatabase } from "@/server/db/client";
 import { getCurrentPrincipal } from "@/server/auth/principal";
@@ -84,6 +85,17 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const basisCopy = describeCompoundBasis(compound.priceChangeBasis);
   const earned = compound.priceChangeBasis?.medianPct != null;
 
+  // The sticky in-page map — only sections that actually render get a stop. This, the bounded
+  // tables, and the single market surface are the "people get lost on this page" fix: one
+  // navigable page instead of twelve unbounded stacked sections.
+  const navItems = [
+    ...(edu ? [{ id: "understand", label: "Understand" }] : []),
+    ...(listings.length ? [{ id: "market", label: "The market" }] : []),
+    ...(labTests.length ? [{ id: "lab-tests", label: "Lab tests" }] : []),
+    ...(research.length || regulatory ? [{ id: "research", label: "Research" }] : []),
+    ...(stacked.length || inStacks.length ? [{ id: "stacked", label: "Stacked with" }] : []),
+  ];
+
   return (
     <>
       {/* A reference entry in the compound directory — name, aliases, description, all visible
@@ -109,7 +121,10 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
               </div>
               <h1 className="mt-5 text-balance text-[clamp(3.2rem,8vw,7rem)] font-extrabold leading-[.86] tracking-[-.06em]">{compound.name}</h1>
               {edu?.goals?.length ? <div className="mt-5"><GoalTags goals={edu.goals} size="md" /></div> : null}
-              <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">{compound.description}</p>
+              {/* Plain words first. The scientific one-liner ("a synthetic pentadecapeptide…")
+                  told a first-time visitor nothing — it now lives with the rest of the science
+                  inside the Understand card, and the hero says what this IS in English. */}
+              <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">{edu?.summary ?? compound.description}</p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {compound.aliases.map((alias) => <span key={alias} className="ink-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#111214]/70">{alias}</span>)}
               </div>
@@ -140,6 +155,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         </div>
       </section>
 
+      <SectionNav items={navItems} />
+
       <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={Layers3} label="Active listings" value={String(compound.listings)} />
@@ -151,33 +168,38 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       </section>
 
       {edu ? (
-        <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
+        <section id="understand" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pb-4 sm:px-8">
           <CompoundKnowledge name={compound.name} education={edu} depth={depthFor(slug)} showStacks={false} />
         </section>
       ) : null}
 
-      <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
-        <UsLegalNotice slug={slug} />
-      </section>
+      {/* THE market surface — marketplace first, science after. Top picks answer "which one?"
+          four ways; the leaderboard below ranks everything by real cost. The old page rendered
+          the same ~48 listings TWICE (a 49-row table AND a 48-card grid) — one surface now. */}
+      {listings.length ? (
+        <div id="market" className="scroll-mt-[140px]">
+          <section className="mx-auto max-w-[1320px] px-5 pt-6 sm:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Current market</p>
+            <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">The {compound.name} market</h2>
+            <p className="mb-7 mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">All {listings.length} listings we track, ranked by what a milligram really costs — with the standout picks first where the evidence supports them.</p>
+            <TopPicks listings={listings} labTests={labTests} />
+          </section>
+          <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
+        </div>
+      ) : null}
+
+      <LabTestsPanel id="lab-tests" tests={labTests} heading={`${compound.name} — independent lab tests`} />
+
+      <PassportCarousel passports={passports} compoundName={compound.name} />
+
+      <CompoundResearchPanel id="research" findings={research} regulatoryStatus={regulatory?.regulatory_status ?? null} evidenceSummary={regulatory?.evidence_summary ?? null} compoundName={compound.name} fdaApprovedDrugExists={regulatory?.fda_approved_drug_exists ?? null} />
 
       <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
         <InnovatorNote slug={slug} compoundName={compound.name} />
       </section>
 
-      <CompoundResearchPanel findings={research} regulatoryStatus={regulatory?.regulatory_status ?? null} evidenceSummary={regulatory?.evidence_summary ?? null} compoundName={compound.name} fdaApprovedDrugExists={regulatory?.fda_approved_drug_exists ?? null} />
-
-      <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
-
-      <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
-        <div className="mb-7">
-          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Current market</p>
-          <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">All {compound.name} listings</h2>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{listings.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
-      </section>
-
       {stacked.length || inStacks.length ? (
-        <section className="mx-auto max-w-[1320px] px-5 pb-4 sm:px-8">
+        <section id="stacked" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pb-4 sm:px-8">
           <div className="mb-7">
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Commonly researched together</p>
             <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Often stacked with {compound.name}</h2>
@@ -214,9 +236,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
         </section>
       ) : null}
 
-      <LabTestsPanel tests={labTests} heading={`${compound.name} — independent lab tests`} />
-
-      <PassportCarousel passports={passports} compoundName={compound.name} />
+      <section className="mx-auto max-w-[1320px] px-5 pb-4 pt-4 sm:px-8">
+        <UsLegalNotice slug={slug} />
+      </section>
 
       <section className="mx-auto max-w-[1320px] px-5 pb-14 pt-4 sm:px-8 sm:pb-20">
         <div className="ink hard rounded-[20px] bg-[#fff6e6] p-6 sm:p-8">

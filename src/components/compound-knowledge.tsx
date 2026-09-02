@@ -5,10 +5,10 @@ import { goalLabel, goalBlurb } from "@/lib/compound-education";
 import { researchStage, type CompoundDepth } from "@/lib/compound-depth";
 import { GoalTags } from "./goal-tags";
 
-// The "I just want to understand what this is" panel. A visible plain-English answer, the
-// research-goal chips, and expandable dropdowns that answer the real questions a first-time
-// buyer has — how it works, what it's studied for, how far the research has gone — without any
-// dosing, medical, or human-use guidance (research context only).
+// The "I just want to understand what this is" panel. The visible answer is the PLAIN-ENGLISH
+// translation (compound-plain-english.ts) — everyday words first, always. The science lives
+// inside the dropdowns, labeled as the science, and every dropdown starts CLOSED so the panel
+// reads as one card, not a wall. No dosing, medical, or human-use guidance (research only).
 export function CompoundKnowledge({
   name, education, depth, stacked = [], showStacks = true,
 }: {
@@ -31,7 +31,11 @@ export function CompoundKnowledge({
         {stage && <span className={`ink-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${stage.tint}`}>{stage.label}</span>}
         {depth?.knownAs ? <span className="ink-1 rounded-full bg-[var(--background)] px-2.5 py-1 text-[11px] font-bold text-[var(--muted)]">a.k.a. {depth.knownAs}</span> : null}
       </div>
-      {education.summary ? <p className="mt-3 max-w-3xl text-[15px] font-medium leading-7 text-black/70">{education.summary}</p> : null}
+      {depth?.plainEnglish ? (
+        <p className="mt-3 max-w-3xl text-[15px] font-medium leading-7 text-black/80">{depth.plainEnglish}</p>
+      ) : education.summary ? (
+        <p className="mt-3 max-w-3xl text-[15px] font-medium leading-7 text-black/70">{education.summary}</p>
+      ) : null}
       {goals.length > 0 ? <div className="mt-5"><GoalTags goals={goals} size="md" /></div> : null}
 
       {depth?.caveat ? (
@@ -43,14 +47,15 @@ export function CompoundKnowledge({
 
       <div className="mt-6 border-t border-black/[.08]">
         {depth?.mechanism ? (
-          <QA q={`How does ${name} work?`} open>
+          <QA q={`How does ${name} work?`}>
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-[var(--muted)]">The science</p>
             <p>{depth.mechanism}</p>
             <p className="mt-2 text-xs text-black/45">Mechanism of action from published research — how the molecule behaves, not a claim about any product or any human-use effect.</p>
           </QA>
         ) : null}
 
         {(depth?.researchedFor || goals.length > 0) ? (
-          <QA q={`What is ${name} researched for?`} open={!depth?.mechanism}>
+          <QA q={`What is ${name} researched for?`}>
             {depth?.researchedFor ? <p className="mb-3">{depth.researchedFor}</p> : null}
             {goals.length > 0 && (
               <ul className="space-y-3.5">

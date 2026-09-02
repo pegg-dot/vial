@@ -5,6 +5,7 @@
 // advice. Generated from research passes; keep the framing neutral (no efficacy/endorsement).
 
 export interface CompoundDepth {
+  plainEnglish?: string;   // the human translation, rendered ABOVE the science (compound-plain-english.ts)
   mechanism: string;       // how it works — receptor/pathway/class
   researchedFor: string;   // what it's studied toward
   researchStatus: string;  // how far: "FDA-approved (for X)…", "In clinical trials…", "Preclinical…", "Limited human data…"
@@ -29,6 +30,11 @@ import { COMPOUND_DEPTH_DATA } from "./compound-depth-data";
 
 export const COMPOUND_DEPTH: Record<string, CompoundDepth> = COMPOUND_DEPTH_DATA;
 
+import { PLAIN_ENGLISH } from "./compound-plain-english";
+
 export function depthFor(slug: string): CompoundDepth | undefined {
-  return COMPOUND_DEPTH[slug];
+  const d = COMPOUND_DEPTH[slug];
+  if (!d) return undefined;
+  const plainEnglish = PLAIN_ENGLISH[slug];
+  return plainEnglish ? { ...d, plainEnglish } : d;
 }
