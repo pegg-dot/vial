@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, Database, FlaskConical, KeyRound, Link2, MousePointerClick, ShieldAlert, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CheckCircle2, Database, FlaskConical, Globe, KeyRound, Link2, MousePointerClick, ShieldAlert, Users } from "lucide-react";
 import { deriveSystemHealth } from "@/lib/system-health";
 import { checkReadiness } from "@/server/health/readiness";
 import { getRefreshMetrics } from "@/server/refresh/repository";
@@ -10,6 +10,8 @@ import { getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { getAttributionOverview } from "@/server/outbound/partner-report";
 import { getDataFreshness, getBrokenCollectors } from "@/server/health/data-health";
+import { attentionState } from "@/lib/collector-attention";
+import { getSearchConsoleSummary, isSearchConsoleConfigured } from "@/server/seo/search-console";
 import { getVisitorSummary } from "@/server/analytics/visitors";
 import { getPeopleOverview } from "@/server/admin/people";
 import { getDatabase } from "@/server/db/client";
@@ -55,6 +57,7 @@ export default async function AdminPage() {
     sweep: sweepHealth ? { lastRanAt: sweepHealth.lastRanAt, lastOk: sweepHealth.lastOk, backlogReaders: sweepHealth.backlogReaders, healthy: isSweepHealthy(sweepHealth), keepingUp: isSweepKeepingUp(sweepHealth) } : null,
   });
 
+  const gscPromise = getSearchConsoleSummary();
   const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getVisitorSummary({ days: 30 }),
@@ -237,6 +240,54 @@ export default async function AdminPage() {
         </div>
       )}
 
+      {/* Google's side of the story: how often we were SHOWN and chosen, from Search Console —
+          the step this site cannot observe on its own. Absent credentials, the card explains
+          exactly how to connect it. */}
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Google&rsquo;s side of the story</h2>
+      {await (async () => {
+        const gsc = await gscPromise;
+        if (gsc) {
+          return (
+            <>
+              <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Search Console, last {gsc.windowDays} full days (Google&rsquo;s data lags ~2 days). This is the step before the funnel above: how often Google showed {gsc.site.replace("sc-domain:", "")} and how many people chose it.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Stat icon={Globe} value={gsc.impressions.toLocaleString()} label="Times shown in Google" />
+                <Stat icon={MousePointerClick} value={gsc.clicks.toLocaleString()} label="Clicks from Google" sub={gsc.impressions > 0 ? `${(gsc.ctr * 100).toFixed(1)}% of impressions` : undefined} />
+                <Stat icon={ArrowUpRight} value={gsc.position > 0 ? gsc.position.toFixed(1) : "—"} label="Average position" />
+                <Stat icon={Users} value={String(gsc.topQueries.length)} label="Queries below" />
+              </div>
+              {gsc.topQueries.length > 0 && (
+                <div className="ink hard mt-3 rounded-[18px] bg-white p-5">
+                  <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">What people typed</p>
+                  <ul className="mt-3 space-y-1.5 text-sm">
+                    {gsc.topQueries.map(q => (
+                      <li key={q.query} className="flex justify-between gap-4">
+                        <span className="truncate font-bold">{q.query}</span>
+                        <span className="shrink-0 tabular-nums text-[var(--muted)]">{q.clicks} clicks · {q.impressions.toLocaleString()} shown · pos {q.position.toFixed(1)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          );
+        }
+        return (
+          <div className="ink hard mt-4 rounded-[18px] bg-white p-6">
+            <p className="text-sm font-bold">{isSearchConsoleConfigured() ? "Search Console is configured but could not be reached — it will retry on the next load." : "Not connected yet. Ten minutes, one credential, and this card fills with Google impressions, clicks, and the exact queries people typed."}</p>
+            {!isSearchConsoleConfigured() && (
+              <ol className="mt-4 max-w-3xl list-decimal space-y-2.5 pl-5 text-sm font-medium leading-6 text-[var(--muted)]">
+                <li>Open <span className="font-bold text-[#111214]">console.cloud.google.com</span> → sign in → top bar → <span className="font-bold text-[#111214]">Select a project → New project</span> → name it <code className="rounded bg-black/[.06] px-1">vialgrade</code> → Create.</li>
+                <li>In that project: <span className="font-bold text-[#111214]">APIs &amp; Services → Library</span> → search &ldquo;Google Search Console API&rdquo; → <span className="font-bold text-[#111214]">Enable</span>.</li>
+                <li><span className="font-bold text-[#111214]">APIs &amp; Services → Credentials → Create credentials → Service account</span> → name <code className="rounded bg-black/[.06] px-1">vialgrade-gsc</code> → Done. Open it → <span className="font-bold text-[#111214]">Keys → Add key → Create new key → JSON</span> → a file downloads.</li>
+                <li>Open <span className="font-bold text-[#111214]">search.google.com/search-console</span> → the vialgrade.com property → <span className="font-bold text-[#111214]">Settings → Users and permissions → Add user</span> → paste the service account&rsquo;s email from the JSON (<code className="rounded bg-black/[.06] px-1">client_email</code>, ends in iam.gserviceaccount.com) → permission <span className="font-bold text-[#111214]">Full</span> → Add.</li>
+                <li>Open <span className="font-bold text-[#111214]">vercel.com</span> → the <code className="rounded bg-black/[.06] px-1">vial</code> project → <span className="font-bold text-[#111214]">Settings → Environment Variables</span>. Add <code className="rounded bg-black/[.06] px-1">VIALGRADE_GSC_CLIENT_EMAIL</code> = the JSON&rsquo;s <code className="rounded bg-black/[.06] px-1">client_email</code>, and <code className="rounded bg-black/[.06] px-1">VIALGRADE_GSC_PRIVATE_KEY</code> = the JSON&rsquo;s <code className="rounded bg-black/[.06] px-1">private_key</code> value, pasted exactly as it appears. Save, then <span className="font-bold text-[#111214]">Deployments → ⋯ on the latest → Redeploy</span>.</li>
+              </ol>
+            )}
+          </div>
+        );
+      })()}
+
       {/* The pipeline: who we already send buyers to, ranked — i.e. who to approach first. */}
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Who to approach first</h2>
       <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
@@ -395,16 +446,19 @@ export default async function AdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#111214]/10">
-              {unhealthy.map(t => (
-                <tr key={t.id} className={t.enabled ? "bg-[#fff1f0]" : "bg-[#f3f3f3]"}>
+              {unhealthy.map(t => {
+                const st = attentionState(t, collectors.map(c => ({ collector: c.collector, lastOk: c.last_ok === null ? null : Boolean(c.last_ok) })));
+                return (
+                <tr key={t.id} className={st.tone === "red" ? "bg-[#fff1f0]" : st.tone === "amber" ? "bg-[#fff4e0]" : "bg-[#f3f3f3]"}>
                   <td className="px-5 py-3 font-bold">{t.target}</td>
                   <td className="px-5 py-3 text-xs">{t.collector}</td>
-                  <td className="px-5 py-3 text-xs font-bold">{t.enabled ? `failing (${t.consecutiveFailures})` : "disabled — retried weekly"}</td>
+                  <td className="px-5 py-3 text-xs font-bold">{st.label}</td>
                   <td className="px-5 py-3 text-xs">{t.lastRunAt ? new Date(t.lastRunAt).toLocaleString() : "never"}</td>
                   <td className="px-5 py-3 text-xs">{t.enabled && t.nextDueAt ? new Date(t.nextDueAt).toLocaleString() : "—"}</td>
                   <td className="px-5 py-3 text-xs text-[var(--muted)]">{t.lastError?.slice(0, 120) ?? "—"}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

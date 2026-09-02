@@ -312,8 +312,10 @@ async function runOne(db: SqlConnection, t: DueTarget, deadlineAt?: number): Pro
     const note = domainAgeNote(await fetchDomainRegistrationDate(vendor.domain));
     // A lookup that failed is NOT an answer. recordDomainAge ignores null rather than erasing a
     // note we already hold, and reporting ok:false lets the queue back this target off instead of
-    // asking a registry that just refused us again on the next tick.
-    if (!note) return { items: 0, ok: false };
+    // asking a registry that just refused us again on the next tick. The reason is recorded —
+    // purerawz sat on /admin as "failing (2)" with a BLANK error column, which told the owner
+    // nothing except to worry.
+    if (!note) return { items: 0, ok: false, error: `rdap lookup returned no registration date for ${vendor.domain} — rdap.org refused or timed out, or the registry omits the date` };
     await recordDomainAge(db, vendor.slug, note);
     return { items: 1, ok: true };
   }
