@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireStaff } from "@/server/auth/session";
 import { runSourceIngestion } from "@/server/agents/pipeline";
+import { parseReviewSubmission } from "@/lib/review-submission";
 import { reviewClaim } from "@/server/review/repository";
 import { advanceFixture } from "@/server/refresh/repository";
 import { processRefreshJob } from "@/server/refresh/scheduler";
@@ -60,6 +61,45 @@ export async function captureAndExtractAction(formData: FormData) {
     if (error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")) throw error;
     redirect(`/admin/ingest?error=${encodeURIComponent(error instanceof Error ? error.message.slice(0, 160) : "ingestion failed")}`);
   }
+}
+
+/**
+ * The review queue's single form action: one button per card ("approveOne"/"rejectOne") or a
+ * checked set with a bulk button. Bulk is a LOOP over the same reviewClaim path — each claim
+ * keeps its own transaction and its own publication receipt, exactly as if clicked one by one;
+ * a mid-loop failure stops there and the redirect reports how far it got.
+ */
+export async function reviewQueueAction(formData: FormData) {
+  const { principal, role } = await requireStaff();
+  const submission = parseReviewSubmission(formData);
+  if (submission.mode === "error") redirect(`/admin/review?error=${encodeURIComponent(submission.reason)}`);
+
+  const ids = submission.mode === "single" ? [submission.claimId] : submission.claimIds;
+  const decision = submission.decision;
+  let done = 0;
+  try {
+    for (const claimId of ids) {
+      await reviewClaim({ claimId, decision, actor: principal.email, role });
+      done += 1;
+    }
+  } catch (error) {
+    if (error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")) throw error;
+    if (done > 0) { revalidateTag(CATALOG_CACHE_TAG, "max"); revalidatePath("/admin/review"); revalidatePath("/admin/publications"); }
+    const message = error instanceof Error ? error.message.slice(0, 120) : "review failed";
+    redirect(`/admin/review?${decision === "approve" ? "published" : "declined"}=${done}&error=${encodeURIComponent(`${message} — ${done} of ${ids.length} processed before the failure`)}`);
+  }
+  // A published claim changes what a buyer sees, so the catalogue cache is stale the moment the
+  // transaction commits — not whenever the revalidate window happens to expire.
+  if (decision === "approve") revalidateTag(CATALOG_CACHE_TAG, "max");
+  revalidatePath("/admin/review");
+  revalidatePath("/admin/publications");
+  // A SINGLE approval keeps its original destination — the publication ledger, receipt in hand
+  // (the admin-workflow e2e pins this deliberately). A BULK decision returns to the queue, where
+  // the rest of the batch still waits.
+  if (submission.mode === "single") {
+    redirect(decision === "approve" ? "/admin/publications?published=1" : "/admin/review?rejected=1");
+  }
+  redirect(decision === "approve" ? `/admin/review?published=${done}` : `/admin/review?declined=${done}`);
 }
 
 export async function reviewClaimAction(formData: FormData) {
