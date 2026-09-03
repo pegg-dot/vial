@@ -15,7 +15,7 @@ export function UsLegalNotice({ slug }: { slug: string }) {
   const st = STYLE[s.category];
   const Icon = st.icon;
   return (
-    <div className={`ink hard rounded-[18px] ${st.bg} p-5`}>
+    <div className={`ink hard-sm rounded-[16px] ${st.bg} p-4`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${st.chip}`}><Icon className="size-3.5" /> US legal status</span>
         {s.flags.map((f) => <span key={f} className="ink-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-black/60">{f}</span>)}

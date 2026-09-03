@@ -21,13 +21,13 @@ export function CompoundKnowledge({
   const goals = education.goals ?? [];
   const stage = depth ? researchStage(depth.researchStatus) : null;
   return (
-    <div className="ink hard rounded-[20px] bg-white p-6 sm:p-8">
+    <div className="ink hard-sm rounded-[16px] bg-white p-5 sm:p-6">
       <div className="flex items-center gap-2.5">
         <span className="ink-1 grid size-9 place-items-center rounded-xl bg-[#f0edff]"><BookOpen className="size-4 text-[#5a4be0]" /></span>
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Understand this compound</p>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <h2 className="text-2xl font-extrabold tracking-[-.035em] sm:text-3xl">What is {name}?</h2>
+        <h2 className="text-xl font-extrabold tracking-[-.03em] sm:text-2xl">What is {name}?</h2>
         {stage && <span className={`ink-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${stage.tint}`}>{stage.label}</span>}
         {depth?.knownAs ? <span className="ink-1 rounded-full bg-[var(--background)] px-2.5 py-1 text-[11px] font-bold text-[var(--muted)]">a.k.a. {depth.knownAs}</span> : null}
       </div>

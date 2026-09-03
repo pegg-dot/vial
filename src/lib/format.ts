@@ -120,8 +120,23 @@ export function pricePerMg(price: number, quantity: string, name = ""): number |
   return price / mg;
 }
 
+// Precision adapts to magnitude so a real price never rounds to zero: a $25 / 10-gram powder is
+// $0.0025/mg, and rendering it "$0.00/mg" made the buy box read "-99% vs median" against a price
+// of nothing. Below one cent we extend decimals until a significant digit survives (trimming
+// trailing zeros); at cent scale and up the familiar 2-decimal form holds.
 export function formatPricePerMg(value: number): string {
-  return `$${value < 1 ? value.toFixed(2) : value.toFixed(value < 10 ? 2 : 1)}/mg`;
+  if (value >= 10) return `$${value.toFixed(1)}/mg`;
+  if (value >= 0.01) return `$${value.toFixed(2)}/mg`;
+  const s = value.toFixed(4).replace(/0+$/, "");
+  return `$${/[1-9]/.test(s) ? s : "0.0001"}/mg`;
+}
+
+// Gram-scale totals read as grams ("10g", not "10000mg total"), sub-mg as mcg. The leaderboard's
+// size column and anything else printing a listing's TOTAL mass goes through here.
+export function formatMgTotal(mg: number): string {
+  if (mg >= 1000) return `${Number((mg / 1000).toFixed(2))}g`;
+  if (mg >= 1) return `${Number(mg.toFixed(2))}mg`;
+  return `${Math.round(mg * 1000)}mcg`;
 }
 
 export function evidenceTone(level: EvidenceLevel) {

@@ -27,7 +27,7 @@ export function ProductPhoto({
     return <ProductVisual name={name} quantity={quantity} accent={accent} compact={compact} decorative={decorative} />;
   }
   return (
-    <div className={`relative flex items-center justify-center overflow-hidden bg-white ${compact ? "h-[148px]" : "min-h-[390px]"}`}>
+    <div className={`relative flex items-center justify-center overflow-hidden bg-white ${compact ? "h-[148px]" : "min-h-[280px]"}`}>
       {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary vendor CDNs; next/image would need a per-host allowlist */}
       <img
         src={imageUrl}
@@ -36,7 +36,7 @@ export function ProductPhoto({
         loading="lazy"
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
-        className={`h-full w-full object-contain ${compact ? "p-3" : "p-10"}`}
+        className={`h-full w-full object-contain ${compact ? "p-3" : "p-6"}`}
       />
     </div>
   );

@@ -22,7 +22,7 @@ export function ProductVisual({
 
   return (
     <div
-      className={`product-visual relative isolate overflow-hidden ${compact ? "h-[148px]" : "min-h-[390px]"}`}
+      className={`product-visual relative isolate overflow-hidden ${compact ? "h-[148px]" : "min-h-[280px]"}`}
       style={style}
       aria-label={decorative ? undefined : `Stylized vial illustration for ${displayProductTitle(name, quantity)}`}
       aria-hidden={decorative ? true : undefined}

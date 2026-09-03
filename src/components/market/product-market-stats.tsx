@@ -58,7 +58,10 @@ export function ProductMarketStats({
             <Stat label="Median $/mg" value={med != null ? formatPricePerMg(med) : "—"} />
             <Stat label="Range $/mg" value={hasRange ? `${formatPricePerMg(low)}–${formatPricePerMg(high)}` : formatPricePerMg(low)} />
             <Stat label="This listing" value={rank != null ? `#${rank} of ${count}` : "—"} sub={rank != null && count > 1 ? (rank === 1 ? "cheapest/mg" : rank === count ? "priciest/mg" : "mid-market") : undefined} />
-            <Stat label="Real / active mg" value={adjustedPricePerMg ? formatPricePerMg(adjustedPricePerMg) : pricePerMg ? formatPricePerMg(pricePerMg) : "—"} accent={Boolean(adjustedPricePerMg)} />
+            {/* "Real / active" is a purity-adjusted claim — with no measured purity there is no such
+                number, and falling back to the raw per-mg under this label contradicted the
+                leaderboard's honest "—" for the same listing. */}
+            <Stat label="Real / active mg" value={adjustedPricePerMg ? formatPricePerMg(adjustedPricePerMg) : "—"} accent={Boolean(adjustedPricePerMg)} />
           </div>
 
           {/* Price-position bar: where this $/mg sits between the market low and high. */}
@@ -76,8 +79,10 @@ export function ProductMarketStats({
             </div>
           )}
           <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">
-            {count > 1 ? `Compared by cost-per-mg against ${count} vendor listing${count === 2 ? "" : "s"} of this compound whose size we can read.` : "The only sized listing we track for this compound so far."}
-            {" "}Real / active mg divides cost-per-mg by measured purity. {PURITY_PROVENANCE_SHORT}{" "}
+            {count > 1 ? `Compared by cost-per-mg against ${count} sized listing${count === 2 ? "" : "s"} of this compound.` : "The only sized listing we track for this compound so far."}
+            {" "}{adjustedPricePerMg
+              ? <>Real / active mg divides cost-per-mg by measured purity. {PURITY_PROVENANCE_SHORT}{" "}</>
+              : <>Real / active mg needs an independent purity test — none on record yet.{" "}</>}
             <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link>
           </p>
         </>
@@ -88,7 +93,7 @@ export function ProductMarketStats({
 
 function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div className="bg-white px-3.5 py-3">
+    <div className="bg-white px-3 py-2.5">
       <p className="text-[10px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{label}</p>
       <p className={`mt-1 text-base font-extrabold tabular-nums tracking-[-.02em] ${accent ? "text-[#0e8f80]" : ""}`}>{value}</p>
       {sub && <p className="text-[10px] font-semibold text-[var(--muted)]">{sub}</p>}

@@ -96,6 +96,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ? (await db.query<{ slug: string; canonical_name: string }>(`SELECT slug, canonical_name FROM compounds WHERE slug = ANY($1)`, [education.stackedWith])).rows.map((r) => ({ slug: r.slug, name: r.canonical_name }))
     : [];
 
+  // One computed read, rendered in one place per breakpoint (desktop media rail / mobile after the
+  // buy box) — never two diverging computations of the same verdict.
+  const buyerRead = buildBuyerRead({
+    status: coaCheck.status,
+    independentPurity: coaCheck.independentPurity ?? null,
+    priceFlag: product.trust?.priceFlag ?? null,
+    priceAssessable: Boolean(product.pricePerMg) && perMgPeers.length >= 4,
+    compoundCoas: product.trust?.compoundCoas ?? 0,
+    compoundMedianPurity: product.trust?.compoundMedianPurity ?? null,
+    vendorFlagged: product.trust?.vendorFlagged ?? false,
+    compoundName: compound.name,
+    vendorName: vendor.name,
+  });
+
   // Structured data for a listing we AGGREGATE. Three constraints shape it:
   //
   //  - Demo listings emit nothing. A demo record is a seeded fictional product at a fictional
@@ -128,14 +142,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       {principal && <DecisionRecorder eventType="listing_viewed" subjectType="listing" subjectId={product.slug} metadata={{ compoundSlug: product.compoundSlug, vendorSlug: product.vendorSlug }} />}
       {structuredData && <JsonLd data={structuredData} />}
-      <section className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8 sm:py-8">
-        <Link href="/market" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black">
+      <section className="mx-auto max-w-[1320px] px-5 py-5 sm:px-8 sm:py-6">
+        <Link href="/market" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black">
           <ArrowLeft className="size-4" /> Back to market
         </Link>
 
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr] lg:gap-10">
-          <div className="ink hard self-start overflow-hidden rounded-[20px] bg-white">
-            <ProductPhoto name={product.name} quantity={product.quantity} accent={product.accent} imageUrl={product.imageUrl} />
+        <div className="grid gap-5 lg:grid-cols-[400px_1fr] lg:gap-8">
+          {/* Media rail: photo + the buyer's read, stacked — the read fills what used to be dead
+              space beside a half-page photo card. On mobile it renders after the buy box instead,
+              so the title isn't pushed below a card of prose. */}
+          <div className="flex flex-col gap-5 self-start">
+            <div className="ink hard-sm overflow-hidden rounded-[16px] bg-white">
+              <ProductPhoto name={product.name} quantity={product.quantity} accent={product.accent} imageUrl={product.imageUrl} />
+            </div>
+            <div className="hidden lg:block">
+              <BuyerReadCard read={buyerRead} />
+            </div>
           </div>
 
           <div className="flex flex-col">
@@ -144,7 +166,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <DataOriginBadge origin={product.origin} />
               <span className="ink-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-black/60">{compound.category}</span>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link href={`/vendors/${vendor.slug}`} className="inline-flex w-fit items-center gap-1 text-sm font-bold text-[var(--muted)] hover:text-black">{vendor.name}</Link>
               {/* The seller's grade, right next to their name. A buyer deciding on THIS listing is
                   really deciding whether to trust THIS seller, and most arrive here from search or
@@ -155,11 +177,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </Link>
               )}
             </div>
-            <h1 className="mt-1 text-[clamp(1.55rem,3.2vw,2.4rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{displayProductName(product.name)} <span className="text-black/35">{displaySize(product.name, product.quantity)}</span></h1>
-            <p className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-[var(--muted)]">{compound.description}</p>
+            <h1 className="mt-1 text-[clamp(1.45rem,2.8vw,2.1rem)] font-extrabold leading-[1.05] tracking-[-.03em]">{displayProductName(product.name)} <span className="text-black/35">{displaySize(product.name, product.quantity)}</span></h1>
+            <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-[var(--muted)]">{compound.description}</p>
 
             {/* Buy box — price + market context + facts + action + vendor track record, grouped */}
-            <div className="ink hard mt-5 rounded-[18px] bg-white p-5">
+            <div className="ink hard-sm mt-4 rounded-[16px] bg-white p-4 sm:p-5">
               <ProductMarketStats
                 price={product.price}
                 pricePerMg={product.pricePerMg}
@@ -181,7 +203,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 {product.reportDate ? <FactInline icon={CalendarDays} label="Report" value={product.reportDate} /> : null}
               </dl>
 
-              <div className="mt-5">
+              <div className="mt-4">
                 <ProductActions slug={product.slug} vendorName={vendor.name} origin={product.origin} externalUrl={product.externalUrl} />
               </div>
 
@@ -208,23 +230,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ? "Real listing aggregated from the vendor's public page. Buying happens on their site, never on VialGrade — we take no payment and hold no stock. These are sold for laboratory research use only, not for human consumption; the seller sets their own terms and age limits at checkout."
                 : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VialGrade."}
             </p>
-          </div>
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-[1320px] px-5 pb-2 sm:px-8">
-        <div className="max-w-3xl">
-          <BuyerReadCard read={buildBuyerRead({
-            status: coaCheck.status,
-            independentPurity: coaCheck.independentPurity ?? null,
-            priceFlag: product.trust?.priceFlag ?? null,
-            priceAssessable: Boolean(product.pricePerMg) && perMgPeers.length >= 4,
-            compoundCoas: product.trust?.compoundCoas ?? 0,
-            compoundMedianPurity: product.trust?.compoundMedianPurity ?? null,
-            vendorFlagged: product.trust?.vendorFlagged ?? false,
-            compoundName: compound.name,
-            vendorName: vendor.name,
-          })} />
+            <div className="mt-4 lg:hidden">
+              <BuyerReadCard read={buyerRead} />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -237,11 +247,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </section>
       ) : null}
 
-      <section className="mx-auto max-w-[1320px] px-5 py-8 sm:px-8 sm:py-10">
-        <div className="mb-6">
-          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]">The lab evidence</p>
-          <h2 className="mt-3 text-[clamp(1.6rem,3vw,2.2rem)] font-extrabold leading-[1] tracking-[-.04em]">What we could verify</h2>
-          <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Each row answers a different question. Passing the identity test doesn&rsquo;t mean it&rsquo;s sterile or correctly dosed — we show each answer separately.</p>
+      <section className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8">
+        <div className="mb-4">
+          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#0e8f80]">The lab evidence</p>
+          <h2 className="mt-1.5 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">What we could verify</h2>
+          <p className="mt-1.5 max-w-2xl text-[13px] font-medium leading-5 text-[var(--muted)]">Each row is a separate question with its own answer — one green row never vouches for the rest.</p>
         </div>
         <EvidenceMatrix evidence={product.evidence.length ? product.evidence : deriveEvidenceDimensions(coaCheck)} />
 
@@ -252,14 +262,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         )}
 
-        <div className="mt-5 grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {/* Equal-height rows of compact evidence tiles — stretch, not masonry: the staggered
+            items-start layout is what read as cards floating in space. The column count follows
+            the tile count so no tile ever orphans onto a row of its own (4 tiles → 2×2). */}
+        <div className={`mt-4 grid gap-4 md:grid-cols-2 ${3 + (product.reportIssuer ? 1 : 0) + (passport ? 1 : 0) === 4 ? "" : "xl:grid-cols-3"}`}>
           <CoaCrossCheckPanel check={coaCheck} />
 
           {/* Exactly one of the five states (spec §5). A percentage appears only when it is earned:
               a baseline near the window start, a fresh latest check, and at least two weeks between
               them. Direction is carried by the sign, not by colour — a price moving is not good or
               bad in an evidence product. */}
-          <div className="ink hard rounded-[18px] bg-white p-5">
+          <div className="ink hard-sm rounded-[16px] bg-white p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Price trend</p>
@@ -269,14 +282,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
               {priceTrend.state === "trending" ? <p className="text-xs font-semibold tabular-nums text-[var(--muted)]">{formatObservedPrice(priceTrend.base.price)} → {formatObservedPrice(priceTrend.latest.price)}</p> : null}
             </div>
-            <div className="mt-5 h-28"><PriceSeries points={product.pricePoints} description={priceTrendCopy} accent={product.accent[0]} height={94} compact /></div>
+            <div className="mt-4 h-28"><PriceSeries points={product.pricePoints} description={priceTrendCopy} accent={product.accent[0]} height={94} compact /></div>
             <p className="mt-3 text-[11px] leading-4 text-black/60">{priceTrendCopy}</p>
           </div>
 
           {product.reportIssuer ? (
-          <div className="ink hard rounded-[18px] bg-white p-5">
+          <div className="ink hard-sm rounded-[16px] bg-white p-4">
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">Report record</p>
-            <dl className="mt-5 space-y-4 text-sm">
+            <dl className="mt-4 space-y-3 text-sm">
               <Detail label="Lab" value={product.reportIssuer} />
               <Detail label="Report date" value={product.reportDate} />
               <Detail label="Batch" value={product.batchCode} />
@@ -286,7 +299,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
           ) : null}
 
-          {passport && <Link href={`/passports/${String(passport.slug)}`} className="ink hard press group block rounded-[18px] bg-[#f0edff] p-5">
+          {passport && <Link href={`/passports/${String(passport.slug)}`} className="ink hard-sm press group block rounded-[16px] bg-[#f0edff] p-4">
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#5a4be0]">This batch has been tested</p>
             <p className="mt-3 text-lg font-extrabold">See the full lab record for this batch</p>
             <p className="mt-2 text-xs font-medium leading-5 text-[#111214]/60">What was tested, who tested it, and what came back. It describes the vials that were tested &mdash; not every vial in the batch.</p>
@@ -297,8 +310,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1320px] px-5 pb-14 sm:px-8">
-        <Link href={`/compounds/${compound.slug}`} className="ink hard press group flex items-center justify-between gap-4 rounded-[18px] bg-white px-6 py-5">
+      <section className="mx-auto max-w-[1320px] px-5 pb-10 pt-2 sm:px-8">
+        <Link href={`/compounds/${compound.slug}`} className="ink hard-sm press group flex items-center justify-between gap-4 rounded-[16px] bg-white px-5 py-4">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#0e8f80]">Same compound</p>
             <p className="mt-1 text-lg font-extrabold tracking-[-.02em]">See the full {compound.name} market{listingCount > 1 ? ` — all ${listingCount} vendors` : ""}, price history & lab tests</p>

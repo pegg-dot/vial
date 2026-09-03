@@ -12,7 +12,7 @@ export function EvidenceMatrix({ evidence }: { evidence: EvidenceDimension[] }) 
     );
   }
   return (
-    <div className="overflow-hidden rounded-[18px] ink bg-white hard">
+    <div className="overflow-hidden rounded-[16px] ink bg-white hard-sm">
       {evidence.map((dimension, index) => {
         const config = {
           established: { icon: Check, label: "Established", className: "ink-1 bg-[#e6fbf4] text-[#0e8f80]" },
@@ -22,7 +22,7 @@ export function EvidenceMatrix({ evidence }: { evidence: EvidenceDimension[] }) 
         }[dimension.status];
         const Icon = config.icon;
         return (
-          <div key={dimension.label} className={`grid gap-3 px-5 py-4 sm:grid-cols-[180px_120px_1fr] sm:items-center ${index > 0 ? "border-t border-[#111214]/10" : ""}`}>
+          <div key={dimension.label} className={`grid gap-2 px-4 py-3 sm:grid-cols-[140px_110px_1fr] sm:items-center ${index > 0 ? "border-t border-[#111214]/10" : ""}`}>
             <p className="text-sm font-extrabold">{dimension.label}</p>
             <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide ${config.className}`}>
               <Icon className="size-3" /> {config.label}

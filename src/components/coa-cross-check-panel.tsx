@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BadgeCheck, ExternalLink, FlaskConical, ShieldAlert, ShieldQuestion } from "lucide-react";
 import type { CoaCrossCheck } from "@/server/verify/coa-cross-check";
-import { PURITY_PROVENANCE } from "@/lib/provenance-copy";
+import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 
 // Shows how a vendor's advertised testing holds up against independent evidence. This is the
 // honest verdict a buyer wants: does the paperwork check out, or is it a claim we can't back?
@@ -18,7 +18,7 @@ export function CoaCrossCheckPanel({ check }: { check: CoaCrossCheck }) {
   const s = STYLE[check.status];
   const Icon = s.icon;
   return (
-    <div className={`ink hard rounded-[18px] ${s.bg} p-5`}>
+    <div className={`ink hard-sm rounded-[16px] ${s.bg} p-4`}>
       <div className="flex items-center gap-2">
         <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${s.chip}`}><Icon className="size-3.5" /> {s.tag}</span>
         {check.claimedIssuer ? <span className="text-[11px] font-semibold text-black/45">vendor cites {check.claimedIssuer}</span> : null}
@@ -48,7 +48,7 @@ export function CoaCrossCheckPanel({ check }: { check: CoaCrossCheck }) {
           <ExternalLink className="ml-auto size-3.5 shrink-0" />
         </Link>
       ) : null}
-      <p className="mt-4 text-[10px] leading-4 text-black/40">Cross-checks the vendor&rsquo;s testing claim against independent lab records. {PURITY_PROVENANCE} Never a statement that a product is safe, sterile, or correctly dosed. <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">What &ldquo;grade&rdquo; actually means</Link></p>
+      <p className="mt-4 text-[10px] leading-4 text-black/40">Cross-checks the vendor&rsquo;s testing claim against independent lab records. {PURITY_PROVENANCE_SHORT} Never a statement that a product is safe, sterile, or correctly dosed. <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">What &ldquo;grade&rdquo; actually means</Link></p>
     </div>
   );
 }
