@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { FileCheck2, Factory, Store } from "lucide-react";
-import { ArtShieldCheck, ArtCoa } from "@/components/vial-art";
 import { getVendorDirectory } from "@/server/vendors/directory";
 import { getCertificatesOnRecord } from "@/server/public-repository";
 import { VendorsDirectory } from "@/components/vendors-directory";
@@ -22,18 +21,15 @@ export default async function VendorsPage() {
   const manufacturers = entries.filter((e) => e.vendor.kind === "manufacturer").length;
 
   return <>
-    <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#f0edff]">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <ArtCoa className="gum-float-slow absolute right-[6%] top-[16%] hidden w-20 drop-shadow-[5px_5px_0_#111214] sm:block lg:w-24" />
-        <ArtShieldCheck className="gum-float absolute right-[16%] top-[48%] hidden w-16 drop-shadow-[4px_4px_0_#111214] lg:block" />
-      </div>
+    <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#e6efff]">
       <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12">
         <div className="max-w-3xl">
-          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Vendor directory</p>
-          <h1 className="mt-3 text-balance text-[clamp(2rem,4.5vw,3.25rem)] font-extrabold leading-[.95] tracking-[-.045em]">Rank every vendor by <span className="text-[#5a4be0]">what you care about.</span></h1>
+          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Vendor directory</p>
+          <h1 className="mt-3 text-balance text-[clamp(2rem,4.5vw,3.25rem)] font-extrabold leading-[.95] tracking-[-.045em]">Rank every vendor by <span className="text-[#2b31d8]">what you care about.</span></h1>
           <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-[#111214]/70">Most reliable, cheapest, purest, most-tested, best-reviewed &mdash; sorted from lab records and public evidence, not marketing. A shady seller can rebrand overnight; the record follows them.</p>
         </div>
-        <div className="ink hard-sm mt-8 grid max-w-2xl grid-cols-3 divide-x-2 divide-[#111214] overflow-hidden rounded-[16px] bg-white">
+        {/* Plain masthead figures — numbers sit on the page, not in a box. */}
+        <div className="mt-8 flex flex-wrap gap-x-12 gap-y-5">
           <HeroStat icon={Store} value={String(storefronts)} label="Storefronts you can shop" />
           <HeroStat icon={Factory} value={String(manufacturers)} label="Upstream manufacturers" />
           <HeroStat icon={FileCheck2} value={String(totalCoa)} label="Lab certificates on record" />
@@ -48,5 +44,13 @@ export default async function VendorsPage() {
 }
 
 function HeroStat({ icon: Icon, value, label }: { icon: React.ComponentType<{ className?: string }>; value: string; label: string }) {
-  return <div className="px-4 py-3.5"><Icon className="size-4 text-[#5a4be0]" /><p className="mt-2 text-2xl font-extrabold tabular-nums tracking-[-.04em]">{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="mt-1 size-4 shrink-0 text-[#2b31d8]" />
+      <div>
+        <p className="text-3xl font-extrabold tabular-nums leading-none tracking-[-.04em]">{value}</p>
+        <p className="mt-1.5 text-[11px] font-semibold text-[var(--muted)]">{label}</p>
+      </div>
+    </div>
+  );
 }

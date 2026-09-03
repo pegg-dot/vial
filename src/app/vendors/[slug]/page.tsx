@@ -553,5 +553,5 @@ function NoEvidence({ answer, note }: { answer: string; note: string }) {
 
 function HeroStat({ icon: Icon, value, label, accent }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; value: string; label: string; accent?: string }) {
   // One cell of the divided header strip — ink numbers; `accent` (price-vs-market) is the only colored figure.
-  return <div className="bg-white px-4 py-3"><Icon className="size-4" style={{ color: accent ?? "#5a4be0" }} /><p className="mt-2 text-2xl font-extrabold tabular-nums tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
+  return <div className="bg-white px-4 py-3"><Icon className="size-4" style={{ color: accent ?? "#2b31d8" }} /><p className="mt-2 text-2xl font-extrabold tabular-nums tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
 }

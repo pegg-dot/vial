@@ -148,8 +148,9 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
   return (
     <div>
       {/* Priority selector */}
-      <div className="ink hard-sm rounded-[16px] bg-white p-4 sm:p-5">
-        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#5a4be0]">What matters most to you?</p>
+      {/* No card around the controls — the pills and the question sit straight on the page. */}
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">What matters most to you?</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {PRIORITIES.map((p) => (
             <button key={p.key} type="button" onClick={() => applyPriority(p.key)} aria-pressed={priority === p.key}
