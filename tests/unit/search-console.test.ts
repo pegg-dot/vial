@@ -21,6 +21,15 @@ describe("service-account assertion", () => {
     expect(verifier.verify(publicKey, Buffer.from(sig, "base64url"))).toBe(true);
   });
 
+  it("repairs a key pasted WITH its surrounding JSON quotes (the live DECODER failure)", () => {
+    const quoted = '"' + pem.replace(/\n/g, "\\n") + '"';
+    const jwt = buildServiceAccountAssertion("svc@proj.iam.gserviceaccount.com", quoted, 1_760_000_000);
+    const [h, c, sig] = jwt.split(".");
+    const verifier = createVerify("RSA-SHA256");
+    verifier.update(`${h}.${c}`);
+    expect(verifier.verify(publicKey, Buffer.from(sig, "base64url"))).toBe(true);
+  });
+
   it("repairs the literal-\\n private keys that env vars arrive with", () => {
     const mangled = pem.replace(/\n/g, "\\n");
     const jwt = buildServiceAccountAssertion("svc@proj.iam.gserviceaccount.com", mangled, 1_760_000_000);

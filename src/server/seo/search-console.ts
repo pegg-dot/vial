@@ -50,6 +50,18 @@ const b64url = (input: Buffer | string) => Buffer.from(input).toString("base64ur
  * The signed JWT a service account trades for an access token. Pure given (email, key, now) —
  * the unit test generates its own RSA pair, verifies the signature, and pins the claims.
  */
+/**
+ * The private key exactly as OpenSSL needs it, from the value however it was pasted. The live
+ * failure this absorbs: a key pasted into Vercel WITH its surrounding JSON quotes produced
+ * error:1E08010C:DECODER routines::unsupported — the PEM header wasn't at byte zero. Wrapping
+ * quotes are stripped, literal \n sequences become real newlines, edges are trimmed.
+ */
+export function normalizePrivateKey(raw: string): string {
+  let k = (raw ?? "").trim();
+  if (k.length > 1 && ((k.startsWith('"') && k.endsWith('"')) || (k.startsWith("'") && k.endsWith("'")))) k = k.slice(1, -1);
+  return k.replace(/\\n/g, "\n").trim();
+}
+
 export function buildServiceAccountAssertion(clientEmail: string, privateKey: string, nowSeconds: number): string {
   const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claims = b64url(JSON.stringify({
@@ -61,7 +73,7 @@ export function buildServiceAccountAssertion(clientEmail: string, privateKey: st
   }));
   const signer = createSign("RSA-SHA256");
   signer.update(`${header}.${claims}`);
-  const signature = signer.sign(privateKey.replace(/\\n/g, "\n")).toString("base64url");
+  const signature = signer.sign(normalizePrivateKey(privateKey)).toString("base64url");
   return `${header}.${claims}.${signature}`;
 }
 
