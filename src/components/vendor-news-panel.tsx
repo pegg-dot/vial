@@ -18,11 +18,11 @@ export function VendorNewsPanel({ items, vendorName, vendorSlug }: { items: News
   if (items.length === 0) return null;
   const shown = items.slice(0, 6);
   return (
-    <section id="news" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pt-14 sm:px-8 sm:pt-16">
+    <section id="news" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-12 sm:px-8 sm:pt-14">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-2xl">
-          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#d3372c]">In the news</p>
-          <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">Has anything been written about {vendorName}?</h2>
+          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">In the news</p>
+          <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">Has anything been written about {vendorName}?</h2>
           <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">
             {items.length} record{items.length === 1 ? "" : "s"} on file that name{items.length === 1 ? "s" : ""} this vendor{shown.length < items.length ? `, newest ${shown.length} shown` : ""}. Each is tagged by how much weight it deserves &mdash; a court document is not a forum post &mdash; and links to its own source. Coverage is not a verdict either way.
           </p>

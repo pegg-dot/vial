@@ -13,10 +13,10 @@ export function VendorSignalsPanel({ signals, vendorName }: { signals: VendorSig
   const youngDomain = /~?\s*(7 months|1\.\d|2\.\d)\s*yr|months old|VERY YOUNG|YOUNG/i.test(signals.domain_age_note ?? "");
   const disclaimer = signals.research_disclaimer;
   return (
-    <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-16">
+    <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8 sm:pt-14">
       <div className="mb-7">
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Operational signals</p>
-        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">What does {vendorName}&rsquo;s own storefront tell us?</h2>
+        <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">What does {vendorName}&rsquo;s own storefront tell us?</h2>
         <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Neutral operational facts we read directly from {vendorName}&rsquo;s public site and domain records. Context for judgment, not a verdict — none of it proves what&rsquo;s in the vial.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -17,11 +17,11 @@ export function CommunitySignalCard({ signal, vendorName }: { signal: StoredComm
   const posts = Array.isArray(signal.top_posts) ? signal.top_posts : [];
   const updated = signal.fetched_at ? new Date(signal.fetched_at).toLocaleDateString() : null;
   return (
-    <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-20">
+    <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8 sm:pt-14">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">Community</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">What does r/Peptides say about {vendorName}?</h2>
+          <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">What does r/Peptides say about {vendorName}?</h2>
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide ${s.chip}`}><MessagesSquare className="size-3" /> {s.label}</span>
       </div>

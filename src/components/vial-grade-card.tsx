@@ -63,7 +63,7 @@ export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summ
   const Icon = b.icon;
   const letterLabel = grade.letter === null ? "Not graded — not enough evidence" : `VialGrade ${grade.letter}`;
   return (
-    <div className={`ink hard-lg flex flex-col rounded-[22px] p-6 text-[#111214] ${b.wrap}`}>
+    <div className={`ink hard-lg flex flex-col rounded-[20px] p-5 text-[#111214] sm:p-6 ${b.wrap}`}>
       <div className="ink inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: b.accent }}>
         <Icon className="size-4" /> VialGrade
       </div>

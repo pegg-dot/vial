@@ -23,10 +23,10 @@ const VOLUME_PLAIN: Record<string, string> = { none: "no reports", sparse: "a th
 export function VendorReviewsPanel({ review, vendorName }: { review: VendorReview; vendorName: string }) {
   const s = SENTIMENT[review.sentiment] ?? SENTIMENT.unknown;
   return (
-    <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8 sm:pt-20">
+    <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8 sm:pt-14">
       <div className="mb-7">
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">What buyers say</p>
-        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">What do buyers report about {vendorName}?</h2>
+        <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">What do buyers report about {vendorName}?</h2>
         {/* The answer sits next to the question, not four elements down inside the card — a reader
             (or an answer engine) quoting this section should get the finding, not the framing. */}
         <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">

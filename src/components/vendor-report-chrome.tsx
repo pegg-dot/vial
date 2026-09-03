@@ -8,7 +8,7 @@ export function SectionHead({ eyebrow, title, note }: { eyebrow: string; title: 
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">{eyebrow}</p>
-        <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">{title}</h2>
+        <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{title}</h2>
       </div>
       {note && <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-[var(--muted)]">{note}</span>}
     </div>
@@ -16,7 +16,9 @@ export function SectionHead({ eyebrow, title, note }: { eyebrow: string; title: 
 }
 
 // Sticky sub-nav for the long report — jumps to a section and highlights the one you're in.
-export function JumpNav({ items }: { items: Array<{ id: string; label: string }> }) {
+// `identity` keeps the vendor's name + grade letter on screen for the whole read once the header
+// has scrolled away (the CoinGecko sticky-bar compression pattern).
+export function JumpNav({ items, identity }: { items: Array<{ id: string; label: string }>; identity?: { name: string; letter: string | null } }) {
   const [active, setActive] = useState(items[0]?.id ?? "");
   useEffect(() => {
     const els = items.map((it) => document.getElementById(it.id)).filter((e): e is HTMLElement => Boolean(e));
@@ -35,7 +37,13 @@ export function JumpNav({ items }: { items: Array<{ id: string; label: string }>
   return (
     <div className="sticky top-[71px] z-30 border-y-2 border-[#111214] bg-[rgba(247,247,244,.9)] backdrop-blur">
       <div className="mx-auto max-w-[1320px] overflow-x-auto px-5 no-scrollbar sm:px-8">
-        <div className="flex gap-1 py-2.5">
+        <div className="flex items-center gap-1 py-2.5">
+          {identity && (
+            <span className="mr-2 hidden shrink-0 items-center gap-1.5 sm:inline-flex">
+              <span className="max-w-[180px] truncate text-sm font-extrabold tracking-[-.02em]">{identity.name}</span>
+              {identity.letter && <span className="ink-1 rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold">{identity.letter}</span>}
+            </span>
+          )}
           {items.map((it) => (
             <a
               key={it.id}

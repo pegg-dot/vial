@@ -12,7 +12,7 @@ import { vendorClaimLabel } from "@/lib/vendor-copy";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 import { TierChip } from "@/components/signal-tier-chip";
 import { signalLabel } from "@/lib/signal-copy";
-import { ProductCard } from "@/components/product-card";
+import { CatalogGrid } from "@/components/catalog-grid";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { checkContent } from "@/server/verify/content-check";
@@ -49,8 +49,6 @@ import { JsonLd } from "@/components/json-ld";
 import { vendorSchema } from "@/lib/structured-data";
 
 export const dynamic = "force-dynamic";
-
-const STEEL = "#39414e";
 
 // The plain words for a gathered-review verdict, matching the labels the reviews panel prints, so
 // the summary at the top and the section further down can never say two different things.
@@ -233,6 +231,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const nav = [
     { id: "verdict", label: "Verdict" },
     hasAlerts ? { id: "alerts", label: "Alerts" } : null,
+    vendorOffers.length > 0 ? { id: "offers", label: "Offers" } : null,
     { id: "reputation", label: "Evidence" },
     { id: "lab-tests", label: "Lab tests" },
     { id: "trackers", label: "Trackers" },
@@ -254,29 +253,30 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           it as a star rating would both invent review data and read as an endorsement. */}
       <JsonLd data={vendorSchema({ slug, name: vendor.name, description: vendor.description, location: vendor.location, founded: vendor.founded })} />
 
-      {/* ── Report header: steel signature, verdict-forward ─────────────────────────── */}
-      <section className="relative isolate overflow-hidden border-b-2 border-[#111214] text-white" style={{ background: STEEL }}>
-        <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-14">
-          <Link href="/vendors" className="inline-flex items-center gap-2 text-sm font-bold text-white/70 transition hover:text-white"><ArrowLeft className="size-4" /> All vendors</Link>
+      {/* ── Report header: paper, not slate — the tier-colored grade card is the only heavy
+          color, a rating letter stamped on a white tearsheet. ─────────────────────────── */}
+      <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[var(--background)]">
+        <div className="mx-auto max-w-[1320px] px-5 py-8 sm:px-8 sm:py-10">
+          <Link href="/vendors" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black"><ArrowLeft className="size-4" /> All vendors</Link>
 
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-stretch">
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_.95fr] lg:items-start">
             {/* identity */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
               <div className="shrink-0"><VendorMark initials={vendor.initials} accent={vendor.accent} size="lg" /></div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.08em] text-white">{vendor.kind === "manufacturer" ? "Manufacturer" : "Storefront"}</span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-bold text-white">{vendorClaimLabel(vendor.profileStatus)}</span>
+                  <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.08em] text-[#111214]">{vendor.kind === "manufacturer" ? "Manufacturer" : "Storefront"}</span>
+                  <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#111214]/70">{vendorClaimLabel(vendor.profileStatus)}</span>
                   <DataOriginBadge origin={vendor.origin} />
                 </div>
-                <h1 className="mt-4 text-balance text-[clamp(2rem,4.2vw,3.25rem)] font-extrabold leading-[.95] tracking-[-.04em]">{vendor.name}</h1>
-                <p className="mt-4 max-w-xl text-[15px] font-medium leading-7 text-white/75">{vendor.description}</p>
-                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-semibold text-white/65">
+                <h1 className="mt-3 text-balance text-[clamp(1.9rem,3.8vw,2.9rem)] font-extrabold leading-[.98] tracking-[-.04em]">{vendor.name}</h1>
+                <p className="mt-3 max-w-xl text-[15px] font-medium leading-7 text-[var(--muted)]">{vendor.description}</p>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-semibold text-[var(--muted)]">
                   {vendor.location && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>}
                   {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> Founded {vendor.founded}</span>}
                   {vendor.lastObserved && <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>}
                 </div>
-                <div className="mt-6"><FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} tone="dark" /></div>
+                <div className="mt-5"><FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} /></div>
               </div>
             </div>
 
@@ -285,7 +285,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </div>
 
           {/* at-a-glance stats */}
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+          {/* one divided strip, ink numbers — the price-vs-market delta is the only colored figure */}
+          <div className="ink hard-sm mt-6 grid grid-cols-2 divide-x divide-y divide-[#111214]/15 overflow-hidden rounded-[16px] bg-white sm:grid-cols-5 sm:divide-y-0">
             <HeroStat icon={FlaskConical} value={String(vendor.coaCount)} label="Independent lab tests" />
             <HeroStat icon={ShieldCheck} value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median tested purity" />
             <HeroStat icon={PackageSearch} value={String(secondaryValue)} label={secondaryLabel} />
@@ -297,7 +298,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             />
             <HeroStat icon={Star} value={vendor.reviewCount > 0 ? String(vendor.reviewCount) : "—"} label="Buyer reviews on file" />
           </div>
-          {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-white/55">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#8fa2ff] underline underline-offset-2">Purity vs grade</Link></p>}
+          {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link></p>}
         </div>
       </section>
 
@@ -307,14 +308,14 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           the clean ones. It reframes everything below it, so it goes first and unconditionally. */}
       {maker && (
         <div className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
-          <p className="ink hard-sm rounded-[18px] bg-[#fff6e6] p-5 text-sm font-medium leading-6 text-[#111214]"><span className="font-extrabold">Upstream manufacturer, not a storefront.</span> We surfaced {vendor.name} from third-party lab records &mdash; the party a certificate names as having made or ordered the tested material, not a shop you buy from directly. Treat its test history as upstream intelligence.</p>
+          <p className="ink hard-sm rounded-[16px] bg-[#fff6e6] p-4 text-sm font-medium leading-6 text-[#111214]"><span className="font-extrabold">Upstream manufacturer, not a storefront.</span> We surfaced {vendor.name} from third-party lab records &mdash; the party a certificate names as having made or ordered the tested material, not a shop you buy from directly. Treat its test history as upstream intelligence.</p>
         </div>
       )}
 
       {/* ── The answer, up front ─────────────────────────────────────────────────────────
           The question the reader arrived with, answered in the first two sentences under it, then
           decomposed into the checks it rests on. Every clause is a count rendered further down. */}
-      <section id="verdict" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pt-12 sm:px-8">
+      <section id="verdict" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-12 sm:px-8">
         <SectionHead eyebrow="The bottom line" title={headlineQuestion} note={`Based on ${composed.weighed} check${composed.weighed === 1 ? "" : "s"}. ${composed.verifiedCount > 0 ? `${composed.verifiedCount} backed by a document.` : "None backed by a document."}`} />
         {/* The answer, in one quotable sentence, immediately under the question. It deliberately does
             NOT repeat the grade card's summary sentence a few hundred pixels above — it names the
@@ -323,11 +324,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <span className="font-extrabold">{grade.headline}.</span> What that rests on: {restsOn}.
         </p>
         <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-          Nothing here says a product is safe to use, and nothing here is an endorsement &mdash; VialGrade sells nothing and takes no money from vendors. Where we hold no evidence, the section below says so plainly instead of disappearing.
+          Never a safety claim or an endorsement &mdash; VialGrade sells nothing and takes no money from vendors. Where we hold no evidence, we say so instead of hiding it.
         </p>
 
-        <h3 className="mt-10 text-[clamp(1.15rem,2vw,1.45rem)] font-extrabold tracking-[-.03em]">Which checks did we run, and what did each one find?</h3>
-        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Every seam we hold on {vendor.name}, in one place &mdash; each one comes from something you can read further down this page. The grade above is a summary of this list, not a replacement for it: a good result and a bad one both stay visible instead of cancelling each other out. We mark each one: <span className="font-bold text-[#0a6b60]">Confirmed</span> (we have the document), <span className="font-bold text-[#2b31d8]">Reported</span> (someone else said it), or <span className="font-bold text-black/55">Our guess</span>.</p>
+        <h3 className="mt-8 text-[clamp(1.15rem,2vw,1.45rem)] font-extrabold tracking-[-.03em]">Which checks did we run, and what did each one find?</h3>
+        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Each check comes from something you can read further down &mdash; a good result and a bad one both stay visible. Marked <span className="font-bold text-[#0a6b60]">Confirmed</span> (we hold the document), <span className="font-bold text-[#2b31d8]">Reported</span> (a source we cite), or <span className="font-bold text-black/55">Our guess</span>.</p>
         <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {composed.factors.map((f) => (
             <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[16px] p-4 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>
@@ -348,7 +349,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
       {/* ── Alerts: grouped, only when present ──────────────────────────────────────── */}
       {hasAlerts && (
-        <section id="alerts" className="mx-auto max-w-[1320px] scroll-mt-24 space-y-4 px-5 pt-12 sm:px-8">
+        <section id="alerts" className="mx-auto max-w-[1320px] scroll-mt-[140px] space-y-4 px-5 pt-12 sm:px-8">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#d3372c]">Read this first</p>
             <h2 className="mt-3 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">What is flagged on {vendor.name} right now?</h2>
@@ -361,13 +362,13 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       )}
 
       {/* ── Sticky jump-nav ─────────────────────────────────────────────────────────── */}
-      <JumpNav items={nav} />
+      <JumpNav items={nav} identity={{ name: vendor.name, letter: grade.letter }} />
 
       {/* ── Evidence ──────────────────────────────────────────────────────────────────
           Every section below renders whether or not we hold the evidence for it. A missing section
           reads as "nothing to see here"; the honest answer is "nobody has published this", and that
           gap is the single most useful thing this site can tell a buyer. */}
-      <section id="reputation" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pt-14 sm:px-8">
+      <section id="reputation" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-14 sm:px-8">
         <SectionHead eyebrow="Evidence, check by check" title="Where does the evidence hold up, and where is it missing?" />
         {reputation ? (
           <>
@@ -385,7 +386,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         )}
       </section>
 
-      <div id="lab-tests" className="scroll-mt-24">
+      <div id="lab-tests" className="scroll-mt-[140px]">
         {vendorLabTests.length > 0 ? (
           <LabTestsPanel tests={vendorLabTests} heading={`Has anyone independently tested ${vendor.name}?`} />
         ) : (
@@ -399,7 +400,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         )}
       </div>
 
-      <div id="trackers" className="scroll-mt-24">
+      <div id="trackers" className="scroll-mt-[140px]">
         {aggregatorRatings.length > 0 ? (
           <AggregatorRatingsPanel ratings={aggregatorRatings} vendorName={vendor.name} />
         ) : (
@@ -413,7 +414,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         )}
       </div>
 
-      <div id="signals" className="scroll-mt-24">
+      <div id="signals" className="scroll-mt-[140px]">
         {vendorSignals ? (
           <VendorSignalsPanel signals={vendorSignals} vendorName={vendor.name} />
         ) : (
@@ -427,7 +428,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         )}
       </div>
 
-      <div id="reviews" className="scroll-mt-24">
+      <div id="reviews" className="scroll-mt-[140px]">
         {vendorReview ? (
           <VendorReviewsPanel review={vendorReview} vendorName={vendor.name} />
         ) : (
@@ -456,7 +457,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           answer most readers came for, and the jump-nav chip used to land on an empty div. When
           there IS a record, the full detail stays in the alert at the top rather than being
           repeated here, because the alarm belongs above the fold. */}
-      <section id="enforcement" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pt-14 sm:px-8">
+      <section id="enforcement" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-14 sm:px-8">
         <SectionHead eyebrow="Regulators" title={`Has any regulator taken action against ${vendor.name}?`} />
         {enforcement.length > 0 ? (
           <div className="ink hard mt-6 rounded-[20px] bg-[#fff1f0] p-6">
@@ -472,22 +473,22 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       </section>
 
       <VendorNewsPanel items={vendorNews} vendorName={vendor.name} vendorSlug={vendor.slug} />
-      {vendorOffers.length > 0 && <VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} />}
-      <div id="network" className="scroll-mt-24"><VendorLinksPanel links={vendorLinks} vendorName={vendor.name} /></div>
+      {vendorOffers.length > 0 && <div id="offers" className="scroll-mt-[140px]"><VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} /></div>}
+      <div id="network" className="scroll-mt-[140px]"><VendorLinksPanel links={vendorLinks} vendorName={vendor.name} /></div>
 
       {/* ── Catalog + history ───────────────────────────────────────────────────────── */}
       {catalogStale && (
-        <div className="ink-1 hard mx-auto mt-8 flex max-w-[1320px] items-start gap-3 rounded-[16px] bg-[#fff4e0] p-5 text-sm font-medium leading-6 text-[#b26a00]">
+        <div className="mx-auto mt-8 max-w-[1320px] px-5 sm:px-8"><div className="ink-1 hard-sm flex items-start gap-3 rounded-[16px] bg-[#fff4e0] p-4 text-sm font-medium leading-6 text-[#b26a00]">
           <CircleDashed className="mt-0.5 size-4 shrink-0" />
           <span>
             <strong className="font-extrabold">These prices may be out of date.</strong> We last read this
             vendor&rsquo;s store {staleDays} days ago and haven&rsquo;t been able to since &mdash; some storefronts
             block automated checks. Treat the prices below as last-seen, not current, and confirm on their site.
           </span>
-        </div>
+        </div></div>
       )}
-      <section id="catalog" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 py-16 sm:px-8 sm:py-20">
-        <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
+      <section id="catalog" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-12 sm:px-8 sm:py-14">
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           <div>
             {listings.length > 0 ? (
               <>
@@ -495,7 +496,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                 <p className="mt-4 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
                   {listings.length} listing{listings.length === 1 ? "" : "s"} we have read from their store, cheapest per milligram first{priceIndex.medianPctVsMarket != null ? `, priced ${Math.abs(priceIndex.medianPctVsMarket)}% ${priceIndex.medianPctVsMarket < 0 ? "below" : priceIndex.medianPctVsMarket > 0 ? "above" : "at"} the market median across ${priceIndex.comparedCount} comparable listing${priceIndex.comparedCount === 1 ? "" : "s"}` : ", with too few priced peers to compare against the market"}. A price is not evidence of quality either way.
                 </p>
-                <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{catalogSorted.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
+                <CatalogGrid products={catalogSorted} />
               </>
             ) : (
               <>
@@ -508,10 +509,10 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             )}
           </div>
 
-          <aside id="history" className="scroll-mt-24">
+          <aside id="history" className="scroll-mt-[140px]">
             <div className="ink-1 hard sticky top-28 rounded-[20px] bg-white p-5">
               <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#2b31d8]">History</p>
-              <h2 className="mt-2 text-[15px] font-extrabold tracking-[-.02em]">What has changed recently?</h2>
+              <h2 className="mt-2 text-lg font-extrabold tracking-[-.02em]">What has changed recently?</h2>
               <p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">
                 {vendor.history.length > 0
                   ? `${vendor.history.length} change${vendor.history.length === 1 ? "" : "s"} we have recorded for ${vendor.name} — catalog, documents, profile and policy.`
@@ -551,5 +552,6 @@ function NoEvidence({ answer, note }: { answer: string; note: string }) {
 }
 
 function HeroStat({ icon: Icon, value, label, accent }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; value: string; label: string; accent?: string }) {
-  return <div className="ink hard rounded-[16px] bg-white p-4 text-[#111214]"><Icon className="size-4" style={{ color: accent ?? "#39414e" }} /><p className="mt-3 text-2xl font-extrabold tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
+  // One cell of the divided header strip — ink numbers; `accent` (price-vs-market) is the only colored figure.
+  return <div className="bg-white px-4 py-3"><Icon className="size-4" style={{ color: accent ?? "#5a4be0" }} /><p className="mt-2 text-2xl font-extrabold tabular-nums tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
 }

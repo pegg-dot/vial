@@ -36,7 +36,7 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests", id }: 
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Independent testing</p>
-          <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">{heading}</h2>
+          <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{heading}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
             Real, publicly verifiable third-party tests. Purity is read from the certificate itself. A test reflects one lab&rsquo;s result for one submitted batch — not a guarantee that every vial matches.
           </p>

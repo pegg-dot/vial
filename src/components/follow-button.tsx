@@ -12,14 +12,13 @@ type FollowEntity = "compound" | "vendor" | "listing";
 // They came back to the same page with the button reset to "Follow changes" and nothing telling
 // them the thing they asked for had not happened. Now the ask happens in place and the follow is
 // completed on the other side of it — the intent is carried, not discarded.
-export function FollowButton({ entityType, entitySlug, entityName, initialFollowed, tone = "light" }: {
+export function FollowButton({ entityType, entitySlug, entityName, initialFollowed }: {
   entityType: FollowEntity;
   entitySlug: string;
   /** Used in the sign-in ask so it names what the visitor actually clicked. */
   entityName?: string;
   initialFollowed: boolean;
   /** "dark" when the button sits on a near-black panel (the vendor header), where --muted is unreadable. */
-  tone?: "light" | "dark";
 }) {
   const { authenticated, promptSignIn } = useMarketplace();
   const [followed, setFollowed] = useState(initialFollowed);
@@ -28,9 +27,10 @@ export function FollowButton({ entityType, entitySlug, entityName, initialFollow
   const [failed, setFailed] = useState(false);
 
   const label = entityName ?? entitySlug.replace(/-/g, " ");
-  const helper = tone === "dark" ? "text-white/65" : "text-[var(--muted)]";
-  const helperLink = tone === "dark" ? "text-[#8fa2ff]" : "text-[#2b31d8]";
-  const helperBad = tone === "dark" ? "text-[#ff9d95]" : "text-[#d3372c]";
+  // The dark tone variant died with the steel vendor header — every caller now sits on light ground.
+  const helper = "text-[var(--muted)]";
+  const helperLink = "text-[#2b31d8]";
+  const helperBad = "text-[#d3372c]";
 
   const write = useCallback(async (next: boolean) => {
     setBusy(true);
@@ -76,7 +76,7 @@ export function FollowButton({ entityType, entitySlug, entityName, initialFollow
         onClick={onClick}
         disabled={busy}
         aria-pressed={followed}
-        className={`ink-1 hard-sm press inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition ${followed && tone !== "dark" ? "bg-[#111214] text-white" : followed ? "bg-[#2b31d8] text-white" : "bg-white text-[#111214]"}`}
+        className={`ink-1 hard-sm press inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition ${followed ? "bg-[#111214] text-white" : "bg-white text-[#111214]"}`}
       >
         {busy ? <Loader2 className="size-4 animate-spin" /> : followed ? <Check className="size-4" /> : <BellPlus className="size-4" />}
         {busy ? "Saving…" : followed ? "Following" : "Follow changes"}
