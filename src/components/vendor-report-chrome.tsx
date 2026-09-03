@@ -8,7 +8,7 @@ export function SectionHead({ eyebrow, title, note }: { eyebrow: string; title: 
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">{eyebrow}</p>
-        <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{title}</h2>
+        <h2 className="mt-2 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">{title}</h2>
       </div>
       {note && <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-[var(--muted)]">{note}</span>}
     </div>

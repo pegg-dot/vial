@@ -17,11 +17,11 @@ export function CommunitySignalCard({ signal, vendorName }: { signal: StoredComm
   const posts = Array.isArray(signal.top_posts) ? signal.top_posts : [];
   const updated = signal.fetched_at ? new Date(signal.fetched_at).toLocaleDateString() : null;
   return (
-    <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8 sm:pt-14">
+    <section className="mx-auto max-w-[1320px] px-5 pt-8 sm:px-8 sm:pt-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">Community</p>
-          <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">What does r/Peptides say about {vendorName}?</h2>
+          <h2 className="mt-2 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">What does r/Peptides say about {vendorName}?</h2>
         </div>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide ${s.chip}`}><MessagesSquare className="size-3" /> {s.label}</span>
       </div>
@@ -31,7 +31,7 @@ export function CommunitySignalCard({ signal, vendorName }: { signal: StoredComm
           ? "No r/Peptides thread mentioning this vendor surfaced in our search."
           : `${signal.mention_count} mention${signal.mention_count === 1 ? "" : "s"} surfaced — ${signal.negative_count} scam or quality complaint${signal.negative_count === 1 ? "" : "s"}, ${signal.positive_count} vouch${signal.positive_count === 1 ? "" : "es"}.`}
       </p>
-      <div className="mt-6 rounded-[18px] ink bg-white p-6 hard sm:p-7">
+      <div className="mt-6 rounded-[16px] ink bg-white p-4 hard-sm sm:p-5">
         <div className="flex flex-wrap gap-6 border-b border-[#111214]/10 pb-5">
           <Stat value={String(signal.mention_count)} label="Mentions found" />
           <Stat value={String(signal.negative_count)} label="Scam / quality complaints" tone={signal.negative_count > 0 ? "rose" : undefined} />

@@ -7,7 +7,7 @@ export function VendorFlagsBanner({ flags, vendorName }: { flags: CoaFlag[]; ven
   if (flags.length === 0) return null;
   const high = flags.some((f) => f.severity === "high");
   return (
-    <div className={`hard rounded-[18px] border-2 p-6 ${high ? "border-[#111214] bg-[#ffecea]" : "border-[#111214] bg-[#fff6e6]"}`}>
+    <div className={`hard-sm rounded-[16px] border-2 p-6 ${high ? "border-[#111214] bg-[#ffecea]" : "border-[#111214] bg-[#fff6e6]"}`}>
       <div className="flex items-center gap-2.5">
         <span className={`grid size-9 place-items-center rounded-xl ${high ? "bg-white text-[#d3372c]" : "bg-white text-[#b26a00]"}`}><ShieldAlert className="size-4" /></span>
         <div>

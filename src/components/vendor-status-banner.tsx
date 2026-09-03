@@ -15,7 +15,7 @@ export function VendorStatusBanner({ status, vendorName }: { status: VendorStatu
   if (!a) return null;
   const Icon = a.icon;
   return (
-    <div className={`hard rounded-[18px] border-2 p-6 ${a.ring} ${a.bg}`}>
+    <div className={`hard-sm rounded-[16px] border-2 p-6 ${a.ring} ${a.bg}`}>
       <div className="flex items-center gap-2.5">
         <span className={`grid size-9 place-items-center rounded-xl ${a.chip}`}><Icon className="size-4" /></span>
         <div>

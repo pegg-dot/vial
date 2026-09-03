@@ -256,7 +256,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       {/* ── Report header: paper, not slate — the tier-colored grade card is the only heavy
           color, a rating letter stamped on a white tearsheet. ─────────────────────────── */}
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[var(--background)]">
-        <div className="mx-auto max-w-[1320px] px-5 py-8 sm:px-8 sm:py-10">
+        <div className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8 sm:py-8">
           <Link href="/vendors" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black"><ArrowLeft className="size-4" /> All vendors</Link>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_.95fr] lg:items-start">
@@ -285,8 +285,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </div>
 
           {/* at-a-glance stats */}
-          {/* one divided strip, ink numbers — the price-vs-market delta is the only colored figure */}
-          <div className="ink hard-sm mt-6 grid grid-cols-2 divide-x divide-y divide-[#111214]/15 overflow-hidden rounded-[16px] bg-white sm:grid-cols-5 sm:divide-y-0">
+          {/* plain masthead figures, no box — the price-vs-market delta is the only colored figure */}
+          <div className="mt-6 flex flex-wrap gap-x-10 gap-y-4">
             <HeroStat icon={FlaskConical} value={String(vendor.coaCount)} label="Independent lab tests" />
             <HeroStat icon={ShieldCheck} value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median tested purity" />
             <HeroStat icon={PackageSearch} value={String(secondaryValue)} label={secondaryLabel} />
@@ -307,7 +307,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           important framing fact about a manufacturer page — that it is not a shop — was invisible on
           the clean ones. It reframes everything below it, so it goes first and unconditionally. */}
       {maker && (
-        <div className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
+        <div className="mx-auto max-w-[1320px] px-5 pt-6 sm:px-8">
           <p className="ink hard-sm rounded-[16px] bg-[#fff6e6] p-4 text-sm font-medium leading-6 text-[#111214]"><span className="font-extrabold">Upstream manufacturer, not a storefront.</span> We surfaced {vendor.name} from third-party lab records &mdash; the party a certificate names as having made or ordered the tested material, not a shop you buy from directly. Treat its test history as upstream intelligence.</p>
         </div>
       )}
@@ -315,12 +315,12 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       {/* ── The answer, up front ─────────────────────────────────────────────────────────
           The question the reader arrived with, answered in the first two sentences under it, then
           decomposed into the checks it rests on. Every clause is a count rendered further down. */}
-      <section id="verdict" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-12 sm:px-8">
+      <section id="verdict" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-8 sm:px-8">
         <SectionHead eyebrow="The bottom line" title={headlineQuestion} note={`Based on ${composed.weighed} check${composed.weighed === 1 ? "" : "s"}. ${composed.verifiedCount > 0 ? `${composed.verifiedCount} backed by a document.` : "None backed by a document."}`} />
         {/* The answer, in one quotable sentence, immediately under the question. It deliberately does
             NOT repeat the grade card's summary sentence a few hundred pixels above — it names the
             evidence the verdict is standing on instead, which is the part a reader can go check. */}
-        <p className="mt-5 max-w-3xl text-[17px] font-medium leading-7 text-[#111214]">
+        <p className="mt-3 max-w-3xl text-[15px] font-medium leading-6 text-[#111214]">
           <span className="font-extrabold">{grade.headline}.</span> What that rests on: {restsOn}.
         </p>
         <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
@@ -329,9 +329,9 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
         <h3 className="mt-8 text-[clamp(1.15rem,2vw,1.45rem)] font-extrabold tracking-[-.03em]">Which checks did we run, and what did each one find?</h3>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Each check comes from something you can read further down &mdash; a good result and a bad one both stay visible. Marked <span className="font-bold text-[#0a6b60]">Confirmed</span> (we hold the document), <span className="font-bold text-[#2b31d8]">Reported</span> (a source we cite), or <span className="font-bold text-black/55">Our guess</span>.</p>
-        <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {composed.factors.map((f) => (
-            <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[16px] p-4 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>
+            <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[12px] p-3.5 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>
               <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-md ${f.ok === true ? "bg-[#12b3a6] text-white" : f.ok === false ? "bg-[#f5463d] text-white" : "bg-[#111214]/[.06] text-black/45"}`}>
                 {f.ok === true ? <Check className="size-3.5" /> : f.ok === false ? <X className="size-3.5" /> : <CircleDashed className="size-3.5" />}
               </span>
@@ -349,10 +349,10 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
       {/* ── Alerts: grouped, only when present ──────────────────────────────────────── */}
       {hasAlerts && (
-        <section id="alerts" className="mx-auto max-w-[1320px] scroll-mt-[140px] space-y-4 px-5 pt-12 sm:px-8">
+        <section id="alerts" className="mx-auto max-w-[1320px] scroll-mt-[140px] space-y-4 px-5 pt-8 sm:px-8">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#d3372c]">Read this first</p>
-            <h2 className="mt-3 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">What is flagged on {vendor.name} right now?</h2>
+            <h2 className="mt-3 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">What is flagged on {vendor.name} right now?</h2>
             <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Enough to change how you read the rest of this page: {alertReasons}. Each one is a record we can show you, not our opinion &mdash; the detail and its source are below.</p>
           </div>
           {statusAlert && <VendorStatusBanner status={statusAlert} vendorName={vendor.name} />}
@@ -460,7 +460,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       <section id="enforcement" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-14 sm:px-8">
         <SectionHead eyebrow="Regulators" title={`Has any regulator taken action against ${vendor.name}?`} />
         {enforcement.length > 0 ? (
-          <div className="ink hard mt-6 rounded-[20px] bg-[#fff1f0] p-6">
+          <div className="ink hard-sm mt-4 rounded-[16px] bg-[#fff1f0] p-4">
             <p className="text-base font-extrabold leading-6">Yes &mdash; {enforcement.length} public record{enforcement.length === 1 ? "" : "s"} name{enforcement.length === 1 ? "s" : ""} {vendor.name}, or an operator we matched to it.</p>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#111214]/70">Each agency, action type, outcome and a link to the original document {enforcement.length === 1 ? "is" : "are"} at the <a href="#alerts" className="font-bold underline underline-offset-2">top of this page</a>. We report the action and link the source; we do not add an accusation of our own.</p>
           </div>
@@ -487,7 +487,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </span>
         </div></div>
       )}
-      <section id="catalog" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-12 sm:px-8 sm:py-14">
+      <section id="catalog" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-8 sm:px-8 sm:py-10">
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           <div>
             {listings.length > 0 ? (
@@ -510,7 +510,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </div>
 
           <aside id="history" className="scroll-mt-[140px]">
-            <div className="ink-1 hard sticky top-28 rounded-[20px] bg-white p-5">
+            <div className="ink-1 hard-sm sticky top-32 rounded-[16px] bg-white p-4">
               <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#2b31d8]">History</p>
               <h2 className="mt-2 text-lg font-extrabold tracking-[-.02em]">What has changed recently?</h2>
               <p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">
@@ -543,15 +543,25 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 // the section stays independently readable, then why the gap exists — never a claim about the
 // vendor. A visible "we don't know" is the product; a silently dropped section is not.
 function NoEvidence({ answer, note }: { answer: string; note: string }) {
+  // A missing record is one honest line, not a billboard — the dashed border still marks it as a
+  // gap, but it takes the height of a row, not a card.
   return (
-    <div className="mt-6 rounded-[20px] border-2 border-dashed border-[#111214]/25 bg-white/50 p-6">
-      <p className="flex items-start gap-2.5 text-base font-extrabold leading-6 text-[#111214]"><CircleDashed className="mt-0.5 size-4 shrink-0 text-[#111214]/35" />{answer}</p>
-      <p className="mt-2 max-w-2xl pl-[26px] text-sm font-medium leading-6 text-[var(--muted)]">{note}</p>
+    <div className="mt-4 rounded-[14px] border-2 border-dashed border-[#111214]/25 bg-white/50 px-4 py-3.5">
+      <p className="flex items-start gap-2.5 text-sm font-extrabold leading-5 text-[#111214]"><CircleDashed className="mt-0.5 size-4 shrink-0 text-[#111214]/35" />{answer}</p>
+      <p className="mt-1 max-w-2xl pl-[26px] text-[13px] font-medium leading-5 text-[var(--muted)]">{note}</p>
     </div>
   );
 }
 
 function HeroStat({ icon: Icon, value, label, accent }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; value: string; label: string; accent?: string }) {
-  // One cell of the divided header strip — ink numbers; `accent` (price-vs-market) is the only colored figure.
-  return <div className="bg-white px-4 py-3"><Icon className="size-4" style={{ color: accent ?? "#2b31d8" }} /><p className="mt-2 text-2xl font-extrabold tabular-nums tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p><p className="mt-0.5 text-[11px] font-semibold leading-4 text-[var(--muted)]">{label}</p></div>;
+  // One masthead figure — ink numbers on the page itself; `accent` (price-vs-market) is the only colored one.
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="mt-1 size-4 shrink-0" style={{ color: accent ?? "#2b31d8" }} />
+      <div>
+        <p className="text-2xl font-extrabold tabular-nums leading-none tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p>
+        <p className="mt-1 text-[11px] font-semibold text-[var(--muted)]">{label}</p>
+      </div>
+    </div>
+  );
 }

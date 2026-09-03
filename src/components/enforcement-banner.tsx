@@ -13,7 +13,7 @@ export function EnforcementBanner({ actions, vendorName }: { actions: Regulatory
   const wrap = severe ? "border-[#111214] bg-[#ffecea]" : "border-[#111214] bg-[#fff6e6]";
   const tone = severe ? "text-rose-900" : "text-amber-950";
   return (
-    <div className={`hard rounded-[18px] border-2 p-5 sm:p-6 ${wrap} ${tone}`}>
+    <div className={`hard-sm rounded-[16px] border-2 p-5 sm:p-6 ${wrap} ${tone}`}>
       <div className="flex items-center gap-3">
         <span className={`grid size-10 shrink-0 place-items-center rounded-2xl text-white ${severe ? "bg-[#d3372c]" : "bg-[#b26a00]"}`}>{severe ? <ShieldAlert className="size-5" /> : <Gavel className="size-5" />}</span>
         <div>

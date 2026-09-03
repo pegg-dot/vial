@@ -55,19 +55,19 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {dimensions.map((d) => {
+      {/* One matrix, not six floating cards — the same label | stamp | answer rows the product
+          page's verify matrix uses. Six cards repeated the same explainer link six times and left
+          half of each box empty; here the whole read is six tight rows and one drawer per row. */}
+      <div className="ink hard-sm overflow-hidden rounded-[16px] bg-white">
+        {dimensions.map((d, i) => {
           const t = toneOf(d.status);
           return (
-            <div key={d.key} className={`rounded-[18px] p-5 ${t.card}`}>
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-extrabold">{PLAIN_DIMENSION_LABELS[d.key] ?? d.label}</h3>
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[d.status] ?? d.status}</span>
-              </div>
-              <p className="mt-3 text-lg font-extrabold tracking-[-.02em]">{d.value}</p>
-              <p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">{d.basis}</p>
-              <button type="button" onClick={() => setOpen(d)} className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-[#2b31d8] transition hover:opacity-70">
-                What does &ldquo;{STATUS_WORD[d.status] ?? d.status}&rdquo; mean? →
+            <div key={d.key} className={`grid gap-2 px-4 py-3 sm:grid-cols-[170px_150px_1fr_auto] sm:items-center ${i > 0 ? "border-t border-[#111214]/10" : ""} ${d.status === "disputed" ? "bg-[#fff6e6]" : ""}`}>
+              <p className="text-sm font-extrabold">{PLAIN_DIMENSION_LABELS[d.key] ?? d.label}</p>
+              <span className={`ink-1 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[d.status] ?? d.status}</span>
+              <p className="min-w-0 text-[13px] font-medium leading-5 text-[var(--muted)]"><span className="font-extrabold text-[#111214]">{d.value}.</span> {d.basis}</p>
+              <button type="button" onClick={() => setOpen(d)} aria-label={`What ${STATUS_WORD[d.status] ?? d.status} means for ${PLAIN_DIMENSION_LABELS[d.key] ?? d.label}`} className="justify-self-start whitespace-nowrap text-[11px] font-bold text-[#2b31d8] transition hover:opacity-70 sm:justify-self-end">
+                Meaning →
               </button>
             </div>
           );

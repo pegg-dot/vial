@@ -32,11 +32,11 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests", id }: 
   const withPurity = independentTests.filter((t) => t.purity_pct != null);
   const blindCount = independentTests.filter((t) => t.is_blind).length;
   return (
-    <section id={id} className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-10 sm:px-8">
+    <section id={id} className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-8 sm:px-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Independent testing</p>
-          <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">{heading}</h2>
+          <h2 className="mt-2 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">{heading}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
             Real, publicly verifiable third-party tests. Purity is read from the certificate itself. A test reflects one lab&rsquo;s result for one submitted batch — not a guarantee that every vial matches.
           </p>
@@ -77,7 +77,7 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests", id }: 
           )}
         </div>
       </div>
-      <div className="ink hard overflow-x-auto rounded-[20px] bg-white">
+      <div className="ink hard-sm overflow-x-auto rounded-[16px] bg-white">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-black/[.025] text-[10px] uppercase tracking-[.12em] text-[var(--muted)]">
             <tr>

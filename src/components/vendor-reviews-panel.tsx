@@ -23,17 +23,17 @@ const VOLUME_PLAIN: Record<string, string> = { none: "no reports", sparse: "a th
 export function VendorReviewsPanel({ review, vendorName }: { review: VendorReview; vendorName: string }) {
   const s = SENTIMENT[review.sentiment] ?? SENTIMENT.unknown;
   return (
-    <section className="mx-auto max-w-[1320px] px-5 pt-12 sm:px-8 sm:pt-14">
+    <section className="mx-auto max-w-[1320px] px-5 pt-8 sm:px-8 sm:pt-10">
       <div className="mb-7">
         <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">What buyers say</p>
-        <h2 className="mt-2 text-[clamp(1.5rem,3vw,2.1rem)] font-extrabold leading-[1.02] tracking-[-.035em]">What do buyers report about {vendorName}?</h2>
+        <h2 className="mt-2 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">What do buyers report about {vendorName}?</h2>
         {/* The answer sits next to the question, not four elements down inside the card — a reader
             (or an answer engine) quoting this section should get the finding, not the framing. */}
         <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
           {s.label} across {VOLUME_PLAIN[review.reviewVolume] ?? "the reports"} we could gather from public sources, held at {review.confidence} confidence.
         </p>
       </div>
-      <div className={`ink hard rounded-[20px] ${s.bg} p-6 sm:p-7`}>
+      <div className={`ink hard-sm rounded-[16px] ${s.bg} p-4 sm:p-5`}>
         <div className="flex flex-wrap items-center gap-2">
           <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${s.chip}`}>{s.label}</span>
           <span className="ink-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-black/55">{review.reviewVolume} review volume</span>
