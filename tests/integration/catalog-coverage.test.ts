@@ -24,8 +24,11 @@ describe("catalog coverage", () => {
   afterAll(async () => { await resetDatabaseForTests(); });
 
   it("names every zero-listing storefront and says which kind of gap it is", async () => {
-    // `chemyo` is really in known-vendors.json with no import method; the other two are not in it
-    // at all — the shape production is actually in.
+    // Real slugs, so the states track the real curated list rather than a fixture of one.
+    // `loti-labs` is curated with no import method (its Store API answers 401); `chemyo` was in
+    // that same bucket until its WooCommerce feed was verified on 2026-09-04, and is now a
+    // collector that simply has not run here.
+    await addVendor("loti-labs", "Loti Labs", "storefront");
     await addVendor("chemyo", "Chemyo", "storefront");
     await addVendor("surfaced-from-a-coa", "Surfaced From A COA", "storefront");
     await addVendor("another-uncurated", "Another Uncurated", "storefront");
@@ -35,11 +38,13 @@ describe("catalog coverage", () => {
 
     // Curated and polled daily for status and domain age, but nothing ever reads its catalogue.
     // This is the bucket an operator can act on, so it must be named, not merely counted.
-    expect(bySlug.get("chemyo")?.state).toBe("no-method");
+    expect(bySlug.get("loti-labs")?.state).toBe("no-method");
+    // Enabling a vendor's importer must move it out of that bucket — the whole point of doing so.
+    expect(bySlug.get("chemyo")?.state).toBe("collecting");
     expect(bySlug.get("surfaced-from-a-coa")?.state).toBe("uncurated");
     expect(coverage.counts["no-method"]).toBeGreaterThanOrEqual(1);
     expect(coverage.counts.uncurated).toBeGreaterThanOrEqual(2);
-    expect(coverage.storefronts).toBeGreaterThanOrEqual(3);
+    expect(coverage.storefronts).toBeGreaterThanOrEqual(4);
   });
 
   it("leaves manufacturers out — the buyer grade scale never applied to them", async () => {

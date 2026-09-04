@@ -15,7 +15,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "Among the most recommended vendors on r/Peptides in 2026 (Colorado, founded 2024). Trustpilot ~4.8 across 88+ reviews; legit third-party COAs (Janoshik) and low pricing."
+    "reputationSummary": "Among the most recommended vendors on r/Peptides in 2026 (Colorado, founded 2024). Trustpilot ~4.8 across 88+ reviews; legit third-party COAs (Janoshik) and low pricing.",
+    "wooWorks": true
   },
   {
     "slug": "eternal-peptides",
@@ -24,7 +25,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "US-based vendor with rigorous third-party testing (Janoshik) covering purity, sterility, endotoxins and heavy metals. Generally well-regarded."
+    "reputationSummary": "US-based vendor with rigorous third-party testing (Janoshik) covering purity, sterility, endotoxins and heavy metals. Generally well-regarded.",
+    "wooWorks": true
   },
   {
     "slug": "core-peptides",
@@ -33,7 +35,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "Long-standing Orlando vendor known for deep educational product pages and per-product COA/HPLC/Mass-Spec tabs. Broadly reputable."
+    "reputationSummary": "Long-standing Orlando vendor known for deep educational product pages and per-product COA/HPLC/Mass-Spec tabs. Broadly reputable.",
+    "wooWorks": true
   },
   {
     "slug": "biotech-peptides",
@@ -42,7 +45,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "Established San Diego vendor with an 87+ peptide catalog and a 30-day guarantee. Publishes COAs/mass-spec; generally solid, some note inconsistency."
+    "reputationSummary": "Established San Diego vendor with an 87+ peptide catalog and a 30-day guarantee. Publishes COAs/mass-spec; generally solid, some note inconsistency.",
+    "wooWorks": true
   },
   {
     "slug": "swiss-chems",
@@ -81,7 +85,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "Established vendor advertising independent third-party testing on every batch. Generally well-regarded for reliability."
+    "reputationSummary": "Established vendor advertising independent third-party testing on every batch. Generally well-regarded for reliability.",
+    "catalogNote": "WooCommerce Store API returns 401 rest_forbidden \u2014 locked to authenticated callers."
   },
   {
     "slug": "limitless-life-nootropics",
@@ -90,7 +95,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "Popular, widely-recommended vendor with a very wide catalog and batch-specific COA testing. Solid community reputation, competitive pricing."
+    "reputationSummary": "Popular, widely-recommended vendor with a very wide catalog and batch-specific COA testing. Solid community reputation, competitive pricing.",
+    "catalogNote": "BigCommerce storefront; no supported importer."
   },
   {
     "slug": "purerawz",
@@ -148,7 +154,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "Long-standing US vendor that displays per-product mass-spec and UV lab reports with dates and lab info. Reports appear legitimate; decent reputation."
+    "reputationSummary": "Long-standing US vendor that displays per-product mass-spec and UV lab reports with dates and lab info. Reports appear legitimate; decent reputation.",
+    "catalogNote": "Magento backend (admin.blueskypeptide.com); no supported importer."
   },
   {
     "slug": "chemyo",
@@ -157,7 +164,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "One of the most trusted SARMs vendors on Reddit, also offering select peptides; publishes third-party COAs. Strong long-term reputation."
+    "reputationSummary": "One of the most trusted SARMs vendors on Reddit, also offering select peptides; publishes third-party COAs. Strong long-term reputation.",
+    "wooWorks": true
   },
   {
     "slug": "nootropic-source",
@@ -186,7 +194,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": false,
-    "reputationSummary": "Newer vendor with thin community feedback. Some report satisfactory shipping; limited track record so far."
+    "reputationSummary": "Newer vendor with thin community feedback. Some report satisfactory shipping; limited track record so far.",
+    "catalogNote": "base44 single-page app \u2014 every path returns the same HTML shell, no catalogue endpoint."
   },
   {
     "slug": "north-peptide",
@@ -195,7 +204,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": false,
-    "reputationSummary": "Newer vendor publishing buyer-education/anti-scam content and COAs. Limited independent community feedback to date."
+    "reputationSummary": "Newer vendor publishing buyer-education/anti-scam content and COAs. Limited independent community feedback to date.",
+    "catalogNote": "Next.js storefront, but not Medusa \u2014 the RSC extractor finds no products in its flight payload."
   },
   {
     "slug": "chameleon-peptides",
@@ -224,7 +234,8 @@
     "productsJsonWorks": false,
     "redFlag": false,
     "publishesJanoshik": true,
-    "reputationSummary": "Newer vendor with ~4.2/5 Trustpilot across 60+ reviews, live chat and same-day shipping; advertises independent COA testing."
+    "reputationSummary": "Newer vendor with ~4.2/5 Trustpilot across 60+ reviews, live chat and same-day shipping; advertises independent COA testing.",
+    "wooWorks": true
   },
   {
     "slug": "ez-peptides",
