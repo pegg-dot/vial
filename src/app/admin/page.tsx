@@ -12,6 +12,7 @@ import { getAttributionOverview } from "@/server/outbound/partner-report";
 import { getDataFreshness, getBrokenCollectors } from "@/server/health/data-health";
 import { attentionState } from "@/lib/collector-attention";
 import { getSearchConsoleSummary, isSearchConsoleConfigured } from "@/server/seo/search-console";
+import { getCatalogCoverage } from "@/server/collect/coverage";
 import { getVisitorSummary } from "@/server/analytics/visitors";
 import { getPeopleOverview } from "@/server/admin/people";
 import { getDatabase } from "@/server/db/client";
@@ -56,6 +57,8 @@ export default async function AdminPage() {
     intelligenceReporting: Boolean(intelMetrics),
     sweep: sweepHealth ? { lastRanAt: sweepHealth.lastRanAt, lastOk: sweepHealth.lastOk, backlogReaders: sweepHealth.backlogReaders, healthy: isSweepHealthy(sweepHealth), keepingUp: isSweepKeepingUp(sweepHealth) } : null,
   });
+
+  const coverage = await getCatalogCoverage().catch(() => null);
 
   const gscPromise = getSearchConsoleSummary();
   const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy] = await Promise.all([
@@ -463,6 +466,52 @@ export default async function AdminPage() {
           </table>
         </div>
       )}
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Storefronts that cannot be graded</h2>
+      {!coverage ? (
+        <p className="mt-3 text-sm font-medium text-[var(--muted)]">The coverage report could not be read.</p>
+      ) : coverage.ungradable.length === 0 ? (
+        <p className="mt-3 text-sm font-medium text-[var(--muted)]">Every storefront on record has a catalogue we have read.</p>
+      ) : (
+        <>
+          {/* The grade scale needs a catalogue to rate, so a storefront with no listings can never
+              earn a letter. None of these is a FAILING collector, which is exactly why they are
+              invisible in the table above — most have no catalog collector enqueued at all. */}
+          <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+            <span className="font-extrabold text-[#111214]">{coverage.ungradable.length} of {coverage.storefronts}</span> storefronts have no catalogue on record, so the grade scale has nothing to rate and the directory shows them as &ldquo;No listings&rdquo;.
+            {" "}<span className="font-bold text-[#111214]">{coverage.counts["no-method"]}</span> are curated and polled for status, but no catalogue import method was ever identified &mdash; nothing reads their storefront.
+            {" "}<span className="font-bold text-[#111214]">{coverage.counts.uncurated}</span> were surfaced from lab records and never curated.
+            {coverage.counts.collecting > 0 && <> {coverage.counts.collecting} have a collector that has not yet succeeded &mdash; those appear above.</>}
+          </p>
+          <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+                <tr>
+                  <th className="px-5 py-3">Storefront</th><th className="px-5 py-3">Why it has no catalogue</th>
+                  <th className="px-5 py-3">Lab tests we hold</th><th className="px-5 py-3">What would change it</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#111214]/10">
+                {coverage.ungradable.slice(0, 40).map((row) => (
+                  <tr key={row.slug} className={row.state === "no-method" ? "bg-[#fff4e0]" : undefined}>
+                    <td className="px-5 py-3 font-bold">{row.name}</td>
+                    <td className="px-5 py-3 text-xs font-bold">
+                      {row.state === "no-method" ? "Curated, but no import method" : row.state === "uncurated" ? "Never curated" : "Collector has not succeeded yet"}
+                    </td>
+                    <td className="px-5 py-3 text-xs tabular-nums">{row.coaCount || "—"}</td>
+                    <td className="px-5 py-3 text-xs text-[var(--muted)]">
+                      {row.state === "no-method" ? "Identify how its catalogue can be read, then set the flag in known-vendors.json" : row.state === "uncurated" ? "Add it to known-vendors.json with a domain" : "See the attention table above"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {coverage.ungradable.length > 40 && (
+            <p className="mt-2 text-xs font-medium tabular-nums text-[var(--muted)]">Showing the 40 that matter most of {coverage.ungradable.length}.</p>
+          )}
+        </>
+      )}
+
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Collectors</h2>
       <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
         <table className="w-full min-w-[820px] text-left text-sm">
