@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import curated from "@/server/data/news-items.json";
-import { NEWS_TOPICS, classifyNewsTopics, filterNews, type NewsRow } from "@/lib/news-filter";
+import { NEWS_TOPICS, classifyNewsTopics, filterNews, leadFirst, type NewsRow } from "@/lib/news-filter";
 
 function row(over: Partial<NewsRow> = {}): NewsRow {
   return {
@@ -136,5 +136,39 @@ describe("filterNews", () => {
 
   it("returns everything when no filter is set", () => {
     expect(filterNews(rows, {}).length).toBe(3);
+  });
+});
+
+// The lead slot is the biggest headline on the site. These pin the one rule that keeps an
+// unconfirmed community post out of it — see `leadFirst`.
+describe("leadFirst", () => {
+  const trade = row({ id: "t", source_type: "trade", title: "DOJ guilty plea", news_date: "2026-05-01" });
+  const news = row({ id: "n", source_type: "news", title: "FDA warns sellers", news_date: "2026-04-01" });
+  const forum = row({ id: "f", source_type: "forum", title: "Reddit says a vendor is fake", news_date: "2026-06-01" });
+  const blog = row({ id: "b", source_type: "blog", title: "Tracker roundup", news_date: "2026-05-15" });
+
+  it("leaves a feed alone when the newest record is already a primary document", () => {
+    expect(leadFirst([trade, forum, blog]).map((r) => r.id)).toEqual(["t", "f", "b"]);
+  });
+
+  it("promotes the newest credible record over a newer forum post", () => {
+    // Chronologically the forum post is newest. It must not get the lead headline.
+    expect(leadFirst([forum, blog, trade, news]).map((r) => r.id)).toEqual(["t", "f", "b", "n"]);
+  });
+
+  it("keeps everything else in chronological order behind the lead", () => {
+    const ordered = leadFirst([forum, blog, news, trade]);
+    expect(ordered.map((r) => r.id)).toEqual(["n", "f", "b", "t"]);
+  });
+
+  it("leads with the newest record when the reader has filtered to forums only", () => {
+    // Nothing to over-amplify: this view is exactly what was asked for.
+    const forums = [forum, row({ id: "f2", source_type: "forum", news_date: "2026-03-01" })];
+    expect(leadFirst(forums).map((r) => r.id)).toEqual(["f", "f2"]);
+  });
+
+  it("handles an empty and a single-record feed", () => {
+    expect(leadFirst([])).toEqual([]);
+    expect(leadFirst([forum]).map((r) => r.id)).toEqual(["f"]);
   });
 });

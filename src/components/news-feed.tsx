@@ -9,6 +9,7 @@ import {
   classifyNewsTopics,
   filterNews,
   hasActiveNewsFilters,
+  leadFirst,
   type NewsRow,
   type NewsTopicId,
 } from "@/lib/news-filter";
@@ -83,7 +84,11 @@ export function NewsFeed({ items, initialQuery = "", initialSourceTypes = [], in
   function addTopic(id: NewsTopicId) { setTopics((current) => (current.includes(id) ? current : [...current, id])); setVisible(PAGE); }
 
   const active = hasActiveNewsFilters(filters);
-  const shown = results.slice(0, visible);
+
+  // An unconfirmed forum post must never inherit the lead slot's 44px headline — see `leadFirst`.
+  const ordered = useMemo(() => leadFirst(results), [results]);
+
+  const shown = ordered.slice(0, visible);
   const remaining = results.length - shown.length;
 
   function reset() {
@@ -164,7 +169,7 @@ export function NewsFeed({ items, initialQuery = "", initialSourceTypes = [], in
           {/* A front page, not a stack of identical boxes: the newest record runs as the lead, the
               next four form a two-column tier, and everything older compresses into headline rows.
               Rules do the separating — the frames are gone. */}
-          <ol className="grid grid-cols-1 gap-x-10 sm:grid-cols-2">
+          <ol className="grid grid-cols-1 gap-x-10 lg:grid-cols-2">
             {shown.map((n, i) => (
               <NewsItem key={n.id} item={n} tier={i === 0 ? "lead" : i <= 4 ? "second" : "row"} kicker={i === 5} onTopic={addTopic} activeTopics={topics} />
             ))}
@@ -210,27 +215,27 @@ function VendorChip({ item }: { item: NewsRow }) {
   return null;
 }
 
-function TopicRow({ item, onTopic, activeTopics }: { item: NewsRow; onTopic: (id: NewsTopicId) => void; activeTopics: NewsTopicId[] }) {
+// `inline` drops the wrapper so the pills join a flex row that already exists (the second tier
+// sits them beside the vendor chip). Two display utilities on one element would collide.
+function TopicRow({ item, onTopic, activeTopics, inline = false }: { item: NewsRow; onTopic: (id: NewsTopicId) => void; activeTopics: NewsTopicId[]; inline?: boolean }) {
   const rowTopics = classifyNewsTopics(item);
   if (rowTopics.length === 0) return null;
-  return (
-    <div className="mt-3 flex flex-wrap items-center gap-1.5">
-      {rowTopics.map((id) => {
-        const topic = NEWS_TOPICS.find((t) => t.id === id)!;
-        return (
-          <button
-            key={id}
-            onClick={() => onTopic(id)}
-            title={`Filter to: ${topic.note}`}
-            aria-pressed={activeTopics.includes(id)}
-            className="ink-1 rounded-full bg-[#fff3f1] px-2.5 py-1 text-[10px] font-bold text-[#d3372c] transition hover:-translate-y-0.5"
-          >
-            {topic.label}
-          </button>
-        );
-      })}
-    </div>
-  );
+  const pills = rowTopics.map((id) => {
+    const topic = NEWS_TOPICS.find((t) => t.id === id)!;
+    return (
+      <button
+        key={id}
+        onClick={() => onTopic(id)}
+        title={`Filter to: ${topic.note}`}
+        aria-pressed={activeTopics.includes(id)}
+        className="ink-1 rounded-full bg-[#fff3f1] px-2.5 py-1 text-[10px] font-bold text-[#d3372c] transition hover:-translate-y-0.5"
+      >
+        {topic.label}
+      </button>
+    );
+  });
+  if (inline) return <>{pills}</>;
+  return <div className="mt-3 flex flex-wrap items-center gap-1.5">{pills}</div>;
 }
 
 function NewsItem({ item: n, tier, kicker, onTopic, activeTopics }: {
@@ -245,7 +250,7 @@ function NewsItem({ item: n, tier, kicker, onTopic, activeTopics }: {
 
   if (tier === "lead") {
     return (
-      <li className="border-b-2 border-[#111214] pb-7 pt-6 sm:col-span-2">
+      <li className="border-b-2 border-[#111214] pb-7 pt-6 lg:col-span-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`ink-1 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${meta.cls}`} title={meta.note}>{meta.label}</span>
           {date && <span className="text-[12px] font-bold tabular-nums text-[var(--muted)]">{date}</span>}
@@ -254,7 +259,7 @@ function NewsItem({ item: n, tier, kicker, onTopic, activeTopics }: {
         </div>
         <h2 className="mt-4 max-w-4xl text-balance text-[clamp(1.7rem,4vw,2.75rem)] font-extrabold leading-[1.02] tracking-[-.04em]">
           <a href={n.source_url} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#d3372c]">
-            {n.title} <ExternalLink className="mb-1 inline size-5 text-[#111214]/30" aria-hidden="true" />
+            {n.title}&nbsp;<ExternalLink className="mb-1 inline size-5 text-[#111214]/30" aria-hidden="true" />
           </a>
         </h2>
         <p className="mt-4 max-w-3xl text-base font-medium leading-7 text-[#111214]/70">{n.summary}</p>
@@ -273,18 +278,23 @@ function NewsItem({ item: n, tier, kicker, onTopic, activeTopics }: {
           {n.publisher && <span className="truncate text-[11px] font-semibold text-[var(--muted)]">· {n.publisher}</span>}
         </div>
         <h2 className="mt-2.5 text-lg font-extrabold leading-6 tracking-[-.02em]">
-          <a href={n.source_url} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#d3372c]">{n.title}</a>
+          <a href={n.source_url} target="_blank" rel="noopener noreferrer" className="transition hover:text-[#d3372c]">
+            {n.title}&nbsp;<ExternalLink className="mb-0.5 inline size-3.5 text-[#111214]/30" aria-hidden="true" />
+          </a>
         </h2>
         <p className="mt-1.5 line-clamp-2 text-[13px] font-medium leading-5 text-[var(--muted)]">{n.summary}</p>
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
           <VendorChip item={n} />
+          {/* The topic pills are filter controls, not decoration — every card used to carry them,
+              and dropping them everywhere but the lead would quietly retire a working affordance. */}
+          <TopicRow item={n} onTopic={onTopic} activeTopics={activeTopics} inline />
         </div>
       </li>
     );
   }
 
   return (
-    <li className="border-b border-[#111214]/10 sm:col-span-2">
+    <li className="border-b border-[#111214]/10 lg:col-span-2">
       {/* The first compressed row carries the tier's kicker, so the shift from stories to
           headlines is announced once instead of guessed at. */}
       {kicker && <p className="pt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[var(--muted)]">Earlier, on the record</p>}

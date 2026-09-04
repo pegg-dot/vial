@@ -139,3 +139,26 @@ export function filterNews(rows: NewsRow[], filters: NewsFilters): NewsRow[] {
     return true;
   });
 }
+
+// A primary document or an established outlet — the two source tiers this site will put its
+// biggest headline behind. `blog` and `forum` are labelled unverified in SOURCE_META above.
+const STRONG_SOURCES = new Set(["trade", "news"]);
+
+/**
+ * Order a filtered feed for the front page: the lead slot goes to the newest record from a source
+ * we can stand behind, and everything else keeps its chronological place.
+ *
+ * The lead is the largest piece of type on the site. Handing it to whatever happens to be newest
+ * would let an unconfirmed forum post run a 44px headline about a named business — the exact
+ * amplification this product exists to prevent, and a chip reading "Forum" underneath does not
+ * undo it. When the reader has explicitly filtered TO those weaker sources there is nothing to
+ * amplify past what they asked for, so the newest item leads as normal.
+ *
+ * Rows arrive already sorted newest-first by the query (`ORDER BY news_date DESC NULLS LAST`).
+ */
+export function leadFirst(rows: NewsRow[]): NewsRow[] {
+  if (rows.length < 2 || STRONG_SOURCES.has(rows[0].source_type)) return rows;
+  const lead = rows.findIndex((row) => STRONG_SOURCES.has(row.source_type));
+  if (lead < 1) return rows;
+  return [rows[lead], ...rows.slice(0, lead), ...rows.slice(lead + 1)];
+}

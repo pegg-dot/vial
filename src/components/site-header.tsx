@@ -28,14 +28,17 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
       <div className="mx-auto flex h-[72px] max-w-[1320px] items-center gap-6 px-5 sm:px-8">
         <Wordmark idPrefix="wmh" />
 
-        <nav aria-label="Primary navigation" className="hidden items-center gap-1 md:flex">
+        {/* The full nav needs ~1200px once the search field and account controls are beside it — at
+            md and lg it overflowed, wrapping "How we check" onto three lines and pushing the account
+            button off the right edge (iPad landscape is exactly 1024). Below xl the menu carries it. */}
+        <nav aria-label="Primary navigation" className="hidden items-center gap-1 xl:flex">
           {items.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-full px-3.5 py-2 text-sm font-bold transition ${
+                className={`rounded-full px-3 py-2 text-sm font-bold transition ${
                   active ? "bg-[#111214] text-white" : "text-[var(--muted)] hover:bg-black/[.06] hover:text-black"
                 }`}
               >
@@ -85,7 +88,7 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
             onClick={() => setMobileOpen((value) => !value)}
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            className="ink-1 grid size-10 place-items-center rounded-full bg-white/80 md:hidden"
+            className="ink-1 grid size-10 place-items-center rounded-full bg-white/80 xl:hidden"
           >
             {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
           </button>
@@ -93,7 +96,7 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
       </div>
 
       {mobileOpen && (
-        <nav aria-label="Mobile navigation" className="border-t-2 border-[#111214] bg-[var(--background)] px-5 py-4 md:hidden">
+        <nav aria-label="Mobile navigation" className="border-t-2 border-[#111214] bg-[var(--background)] px-5 py-4 xl:hidden">
           <div className="mx-auto grid max-w-[1320px] gap-1">
             {[...items, { href: "/watchlist", label: "Saved" }, { href: "/compare", label: "Compare" }, { href: "/help", label: "Help" }, { href: "/account", label: "Account" }].map((item) => (
               <Link
