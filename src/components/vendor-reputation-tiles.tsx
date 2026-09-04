@@ -77,26 +77,29 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
       {/* Sliding explainer modal */}
       <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
         <div onClick={() => setOpen(null)} className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`} />
-        <aside role="dialog" aria-modal="true" className={`absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-[#faf9f6] shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}>
+        {/* The drawer speaks the site's own language — ink borders, hard shadows, extrabold type,
+            warm paper — the same register as the matrix it explains. The old soft-hairline version
+            read as a different product bolted onto this one. */}
+        <aside role="dialog" aria-modal="true" className={`absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l-2 border-[#111214] bg-[var(--background)] transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}>
           {open ? (() => {
             const t = toneOf(open.status);
             return (
               <>
-                <div className="flex items-start justify-between gap-4 border-b border-black/[.08] p-6">
+                <div className="flex items-start justify-between gap-4 border-b-2 border-[#111214] bg-white p-5 sm:p-6">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-[var(--muted)]">{PLAIN_DIMENSION_LABELS[open.key] ?? open.label}</p>
-                    <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[open.status] ?? open.status}</span>
+                    <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[var(--muted)]">{PLAIN_DIMENSION_LABELS[open.key] ?? open.label}</p>
+                    <span className={`ink-1 mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[open.status] ?? open.status}</span>
                   </div>
-                  <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="grid size-9 shrink-0 place-items-center rounded-full border border-black/[.1] bg-white text-black/50 transition hover:text-black"><X className="size-4" /></button>
+                  <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="ink-1 press grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#111214] transition hover:bg-[var(--background)]"><X className="size-4" /></button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-6">
-                  <p className="text-2xl font-semibold tracking-[-.03em]">{open.value}</p>
-                  <p className="mt-4 text-sm leading-7 text-black/70">{open.basis}</p>
-                  <div className="mt-6 rounded-2xl border border-black/[.08] bg-white p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">What &ldquo;{STATUS_WORD[open.status] ?? open.status}&rdquo; means here</p>
-                    <p className="mt-2 text-sm leading-6 text-black/70">{STATUS_MEANING[open.status] ?? ""}</p>
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+                  <p className="text-xl font-extrabold leading-7 tracking-[-.03em]">{open.value}</p>
+                  <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">{open.basis}</p>
+                  <div className="ink-1 hard-sm mt-5 rounded-[14px] bg-white p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#2b31d8]">What &ldquo;{STATUS_WORD[open.status] ?? open.status}&rdquo; means here</p>
+                    <p className="mt-2 text-sm font-medium leading-6 text-[#111214]/75">{STATUS_MEANING[open.status] ?? ""}</p>
                   </div>
-                  <p className="mt-4 text-xs leading-5 text-[var(--muted)]">Where this came from: {PROVENANCE_LABELS[open.provenance.sourceType] ?? open.provenance.sourceType}. Every answer stands on its own and says where it came from &mdash; we never blend them into one score.</p>
+                  <p className="mt-4 text-xs font-medium leading-5 text-[var(--muted)]">Where this came from: <span className="font-bold text-[#111214]">{PROVENANCE_LABELS[open.provenance.sourceType] ?? open.provenance.sourceType}</span>. Every answer stands on its own and says where it came from &mdash; we never blend them into one score.</p>
                 </div>
               </>
             );

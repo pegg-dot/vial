@@ -51,7 +51,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16">
+      <section className="mx-auto max-w-[1320px] px-5 py-8 sm:px-8 sm:py-10">
         {items.length === 0 ? (
           <p className="ink rounded-[20px] bg-white px-6 py-16 text-center text-sm font-medium text-[var(--muted)]">No news on record yet.</p>
         ) : (

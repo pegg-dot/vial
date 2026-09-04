@@ -329,18 +329,21 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
         <h3 className="mt-8 text-[clamp(1.15rem,2vw,1.45rem)] font-extrabold tracking-[-.03em]">Which checks did we run, and what did each one find?</h3>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Each check comes from something you can read further down &mdash; a good result and a bad one both stay visible. Marked <span className="font-bold text-[#0a6b60]">Confirmed</span> (we hold the document), <span className="font-bold text-[#2b31d8]">Reported</span> (a source we cite), or <span className="font-bold text-black/55">Our guess</span>.</p>
-        <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-          {composed.factors.map((f) => (
-            <div key={f.label} className={`ink-1 flex items-start gap-3 rounded-[12px] p-3.5 ${f.ok === false ? "bg-[#fff5f4]" : f.ok === true ? "bg-[#f2fdfa]" : "bg-white"}`}>
-              <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-md ${f.ok === true ? "bg-[#12b3a6] text-white" : f.ok === false ? "bg-[#f5463d] text-white" : "bg-[#111214]/[.06] text-black/45"}`}>
-                {f.ok === true ? <Check className="size-3.5" /> : f.ok === false ? <X className="size-3.5" /> : <CircleDashed className="size-3.5" />}
+        {/* A ledger, not a card wall — the same label | stamp | answer rows the reputation matrix
+            below uses, so the two evidence readouts on this page share one shape. The old 3-across
+            cards spent more height on frames and trapped air than on findings. */}
+        <div className="ink-1 hard-sm mt-5 overflow-hidden rounded-[14px] bg-white">
+          {composed.factors.map((f, i) => (
+            <div key={f.label} className={`flex items-start gap-3 px-4 py-3 ${i > 0 ? "border-t border-[#111214]/10" : ""} ${f.ok === false ? "bg-[#fff5f4]" : ""}`}>
+              <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-md ${f.ok === true ? "bg-[#12b3a6] text-white" : f.ok === false ? "bg-[#f5463d] text-white" : "bg-[#111214]/[.06] text-black/45"}`}>
+                {f.ok === true ? <Check className="size-3" /> : f.ok === false ? <X className="size-3" /> : <CircleDashed className="size-3" />}
               </span>
-              <div>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <div className="grid min-w-0 flex-1 gap-x-4 gap-y-0.5 sm:grid-cols-[200px_1fr]">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 self-start">
                   <p className="text-[13px] font-extrabold tracking-[-.01em]">{signalLabel(f.label)}</p>
                   {f.confidence && <TierChip tier={f.confidence} />}
                 </div>
-                <p className="mt-0.5 text-[13px] font-medium leading-5 text-[var(--muted)]">{f.detail}</p>
+                <p className="text-[13px] font-medium leading-5 text-[var(--muted)]">{f.detail}</p>
               </div>
             </div>
           ))}
@@ -368,14 +371,14 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           Every section below renders whether or not we hold the evidence for it. A missing section
           reads as "nothing to see here"; the honest answer is "nobody has published this", and that
           gap is the single most useful thing this site can tell a buyer. */}
-      <section id="reputation" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-14 sm:px-8">
+      <section id="reputation" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-10 sm:px-8">
         <SectionHead eyebrow="Evidence, check by check" title="Where does the evidence hold up, and where is it missing?" />
         {reputation ? (
           <>
             <p className="mt-4 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
               Of the {reputation.dimensions.length} things we check on a vendor, {repEstablished} {repEstablished === 1 ? "is" : "are"} backed by evidence we can point at, {repDisputed} {repDisputed === 1 ? "needs" : "need"} a closer look, and {repUnknown} we simply don&rsquo;t know. Each card says which, and where it came from.
             </p>
-            <div className="mt-7"><VendorReputationTiles dimensions={reputation.dimensions} /></div>
+            <div className="mt-5"><VendorReputationTiles dimensions={reputation.dimensions} /></div>
             <p className="mt-5 max-w-3xl text-xs font-medium leading-5 text-[var(--muted)]">Each answer stands on its own and says where it came from. Where we don&rsquo;t have the evidence, it says so &mdash; we never invent a number or blend everything into one score.</p>
           </>
         ) : (
@@ -390,7 +393,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         {vendorLabTests.length > 0 ? (
           <LabTestsPanel tests={vendorLabTests} heading={`Has anyone independently tested ${vendor.name}?`} />
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8">
+          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
             <SectionHead eyebrow="Independent testing" title={`Has anyone independently tested ${vendor.name}?`} />
             <NoEvidence
               answer={`No independent lab certificate for ${vendor.name} is on record with us.`}
@@ -404,7 +407,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         {aggregatorRatings.length > 0 ? (
           <AggregatorRatingsPanel ratings={aggregatorRatings} vendorName={vendor.name} />
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8">
+          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
             <SectionHead eyebrow="Third-party aggregators" title={`What do other trackers say about ${vendor.name}?`} />
             <NoEvidence
               answer={`No independent peptide tracker we follow has published a rating for ${vendor.name}.`}
@@ -418,7 +421,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         {vendorSignals ? (
           <VendorSignalsPanel signals={vendorSignals} vendorName={vendor.name} />
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8">
+          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
             <SectionHead eyebrow="Operational signals" title={`What does ${vendor.name}’s own storefront tell us?`} />
             <NoEvidence
               answer={`We haven’t read ${vendor.name}’s own site into a record yet.`}
@@ -432,7 +435,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         {vendorReview ? (
           <VendorReviewsPanel review={vendorReview} vendorName={vendor.name} />
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8">
+          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
             <SectionHead eyebrow="What buyers say" title={`What do buyers report about ${vendor.name}?`} />
             <NoEvidence
               answer={`We haven’t gathered a buyer-review record for ${vendor.name}.`}
@@ -443,7 +446,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         {communitySignal ? (
           <CommunitySignalCard signal={communitySignal} vendorName={vendor.name} />
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-14 sm:px-8">
+          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
             <SectionHead eyebrow="Community" title={`What does r/Peptides say about ${vendor.name}?`} />
             <NoEvidence
               answer={`No r/Peptides discussion for ${vendor.name} has been captured.`}
@@ -457,7 +460,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           answer most readers came for, and the jump-nav chip used to land on an empty div. When
           there IS a record, the full detail stays in the alert at the top rather than being
           repeated here, because the alarm belongs above the fold. */}
-      <section id="enforcement" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-14 sm:px-8">
+      <section id="enforcement" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-10 sm:px-8">
         <SectionHead eyebrow="Regulators" title={`Has any regulator taken action against ${vendor.name}?`} />
         {enforcement.length > 0 ? (
           <div className="ink hard-sm mt-4 rounded-[16px] bg-[#fff1f0] p-4">
