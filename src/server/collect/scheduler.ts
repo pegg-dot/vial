@@ -29,6 +29,7 @@ import { fetchShopRating, ratingForDomain, normalizeDomain } from "./tracker-rat
 import { recordDomainAge, recordAggregatorRating } from "@/server/external/repository";
 import { importRscCatalog, productUrlsFromSitemap } from "@/server/ingest/rsc-storefront-import";
 import { collectJanoshikLive, collectJanoshikCapture } from "./lab-janoshik";
+import { reconcileVendorKinds } from "@/server/catalog/vendor-kind";
 import type { CollectorOutcome } from "./types";
 
 export type CollectorKind = "catalog-shopify" | "catalog-woo" | "catalog-rsc" | "vendor-status" | "domain-age" | "tracker-ratings" | "enforcement-openfda" | "news-feeds" | "lab-janoshik" | "lab-janoshik-capture";
@@ -83,6 +84,22 @@ function vendors(): KnownVendor[] {
   const raw = knownVendors as unknown;
   const list = Array.isArray(raw) ? raw : ((raw as { vendors?: unknown[] }).vendors ?? []);
   return (list as KnownVendor[]).filter(v => v?.slug && v?.domain);
+}
+
+/**
+ * The vendors a buyer can actually shop at, for kind classification.
+ *
+ * The offline script unioned the curated list with the vendors that publish their own COAs. Every
+ * one of those 15 slugs is already in the curated list, so the union is redundant and the curated
+ * list alone is the retail set — which is what makes this computable at runtime from the bundle.
+ *
+ * Red-flagged vendors stay in: a shop that committed fraud is still a shop, and demoting it to
+ * "upstream manufacturer" would quietly retire the warning the directory exists to show.
+ */
+function retailVendorSlugs(): Set<string> {
+  const raw = knownVendors as unknown;
+  const list = Array.isArray(raw) ? raw : ((raw as { vendors?: unknown[] }).vendors ?? []);
+  return new Set((list as Array<{ slug?: string }>).map((v) => v?.slug).filter((s): s is string => Boolean(s)));
 }
 
 /** Reconciles the queue against the curated vendor list. Idempotent; safe on every tick. */
@@ -443,6 +460,21 @@ export async function runCollectionTick(
       ran.push({ collector: t.collector, target: t.target, items: 0, ok: false, error: message });
     }
   }
+
+  // Storefront or upstream factory, decided every tick rather than by hand.
+  //
+  // `organizations.vendor_kind` defaults to 'storefront' at the schema level, and the only caller
+  // of the classifier was an offline script. So every vendor the lab feed discovers — the "Made By"
+  // party on a Janoshik certificate — kept that default forever: 41 Chinese contract factories
+  // (HH Peptide Factory, Guangzhou BoWei Peptide, Dankangpeptidesourcefactory…) were counted under
+  // "Shops you can buy from" and rendered as storefronts whose catalogue we had merely failed to
+  // capture. Nothing failed; a default was simply mistaken for an answer.
+  //
+  // It belongs here because both of its inputs move here: a catalogue import gives a vendor
+  // listings (making it a storefront), and the lab collector creates new vendors. Idempotent, one
+  // read plus an update only where the answer actually changed, so a vendor that later gains a
+  // catalogue flips back on its own.
+  await reconcileVendorKinds(db, retailVendorSlugs());
 
   // Every live listing this tick touched becomes today's observation — one statement, the only
   // writer of observation rows — and each compound's Δ is re-earned from those rows (spec D4/D6).
