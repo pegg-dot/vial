@@ -498,17 +498,22 @@ export async function runCollectionTick(
   // Keep the materialized grade in step with the evidence that just changed. Stale-first ordering
   // means the longest-unrated vendor is always next.
   //
-  // Sized to cover the WHOLE vendor list in a single run, deliberately. At 25 per run this was
-  // tuned for a collector that ran every 15 minutes — 96 runs a day, so the full list refreshed in
-  // under an hour. The cron is now daily, which silently turned the same numbers into a four-day
-  // lag: a grade correction would sit unpublished for days while directory cards kept serving the
-  // old verdict. That is unacceptable for the case that exposed it, where the stale grade was
-  // hiding a vendor's DOJ enforcement record behind a neutral chip.
+  // The size is a per-DAY budget, not a per-run one, and it has to be re-derived whenever the cron
+  // frequency moves. The history: 25 per run was tuned for a 15-minute collector (96 runs/day), and
+  // when the cron went daily the same number silently became a four-day lag — a grade correction
+  // sitting unpublished while directory cards served the old verdict, in the very case where the
+  // stale grade was hiding a vendor's DOJ enforcement record behind a neutral chip. It was then
+  // raised to 200 against an hourly cron.
+  //
+  // The cron is now every 30 minutes (48 runs/day), so 100 keeps the daily regrade volume exactly
+  // where the hourly schedule had it while still refreshing all ~124 vendors inside two ticks — one
+  // hour, the same freshness as before. Doubling the tick rate without halving this would have
+  // doubled the heaviest fixed cost in the tick for no gain in freshness.
   //
   // The budget still bounds it. maxDuration on this route is 120s and collection has already run
   // by this point, so 45s is headroom, not a gamble — and stale-first ordering means an exhausted
-  // budget simply resumes where it stopped tomorrow.
-  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: Math.min(45_000, Math.max(5_000, 110_000 - (Date.now() - started))), limit: 200 });
+  // budget simply resumes where it stopped next tick.
+  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: Math.min(45_000, Math.max(5_000, 110_000 - (Date.now() - started))), limit: 100 });
 
   return { ran, budgetExhausted, reindexed, observed, regraded: regrade.graded, durationMs: Date.now() - started };
 }

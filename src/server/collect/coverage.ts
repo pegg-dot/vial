@@ -12,9 +12,15 @@
 // storefront is in exactly one of three states, and they call for different work:
 //
 //   uncurated   — surfaced from lab records, never added to the curated list. Nothing has ever
-//                 looked at its storefront.
+//                 looked at its storefront. In production this is normally empty: `reconcileVendorKinds`
+//                 reclassifies exactly this population as manufacturers, and manufacturers are not
+//                 storefronts, so they leave this report. It stays reachable for demo vendors (which
+//                 reconciliation skips) and for the window before the first tick.
 //   no-method   — curated, polled for status/domain/ratings, but no import method was ever
 //                 identified, so its catalogue is never read.
+//   flagged     — red-flagged, and `syncCollectionTargets` filters those out of EVERY collector,
+//                 not just the catalogue ones. Nothing polls them at all, and no import flag would
+//                 change that, so this must not be reported as an identification problem.
 //   collecting  — a catalog collector exists; zero listings means it has not succeeded YET, and
 //                 the "collectors needing attention" table is the place that says why.
 //
@@ -23,7 +29,7 @@
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import knownVendors from "@/server/verify/known-vendors.json";
 
-export type CoverageState = "uncurated" | "no-method" | "collecting";
+export type CoverageState = "uncurated" | "no-method" | "flagged" | "collecting";
 
 export interface UngradableStorefront {
   slug: string;
@@ -36,7 +42,6 @@ export interface UngradableStorefront {
 
 export interface CatalogCoverage {
   storefronts: number;
-  withListings: number;
   ungradable: UngradableStorefront[];
   counts: Record<CoverageState, number>;
 }
@@ -66,9 +71,10 @@ export function hasImportMethod(vendor: CuratedVendor): boolean {
 export function coverageState(slug: string, list: CuratedVendor[] = curated()): CoverageState {
   const entry = list.find((v) => v.slug === slug);
   if (!entry) return "uncurated";
-  // A red-flagged vendor is deliberately excluded from every collector by `syncCollectionTargets`,
-  // so it is never "collecting" however its import flags read.
-  if (entry.redFlag) return "no-method";
+  // `syncCollectionTargets` filters red-flagged vendors out of EVERY collector. Calling this
+  // "no-method" told the reader we poll them for status and merely lack a catalogue reader — we
+  // poll them for nothing — and offered a remediation (set an import flag) that cannot move them.
+  if (entry.redFlag) return "flagged";
   return hasImportMethod(entry) ? "collecting" : "no-method";
 }
 
@@ -76,6 +82,11 @@ export async function getCatalogCoverage(connection?: SqlConnection): Promise<Ca
   const db = connection ?? await getDatabase();
   // Same listings predicate the vendor surfaces count with (`p.status='active'`), so this panel and
   // the directory can never disagree about who has a catalogue.
+  //
+  // `classifyVendorKind`, which decides who is even eligible for this query, deliberately uses a
+  // LOOSER test — any `products` row, active or not. That disagreement resolves in the safe
+  // direction: a storefront whose catalogue went inactive stays a storefront and keeps showing up
+  // here as something to fix, rather than being silently demoted to a factory.
   const rows = (await db.query<{ slug: string; display_name: string; listings: string; coas: string }>(
     `SELECT o.slug, o.display_name,
             (SELECT COUNT(*) FROM listings l JOIN products p ON p.id=l.product_id
@@ -88,12 +99,11 @@ export async function getCatalogCoverage(connection?: SqlConnection): Promise<Ca
   )).rows;
 
   const list = curated();
-  const counts: Record<CoverageState, number> = { uncurated: 0, "no-method": 0, collecting: 0 };
+  const counts: Record<CoverageState, number> = { uncurated: 0, "no-method": 0, flagged: 0, collecting: 0 };
   const ungradable: UngradableStorefront[] = [];
-  let withListings = 0;
 
   for (const row of rows) {
-    if (Number(row.listings) > 0) { withListings += 1; continue; }
+    if (Number(row.listings) > 0) continue;
     const state = coverageState(row.slug, list);
     counts[state] += 1;
     const note = list.find((v) => v.slug === row.slug)?.catalogNote ?? null;
@@ -102,8 +112,8 @@ export async function getCatalogCoverage(connection?: SqlConnection): Promise<Ca
 
   // Worst first: a curated vendor we poll but never read is a smaller fix than curating a new one,
   // and a collector already trying is the admin table's business, not this panel's.
-  const order: Record<CoverageState, number> = { "no-method": 0, uncurated: 1, collecting: 2 };
+  const order: Record<CoverageState, number> = { "no-method": 0, uncurated: 1, flagged: 2, collecting: 3 };
   ungradable.sort((a, b) => order[a.state] - order[b.state] || b.coaCount - a.coaCount || a.name.localeCompare(b.name));
 
-  return { storefronts: rows.length, withListings, ungradable, counts };
+  return { storefronts: rows.length, ungradable, counts };
 }

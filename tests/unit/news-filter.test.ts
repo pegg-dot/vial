@@ -161,10 +161,24 @@ describe("leadFirst", () => {
     expect(ordered.map((r) => r.id)).toEqual(["n", "f", "b", "t"]);
   });
 
-  it("leads with the newest record when the reader has filtered to forums only", () => {
-    // Nothing to over-amplify: this view is exactly what was asked for.
+  it("promotes nothing when the result set holds no source we would stand behind", () => {
+    // This is what a reader filtered to forums sees. The mechanism is "nothing strong present",
+    // not knowledge of the filter — the function is handed rows, not filter state.
     const forums = [forum, row({ id: "f2", source_type: "forum", news_date: "2026-03-01" })];
     expect(leadFirst(forums).map((r) => r.id)).toEqual(["f", "f2"]);
+  });
+
+  it("will not reach past the top of the feed for a lead", () => {
+    // Five newer weak records, then an old primary document. Promoting it would head the front
+    // page with a headline older than everything printed beneath it.
+    const weak = Array.from({ length: 6 }, (_, i) => row({ id: `w${i}`, source_type: "blog", news_date: `2026-06-0${i + 1}` }));
+    const stale = row({ id: "old", source_type: "trade", news_date: "2024-01-01" });
+    expect(leadFirst([...weak, stale]).map((r) => r.id)[0]).toBe("w0");
+  });
+
+  it("still promotes a credible record that is only just below the top", () => {
+    const weak = [row({ id: "w0", source_type: "forum" }), row({ id: "w1", source_type: "blog" })];
+    expect(leadFirst([...weak, trade]).map((r) => r.id)).toEqual(["t", "w0", "w1"]);
   });
 
   it("handles an empty and a single-record feed", () => {

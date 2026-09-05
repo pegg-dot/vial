@@ -214,13 +214,13 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
   const filtered = hasActiveVendorFilters(filters);
   const shown = ranked.slice(0, visible);
   // The legend explains the exact words on screen, read back off the same function that renders
-  // them. Deriving it from vendor kind instead would print a definition for a term no row shows
-  // (a maker WITH listings is graded on the buyer scale, so it reads "Not rated", not "Not a shop").
+  // them, so it can never define a term no row shows. Deriving it from vendor kind instead would
+  // have to re-implement `gradeStandIn`'s branches and would drift the moment either side moved.
   const standIns = useMemo(() => new Set(
-    shown
+    ranked.slice(0, visible)
       .filter((entry) => !entry.vendor.grade?.letter || entry.vendor.grade.band === "reference")
       .map((entry) => gradeStandIn(entry.vendor).word),
-  ), [shown]);
+  ), [ranked, visible]);
 
   function reset() {
     setQuery("");
@@ -268,7 +268,6 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
             onChange={(event) => applyQuery(event.target.value)}
             placeholder="Search a vendor by name or where it ships from"
             aria-label="Search vendors"
-            title="Names match with or without spacing — “swisschems” finds Swiss Chems. Search reads the name, URL, and location, never marketing copy."
             className="min-w-0 flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--muted)]"
           />
           {query && (
@@ -303,6 +302,10 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
           </button>
         )}
       </div>
+
+      <p className="mt-2 text-[11px] font-medium text-[var(--muted)]">
+        Names match with or without spacing &mdash; &ldquo;swisschems&rdquo; finds Swiss Chems. Search reads the name, URL, and location, never marketing copy.
+      </p>
 
       {ranked.length === 0 ? (
         <div className="ink hard-sm mt-4 rounded-[16px] bg-white px-6 py-14 text-center">

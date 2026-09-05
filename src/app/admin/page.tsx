@@ -58,10 +58,8 @@ export default async function AdminPage() {
     sweep: sweepHealth ? { lastRanAt: sweepHealth.lastRanAt, lastOk: sweepHealth.lastOk, backlogReaders: sweepHealth.backlogReaders, healthy: isSweepHealthy(sweepHealth), keepingUp: isSweepKeepingUp(sweepHealth) } : null,
   });
 
-  const coverage = await getCatalogCoverage().catch(() => null);
-
   const gscPromise = getSearchConsoleSummary();
-  const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy] = await Promise.all([
+  const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy, coverage] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getVisitorSummary({ days: 30 }),
     getPeopleOverview({ recentDays: 7 }),
@@ -90,6 +88,7 @@ export default async function AdminPage() {
     // By NAME. The per-kind table above collapses two failing vendors into one row, which is how
     // "2 failing" on /status could not be turned into two names.
     getUnhealthyCollectorTargets(db).catch(() => []),
+    getCatalogCoverage().catch(() => null),
   ]);
 
   const { totals, vendors } = attribution;
@@ -483,6 +482,7 @@ export default async function AdminPage() {
                 emptied and this paragraph was reporting "0 were surfaced from lab records". */}
             {coverage.counts["no-method"] > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts["no-method"]}</span> are curated and polled for status, but no catalogue import method was ever identified &mdash; nothing reads their storefront.</>}
             {coverage.counts.uncurated > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.uncurated}</span> were surfaced from lab records and never curated.</>}
+            {coverage.counts.flagged > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.flagged}</span> are red-flagged and deliberately excluded from every collector &mdash; nothing polls them at all, and no import flag would change that.</>}
             {coverage.counts.collecting > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.collecting}</span> have a collector that has not yet succeeded &mdash; those appear above.</>}
           </p>
           <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
@@ -495,17 +495,17 @@ export default async function AdminPage() {
               </thead>
               <tbody className="divide-y divide-[#111214]/10">
                 {coverage.ungradable.slice(0, 40).map((row) => (
-                  <tr key={row.slug} className={row.state === "no-method" ? "bg-[#fff4e0]" : undefined}>
+                  <tr key={row.slug} className={row.state === "no-method" ? "bg-[#fff4e0]" : row.state === "flagged" ? "bg-[#f3f3f3]" : undefined}>
                     <td className="px-5 py-3 font-bold">{row.name}</td>
                     <td className="px-5 py-3 text-xs font-bold">
-                      {row.state === "no-method" ? "Curated, but no import method" : row.state === "uncurated" ? "Never curated" : "Collector has not succeeded yet"}
+                      {row.state === "no-method" ? "Curated, but no import method" : row.state === "uncurated" ? "Never curated" : row.state === "flagged" ? "Red-flagged — not collected at all" : "Collector has not succeeded yet"}
                     </td>
                     <td className="px-5 py-3 text-xs tabular-nums">{row.coaCount || "—"}</td>
                     <td className="px-5 py-3 text-xs text-[var(--muted)]">
                       {/* The note is what a probe actually found. Without it this column could only
                           repeat the generic instruction, and the next person would re-probe a
                           storefront we already know answers 401. */}
-                      {row.note ?? (row.state === "no-method" ? "Identify how its catalogue can be read, then set the flag in known-vendors.json" : row.state === "uncurated" ? "Add it to known-vendors.json with a domain" : "See the attention table above")}
+                      {row.note ?? (row.state === "no-method" ? "Identify how its catalogue can be read, then set the flag in known-vendors.json" : row.state === "uncurated" ? "Add it to known-vendors.json with a domain" : row.state === "flagged" ? "Nothing — it is excluded on purpose. Clearing the red flag would re-enable collection." : "See the attention table above")}
                     </td>
                   </tr>
                 ))}

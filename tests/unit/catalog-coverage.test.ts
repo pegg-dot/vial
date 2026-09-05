@@ -29,10 +29,12 @@ describe("coverageState", () => {
     }
   });
 
-  it("never reports a red-flagged vendor as collecting", () => {
-    // `syncCollectionTargets` filters red-flagged vendors out of every collector, so calling this
-    // one "collecting" would send someone to look for a failing job that was never enqueued.
-    expect(coverageState("flagged", list)).toBe("no-method");
+  it("reports a red-flagged vendor as flagged, not as a missing importer", () => {
+    // `syncCollectionTargets` filters red-flagged vendors out of EVERY collector. Calling this
+    // "collecting" would send someone hunting a job that was never enqueued; calling it
+    // "no-method" would claim we poll it for status (we do not) and offer a remediation — set an
+    // import flag — that cannot move it. Both readings send the operator somewhere useless.
+    expect(coverageState("flagged", list)).toBe("flagged");
   });
 });
 

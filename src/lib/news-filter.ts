@@ -151,14 +151,24 @@ const STRONG_SOURCES = new Set(["trade", "news"]);
  * The lead is the largest piece of type on the site. Handing it to whatever happens to be newest
  * would let an unconfirmed forum post run a 44px headline about a named business — the exact
  * amplification this product exists to prevent, and a chip reading "Forum" underneath does not
- * undo it. When the reader has explicitly filtered TO those weaker sources there is nothing to
- * amplify past what they asked for, so the newest item leads as normal.
+ * undo it.
  *
- * Rows arrive already sorted newest-first by the query (`ORDER BY news_date DESC NULLS LAST`).
+ * Two bounds, both deliberate:
+ *
+ * - The search stops after LEAD_SEARCH_WINDOW rows. Rows arrive newest-first, so promoting a
+ *   record from deep in the feed would hand the front page a headline older than everything under
+ *   it — a stale lead is its own kind of dishonesty. Past that window the newest record leads and
+ *   carries its own source chip, which is what that chip is for.
+ * - If no row inside the window is one we would stand behind, nothing is promoted. That covers the
+ *   reader who has filtered TO forums: their result set contains nothing stronger, so the newest
+ *   leads, which is exactly what they asked to see. Note the mechanism is "no strong source in the
+ *   window", not knowledge of the filters — this function is given rows, not filter state.
  */
+const LEAD_SEARCH_WINDOW = 5;
+
 export function leadFirst(rows: NewsRow[]): NewsRow[] {
   if (rows.length < 2 || STRONG_SOURCES.has(rows[0].source_type)) return rows;
-  const lead = rows.findIndex((row) => STRONG_SOURCES.has(row.source_type));
+  const lead = rows.slice(0, LEAD_SEARCH_WINDOW).findIndex((row) => STRONG_SOURCES.has(row.source_type));
   if (lead < 1) return rows;
   return [rows[lead], ...rows.slice(0, lead), ...rows.slice(lead + 1)];
 }

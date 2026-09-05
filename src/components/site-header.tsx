@@ -38,7 +38,7 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-full px-3 py-2 text-sm font-bold transition ${
+                className={`shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold transition ${
                   active ? "bg-[#111214] text-white" : "text-[var(--muted)] hover:bg-black/[.06] hover:text-black"
                 }`}
               >

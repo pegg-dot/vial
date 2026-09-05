@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getDatabase, resetDatabaseForTests } from "@/server/db/client";
 import { getCatalogCoverage } from "@/server/collect/coverage";
+import { runCollectionTick } from "@/server/collect/scheduler";
 
 process.env.VIALGRADE_PGLITE_MEMORY = "true";
 process.env.VIALGRADE_SESSION_SECRET = "coverage-test-secret-at-least-32-characters-long";
@@ -50,6 +51,32 @@ describe("catalog coverage", () => {
     expect(coverage.counts.uncurated).toBeGreaterThanOrEqual(2);
     expect(coverage.storefronts).toBeGreaterThanOrEqual(4);
   });
+
+  // The two halves of this work meet here, and the meeting point is easy to get wrong: a vendor
+  // known only to the lab feed is BOTH "uncurated" to this report and "a manufacturer" to
+  // `reconcileVendorKinds`. Asserting the uncurated state without running a tick would pin a state
+  // production destroys one call later, and the report would look like it names a population it
+  // no longer sees.
+  it("hands an uncurated lab-feed vendor over to kind reconciliation, which removes it from this report", async () => {
+    const before = await getCatalogCoverage();
+    expect(before.ungradable.find((r) => r.slug === "another-uncurated")?.state).toBe("uncurated");
+
+    await runCollectionTick({ budgetMs: 1, maxTargets: 0 });
+
+    const after = await getCatalogCoverage();
+    // It is not a storefront at all, so it is not a storefront that cannot be graded.
+    expect(after.ungradable.some((r) => r.slug === "another-uncurated")).toBe(false);
+    // The curated ones stay: they are real shops we simply cannot read.
+    expect(after.ungradable.find((r) => r.slug === "loti-labs")?.state).toBe("no-method");
+  }, 120000);
+
+  it("separates a red-flagged vendor from one merely lacking an importer", async () => {
+    // syncCollectionTargets filters red-flagged vendors out of EVERY collector, so reporting one
+    // as "curated and polled, just no catalogue reader" is false twice over.
+    await addVendor("paradigm-peptides", "Paradigm Peptides", "storefront");
+    const coverage = await getCatalogCoverage();
+    expect(coverage.ungradable.find((r) => r.slug === "paradigm-peptides")?.state).toBe("flagged");
+  }, 120000);
 
   it("leaves manufacturers out — the buyer grade scale never applied to them", async () => {
     // Over half of production's directory is makers. Counting them as a coverage failure would

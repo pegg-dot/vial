@@ -81,7 +81,10 @@ export function NewsFeed({ items, initialQuery = "", initialSourceTypes = [], in
   function applyQuery(next: string) { setQuery(next); setVisible(PAGE); }
   function applySourceType(type: string) { setSourceTypes((current) => toggle(current, type)); setVisible(PAGE); }
   function applyTopic(id: NewsTopicId) { setTopics((current) => toggle(current, id)); setVisible(PAGE); }
-  function addTopic(id: NewsTopicId) { setTopics((current) => (current.includes(id) ? current : [...current, id])); setVisible(PAGE); }
+  // A story's topic pills toggle, exactly like the facet chips above them. They used to only ADD,
+  // which made an already-active pill a dead control — and once it advertised `aria-pressed` that
+  // became a promise the handler did not keep.
+  function addTopic(id: NewsTopicId) { applyTopic(id); }
 
   const active = hasActiveNewsFilters(filters);
 
@@ -222,13 +225,14 @@ function TopicRow({ item, onTopic, activeTopics, inline = false }: { item: NewsR
   if (rowTopics.length === 0) return null;
   const pills = rowTopics.map((id) => {
     const topic = NEWS_TOPICS.find((t) => t.id === id)!;
+    const on = activeTopics.includes(id);
     return (
       <button
         key={id}
         onClick={() => onTopic(id)}
-        title={`Filter to: ${topic.note}`}
-        aria-pressed={activeTopics.includes(id)}
-        className="ink-1 rounded-full bg-[#fff3f1] px-2.5 py-1 text-[10px] font-bold text-[#d3372c] transition hover:-translate-y-0.5"
+        title={on ? `Stop filtering to: ${topic.note}` : `Filter to: ${topic.note}`}
+        aria-pressed={on}
+        className={`ink-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition hover:-translate-y-0.5 ${on ? "bg-[#d3372c] text-white" : "bg-[#fff3f1] text-[#d3372c]"}`}
       >
         {topic.label}
       </button>
