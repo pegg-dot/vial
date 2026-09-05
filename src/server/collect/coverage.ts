@@ -30,6 +30,8 @@ export interface UngradableStorefront {
   name: string;
   state: CoverageState;
   coaCount: number;
+  /** Why no importer can read this storefront, recorded on the curated entry when we probed it. */
+  note: string | null;
 }
 
 export interface CatalogCoverage {
@@ -42,6 +44,8 @@ export interface CatalogCoverage {
 interface CuratedVendor {
   slug?: string; domain?: string; redFlag?: boolean;
   productsJsonWorks?: boolean; wooWorks?: boolean; rscWorks?: boolean;
+  /** Set when a storefront was probed and found unreadable, so nobody re-probes it blind. */
+  catalogNote?: string;
 }
 
 function curated(): CuratedVendor[] {
@@ -92,7 +96,8 @@ export async function getCatalogCoverage(connection?: SqlConnection): Promise<Ca
     if (Number(row.listings) > 0) { withListings += 1; continue; }
     const state = coverageState(row.slug, list);
     counts[state] += 1;
-    ungradable.push({ slug: row.slug, name: row.display_name, state, coaCount: Number(row.coas) });
+    const note = list.find((v) => v.slug === row.slug)?.catalogNote ?? null;
+    ungradable.push({ slug: row.slug, name: row.display_name, state, coaCount: Number(row.coas), note });
   }
 
   // Worst first: a curated vendor we poll but never read is a smaller fix than curating a new one,

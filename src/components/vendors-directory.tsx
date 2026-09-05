@@ -153,7 +153,11 @@ function VendorRow({ entry, rank, activeCol }: { entry: VendorDirectoryEntry; ra
     >
       <span aria-hidden="true" className="w-7 shrink-0 text-right text-[13px] font-extrabold tabular-nums text-[var(--muted)]">{rank}</span>
       <VendorMark initials={v.initials} accent={v.accent} size="sm" />
-      <div aria-hidden="true" className="min-w-0 flex-1">
+      {/* Deliberately NOT aria-hidden. The row's `aria-label` names the link, but hiding this block
+          too would strip every vendor name out of the heading tree — and jumping heading to heading
+          is how a screen-reader user scans a directory. The numeric cells below stay hidden because
+          the label already says them in words. */}
+      <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <h3 className="truncate text-[15px] font-extrabold leading-5 tracking-[-.02em]">{v.name}</h3>
           {v.origin === "live" && <DataOriginBadge origin="live" compact />}

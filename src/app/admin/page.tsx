@@ -478,9 +478,12 @@ export default async function AdminPage() {
               invisible in the table above — most have no catalog collector enqueued at all. */}
           <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
             <span className="font-extrabold text-[#111214]">{coverage.ungradable.length} of {coverage.storefronts}</span> storefronts have no catalogue on record, so the grade scale has nothing to rate and the directory shows them as &ldquo;No listings&rdquo;.
-            {" "}<span className="font-bold text-[#111214]">{coverage.counts["no-method"]}</span> are curated and polled for status, but no catalogue import method was ever identified &mdash; nothing reads their storefront.
-            {" "}<span className="font-bold text-[#111214]">{coverage.counts.uncurated}</span> were surfaced from lab records and never curated.
-            {coverage.counts.collecting > 0 && <> {coverage.counts.collecting} have a collector that has not yet succeeded &mdash; those appear above.</>}
+            {/* Each clause appears only when it has something to describe. Once vendor-kind
+                reconciliation moved the lab-feed factories out of this list, the uncurated bucket
+                emptied and this paragraph was reporting "0 were surfaced from lab records". */}
+            {coverage.counts["no-method"] > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts["no-method"]}</span> are curated and polled for status, but no catalogue import method was ever identified &mdash; nothing reads their storefront.</>}
+            {coverage.counts.uncurated > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.uncurated}</span> were surfaced from lab records and never curated.</>}
+            {coverage.counts.collecting > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.collecting}</span> have a collector that has not yet succeeded &mdash; those appear above.</>}
           </p>
           <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
             <table className="w-full min-w-[720px] text-left text-sm">
@@ -499,7 +502,10 @@ export default async function AdminPage() {
                     </td>
                     <td className="px-5 py-3 text-xs tabular-nums">{row.coaCount || "—"}</td>
                     <td className="px-5 py-3 text-xs text-[var(--muted)]">
-                      {row.state === "no-method" ? "Identify how its catalogue can be read, then set the flag in known-vendors.json" : row.state === "uncurated" ? "Add it to known-vendors.json with a domain" : "See the attention table above"}
+                      {/* The note is what a probe actually found. Without it this column could only
+                          repeat the generic instruction, and the next person would re-probe a
+                          storefront we already know answers 401. */}
+                      {row.note ?? (row.state === "no-method" ? "Identify how its catalogue can be read, then set the flag in known-vendors.json" : row.state === "uncurated" ? "Add it to known-vendors.json with a domain" : "See the attention table above")}
                     </td>
                   </tr>
                 ))}

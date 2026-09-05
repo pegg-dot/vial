@@ -42,6 +42,10 @@ describe("catalog coverage", () => {
     // Enabling a vendor's importer must move it out of that bucket — the whole point of doing so.
     expect(bySlug.get("chemyo")?.state).toBe("collecting");
     expect(bySlug.get("surfaced-from-a-coa")?.state).toBe("uncurated");
+    // The probe result must reach the panel. A field written into known-vendors.json and rendered
+    // back nowhere is the same as not having probed at all — the next person re-probes it blind.
+    expect(bySlug.get("loti-labs")?.note).toMatch(/401|authenticat/i);
+    expect(bySlug.get("surfaced-from-a-coa")?.note).toBeNull();
     expect(coverage.counts["no-method"]).toBeGreaterThanOrEqual(1);
     expect(coverage.counts.uncurated).toBeGreaterThanOrEqual(2);
     expect(coverage.storefronts).toBeGreaterThanOrEqual(4);
