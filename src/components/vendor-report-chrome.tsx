@@ -35,7 +35,12 @@ export function JumpNav({ items, identity }: { items: Array<{ id: string; label:
   }, [items]);
 
   return (
-    <div className="sticky top-[71px] z-30 border-y-2 border-[#111214] bg-[rgba(247,247,244,.9)] backdrop-blur">
+    // The gap lives on the nav, not on the section above it. Whatever precedes this bar varies —
+    // the verdict ledger, or the alert group when a vendor has one — and both ended flush against
+    // its top border, close enough that the ledger's hard shadow touched it. Putting the space here
+    // covers either case and cannot double up with the alert section's own top padding. It only
+    // applies in normal flow; once the bar sticks, `top` governs.
+    <div className="sticky top-[71px] z-30 mt-10 border-y-2 border-[#111214] bg-[rgba(247,247,244,.9)] backdrop-blur">
       <div className="mx-auto max-w-[1320px] overflow-x-auto px-5 no-scrollbar sm:px-8">
         <div className="flex items-center gap-1 py-2.5">
           {identity && (
