@@ -1,9 +1,12 @@
 // Filtering and topic derivation for /news. Pure, so the same code runs in the server render and in
 // the client filter, and so the topic table can be tested against the real corpus.
 //
-// `news_items` has exactly one classification column — `source_type`, four values (see
-// src/server/collect/news.ts SOURCE_TYPES). There is no tag, topic, or keyword column, and no
-// full-text index. Topics here are therefore DERIVED from the headline and summary, never sourced.
+// `news_items` has exactly one classification column — `source_type`, a bare TEXT column defaulting
+// to 'news' with no CHECK constraint (src/server/db/external-data-schema.ts). Its four meaningful
+// values are enumerated by `SOURCE_META` below, which is therefore the authority on what a value
+// means and what weight it carries; the curated baseline sets `sourceType` per item and the live
+// government feeds in src/server/collect/news.ts store their own. There is no tag, topic, or
+// keyword column, and no full-text index. Topics here are therefore DERIVED from the headline and summary, never sourced.
 // The UI says so: a derived label must not read like a publisher's own classification.
 //
 // Rules for the keyword table:
