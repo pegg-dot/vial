@@ -62,6 +62,9 @@ export async function GET() {
     ...STATIC_PAGES.map(([path, freq, pri]) => urlEntry(path, freq, pri, lastmod)),
     ...(catalog?.products ?? []).map((p) => urlEntry(`/products/${p.slug}`, "daily", 0.8, lastmod)),
     ...(catalog?.compounds ?? []).map((c) => urlEntry(`/compounds/${c.slug}`, "weekly", 0.75, lastmod)),
+    // The full per-compound market. Its own indexable page because "every X listing, sorted by
+    // real cost" is a distinct query from the compound overview, and it changes with prices.
+    ...(catalog?.compounds ?? []).filter((c) => c.listings > 0).map((c) => urlEntry(`/compounds/${c.slug}/market`, "daily", 0.7, lastmod)),
     ...(catalog?.vendors ?? []).map((v) => urlEntry(`/vendors/${v.slug}`, "weekly", 0.7, lastmod)),
     // Only stacks whose components the catalog actually tracks — the page 404s otherwise.
     ...STACKS.filter((s) => catalog && resolveStack(s, catalog.compounds) !== null).map((s) => urlEntry(`/stacks/${s.slug}`, "weekly", 0.65, lastmod)),

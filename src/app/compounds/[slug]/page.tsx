@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3 } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BookOpen, ChartNoAxesCombined, CircleAlert, FileSearch, Layers3 } from "lucide-react";
 import { ArtMolecule, ArtDroplet } from "@/components/vial-art";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
@@ -181,10 +181,18 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           <section className="mx-auto max-w-[1320px] px-5 pt-6 sm:px-8">
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Current market</p>
             <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">The {compound.name} market</h2>
-            <p className="mb-7 mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Every {compound.name} listing we track &mdash; {listings.length} in all. The standout picks first where the evidence supports them, then the full table, ranked by what a milligram really costs wherever the vendor published a strength we can read.</p>
+            <div className="mb-7 mt-3 flex flex-wrap items-end justify-between gap-4">
+              <p className="max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Every {compound.name} listing we track &mdash; {listings.length} in all. The standout picks first where the evidence supports them, then the full table, ranked by what a milligram really costs wherever the vendor published a strength we can read.</p>
+              {/* The way out of the summary. Picks answer "which one?"; the full market answers
+                  "show me everything, my way" — sorted by real value, tested purity, how recently
+                  we read the store. */}
+              <Link href={`/compounds/${slug}/market`} className="ink hard-sm press inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111214] px-5 py-2.5 text-sm font-bold text-white">
+                Open full market <ArrowUpRight className="size-4" />
+              </Link>
+            </div>
             <TopPicks listings={listings} labTests={labTests} />
           </section>
-          <PriceLeaderboard compoundName={compound.name} listings={listings} labTests={labTests} />
+          <PriceLeaderboard compoundName={compound.name} marketHref={`/compounds/${slug}/market`} listings={listings} labTests={labTests} />
         </div>
       ) : null}
 

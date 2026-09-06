@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Crown, ExternalLink, TriangleAlert } from "lucide-react";
+import { ArrowUpRight, Crown, ExternalLink, TriangleAlert } from "lucide-react";
 import type { Product } from "@/lib/types";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { formatCurrency, formatMgTotal, formatPricePerMg } from "@/lib/format";
@@ -38,7 +38,7 @@ const AVAIL: Partial<Record<Product["availability"], { label: string; cls: strin
   Unavailable: { label: "Unavailable", cls: "text-[#d3372c]" },
 };
 
-export function PriceLeaderboard({ compoundName, listings, labTests }: { compoundName: string; listings: Product[]; labTests: LabTestRow[] }) {
+export function PriceLeaderboard({ compoundName, marketHref, listings, labTests }: { compoundName: string; marketHref?: string; listings: Product[]; labTests: LabTestRow[] }) {
   const { ranked, unranked } = splitByRankability(listings);
   // Ranked first, then the ones no per-mg figure can order — see `splitByRankability`. Nothing is
   // dropped: a vendor missing from the comparison reads as a vendor we do not know about.
@@ -164,6 +164,15 @@ export function PriceLeaderboard({ compoundName, listings, labTests }: { compoun
           />
         </table>
       </div>
+      {marketHref && (
+        // A reader who has scrolled the whole table is exactly the one who wants to sort it
+        // differently, so the way out sits at the end of it as well as at the top of the section.
+        <p className="mt-4">
+          <Link href={marketHref} className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold">
+            Open the full {compoundName} market <ArrowUpRight className="size-4" />
+          </Link>
+        </p>
+      )}
       <p className="mt-3 text-xs font-medium text-[var(--muted)]"><span className="font-bold text-[#0e8f80]">Real $/active mg</span> divides the price-per-mg by the measured purity — the honest cost of the actual peptide, so a 90%-pure vial isn&rsquo;t compared as if it were 99%. <span className="font-bold text-[#b26a00]">Too cheap?</span> flags a listing far below the market rate — often underdosing or a fake, not a deal. The crown marks the cheapest non-outlier; <span className="font-bold text-[#0e8f80]">best value</span> marks the lowest real cost per active mg. A vendor shown as <span className="font-bold text-[#d3372c]">Unavailable</span> or <span className="font-bold text-[#b26a00]">Low stock</span> is priced here but not currently buyable.</p>
     </section>
   );
