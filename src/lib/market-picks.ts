@@ -24,6 +24,24 @@ export interface TestRowLike {
 
 // A listing far below market rate is flagged by the canonical trust verdict; the crown and the
 // "cheapest" pick must both skip it — a too-cheap listing is a warning, not a deal.
+/**
+ * Split a compound's listings into the ones a price-per-mg ranking can order, and the ones it
+ * cannot — without losing any.
+ *
+ * A vendor who publishes "1 vial" with no strength gives us no milligrams to divide the price by,
+ * so that listing has no per-mg figure and cannot take a position in a cheapest-first table. It was
+ * previously filtered out of the comparison entirely, which meant /compounds/mots-c showed 30 rows
+ * under a heading that said "All 40 listings we track" and ten real vendors were unreachable from
+ * the page. Not being sortable is not a reason to be invisible.
+ *
+ * The invariant this exists to hold: ranked + unranked accounts for every listing handed in.
+ */
+export function splitByRankability(listings: Product[]): { ranked: Product[]; unranked: Product[] } {
+  const ranked = listings.filter((p) => p.pricePerMg != null && p.pricePerMg > 0).sort((a, b) => a.pricePerMg! - b.pricePerMg!);
+  const unranked = listings.filter((p) => !(p.pricePerMg != null && p.pricePerMg > 0));
+  return { ranked, unranked };
+}
+
 export function isSuspicious(p: Product): boolean {
   return p.trust?.priceFlag === "too-cheap";
 }

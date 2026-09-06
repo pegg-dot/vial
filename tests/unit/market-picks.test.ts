@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { independentPurityByVendor, independentTestCountByVendor, isSuspicious, pickTopListings, type PickKey } from "@/lib/market-picks";
+import { independentPurityByVendor, independentTestCountByVendor, isSuspicious, pickTopListings, splitByRankability, type PickKey } from "@/lib/market-picks";
 import type { Product } from "@/lib/types";
 
 // Minimal listing fixture — only the fields the pick logic reads carry meaning.
@@ -126,5 +126,44 @@ describe("helpers", () => {
   it("isSuspicious reads the canonical trust flag", () => {
     expect(isSuspicious(listing({ slug: "a", vendor: "v", perMg: 1, tooCheap: true }))).toBe(true);
     expect(isSuspicious(listing({ slug: "b", vendor: "v", perMg: 1 }))).toBe(false);
+  });
+});
+
+// /compounds/mots-c listed 40 listings in its own heading and put 30 in the comparison table. The
+// ten missing ones were real vendors — Behemoth Labz, Cernum, Simple Peptide — dropped for having
+// no published strength, which made them unreachable from the page rather than merely unsortable.
+describe("splitByRankability", () => {
+  it("accounts for every listing handed in", () => {
+    const listings = [
+      listing({ slug: "a", vendor: "v1", perMg: 3 }),
+      listing({ slug: "b", vendor: "v2" }),                    // no per-mg: "1 vial", no strength
+      listing({ slug: "c", vendor: "v3", perMg: 1 }),
+      listing({ slug: "d", vendor: "v4" }),
+    ];
+    const { ranked, unranked } = splitByRankability(listings);
+    expect(ranked.length + unranked.length).toBe(listings.length);
+    expect([...ranked, ...unranked].map((p) => p.slug).sort()).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("orders the rankable ones cheapest per mg first", () => {
+    const { ranked } = splitByRankability([
+      listing({ slug: "dear", vendor: "v1", perMg: 9 }),
+      listing({ slug: "cheap", vendor: "v2", perMg: 2 }),
+      listing({ slug: "mid", vendor: "v3", perMg: 5 }),
+    ]);
+    expect(ranked.map((p) => p.slug)).toEqual(["cheap", "mid", "dear"]);
+  });
+
+  it("keeps a listing whose price we know but whose size we cannot read", () => {
+    const { ranked, unranked } = splitByRankability([listing({ slug: "sized", vendor: "v1", perMg: 4 }), listing({ slug: "vial-only", vendor: "v2" })]);
+    expect(ranked.map((p) => p.slug)).toEqual(["sized"]);
+    expect(unranked.map((p) => p.slug)).toEqual(["vial-only"]);
+  });
+
+  it("treats a zero or negative per-mg as unrankable rather than cheapest", () => {
+    // A $0.00/mg row sorting to the top of a "cheapest" table is the failure this guards.
+    const { ranked, unranked } = splitByRankability([listing({ slug: "zero", vendor: "v1", perMg: 0 }), listing({ slug: "real", vendor: "v2", perMg: 6 })]);
+    expect(ranked.map((p) => p.slug)).toEqual(["real"]);
+    expect(unranked.map((p) => p.slug)).toEqual(["zero"]);
   });
 });
