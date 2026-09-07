@@ -15,6 +15,7 @@ import { getSearchConsoleSummary, isSearchConsoleConfigured } from "@/server/seo
 import { getCatalogCoverage } from "@/server/collect/coverage";
 import { getVisitorSummary } from "@/server/analytics/visitors";
 import { getPeopleOverview } from "@/server/admin/people";
+import { listVerifyDemand } from "@/server/verify/query-log";
 import { getDatabase } from "@/server/db/client";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +60,7 @@ export default async function AdminPage() {
   });
 
   const gscPromise = getSearchConsoleSummary();
-  const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy, coverage] = await Promise.all([
+  const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy, coverage, verifyDemand] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getVisitorSummary({ days: 30 }),
     getPeopleOverview({ recentDays: 7 }),
@@ -89,6 +90,7 @@ export default async function AdminPage() {
     // "2 failing" on /status could not be turned into two names.
     getUnhealthyCollectorTargets(db).catch(() => []),
     getCatalogCoverage().catch(() => null),
+    listVerifyDemand({ limit: 40 }),
   ]);
 
   const { totals, vendors } = attribution;
@@ -421,6 +423,49 @@ export default async function AdminPage() {
           <div className="h-4" />
         </div>
       )}
+
+      {/* The demand signal /verify generates, which used to be discarded on every call.
+          Untracked domains first: a shop we already cover being checked often is interesting, a
+          shop we do NOT cover being checked often is a decision waiting to be made. No request
+          context is stored anywhere behind this — see server/verify/query-log.ts. */}
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">What buyers are checking</h2>
+      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+        Every query typed into /verify that resolved to something, most-checked first. A domain here
+        that we do not track is a vendor buyers are about to spend money at and we hold nothing on
+        &mdash; that is the list worth working down. A count climbing fast is a link circulating.
+      </p>
+      <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+        <table className="w-full min-w-[720px] text-left text-sm">
+          <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+            <tr>
+              <th className="px-5 py-3">Query</th><th className="px-5 py-3">Checks</th>
+              <th className="px-5 py-3">Resolved as</th><th className="px-5 py-3">Last verdict</th>
+              <th className="px-5 py-3">First asked</th><th className="px-5 py-3">Last asked</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#111214]/10">
+            {verifyDemand.length === 0 && (
+              <tr><td colSpan={6} className="px-5 py-8 text-center text-sm font-medium text-[var(--muted)]">
+                Nothing checked yet. Rows appear the first time someone uses /verify.
+              </td></tr>
+            )}
+            {verifyDemand.map((q) => (
+              <tr key={q.display} className={q.kind === "unknown-domain" ? "bg-[#fff6e6]" : undefined}>
+                <td className="px-5 py-3 font-mono text-[13px] font-bold">{q.display}</td>
+                <td className="px-5 py-3 font-extrabold tabular-nums">{q.checks.toLocaleString()}</td>
+                <td className="px-5 py-3">
+                  <span className="ink-1 rounded-full bg-[#f2f2ef] px-2 py-1 text-[11px] font-bold uppercase tracking-[.08em]">
+                    {q.kind === "unknown-domain" ? "not tracked" : q.kind}
+                  </span>
+                </td>
+                <td className="px-5 py-3 font-semibold">{q.lastVerdict}</td>
+                <td className="px-5 py-3 tabular-nums text-[var(--muted)]">{when(q.firstSeenAt)}</td>
+                <td className="px-5 py-3 tabular-nums text-[var(--muted)]">{when(q.lastSeenAt)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Is the data healthy?</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

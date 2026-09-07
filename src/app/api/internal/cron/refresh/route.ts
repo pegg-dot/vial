@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { secretMatches } from "@/server/auth/secret-compare";
 import { runIntelligenceSweep } from "@/server/intelligence/scanner";
 import { getDatabase } from "@/server/db/client";
+import { pruneProbeCache } from "@/server/verify/probe-cache";
 import { applyRetention } from "@/server/db/retention";
 import { reviewCostSignals } from "@/server/observability/cost-signals";
 
@@ -34,9 +35,12 @@ export async function GET(request: NextRequest) {
   // read volume the database bills for. applyRetention never throws, so it cannot fail the sweep.
   const db = await getDatabase();
   const retention = await applyRetention(db);
+  // The verify probe cache expires its own rows logically; this is what stops the table growing
+  // forever with them. Never throws — a prune that fails costs disk, not a cron run.
+  const prunedProbes = await pruneProbeCache();
   // Checks whether the expensive paths ran more often than caching should allow. This is the
   // early warning the last quota blowout did not have: the cache breaking is silent, and the only
   // symptom before was the database dying two weeks later.
   const cost = await reviewCostSignals(db).catch(() => []);
-  return NextResponse.json({ intelligence, retention, cost, completedAt: new Date().toISOString() });
+  return NextResponse.json({ intelligence, retention, prunedProbes, cost, completedAt: new Date().toISOString() });
 }

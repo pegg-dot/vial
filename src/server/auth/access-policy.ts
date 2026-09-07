@@ -42,7 +42,7 @@ const RETIRED_PREFIX = ["/terminal", "/operations", "/updates", "/developers", "
 // (public read, bearer token, or webhook signature) and must never be session-gated
 // by the perimeter, or legitimate no-session callers (cron, Stripe) would be blocked.
 const PUBLIC_API_EXACT = new Set([
-  "/api/search", "/api/openapi.json", "/api/v1/verify", "/api/v1/compare",
+  "/api/search", "/api/openapi.json", "/api/v1/verify", "/api/v1/verify/document", "/api/v1/compare",
   "/api/v1/health", "/api/v1/catalog", "/api/v1/alerts",
   "/api/v1/commerce/provider/webhook", "/api/internal/cron/refresh",
   // Cron routes authenticate themselves with CRON_SECRET inside the handler. They must be listed

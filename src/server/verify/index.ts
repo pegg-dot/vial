@@ -8,6 +8,8 @@ import knownVendors from "./known-vendors.json";
 import { getDatabase } from "@/server/db/client";
 import { searchPeptides, classifyPost } from "@/server/ingest/reddit";
 import { composeVerdictForVendorSlug } from "./trust-graph";
+import { withProbeCache, type ProbeOutcome } from "./probe-cache";
+import { recordVerifyQuery } from "./query-log";
 
 export type Verdict = "trusted" | "caution" | "avoid" | "high-risk" | "unproven" | "info";
 // How much a signal can be trusted — its PROVENANCE tier, orthogonal to whether it's good/bad (`ok`).
@@ -110,33 +112,69 @@ export function unknownDomainVerdict(signals: Signal[]): Verdict {
   return substantiated.length > 0 ? "high-risk" : "unproven";
 }
 
-async function checkDomainAge(domain: string): Promise<Signal> {
+/**
+ * The registration date a registry publishes for a domain, or why we have none.
+ *
+ * Split from the signal it feeds so the CACHE holds the date rather than the sentence. A domain
+ * registered on a given day is registered on that day forever, while "registered 89 days ago" is
+ * true for one day — caching the rendered signal would have frozen a vendor at the age it had when
+ * first checked, right across the 90-day threshold the verdict turns on.
+ */
+type DomainRegistration = { registeredAt: string } | { registeredAt: null; reason: "not-published" | "unavailable" };
+
+const DOMAIN_AGE_TTL = { okSeconds: 30 * 86_400, failSeconds: 3_600 };
+
+async function fetchDomainRegistration(domain: string): Promise<ProbeOutcome<DomainRegistration>> {
   try {
     const res = await fetch(`https://rdap.org/domain/${domain}`, { headers: { accept: "application/rdap+json", "user-agent": UA }, signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return { ok: null, label: "Domain age", detail: "Could not look up registration date." };
+    if (!res.ok) return { value: { registeredAt: null, reason: "unavailable" }, ok: false };
     const data = (await res.json()) as { events?: { eventAction: string; eventDate: string }[] };
     const reg = data.events?.find((e) => e.eventAction === "registration");
-    if (!reg) return { ok: null, label: "Domain age", detail: "Registration date not published." };
-    const days = Math.floor((Date.now() - new Date(reg.eventDate).getTime()) / 86_400_000);
-    // `inferred`: a registry date was read. Nobody examined this business. One inferred concern is
-    // context, never a verdict on its own — the same rule trust-graph.ts and grade.ts already apply.
-    if (days < 90) return { ok: false, label: "Domain age", detail: `Registered ${days} days ago — brand-new domains are a common scam pattern.`, confidence: "inferred" };
-    if (days < 365) return { ok: null, label: "Domain age", detail: `Registered ${days} days ago — relatively new.` };
-    const years = (days / 365).toFixed(1);
-    return { ok: true, label: "Domain age", detail: `Registered ${years} years ago — an established domain.` };
+    // "The registry published no date" is an ANSWER and caches like one. "We could not ask" is not.
+    if (!reg) return { value: { registeredAt: null, reason: "not-published" }, ok: true };
+    return { value: { registeredAt: reg.eventDate }, ok: true };
   } catch {
-    return { ok: null, label: "Domain age", detail: "Registration lookup unavailable." };
+    return { value: { registeredAt: null, reason: "unavailable" }, ok: false };
   }
+}
+
+async function checkDomainAge(domain: string): Promise<Signal> {
+  const registration = await withProbeCache("domain-age", domain, DOMAIN_AGE_TTL, () => fetchDomainRegistration(domain));
+  if (registration.registeredAt === null) {
+    return { ok: null, label: "Domain age", detail: registration.reason === "not-published" ? "Registration date not published." : "Registration lookup unavailable." };
+  }
+  const days = Math.floor((Date.now() - new Date(registration.registeredAt).getTime()) / 86_400_000);
+  // `inferred`: a registry date was read. Nobody examined this business. One inferred concern is
+  // context, never a verdict on its own — the same rule trust-graph.ts and grade.ts already apply.
+  if (days < 90) return { ok: false, label: "Domain age", detail: `Registered ${days} days ago — brand-new domains are a common scam pattern.`, confidence: "inferred" };
+  if (days < 365) return { ok: null, label: "Domain age", detail: `Registered ${days} days ago — relatively new.` };
+  const years = (days / 365).toFixed(1);
+  return { ok: true, label: "Domain age", detail: `Registered ${years} years ago — an established domain.` };
+}
+
+// Post COUNTS are what gets cached, not the sentence built from them, for the same reason the
+// registration date is. Twelve hours: long enough that a scam domain doing the rounds is not
+// re-searched on every share of the link, short enough that a thread posted this morning is found
+// this evening.
+const COMMUNITY_TTL = { okSeconds: 12 * 3_600, failSeconds: 900 };
+
+type CommunityCounts = { mentions: number; scammy: number } | null;
+
+async function fetchCommunityCounts(name: string): Promise<ProbeOutcome<CommunityCounts>> {
+  const result = await searchPeptides(name, { limit: 10 });
+  if (!result) return { value: null, ok: false };
+  const posts = result.posts;
+  return { value: { mentions: posts.length, scammy: posts.filter((p) => classifyPost(p) === "negative").length }, ok: true };
 }
 
 async function checkReddit(name: string): Promise<Signal> {
   // Uses authenticated Reddit search when credentials are configured (the public endpoint
   // blocks datacenter IPs); degrades to "unavailable" rather than a false all-clear.
-  const result = await searchPeptides(name, { limit: 10 });
-  if (!result) return { ok: null, label: "Community (r/Peptides)", detail: "Reddit search unavailable right now." };
-  const posts = result.posts;
+  const counts = await withProbeCache("community", name, COMMUNITY_TTL, () => fetchCommunityCounts(name));
+  if (!counts) return { ok: null, label: "Community (r/Peptides)", detail: "Reddit search unavailable right now." };
+  const posts = { length: counts.mentions };
   if (posts.length === 0) return { ok: false, label: "Community (r/Peptides)", detail: "No mentions found. Real vendors get talked about — silence is a mild warning." };
-  const scammy = posts.filter((p) => classifyPost(p) === "negative");
+  const scammy = { length: counts.scammy };
   // Require corroboration before this reads as a red signal — a single negative-classified post
   // (which can be a mis-scored post DEFENDING a vendor) must not flag, matching the composed
   // community seam's neg>=2 gate. One lone complaint is a "read it yourself," not a verdict.
@@ -253,23 +291,59 @@ function coaIsStale(testedAt: string | null): boolean {
   return m ? new Date().getUTCFullYear() - Number(m[1]) >= 2 : false;
 }
 
-// Live existence check for a pasted Janoshik verify URL we don't hold — does it resolve to a
-// real certificate image? Confirms authenticity even for codes outside our index.
-async function janoshikResolves(url: string): Promise<boolean | null> {
+/**
+ * Can we see this certificate at the lab?
+ *
+ * Three answers, and the third one is why this function was rewritten.
+ *
+ * It used to return a boolean: `!res.ok` meant `false`, and `false` published "This certificate
+ * does NOT resolve at the lab ... it is fabricated — do not trust it." Janoshik's edge answers 403
+ * to server-side clients — this repo already knew that and says so in janoshik-verify.ts — and a
+ * 403 is not ok, so it was false, so it was fabricated. Probed 2026-09-07 from two networks: a
+ * REAL certificate URL and an invented one both return 403. They are indistinguishable to us.
+ *
+ * So the tool was accusing genuine documents of being forged, on the strength of our own request
+ * being turned away, and could not have told a real forgery from a real certificate if it tried.
+ * An accusation of fraud is the heaviest thing this product says about anything. It may not rest
+ * on a request we were not allowed to make.
+ *
+ * "unreachable" is now its own answer and it never votes. Only a page we actually read and found
+ * empty of a certificate can be evidence of absence.
+ */
+type CertificateReach = "resolved" | "absent" | "unreachable";
+
+const CERT_REACH_TTL = { okSeconds: 7 * 86_400, failSeconds: 1_800 };
+
+async function fetchCertificateReach(url: string): Promise<ProbeOutcome<CertificateReach>> {
   try {
     const res = await fetch(url, { headers: { "user-agent": UA, "x-requested-with": "XMLHttpRequest" }, signal: AbortSignal.timeout(9000) });
-    if (!res.ok) return false;
+    // Anything that is not a clean 200 tells us about our access, not about the document. 404
+    // included: the lab's edge returns its block page with whatever status it likes.
+    if (!res.ok) return { value: "unreachable", ok: false };
     const html = await res.text();
-    return /img\/[a-f0-9]+\.png/i.test(html);
+    return /img\/[a-f0-9]+\.png/i.test(html) ? { value: "resolved", ok: true } : { value: "absent", ok: true };
   } catch {
-    return null;
+    return { value: "unreachable", ok: false };
   }
+}
+
+async function janoshikReach(url: string): Promise<CertificateReach> {
+  return withProbeCache("coa-reachability", url, CERT_REACH_TTL, () => fetchCertificateReach(url));
 }
 
 async function coaVerdict(code: string, url?: string): Promise<VerifyResult> {
   const db = await getDatabase();
   const r = await db.query<{ sample_name: string; manufacturer: string; purity_pct: string | number | null; verify_url: string; compound_slug: string | null; vendor_slug: string | null; tested_at: string | null }>(
-    `SELECT sample_name,manufacturer,purity_pct,verify_url,compound_slug,vendor_slug,tested_at FROM lab_test_records WHERE verify_key = $1 LIMIT 1`,
+    // Two ways in. verify_key is the extracted column, but the key is also the tail of the stored
+    // URL (".../tests/112184-Retatrutide_10mg_9D1HBMNJ411S"), and a record whose key was never
+    // extracted is still a record we hold. Matching both turns "we don't have this on file" into a
+    // real answer for rows the exact-column lookup walked straight past. The code is [A-Z0-9] by
+    // construction, so it carries no LIKE wildcards.
+    `SELECT sample_name,manufacturer,purity_pct,verify_url,compound_slug,vendor_slug,tested_at
+       FROM lab_test_records
+      WHERE verify_key = $1 OR UPPER(verify_url) LIKE '%' || $1
+      ORDER BY (verify_key = $1) DESC
+      LIMIT 1`,
     [code.toUpperCase()],
   );
   const row = r.rows[0];
@@ -291,8 +365,8 @@ async function coaVerdict(code: string, url?: string): Promise<VerifyResult> {
   }
   // Not in our index — if a full URL was pasted, check whether it resolves live.
   if (url) {
-    const resolves = await janoshikResolves(url);
-    if (resolves === true) {
+    const reach = await janoshikReach(url);
+    if (reach === "resolved") {
       return {
         query: code || url, kind: "coa", verdict: "unproven",
         headline: "Real certificate — but check who it belongs to",
@@ -301,14 +375,27 @@ async function coaVerdict(code: string, url?: string): Promise<VerifyResult> {
         link: { href: url, label: "Open the certificate" },
       };
     }
-    if (resolves === false) {
+    if (reach === "absent") {
       return {
         query: code || url, kind: "coa", verdict: "high-risk",
         headline: "This certificate does NOT resolve at the lab",
-        summary: "The URL you pasted doesn't return a real certificate. A COA that won't verify at the issuing lab is fabricated — do not trust it.",
-        signals: [{ ok: false, label: "Certificate", detail: "Does not resolve to a real lab record — fabricated." }],
+        summary: "We reached the lab's page for this certificate and it returned no record. A COA that won't verify at the issuing lab is fabricated — do not trust it.",
+        signals: [{ ok: false, label: "Certificate", detail: "The lab's page for this certificate holds no record.", confidence: "verified" }],
       };
     }
+    // unreachable. The reader gets the one thing that does work: their own browser, which the lab
+    // does not block. Handing them a link and the exact test to apply beats an answer we cannot
+    // stand behind — and beats the accusation this used to make.
+    return {
+      query: code || url, kind: "coa", verdict: "unproven",
+      headline: "We couldn't check this one at the lab",
+      summary: "Janoshik's site refuses automated checks, so we can't confirm this certificate from here — and we don't have it indexed. Open it yourself: if it loads a certificate, it's real, and if it doesn't load at all, it's fabricated. Then check the compound and the “Made By” name match the product you're buying.",
+      signals: [
+        { ok: null, label: "Certificate", detail: "The lab blocks automated checks, so we could not read this page. That is about our access, not about the document." },
+        { ok: null, label: "Attribution", detail: "Not in our index — verify the “Made By” name and compound yourself." },
+      ],
+      link: { href: url, label: "Open the certificate at the lab" },
+    };
   }
   return {
     query: code, kind: "coa", verdict: "unproven",
@@ -332,7 +419,19 @@ async function topAlternatives(): Promise<{ slug: string; name: string }[]> {
   return (knownVendors as KnownVendor[]).filter((v) => !v.redFlag && v.publishesJanoshik === true).slice(0, 3).map((v) => ({ slug: v.slug, name: v.name }));
 }
 
+/**
+ * Resolve a query to a verdict, then remember that it was asked.
+ *
+ * Recording sits here rather than in any single branch so no future branch can forget it, and it is
+ * awaited but never allowed to fail a verdict — see query-log.ts for what is and is not kept.
+ */
 export async function runVerification(rawQuery: string): Promise<VerifyResult> {
+  const result = await resolveVerification(rawQuery);
+  await recordVerifyQuery(result);
+  return result;
+}
+
+async function resolveVerification(rawQuery: string): Promise<VerifyResult> {
   const query = rawQuery.trim();
   if (!query) return { query, kind: "nothing", verdict: "info", headline: "Enter something to check", summary: "A vendor name or domain, a compound, a Janoshik COA code, or a pasted COA verify link.", signals: [] };
 

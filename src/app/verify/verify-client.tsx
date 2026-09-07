@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, Check, CircleAlert, CircleDashed, ExternalLink, ScanLine, Search, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, CircleAlert, CircleDashed, ExternalLink, FileUp, ScanLine, Search, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { VerifyResult, Verdict } from "@/server/verify";
 import { VialBuddy, ArtMagnifierVial, ArtMolecule } from "@/components/vial-art";
 import { TierChip } from "@/components/signal-tier-chip";
@@ -27,6 +27,24 @@ export function VerifyClient() {
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  // A certificate arrives as a PDF from the vendor far more often than as a code, and reading the
+  // code out of it by hand was work we were asking the reader to do for us. The document is parsed
+  // for its verification key and thrown away — nothing about it is stored.
+  async function checkDocument(file: File) {
+    setPending(true); setError(null); setResult(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/v1/verify/document", { method: "POST", body });
+      const payload = (await res.json().catch(() => null)) as (VerifyResult & { error?: string }) | null;
+      if (!res.ok) { setError(payload?.error ?? "Couldn't read that file — try the code instead."); return; }
+      if (payload) setResult(payload);
+    } catch { setError("Couldn't read that file — try the code instead."); }
+    finally { setPending(false); }
+  }
 
   async function check(q: string) {
     const value = q.trim();
@@ -73,6 +91,29 @@ export function VerifyClient() {
             </label>
             <button disabled={pending} className="ink press flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[#111214] px-7 text-sm font-bold text-white disabled:opacity-60">{pending ? "Checking…" : "Check"} <ArrowRight className="size-4" /></button>
           </form>
+          {/* The drop target is the whole panel, so a dragged file has somewhere obvious to land
+              rather than a 200px strip to aim at. */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) void checkDocument(f); }}
+            className={`mx-auto mt-3 flex max-w-2xl items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-3 text-sm font-semibold transition ${dragging ? "border-white bg-white/15 text-white" : "border-white/35 text-white/75"}`}
+          >
+            <FileUp className="size-4 shrink-0" />
+            <span className="text-balance">
+              Got a COA as a PDF?{" "}
+              <button type="button" onClick={() => fileInput.current?.click()} className="font-bold text-white underline underline-offset-4">
+                Drop it here or choose a file
+              </button>
+              {" "}&mdash; we never store it.
+            </span>
+            <input
+              ref={fileInput} type="file" accept="application/pdf,.pdf" className="sr-only"
+              aria-label="Upload a COA certificate PDF"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) void checkDocument(f); e.target.value = ""; }}
+            />
+          </div>
+
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-white/70">
             Try:
             {SUGGESTIONS.map((s) => (
