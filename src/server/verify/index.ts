@@ -41,8 +41,52 @@ export function extractDomain(q: string): string | null {
   return m ? m[1] : null;
 }
 
+// Public suffixes that are two labels deep. Not the full PSL — the tracked vendors are all on
+// single-label TLDs (com, is, co, net, bio) — but a buyer pasting a .co.uk shop must not have its
+// registrable domain read as "co.uk", which would make every .co.uk site match every other one.
+const MULTI_LABEL_SUFFIXES = new Set([
+  "co.uk", "org.uk", "me.uk", "com.au", "net.au", "org.au", "co.nz", "co.za", "com.br", "com.mx",
+  "co.jp", "co.kr", "com.tr", "com.sg", "co.in", "com.cn",
+]);
+
+/**
+ * The name someone actually registered, which is the only safe unit to compare two hosts on.
+ *
+ * `shop.bluumpeptides.com` is Bluum Peptides. `bluumpeptides.scam.ru` is not — it is a subdomain of
+ * scam.ru wearing their name, and telling those two apart is the whole job here.
+ */
+export function registrableDomain(host: string): string | null {
+  const clean = host.trim().toLowerCase().replace(/^www\./, "");
+  if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(clean)) return null;
+  const labels = clean.split(".");
+  const lastTwo = labels.slice(-2).join(".");
+  const depth = MULTI_LABEL_SUFFIXES.has(lastTwo) ? 3 : 2;
+  if (labels.length < depth) return null;
+  return labels.slice(-depth).join(".");
+}
+
+/**
+ * The COA code inside whatever the reader pasted, or null.
+ *
+ * The old test was `/^[A-Z0-9]{9,16}$/` against the raw string, which rejected three things a
+ * person plausibly types: the code in lowercase (the lookup upper-cases it anyway, so this was pure
+ * loss), the code with the spacing a copy-paste drags along, and the code with a stray # or period.
+ *
+ * Deleting separators is not free — "some words here" compacts to thirteen alphanumerics and would
+ * become a code. So separators are only removed when what is left still reads like a key rather
+ * than a sentence, which is what the digit test is for. An input that never had separators keeps
+ * the old, looser rule, so no code that worked before stops working.
+ */
+export function normalizeCoaCode(q: string): string | null {
+  const trimmed = q.trim();
+  const compact = trimmed.replace(/[\s.\-#_]+/g, "").toUpperCase();
+  if (!/^[A-Z0-9]{9,16}$/.test(compact)) return null;
+  if (compact !== trimmed.toUpperCase() && !/\d/.test(compact)) return null;
+  return compact;
+}
+
 export function looksLikeCoaCode(q: string): boolean {
-  return /^[A-Z0-9]{9,16}$/.test(q.trim());
+  return normalizeCoaCode(q) !== null;
 }
 
 // ---- live checks (best-effort; a failed check degrades to unknown, never throws) ----
@@ -121,12 +165,28 @@ async function coaSignal(domain: string): Promise<Signal> {
 
 interface KnownVendor { slug: string; name: string; domain: string; redFlag: boolean; reputationSummary?: string; publishesJanoshik?: boolean | string }
 
+/**
+ * A tracked vendor for a free-text query, matched on its name or the domain it registered.
+ *
+ * Domain matching used to be `ndm.includes(nd) || nd.includes(ndm)` against the domain with its
+ * TLD stripped, so ANY domain containing a tracked vendor's name inherited that vendor's verdict.
+ * On this site's headline anti-scam tool that meant `bluumpeptides-shop.com` and
+ * `bluumpeptides.scam.ru` were both answered "Bluum Peptides — generally trusted": the tool
+ * endorsing the exact impersonation it exists to catch, by name, with a link. It ran the other way
+ * too — a domain containing a red-flagged vendor's name would have been published "do not buy".
+ * And it fired on innocent overlap: `peptides.com` matched Bluum Peptides, `amino.com` matched
+ * Modern Aminos.
+ *
+ * Hosts now compare on their registrable domain and must be equal. A real subdomain still matches;
+ * a lookalike falls through to the unknown-domain path, which is the honest answer for it.
+ */
 export function findKnownVendor(query: string, domain: string | null): KnownVendor | null {
   const nq = norm(query);
-  const nd = domain ? norm(domain.replace(/\.[a-z]+$/, "")) : "";
+  const queryDomain = domain ? registrableDomain(domain) : null;
   return (knownVendors as KnownVendor[]).find((v) => {
     const nn = norm(v.name), ndm = norm(v.domain.replace(/\.[a-z]+$/, ""));
-    return nn === nq || ndm === nq || (nd && (ndm === nd || ndm.includes(nd) || nd.includes(ndm)));
+    if (nn === nq || ndm === nq) return true;
+    return Boolean(queryDomain) && registrableDomain(v.domain) === queryDomain;
   }) ?? null;
 }
 
@@ -293,20 +353,29 @@ export async function runVerification(rawQuery: string): Promise<VerifyResult> {
   }
 
   // 1b. A tracked DB vendor that isn't in the curated list — resolve by name/slug and compose.
-  if (!looksLikeCoaCode(query)) {
-    const trackedSlug = await resolveTrackedVendorSlug(query);
-    if (trackedSlug) {
-      const rich = await composeVerdictForVendorSlug(trackedSlug);
-      if (rich) return verifyResultFromComposed(rich.vendorName, rich.slug, rich);
-    }
+  const trackedSlug = await resolveTrackedVendorSlug(query);
+  if (trackedSlug) {
+    const rich = await composeVerdictForVendorSlug(trackedSlug);
+    if (rich) return verifyResultFromComposed(rich.vendorName, rich.slug, rich);
   }
 
-  // 2. A Janoshik COA code.
-  if (looksLikeCoaCode(query)) return coaVerdict(query);
-
-  // 3. A compound we track.
+  // 2. A compound we track.
+  //
+  // Named things resolve before pattern-matched ones, and this is why. The COA test is a SHAPE —
+  // 9 to 16 alphanumerics — and eleven of the compounds on this site match it when typed in capital
+  // letters: GLUTATHIONE, SEMAGLUTIDE, TIRZEPATIDE, EPITHALON and the rest. While the shape was
+  // tested first, a reader typing the name of a compound we hold a whole market page for was told
+  // "we don't have this COA code on record". The same shadow fell over 23 of the 34 tracked vendor
+  // names, which is why step 1b used to carry a `!looksLikeCoaCode` guard to escape it.
+  //
+  // A COA key is random, so it will not collide with a name we actually hold; a name will collide
+  // with the shape constantly. Identity first, shape last.
   const byName = await compoundOrVendorByName(query);
   if (byName) return byName;
+
+  // 3. A Janoshik COA code.
+  const coaCode = normalizeCoaCode(query);
+  if (coaCode) return coaVerdict(coaCode);
 
   // 4. An unknown domain — run live checks so "unknown" is an informed verdict.
   if (domain) {

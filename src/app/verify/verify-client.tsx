@@ -34,7 +34,14 @@ export function VerifyClient() {
     setPending(true); setError(null); setResult(null);
     try {
       const res = await fetch("/api/v1/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: value }) });
-      if (!res.ok) { setError("Something went wrong — try again."); return; }
+      if (!res.ok) {
+        // The server says what went wrong for the cases it can name — an empty query, or too many
+        // checks in a minute. "Something went wrong" for a rate limit tells the reader to retry
+        // immediately, which is the one thing that cannot work.
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(body?.error ?? "Something went wrong — try again.");
+        return;
+      }
       setResult(await res.json());
     } catch { setError("Something went wrong — try again."); }
     finally { setPending(false); }
