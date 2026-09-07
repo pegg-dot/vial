@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { secretMatches } from "@/server/auth/secret-compare";
 import { runCollectionTick } from "@/server/collect/scheduler";
-import { TICK_MAX_TARGETS } from "@/server/collect/schedule-capacity";
+import { TICK_MAX_TARGETS, TICK_CONCURRENCY, TICK_BUDGET_MS } from "@/server/collect/schedule-capacity";
 import { isLiveIngestApproved } from "@/server/ingest/live-sources";
 import { revalidateTag } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
@@ -9,7 +9,7 @@ import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 export const dynamic = "force-dynamic";
 // Pro allows 300s. The tick's own budget stops it well before this; the ceiling is only here so a
 // single pathological host cannot take the function down with it.
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 function authorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET?.trim();
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = await runCollectionTick({ budgetMs: 45_000, maxTargets: TICK_MAX_TARGETS });
+  const result = await runCollectionTick({ budgetMs: TICK_BUDGET_MS, maxTargets: TICK_MAX_TARGETS, concurrency: TICK_CONCURRENCY });
   // The catalog is served from cache because the root layout reads it on every request. This is the
   // moment it actually changed, so mark it stale now rather than serving old prices until the
   // revalidate window expires. "max" is stale-while-revalidate: the next visitor gets the cached

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import knownVendors from "@/server/verify/known-vendors.json";
-import { ticksPerDay, dailyDemand, dailyCapacity, headroom, TICK_MAX_TARGETS, REFRESH_DEFAULT_INTERVAL_MINUTES, REFRESH_SCHEMA_INTERVAL_MINUTES } from "@/server/collect/schedule-capacity";
+import { CADENCE_MINUTES, TARGET_DEADLINE_MS } from "@/server/collect/scheduler";
+import { ticksPerDay, dailyDemand, dailyCapacity, headroom, TICK_MAX_TARGETS, REFRESH_DEFAULT_INTERVAL_MINUTES, REFRESH_SCHEMA_INTERVAL_MINUTES, perUnitBudgetMs, TICK_BUDGET_MS, TICK_CONCURRENCY } from "@/server/collect/schedule-capacity";
 
 // CADENCE_MINUTES declares that a headless catalogue is re-read every six hours. Until 2026-08-24
 // the cron firing the collection tick ran ONCE A DAY and claimed eight targets, against 99 targets
@@ -45,12 +46,31 @@ describe("the collection schedule can serve the cadences it declares", () => {
     expect(headroom(collectCron(), counts())).toBeGreaterThan(1.5);
   });
 
-  // Positive control. The check is worth nothing unless the schedule it was written against fails
-  // it — the daily cron really was the production configuration, and this is what it scores.
-  it("rejects the once-a-day schedule this replaced", () => {
+  // Counting targets is only half the promise. On one run a day the tick has to reach the whole
+  // fleet inside a single function lifetime, so the other half is whether the budget affords the
+  // time at the configured concurrency. Red when the vendor list outgrows one nightly run, rather
+  // than the tick quietly stopping on its budget with every run still green.
+  it("affords each target enough wall-clock to actually run", () => {
+    const perTarget = perUnitBudgetMs(dailyDemand(counts()) * 1.5, TICK_BUDGET_MS, TICK_CONCURRENCY);
+    expect(perTarget).toBeGreaterThan(TARGET_DEADLINE_MS / 4);
+  });
+
+  // Positive controls. The checks above are worth nothing unless arrangements that genuinely
+  // cannot do the job score as failures.
+  //
+  // The schedule is daily again as of 2026-09-07, so "daily" on its own is no longer the thing
+  // that fails — the tick size is. Eight targets a run was correct at 48 runs a day and is a
+  // sixth of one day's demand; that pairing is the 2026-08-24 starvation exactly.
+  it("rejects the old tick size under the current daily cron", () => {
     const c = counts();
-    expect(dailyCapacity("30 4 * * *")).toBeLessThan(dailyDemand(c));
-    expect(headroom("30 4 * * *", c)).toBeLessThan(0.2);
+    expect(dailyCapacity(collectCron(), 8)).toBeLessThan(dailyDemand(c));
+    expect(headroom(collectCron(), c, 8)).toBeLessThan(0.2);
+  });
+
+  it("rejects a tick size the budget cannot actually reach", () => {
+    // One target at a time is the arrangement this replaced: at 87 target-runs of demand a
+    // sequential tick affords each one about two seconds, well under a storefront round trip.
+    expect(perUnitBudgetMs(dailyDemand(counts()) * 1.5, TICK_BUDGET_MS, 1)).toBeLessThan(TARGET_DEADLINE_MS / 4);
   });
 
   it("counts ticks from a cron expression, and refuses shapes it cannot read", () => {
@@ -66,7 +86,19 @@ describe("the collection schedule can serve the cadences it declares", () => {
   // still reports as free. With no vendors at all the demand is exactly the market kinds:
   // enforcement daily, news twice daily, the Janoshik feed daily, its browser capture daily.
   it("counts every market-wide collector, including both Janoshik kinds", () => {
-    expect(dailyDemand({ withCatalog: 0, collected: 0 })).toBe(1 + 2 + 1 + 1);
+    // All four sit at the daily floor now: no cadence may be shorter than the cron that drains it.
+    expect(dailyDemand({ withCatalog: 0, collected: 0 })).toBe(1 + 1 + 1 + 1);
+  });
+
+  // The cadences are a promise the schedule has to keep. One shorter than the cron interval is not
+  // a faster read, it is a target sitting due until the next run under a label that claims
+  // otherwise — and dailyDemand counts straight off these numbers, so a cadence that lies here
+  // makes every assertion in this file lie with it.
+  it("declares no cadence shorter than the cron that drains it", () => {
+    const minutesBetweenRuns = (24 * 60) / ticksPerDay(collectCron());
+    for (const [kind, cadence] of Object.entries(CADENCE_MINUTES)) {
+      expect(cadence, `${kind} is faster than the cron`).toBeGreaterThanOrEqual(minutesBetweenRuns);
+    }
   });
 
   it("keeps the tick size the route uses and the one it scores identical", () => {

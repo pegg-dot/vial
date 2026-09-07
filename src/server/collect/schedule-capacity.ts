@@ -13,7 +13,13 @@
 import { CADENCE_MINUTES, type CollectorKind } from "./scheduler";
 
 /** How many targets one tick will claim. The route reads this so both sides cannot drift. */
-export const TICK_MAX_TARGETS = 8;
+export const TICK_MAX_TARGETS = 140;
+
+/** In-flight collector targets. Never two against one vendor — see server/collect/pool.ts. */
+export const TICK_CONCURRENCY = 6;
+
+/** Wall-clock the collection tick may spend starting targets, inside a 300s function ceiling. */
+export const TICK_BUDGET_MS = 180_000;
 
 const MINUTES_PER_DAY = 24 * 60;
 
@@ -69,6 +75,25 @@ export function dailyCapacity(cron: string, maxTargets = TICK_MAX_TARGETS): numb
 }
 
 /**
+ * Wall-clock each unit of work gets, if the run is to serve a day of demand.
+ *
+ * Counting jobs alone stopped being enough the moment the schedule went daily. A tick that claims
+ * 1,400 jobs is not serving 1,400 jobs unless it can actually finish them inside one function
+ * lifetime — and when the work is network fetches against other people's servers, that is a claim
+ * about seconds, not about counters. Under the old 15- and 30-minute crons the distinction did not
+ * matter: no tick ever had more than a nibble to do. Under a daily cron it is the whole question.
+ *
+ * So capacity is expressed as the per-unit time the budget affords at the configured concurrency.
+ * If that number drops below what a real fetch costs, the run stops on its budget and the queue
+ * lags — quietly, greenly, exactly like the 2026-08-24 starvation. The tests hold it above a floor
+ * so that adding vendors or listings turns red rather than turning slow.
+ */
+export function perUnitBudgetMs(demandPerDay: number, budgetMs: number, concurrency: number, runsPerDay = 1): number {
+  if (demandPerDay <= 0) return Infinity;
+  return (budgetMs * concurrency * runsPerDay) / demandPerDay;
+}
+
+/**
  * Headroom as a multiple of demand. Below 1.0 the queue can never catch up and the oldest targets
  * starve; a tick that always finds work is a tick that is always behind.
  */
@@ -79,13 +104,35 @@ export function headroom(cron: string, counts: TargetCounts, maxTargets = TICK_M
 // ── Provenance sweep capacity ────────────────────────────────────────────────────────────────────
 //
 // The refresh sweep used to ride the daily housekeeping cron claiming 20 jobs, which was harmless
-// only because nothing was ever enrolled. Now every catalogue listing is, so it has its own hourly
-// cron and its own arithmetic. These two intervals still differ on purpose — the registration
-// default applies to manually registered sources, the schema default to anything inserted without
-// one — and the difference is load-bearing, so it is asserted rather than tidied away.
+// only because nothing was ever enrolled. Now every catalogue listing is, so it has its own cron
+// and its own arithmetic. These two intervals still differ on purpose — the registration default
+// applies to manually registered sources, the schema default to anything inserted without one —
+// and the difference is load-bearing, so it is asserted rather than tidied away.
 
-/** Jobs one provenance sweep claims. The route imports this, so scored and used cannot drift. */
-export const PROVENANCE_SWEEP_JOBS = 20;
+/**
+ * Jobs one provenance sweep claims. The route imports this, so scored and used cannot drift.
+ *
+ * 20 was sized against a cron running 96 times a day. On a daily cron the whole 897-listing
+ * catalogue has to be served by a single sweep, so this is the day's work rather than a tick's —
+ * which is only possible because the jobs no longer run one at a time.
+ */
+export const PROVENANCE_SWEEP_JOBS = 1400;
+
+/** In-flight refresh jobs. Never two against one vendor — see server/collect/pool.ts. */
+export const PROVENANCE_CONCURRENCY = 12;
+
+/** Wall-clock the sweep may spend starting jobs, inside a 300s function ceiling. */
+export const PROVENANCE_BUDGET_MS = 200_000;
+
+/**
+ * The slowest a provenance fetch may average before the daily sweep stops keeping its promise.
+ *
+ * This is an ASSUMPTION, written down so it can be checked rather than believed: at 12 in flight
+ * for 200s, 1,346 jobs get 1.78s each. A real fetch-and-parse against a storefront is comfortably
+ * inside that, but it has not been measured against production yet — the first daily run reports
+ * `processed` and `budgetExhausted`, and those two numbers are what confirm or refute it.
+ */
+export const PROVENANCE_ASSUMED_JOB_MS = 1_000;
 
 /** Interval a policy gets from registerLiveHttpSource when the caller does not specify one. */
 export const REFRESH_DEFAULT_INTERVAL_MINUTES = 720;
@@ -104,9 +151,11 @@ export const REFRESH_SCHEMA_INTERVAL_MINUTES = 360;
  * reading of "43 listings" off the /market page was a facet count, and sizing to it would have
  * rebuilt the collector starvation on purpose — the very thing this whole arc was about.
  *
- * The answer is frequency, not a bigger sweep: jobs run sequentially and each is a network fetch,
- * so a sweep large enough to serve 900+ listings daily would outlive the 120s function ceiling and
- * be killed mid-flight.
+ * This used to say "the answer is frequency, not a bigger sweep", because jobs ran strictly one at
+ * a time and a sweep big enough for 900+ listings would outlive the function ceiling. Frequency is
+ * no longer available — the schedule is daily by the owner's decision — so the sweep got the other
+ * half instead: bounded concurrency, serialised per vendor. The count below is therefore only half
+ * the answer; `perUnitBudgetMs` is the half that says whether the count can actually be reached.
  */
 export function provenanceListingCeiling(cron: string, intervalMinutes: number, sweepJobs = PROVENANCE_SWEEP_JOBS): number {
   const runsPerListingPerDay = MINUTES_PER_DAY / intervalMinutes;

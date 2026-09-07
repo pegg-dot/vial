@@ -5,6 +5,7 @@ import { createAlert, createChildEvent, createDomainEvent, getEventRoot, recordM
 import { getActiveFixture, claimNextRefreshJob, enqueueDueRefreshJobs, getRefreshPolicy, reclaimStalledRefreshJobs } from "./repository";
 import { SafeFetchError, safeFetch } from "./safe-fetch";
 import type { RefreshJob } from "./types";
+import { runPooled } from "@/server/collect/pool";
 
 interface RefreshPayload {
   body: string;
@@ -282,21 +283,47 @@ export async function processRefreshJob(jobId: string) {
   return processClaimedRefreshJob(job);
 }
 
-export async function runRefreshSweep(limit = 10, budgetMs = 90_000) {
+export async function runRefreshSweep(limit = 10, budgetMs = 90_000, concurrency = 1) {
   // First, anything a killed function left behind — otherwise its policy is never served again.
   const reclaimed = await reclaimStalledRefreshJobs();
   const enqueued = await enqueueDueRefreshJobs();
   const results: Awaited<ReturnType<typeof processRefreshJob>>[] = [];
-  // Jobs run one at a time and each is a network fetch against someone else's server, so a sweep
-  // sized only by count can outlive the serverless function that invoked it — and a function killed
-  // mid-sweep leaves a job claimed and unfinished. Stop on whichever limit arrives first; the next
-  // tick resumes from the queue.
+  // Each job is a network fetch against someone else's server, so a sweep sized only by count can
+  // outlive the serverless function that invoked it — and a function killed mid-sweep leaves a job
+  // claimed and unfinished. Stop on whichever limit arrives first; the next run resumes the queue.
+  //
+  // `concurrency` workers pull from the same queue rather than one loop draining it. That is what
+  // makes a daily schedule able to serve 897 enrolled listings at all: sequentially they are a
+  // quarter of an hour of fetching, which no function lifetime affords. Claiming is atomic
+  // (claimNextRefreshJob leases the row), so workers never take the same job.
+  // Claimed in waves, then each wave run through the pool.
+  //
+  // Claiming the whole limit up front would be simpler and wrong: a claim is a lease, so a function
+  // killed mid-sweep would strand every job it had taken until reclaimStalledRefreshJobs times them
+  // out. A wave bounds that blast radius to one wave. Claiming strictly one at a time — what this
+  // did when the cron ran 96 times a day — is the other extreme, and cannot use a pool at all.
+  //
+  // Inside a wave the pool serialises on vendorId, so a sweep is never two connections to the same
+  // storefront no matter how wide it runs. Jobs with no vendor (a listing whose product row is
+  // gone) key on their own id, which excludes nothing but themselves.
   const deadline = Date.now() + budgetMs;
-  for (let index = 0; index < limit; index += 1) {
-    if (Date.now() >= deadline) break;
-    const next = await claimNextRefreshJob();
-    if (!next) break;
-    results.push(await processClaimedRefreshJob(next));
+  const workers = Math.max(1, concurrency);
+  const waveSize = Math.max(workers, workers * 5);
+  let claimed = 0;
+  let budgetExhausted = false;
+  while (claimed < limit && Date.now() < deadline) {
+    const wave: RefreshJob[] = [];
+    while (wave.length < Math.min(waveSize, limit - claimed) && Date.now() < deadline) {
+      const next = await claimNextRefreshJob();
+      if (!next) break;
+      wave.push(next);
+      claimed += 1;
+    }
+    if (wave.length === 0) break;
+    const pooled = await runPooled(wave, async (job) => {
+      results.push(await processClaimedRefreshJob(job));
+    }, { concurrency: workers, keyOf: (job) => job.vendorId ?? `job:${job.id}`, budgetMs: Math.max(0, deadline - Date.now()) });
+    if (pooled.budgetExhausted) { budgetExhausted = true; break; }
   }
-  return { reclaimed, enqueued: enqueued.length, processed: results.length, results, budgetExhausted: Date.now() >= deadline };
+  return { reclaimed, enqueued: enqueued.length, processed: results.length, results, budgetExhausted: budgetExhausted || Date.now() >= deadline };
 }

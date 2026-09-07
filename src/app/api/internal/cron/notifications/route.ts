@@ -3,7 +3,7 @@ import { secretMatches } from "@/server/auth/secret-compare";
 import { NOTIFICATION_SWEEP_USERS, runNotificationSweep } from "@/server/notifications/sweep";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 // The tick that makes "we'll tell you when something changes" true.
 //

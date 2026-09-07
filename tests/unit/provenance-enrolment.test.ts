@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { triageClaim, STOREFRONT_NOISE, PRICE_MIN, PRICE_MAX } from "@/server/refresh/auto-triage";
-import { provenanceListingCeiling, PROVENANCE_SWEEP_JOBS } from "@/server/collect/schedule-capacity";
+import { provenanceListingCeiling, PROVENANCE_SWEEP_JOBS, perUnitBudgetMs, PROVENANCE_BUDGET_MS, PROVENANCE_CONCURRENCY, PROVENANCE_ASSUMED_JOB_MS } from "@/server/collect/schedule-capacity";
 import { PROVENANCE_INTERVAL_MINUTES } from "@/server/ingest/live-sources";
 
 // Every catalogue listing is now enrolled in the provenance pipeline. Before this, the collectors
@@ -51,7 +51,7 @@ describe("deciding which claims a person actually has to look at", () => {
 });
 
 describe("the provenance schedule can serve everything enrolled", () => {
-  const PROVENANCE_CRON = "*/15 * * * *";
+  const PROVENANCE_CRON = "0 6 * * *";
 
   it("matches the cron actually configured", () => {
     const cfg = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8")) as { crons: { path: string; schedule: string }[] };
@@ -65,28 +65,59 @@ describe("the provenance schedule can serve everything enrolled", () => {
 
   it("serves the whole catalogue with headroom", () => {
     const ceiling = provenanceListingCeiling(PROVENANCE_CRON, PROVENANCE_INTERVAL_MINUTES);
-    expect(ceiling).toBe(1920);
+    expect(ceiling).toBe(PROVENANCE_SWEEP_JOBS);
     expect(ceiling).toBeGreaterThan(REAL_CATALOGUE * 1.5);
   });
 
-  // Both arrangements this replaced. The daily sweep could not serve even a fiftieth of it, and the
-  // hourly one I sized off the wrong number could not serve it either.
-  it("rejects the daily and hourly schedules this replaced", () => {
-    expect(provenanceListingCeiling("30 5 * * *", PROVENANCE_INTERVAL_MINUTES)).toBeLessThan(REAL_CATALOGUE);
-    expect(provenanceListingCeiling("15 * * * *", PROVENANCE_INTERVAL_MINUTES)).toBeLessThan(REAL_CATALOGUE);
+  // Counting jobs is only half the promise. On one run a day the sweep has to finish 897 fetches
+  // inside a single function lifetime, so the other half is whether the budget affords the time at
+  // the configured concurrency. This is the assertion that goes red when the catalogue grows past
+  // what one nightly run can actually reach — rather than the sweep quietly stopping on its budget
+  // and the queue falling a day further behind every day, all of it green.
+  it("affords each job enough wall-clock to actually run", () => {
+    const perJob = perUnitBudgetMs(REAL_CATALOGUE * 1.5, PROVENANCE_BUDGET_MS, PROVENANCE_CONCURRENCY);
+    expect(perJob).toBeGreaterThan(PROVENANCE_ASSUMED_JOB_MS);
   });
 
-  // A sweep is sequential and every job is a network fetch, so it must stop on time rather than be
-  // killed mid-flight leaving a job claimed and unfinished. Frequency is what scales this, not size.
+  // Positive controls. Each is what the check scores for an arrangement that genuinely cannot do
+  // the job, so the assertions above are known to be capable of failing.
+  it("rejects a daily sweep at the old tick-sized job count", () => {
+    // 20 jobs was right for 96 runs a day and is a fiftieth of what one run a day needs.
+    expect(provenanceListingCeiling(PROVENANCE_CRON, PROVENANCE_INTERVAL_MINUTES, 20)).toBeLessThan(REAL_CATALOGUE);
+  });
+
+  it("rejects a job count the budget cannot actually reach", () => {
+    // Claiming the whole catalogue sequentially is the arrangement this replaced: one at a time,
+    // 897 fetches get 223ms each, which no network round trip meets.
+    expect(perUnitBudgetMs(REAL_CATALOGUE * 1.5, PROVENANCE_BUDGET_MS, 1)).toBeLessThan(PROVENANCE_ASSUMED_JOB_MS);
+  });
+
+  // Every job is a network fetch, so the sweep must stop on time rather than be killed mid-flight
+  // leaving a job claimed and unfinished. Both bounds are checked before a job is claimed.
   it("bounds a sweep by time, not only by count", () => {
     const scheduler = readFileSync(new URL("../../src/server/refresh/scheduler.ts", import.meta.url), "utf8");
     expect(scheduler).toContain("budgetMs");
-    expect(scheduler).toMatch(/if \(Date\.now\(\) >= deadline\) break;/);
+    // The clock gates both loops, and it gates them BEFORE a job is claimed — a claim is a lease,
+    // so a job taken and then abandoned is a policy nothing can serve until the lease times out.
+    expect(scheduler).toMatch(/while \(claimed < limit && Date\.now\(\) < deadline\)/);
+    expect(scheduler).toMatch(/wave\.length < Math\.min\(waveSize, limit - claimed\) && Date\.now\(\) < deadline/);
+  });
+
+  // The sweep runs wide, so it must never run wide at ONE storefront. Twelve workers against a
+  // queue ordered by creation time would have been twelve connections to whichever vendor's
+  // catalogue was enqueued last — the pool keys on the vendor to make that impossible.
+  it("serialises jobs per vendor even while running many at once", () => {
+    const scheduler = readFileSync(new URL("../../src/server/refresh/scheduler.ts", import.meta.url), "utf8");
+    expect(scheduler).toMatch(/keyOf: \(job\) => job\.vendorId/);
+    const repository = readFileSync(new URL("../../src/server/refresh/repository.ts", import.meta.url), "utf8");
+    // Concurrent claimers need SKIP LOCKED, or eleven of twelve simply queue behind the first.
+    expect(repository).toContain("FOR UPDATE SKIP LOCKED");
+    expect(repository).toContain("pr.vendor_id");
   });
 
   it("keeps the sweep size the route uses and the one it scores identical", () => {
     const route = readFileSync(new URL("../../src/app/api/internal/cron/provenance/route.ts", import.meta.url), "utf8");
-    expect(route).toContain("runRefreshSweep(PROVENANCE_SWEEP_JOBS)");
+    expect(route).toContain("runRefreshSweep(PROVENANCE_SWEEP_JOBS, PROVENANCE_BUDGET_MS, PROVENANCE_CONCURRENCY)");
     expect(PROVENANCE_SWEEP_JOBS).toBeGreaterThan(0);
   });
 

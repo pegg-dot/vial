@@ -11,6 +11,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import { getDatabase } from "@/server/db/client";
 import { recordCollectorRun } from "@/server/health/data-health";
+import { runPooled } from "./pool";
 import knownVendors from "@/server/verify/known-vendors.json";
 import { importShopifyCatalog } from "@/server/ingest/shopify-import";
 import { importWooCommerceCatalog } from "@/server/ingest/woocommerce-import";
@@ -50,17 +51,24 @@ interface KnownVendor {
 
 // Cadence tiers — chosen from how fast each source actually changes, not from how often we could
 // ask. Prices move; a vendor's storefront being alive moves slower.
+//
+// No cadence here may be shorter than the interval of the cron that drains the queue, and since
+// 2026-09-07 that cron is daily (owner's call: nothing runs more than once a day). A six-hour
+// cadence under a daily cron is not four reads a day, it is one read a day wearing a label that
+// says four — the target simply sits due until the next run. The arithmetic in schedule-capacity.ts
+// counts demand straight off these numbers, so a cadence that lies here makes every capacity
+// assertion downstream lie with it. `tests/unit/schedule-capacity.test.ts` holds the floor.
 export const CADENCE_MINUTES: Record<CollectorKind, number> = {
-  "catalog-shopify": 6 * 60,
-  "catalog-woo": 6 * 60,
+  "catalog-shopify": 24 * 60,
+  "catalog-woo": 24 * 60,
   "vendor-status": 24 * 60,
   // Government publishing rhythms, not ours. FDA posts recalls to openFDA in daily batches, so
-  // asking more than once a day only spends rate limit. Press releases land through the working
-  // day, and a twice-daily pass keeps `/news` current without hammering a public feed.
+  // asking more than once a day only spends rate limit — this one was already at the daily floor
+  // and did not move. News dropped from twice a day to once for the reason above.
   "enforcement-openfda": 24 * 60,
-  "news-feeds": 12 * 60,
+  "news-feeds": 24 * 60,
   // A headless catalogue changes as fast as a Shopify one — same prices, same stock.
-  "catalog-rsc": 6 * 60,
+  "catalog-rsc": 24 * 60,
   // A registration date does not move. This is here to notice NEW vendors and to re-check the ones
   // whose lookup failed, not to re-ask a question whose answer is fixed.
   "domain-age": 30 * 24 * 60,
@@ -397,10 +405,10 @@ export interface TickResult {
  * out is recorded and backed off, and the tick moves on.
  */
 export async function runCollectionTick(
-  options: { budgetMs?: number; maxTargets?: number; connection?: SqlConnection } = {},
+  options: { budgetMs?: number; maxTargets?: number; concurrency?: number; connection?: SqlConnection } = {},
 ): Promise<TickResult> {
   const started = Date.now();
-  const budgetMs = options.budgetMs ?? 45_000;
+  const budgetMs = options.budgetMs ?? 180_000;
   const db = options.connection ?? await getDatabase();
   await syncCollectionTargets(db);
   // The database's clock: observed_at is written with NOW() by the importers, and the tick's
@@ -418,7 +426,10 @@ export async function runCollectionTick(
   // can never get to the front of. Reserve a slot for each kind that has due work, then fill the
   // rest by age.
   const maxTargets = options.maxTargets ?? 8;
-  const allDue = await claimDueTargets(db, 200);
+  const concurrency = options.concurrency ?? 1;
+  // Claim deeper than we can run: the fair-share pass below picks from the whole due set, and on a
+  // daily cron the due set IS the day's work rather than a slice of it.
+  const allDue = await claimDueTargets(db, Math.max(200, maxTargets * 2));
   const firstOfEachKind: DueTarget[] = [];
   const seenKinds = new Set<string>();
   for (const t of allDue) {
@@ -440,13 +451,16 @@ export async function runCollectionTick(
     ...firstOfEachKind.slice(0, maxTargets),
     ...allDue.filter(t => !chosen.has(t.id)).slice(0, Math.max(0, maxTargets - firstOfEachKind.length)),
   ];
-  for (const t of due) {
-    // Stop BEFORE starting work we cannot finish — a half-run target would settle as a failure
-    // and back off for no reason.
-    if (Date.now() - started > budgetMs) { budgetExhausted = true; break; }
+  // Keyed on `target`, which is the vendor slug — so the pool goes wide across storefronts and
+  // never opens two connections to the same one. At concurrency 1 this is exactly the sequential
+  // loop it replaced, which is what the tests that predate the daily schedule still assert.
+  //
+  // The budget still stops work BEFORE it starts, not partway through: a half-run target settles as
+  // a failure and backs off for no reason, so under-running is always the cheaper mistake.
+  const pooled = await runPooled(due, async (t) => {
+    // A collector reports a dead SOURCE in its return value, not by throwing — a throw here means
+    // a defect in our own code, and the two must stay distinguishable in `collector_runs`.
     try {
-      // A collector reports a dead SOURCE in its return value, not by throwing — a throw here means
-      // a defect in our own code, and the two must stay distinguishable in `collector_runs`.
       await leaseTarget(db, t);
       const deadlineAt = Date.now() + Math.min(TARGET_DEADLINE_MS, Math.max(1_000, budgetMs - (Date.now() - started)));
       const { items, ok, error, retired } = await runOne(db, t, deadlineAt);
@@ -459,7 +473,8 @@ export async function runCollectionTick(
       await settle(db, t, false, 0, message, refused ? DISABLE_AFTER_REFUSALS : DISABLE_AFTER_FAILURES);
       ran.push({ collector: t.collector, target: t.target, items: 0, ok: false, error: message });
     }
-  }
+  }, { concurrency, keyOf: (t) => t.target, budgetMs: Math.max(0, budgetMs - (Date.now() - started)) });
+  if (pooled.budgetExhausted) budgetExhausted = true;
 
   // Storefront or upstream factory, decided every tick rather than by hand.
   //
@@ -499,21 +514,21 @@ export async function runCollectionTick(
   // means the longest-unrated vendor is always next.
   //
   // The size is a per-DAY budget, not a per-run one, and it has to be re-derived whenever the cron
-  // frequency moves. The history: 25 per run was tuned for a 15-minute collector (96 runs/day), and
-  // when the cron went daily the same number silently became a four-day lag — a grade correction
-  // sitting unpublished while directory cards served the old verdict, in the very case where the
-  // stale grade was hiding a vendor's DOJ enforcement record behind a neutral chip. It was then
-  // raised to 200 against an hourly cron.
+  // frequency moves. The history is a warning: 25 per run was tuned for a 15-minute collector (96
+  // runs/day), and when the cron went daily the same number silently became a four-day lag — a
+  // grade correction sitting unpublished while directory cards served the old verdict, in the very
+  // case where the stale grade was hiding a vendor's DOJ enforcement record behind a neutral chip.
+  // It was raised to 200 against an hourly cron, then 100 against a 30-minute one.
   //
-  // The cron is now every 30 minutes (48 runs/day), so 100 keeps the daily regrade volume exactly
-  // where the hourly schedule had it while still refreshing all ~124 vendors inside two ticks — one
-  // hour, the same freshness as before. Doubling the tick rate without halving this would have
-  // doubled the heaviest fixed cost in the tick for no gain in freshness.
+  // The cron is daily again as of 2026-09-07 — this time deliberately, and this time with the
+  // number moved to match. One run is now the whole day, so the limit has to clear the entire
+  // vendor table in a single pass or it rebuilds that same lag on purpose. 400 covers the ~124
+  // vendors on record with room for the table to grow.
   //
-  // The budget still bounds it. maxDuration on this route is 120s and collection has already run
-  // by this point, so 45s is headroom, not a gamble — and stale-first ordering means an exhausted
-  // budget simply resumes where it stopped next tick.
-  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: Math.min(45_000, Math.max(5_000, 110_000 - (Date.now() - started))), limit: 100 });
+  // The budget bounds it. maxDuration on this route is 300s and collection has already spent up to
+  // 180s of it by this point, so what is left is claimed here up to 90s — and stale-first ordering
+  // means an exhausted budget resumes where it stopped rather than losing its place.
+  const regrade = await recomputeAllVendorGrades({ connection: db, budgetMs: Math.min(90_000, Math.max(5_000, 280_000 - (Date.now() - started))), limit: 400 });
 
   return { ran, budgetExhausted, reindexed, observed, regraded: regrade.graded, durationMs: Date.now() - started };
 }

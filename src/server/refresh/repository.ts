@@ -114,6 +114,7 @@ interface JobRow extends QueryResultRow {
   policy_id: string;
   label: string;
   listing_slug: string;
+  vendor_id?: string | null;
   trigger_type: string;
   trigger_event_id: string | null;
   status: RefreshJob["status"];
@@ -135,6 +136,7 @@ function toJob(row: JobRow): RefreshJob {
     policyId: row.policy_id,
     sourceLabel: row.label,
     targetListingSlug: row.listing_slug,
+    vendorId: row.vendor_id ?? undefined,
     triggerType: row.trigger_type,
     triggerEventId: row.trigger_event_id ?? undefined,
     status: row.status,
@@ -287,7 +289,16 @@ export async function claimNextRefreshJob(jobId?: string) {
     const result = await tx.query<QueryResultRow & { id: string }>(
       jobId
         ? `SELECT id FROM refresh_jobs WHERE id = $1 AND status IN ('queued','retrying') AND available_at <= NOW() FOR UPDATE`
-        : `SELECT id FROM refresh_jobs WHERE status IN ('queued','retrying') AND available_at <= NOW() ORDER BY priority ASC, created_at ASC LIMIT 1 FOR UPDATE`,
+        // SKIP LOCKED and the id tiebreaker both exist for concurrent claimers.
+        //
+        // Without SKIP LOCKED, every worker takes FOR UPDATE on the same top row and eleven of
+        // twelve block until the first commits — a lock convoy that turns a pool back into a queue.
+        //
+        // Without the id tiebreaker, created_at orders the queue and jobs are enqueued per listing,
+        // so a vendor's whole catalogue lands in one contiguous run. Twelve workers would then be
+        // twelve simultaneous connections to one storefront. id is random, so ties spread across
+        // vendors, and the pool's per-vendor exclusion does the rest.
+        : `SELECT id FROM refresh_jobs WHERE status IN ('queued','retrying') AND available_at <= NOW() ORDER BY priority ASC, available_at ASC, id ASC LIMIT 1 FOR UPDATE SKIP LOCKED`,
       jobId ? [jobId] : [],
     );
     const id = result.rows[0]?.id;
@@ -299,11 +310,15 @@ export async function claimNextRefreshJob(jobId?: string) {
       [id],
     );
     const job = await tx.query<JobRow>(
-      `SELECT rj.*, s.label, l.slug AS listing_slug
+      // vendor_id rides along so the sweep can serialise per storefront. LEFT JOIN because a policy
+      // may target a listing whose product row is gone; a missing vendor must cost that one job its
+      // exclusion key, never the whole claim.
+      `SELECT rj.*, s.label, l.slug AS listing_slug, pr.vendor_id
        FROM refresh_jobs rj
        JOIN source_refresh_policies rp ON rp.id = rj.policy_id
        JOIN sources s ON s.id = rp.source_id
        JOIN listings l ON l.id = rp.target_listing_id
+       LEFT JOIN products pr ON pr.id = l.product_id
        WHERE rj.id = $1`,
       [id],
     );

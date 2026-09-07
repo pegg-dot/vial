@@ -317,8 +317,11 @@ describe("both collectors are registered in the continuous queue", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({ id: "ct:enforcement-openfda:market", collector: "enforcement-openfda", target: "market", cadence_minutes: CADENCE_MINUTES["enforcement-openfda"] });
     expect(rows[1]).toMatchObject({ id: "ct:news-feeds:market", collector: "news-feeds", target: "market", cadence_minutes: CADENCE_MINUTES["news-feeds"] });
+    // Pinned literally, so moving a cadence has to be a decision rather than a side effect. News
+    // went 12h -> 24h on 2026-09-07 when the collection cron went daily: a cadence shorter than the
+    // cron that drains it is not a faster read, just a target sitting due under a misleading label.
     expect(CADENCE_MINUTES["enforcement-openfda"]).toBe(24 * 60);
-    expect(CADENCE_MINUTES["news-feeds"]).toBe(12 * 60);
+    expect(CADENCE_MINUTES["news-feeds"]).toBe(24 * 60);
   });
 
   it("stays idempotent across repeated syncs", async () => {

@@ -6,7 +6,7 @@ import { applyRetention } from "@/server/db/retention";
 import { reviewCostSignals } from "@/server/observability/cost-signals";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function authorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET?.trim();

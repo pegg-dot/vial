@@ -36,6 +36,8 @@ export interface RefreshJob {
   policyId: string;
   sourceLabel: string;
   targetListingSlug: string;
+  /** The storefront this job will fetch from. The sweep never runs two jobs for one vendor at once. */
+  vendorId?: string;
   triggerType: string;
   triggerEventId?: string;
   status: RefreshJobStatus;

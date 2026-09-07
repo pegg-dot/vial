@@ -3,10 +3,10 @@ import { secretMatches } from "@/server/auth/secret-compare";
 import { runRefreshSweep } from "@/server/refresh/scheduler";
 import { triagePendingClaims } from "@/server/refresh/auto-triage";
 import { isLiveIngestApproved } from "@/server/ingest/live-sources";
-import { PROVENANCE_SWEEP_JOBS } from "@/server/collect/schedule-capacity";
+import { PROVENANCE_SWEEP_JOBS, PROVENANCE_CONCURRENCY, PROVENANCE_BUDGET_MS } from "@/server/collect/schedule-capacity";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 // The provenance sweep, on its own schedule.
 //
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ skipped: "live ingest not approved", hint: "set VIALGRADE_LIVE_INGEST_APPROVED=true" }, { status: 200 });
   }
 
-  const refresh = await runRefreshSweep(PROVENANCE_SWEEP_JOBS);
+  const refresh = await runRefreshSweep(PROVENANCE_SWEEP_JOBS, PROVENANCE_BUDGET_MS, PROVENANCE_CONCURRENCY);
   // Triage runs in the same tick as the sweep that produced the claims. Deferring it would leave a
   // queue of page-chrome noise sitting in front of a human between ticks, which is exactly the
   // "unread queue that looks like oversight" this is meant to avoid.
