@@ -42,6 +42,10 @@ import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 
 export const dynamic = "force-dynamic";
 
+// Supporting-tile row: the price trend always, plus a report record and a batch passport when this
+// listing has them. A lone tile takes the full width rather than sitting beside an empty half.
+const TILE_COLUMNS: Record<number, string> = { 1: "", 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 xl:grid-cols-3" };
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
@@ -90,6 +94,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const priceMeta = await getListingPriceMeta(db, product.slug);
   const priceTrend = computeListingTrend(await getListingObservations(db, product.slug), new Date(), priceMeta.days);
   const priceTrendCopy = describeListingTrend(priceTrend);
+  // A step chart needs two observed prices before it draws anything a reader can use.
+  const plottablePrices = product.pricePoints.filter((pt) => pt.available && pt.price !== null).length;
   const compoundLabTests = await getLabTestsForCompound(db, product.compoundSlug);
   const education = educationFor(product.compoundSlug);
   const stackedBriefs = education?.stackedWith?.length
@@ -262,17 +268,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         )}
 
-        {/* Equal-height rows of compact evidence tiles — stretch, not masonry: the staggered
-            items-start layout is what read as cards floating in space. The column count follows
-            the tile count so no tile ever orphans onto a row of its own (4 tiles → 2×2). */}
-        <div className={`mt-4 grid gap-4 md:grid-cols-2 ${3 + (product.reportIssuer ? 1 : 0) + (passport ? 1 : 0) === 4 ? "" : "xl:grid-cols-3"}`}>
-          <CoaCrossCheckPanel check={coaCheck} />
+        {/* The verdict on this listing's evidence gets the full measure, on its own row. */}
+        <div className="mt-4"><CoaCrossCheckPanel check={coaCheck} /></div>
 
+        {/* Then the supporting readouts, as an equal-height row of genuinely comparable tiles.
+            Stretch, not masonry: the staggered items-start layout is what read as cards floating
+            in space. It only worked once the cross-check verdict — three times their height — was
+            lifted out of the row, and the column count follows the tile count so no tile ever
+            orphans onto a row of its own. */}
+        <div className={`mt-4 grid gap-4 ${TILE_COLUMNS[1 + (product.reportIssuer ? 1 : 0) + (passport ? 1 : 0)]}`}>
           {/* Exactly one of the five states (spec §5). A percentage appears only when it is earned:
               a baseline near the window start, a fresh latest check, and at least two weeks between
               them. Direction is carried by the sign, not by colour — a price moving is not good or
               bad in an evidence product. */}
-          <div className="ink hard-sm rounded-[16px] bg-white p-4">
+          <div className="ink hard-sm flex flex-col rounded-[16px] bg-white p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Price trend</p>
@@ -282,8 +291,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
               {priceTrend.state === "trending" ? <p className="text-xs font-semibold tabular-nums text-[var(--muted)]">{formatObservedPrice(priceTrend.base.price)} → {formatObservedPrice(priceTrend.latest.price)}</p> : null}
             </div>
-            <div className="mt-4 h-28"><PriceSeries points={product.pricePoints} description={priceTrendCopy} accent={product.accent[0]} height={94} compact /></div>
-            <p className="mt-3 text-[11px] leading-4 text-black/60">{priceTrendCopy}</p>
+            {/* A step chart needs two observed prices to draw a step. Below that the plot area was
+                a 94px void holding at most one dot, and the sentence beneath it already says
+                everything the chart could — so the sentence carries it alone. It keeps its own
+                height rather than growing into the row: a 350px-tall sparkline of two observations
+                is dead space with a line through it, not a better chart. */}
+            {plottablePrices >= 2 ? <div className="mt-4 h-28"><PriceSeries points={product.pricePoints} description={priceTrendCopy} accent={product.accent[0]} height={94} compact /></div> : null}
+            <p className="mt-auto pt-3 text-[11px] leading-4 text-black/60">{priceTrendCopy}</p>
           </div>
 
           {product.reportIssuer ? (
@@ -306,8 +320,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#5a4be0]">Open the record <ExternalLink className="size-4 transition group-hover:translate-x-1"/></span>
           </Link>}
 
-          <UsLegalNotice slug={product.compoundSlug} />
         </div>
+
+        {/* Standing compound-level context, not evidence about this listing — the same notice on
+            all 42 vendors selling this compound. It reads as a band under the listing's own
+            readouts rather than a fourth tile competing with them, which also stops the longest
+            legal text on the site (investigational compounds) from setting the tile row's height. */}
+        <div className="mt-4"><UsLegalNotice slug={product.compoundSlug} /></div>
       </section>
 
       <section className="mx-auto max-w-[1320px] px-5 pb-10 pt-2 sm:px-8">

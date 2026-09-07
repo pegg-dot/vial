@@ -55,14 +55,12 @@ export function PriceSeries({ points, description, accent = "#111214", height = 
 
   return (
     <figure className="m-0 h-full w-full">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full" role="img" aria-label={description} data-series={id || undefined}>
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="h-full w-full" role="img" aria-label={description} data-series={id || undefined}>
         {segments.map((seg, i) => (
-          <polyline key={i} points={seg} fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline key={i} points={seg} fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         ))}
-        {gaps.map((gx, i) => (
-          <circle key={`gap-${i}`} cx={gx} cy={baseline} r="2.6" fill="white" stroke={accent} strokeWidth="1.5" />
-        ))}
-        {last ? <circle cx={x(last.day)} cy={y(last.price as number)} r="3" fill={accent} stroke="white" strokeWidth="2" /> : null}
+        {gaps.map((gx, i) => <Dot key={`gap-${i}`} cx={gx} cy={baseline} size={5.2} fill="white" ring={accent} />)}
+        {last ? <Dot cx={x(last.day)} cy={y(last.price as number)} size={6} fill={accent} ring="white" /> : null}
       </svg>
       <details className={compact ? "sr-only" : "mt-2 text-[11px] leading-4 text-black/60"}>
         <summary className="cursor-pointer font-semibold">Every observation</summary>
@@ -76,5 +74,20 @@ export function PriceSeries({ points, description, accent = "#111214", height = 
         </table>
       </details>
     </figure>
+  );
+}
+
+// A marker, drawn as a pair of zero-length round-capped lines rather than a <circle>.
+//
+// The chart stretches to whatever width its card gives it (preserveAspectRatio="none"), which is
+// the only way a step chart fills a tile that is 340px wide on a phone and 1,250px wide on its own
+// row. Under that stretch a circle renders as a flat ellipse — but a round line cap is sized in
+// screen pixels, so it stays a dot at any width, exactly like the non-scaling strokes around it.
+function Dot({ cx, cy, size, fill, ring }: { cx: number; cy: number; size: number; fill: string; ring: string }) {
+  return (
+    <g>
+      <line x1={cx} y1={cy} x2={cx} y2={cy} stroke={ring} strokeWidth={size + 2.4} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <line x1={cx} y1={cy} x2={cx} y2={cy} stroke={fill} strokeWidth={size} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+    </g>
   );
 }

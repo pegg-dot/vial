@@ -5,6 +5,13 @@ import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 
 // Shows how a vendor's advertised testing holds up against independent evidence. This is the
 // honest verdict a buyer wants: does the paperwork check out, or is it a claim we can't back?
+//
+// It is the page's verdict, so it gets its own full-width row rather than a third of a tile row.
+// Sharing that row cost it twice: the prose wrapped at ~430px into a five-line block that stood
+// 533px tall, and every tile beside it was stretched to match, which is where the empty half-cards
+// came from. Given the width, the finding reads down the left at a set measure and the evidence it
+// rests on stacks down the right. Measured on the same listing, the panel went 655px -> 321px and
+// the tile row beside it went from 95px of dead space to none.
 const STYLE: Record<CoaCrossCheck["status"], { bg: string; chip: string; icon: typeof BadgeCheck; tag: string }> = {
   "batch-verified": { bg: "bg-[#e6fbf6]", chip: "bg-white text-[#0e8f80]", icon: BadgeCheck, tag: "Independently confirmed" },
   verified: { bg: "bg-[#e6fbf6]", chip: "bg-white text-[#0e8f80]", icon: BadgeCheck, tag: "Independently backed" },
@@ -17,38 +24,56 @@ const STYLE: Record<CoaCrossCheck["status"], { bg: string; chip: string; icon: t
 export function CoaCrossCheckPanel({ check }: { check: CoaCrossCheck }) {
   const s = STYLE[check.status];
   const Icon = s.icon;
+  // The evidence only earns its own column when there is enough of it to read as a stack. A single
+  // signal stranded opposite the headline looks like a layout accident, so below the threshold the
+  // same content runs under the finding instead, behind a rule.
+  const supporting = check.signals.length + (check.testedAt ? 1 : 0) + (check.independentUrl ? 1 : 0) + (check.compoundEvidence ? 1 : 0);
+  const split = supporting >= 2;
   return (
-    <div className={`ink hard-sm rounded-[16px] ${s.bg} p-4`}>
-      <div className="flex items-center gap-2">
-        <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${s.chip}`}><Icon className="size-3.5" /> {s.tag}</span>
-        {check.claimedIssuer ? <span className="text-[11px] font-semibold text-black/45">vendor cites {check.claimedIssuer}</span> : null}
+    <div className={`ink hard-sm rounded-[16px] ${s.bg} p-5`}>
+      <div className={`grid gap-x-10 gap-y-5 ${split ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]" : ""}`}>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${s.chip}`}><Icon className="size-3.5" /> {s.tag}</span>
+            {check.claimedIssuer ? <span className="text-[11px] font-semibold text-black/45">vendor cites {check.claimedIssuer}</span> : null}
+          </div>
+          <p className="mt-4 max-w-[46ch] text-[18px] font-extrabold leading-7 tracking-[-.025em]">{check.headline}</p>
+          <p className="mt-2 max-w-[68ch] text-[13px] font-medium leading-6 text-black/70">{check.detail}</p>
+        </div>
+
+        {supporting > 0 ? (
+          <div className={split ? "lg:pt-1" : "max-w-[68ch] border-t-2 border-black/[.07] pt-4"}>
+            {check.signals.length > 0 ? (
+              <ul className="space-y-2">
+                {check.signals.map((sig, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs leading-5">
+                    <span className={`mt-1 size-2 shrink-0 rounded-full ${sig.ok === true ? "bg-[#12b3a6]" : sig.ok === false ? "bg-[#f5463d]" : "bg-black/25"}`} />
+                    <span><span className="font-bold text-black/75">{sig.label}.</span> <span className="font-medium text-black/60">{sig.detail}</span></span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {check.testedAt ? (
+              <p className="mt-3 text-xs text-black/55">Certificate analyzed <span className="font-semibold text-black/70">{check.testedAt}</span>{check.stale ? <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">years old — may not describe current stock</span> : null}</p>
+            ) : null}
+            {check.independentUrl ? (
+              <a href={check.independentUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#2b31d8] hover:underline">
+                Open the independent certificate <ExternalLink className="size-3.5" />
+              </a>
+            ) : null}
+            {check.compoundEvidence ? (
+              <Link href={`/compounds/${check.compoundEvidence.compoundSlug}`} className="ink-1 mt-3 flex items-center gap-2.5 rounded-xl bg-[#eef0ff] px-3.5 py-2.5 text-xs font-bold text-[#2b31d8] transition hover:-translate-y-0.5">
+                <FlaskConical className="size-3.5 shrink-0 text-[#2b31d8]" />
+                <span>{check.compoundEvidence.count} independent COA{check.compoundEvidence.count === 1 ? "" : "s"} on record for this compound{check.compoundEvidence.medianPurity != null ? ` · median ${check.compoundEvidence.medianPurity.toFixed(1)}%` : ""} — see them all</span>
+                <ExternalLink className="ml-auto size-3.5 shrink-0" />
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* Always the last row, whichever way the panel laid out above it. */}
+        <p className={`max-w-[86ch] text-[10px] leading-4 text-black/40 ${split ? "lg:col-span-2" : ""}`}>Cross-checks the vendor&rsquo;s testing claim against independent lab records. {PURITY_PROVENANCE_SHORT} Never a statement that a product is safe, sterile, or correctly dosed. <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">What &ldquo;grade&rdquo; actually means</Link></p>
       </div>
-      <p className="mt-4 text-[15px] font-extrabold leading-6 tracking-[-.02em]">{check.headline}</p>
-      <p className="mt-2 text-[13px] font-medium leading-6 text-black/70">{check.detail}</p>
-      <ul className="mt-4 space-y-2">
-        {check.signals.map((sig, i) => (
-          <li key={i} className="flex items-start gap-2 text-xs leading-5">
-            <span className={`mt-1 size-2 shrink-0 rounded-full ${sig.ok === true ? "bg-[#12b3a6]" : sig.ok === false ? "bg-[#f5463d]" : "bg-black/25"}`} />
-            <span><span className="font-bold text-black/75">{sig.label}.</span> <span className="font-medium text-black/60">{sig.detail}</span></span>
-          </li>
-        ))}
-      </ul>
-      {check.testedAt ? (
-        <p className="mt-3 text-xs text-black/55">Certificate analyzed <span className="font-semibold text-black/70">{check.testedAt}</span>{check.stale ? <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">years old — may not describe current stock</span> : null}</p>
-      ) : null}
-      {check.independentUrl ? (
-        <a href={check.independentUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#2b31d8] hover:underline">
-          Open the independent certificate <ExternalLink className="size-3.5" />
-        </a>
-      ) : null}
-      {check.compoundEvidence ? (
-        <Link href={`/compounds/${check.compoundEvidence.compoundSlug}`} className="ink-1 mt-4 flex items-center gap-2.5 rounded-xl bg-[#eef0ff] px-3.5 py-2.5 text-xs font-bold text-[#2b31d8] transition hover:-translate-y-0.5">
-          <FlaskConical className="size-3.5 shrink-0 text-[#2b31d8]" />
-          <span>{check.compoundEvidence.count} independent COA{check.compoundEvidence.count === 1 ? "" : "s"} on record for this compound{check.compoundEvidence.medianPurity != null ? ` · median ${check.compoundEvidence.medianPurity.toFixed(1)}%` : ""} — see them all</span>
-          <ExternalLink className="ml-auto size-3.5 shrink-0" />
-        </Link>
-      ) : null}
-      <p className="mt-4 text-[10px] leading-4 text-black/40">Cross-checks the vendor&rsquo;s testing claim against independent lab records. {PURITY_PROVENANCE_SHORT} Never a statement that a product is safe, sterile, or correctly dosed. <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">What &ldquo;grade&rdquo; actually means</Link></p>
     </div>
   );
 }
