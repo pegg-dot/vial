@@ -12,6 +12,7 @@ import type { SqlConnection } from "@/server/db/client";
 import { getDatabase } from "@/server/db/client";
 import { recordCollectorRun } from "@/server/health/data-health";
 import { runPooled } from "./pool";
+import { DUE_GRACE_MINUTES } from "./schedule-capacity";
 import knownVendors from "@/server/verify/known-vendors.json";
 import { importShopifyCatalog } from "@/server/ingest/shopify-import";
 import { importWooCommerceCatalog } from "@/server/ingest/woocommerce-import";
@@ -189,15 +190,21 @@ export interface DueTarget {
   id: string; collector: CollectorKind; target: string; cadence_minutes: number; consecutive_failures: number;
 }
 
-/** Most-overdue first, so nothing starves while a busy collector hogs the ticks. */
+/**
+ * Most-overdue first, so nothing starves while a busy collector hogs the ticks.
+ *
+ * Claims slightly EARLY on purpose — see DUE_GRACE_MINUTES. Without the grace, a cadence equal to
+ * the cron interval makes every target alternate days, because the seconds a run takes to reach a
+ * target push its next due time past the moment the next run starts.
+ */
 export async function claimDueTargets(db: SqlConnection, limit: number): Promise<DueTarget[]> {
   return (await db.query<DueTarget>(
     `SELECT id,collector,target,cadence_minutes,consecutive_failures
      FROM collection_targets
-     WHERE enabled AND next_due_at <= NOW()
+     WHERE enabled AND next_due_at <= NOW() + ($2::text || ' minutes')::interval
      ORDER BY next_due_at ASC
      LIMIT $1`,
-    [limit],
+    [limit, String(DUE_GRACE_MINUTES)],
   )).rows;
 }
 

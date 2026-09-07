@@ -22,6 +22,9 @@ export const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
 /** Bounds the work one request can ask for. A Janoshik COA is one page. */
 const MAX_PAGES = 10;
 
+/** Key-shaped tokens we will offer to the index from one document. */
+const MAX_CANDIDATES = 40;
+
 const VERIFY_URL = /https?:\/\/(?:www\.)?verify\.janoshik\.com\/tests\/[^\s"'<>)]+/i;
 
 export interface DocumentScan {
@@ -69,18 +72,26 @@ export async function scanCoaDocument(bytes: Uint8Array): Promise<DocumentScan> 
  * text path uses, so a document and a typed code resolve to the same record.
  */
 export async function firstIndexedCode(codes: readonly string[]): Promise<string | null> {
-  if (codes.length === 0) return null;
+  const candidates = codes.slice(0, MAX_CANDIDATES);
+  if (candidates.length === 0) return null;
   try {
     const db = await getDatabase();
-    for (const code of codes.slice(0, 40)) {
-      const r = await db.query<{ n: string }>(
-        `SELECT COUNT(*) n FROM lab_test_records WHERE verify_key = $1 OR UPPER(verify_url) LIKE '%' || $1`,
-        [code],
-      );
-      if (Number(r.rows[0]?.n ?? 0) > 0) return code;
-    }
+    // One query for the whole candidate set, not one per candidate. A crafted document can carry
+    // forty key-shaped tokens, and asking the database forty separate questions about one upload is
+    // how a parser becomes an amplifier.
+    const r = await db.query<{ verify_key: string | null; verify_url: string }>(
+      `SELECT verify_key, UPPER(verify_url) AS verify_url
+         FROM lab_test_records
+        WHERE verify_key = ANY($1::text[])
+           OR EXISTS (SELECT 1 FROM unnest($1::text[]) c WHERE UPPER(verify_url) LIKE '%' || c)`,
+      [candidates],
+    );
+    if (r.rows.length === 0) return null;
+    const keys = new Set(r.rows.map((row) => row.verify_key).filter((k): k is string => Boolean(k)));
+    const urls = r.rows.map((row) => row.verify_url);
+    // Document order decides, so the same PDF always resolves to the same certificate.
+    return candidates.find((code) => keys.has(code) || urls.some((u) => u.endsWith(code))) ?? null;
   } catch {
     return null;
   }
-  return null;
 }

@@ -21,6 +21,28 @@ export const TICK_CONCURRENCY = 6;
 /** Wall-clock the collection tick may spend starting targets, inside a 300s function ceiling. */
 export const TICK_BUDGET_MS = 180_000;
 
+/**
+ * How early a target may be claimed, in minutes.
+ *
+ * A queue that writes `next_due = completion + cadence` and claims on `next_due <= now` works fine
+ * while the cron fires far more often than the cadence — there is always another tick along
+ * shortly. It breaks in exactly one case: cadence EQUAL to the cron interval, which is what a daily
+ * cron with 24-hour cadences is.
+ *
+ *   Day 1  cron 05:00:00 -> target settles 05:00:03 -> next due Day 2 05:00:03
+ *   Day 2  cron 05:00:00 -> 05:00:03 <= 05:00:00 is false -> skipped
+ *   Day 3  cron 05:00:00 -> due
+ *
+ * Every target served every OTHER day, at half the freshness its cadence promises, every run green
+ * and the headroom arithmetic above still reporting 2.4x. The seconds a run takes to reach a target
+ * are enough to cause it, and Vercel's firing time drifts by minutes on top of that.
+ *
+ * An hour absorbs both. It is a rounding error against the cadences that are longer than a day
+ * (a weekly target claimed 0.6% early is still weekly) and it is the difference between daily and
+ * every-other-day for the ones that match the cron.
+ */
+export const DUE_GRACE_MINUTES = 60;
+
 const MINUTES_PER_DAY = 24 * 60;
 
 /**

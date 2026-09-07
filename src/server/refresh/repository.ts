@@ -1,4 +1,5 @@
 import type { QueryResultRow } from "pg";
+import { DUE_GRACE_MINUTES } from "@/server/collect/schedule-capacity";
 import { getDatabase, withTransaction, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { createDomainEvent } from "@/server/intelligence/events";
@@ -238,17 +239,21 @@ export async function createRefreshJob(input: Parameters<typeof insertRefreshJob
 export async function enqueueDueRefreshJobs(now = new Date()) {
   return withTransaction(async (tx) => {
     const due = await tx.query<QueryResultRow & { id: string; next_run_at: Date | string }>(
+      // Claims slightly EARLY on purpose — see DUE_GRACE_MINUTES. A policy whose interval equals
+      // the sweep's cron interval (1440 minutes each, since 2026-09-07) is otherwise served every
+      // other day: yesterday's sweep reached it seconds after the cron fired, so today it is due
+      // seconds from now and today's sweep walks past it.
       `SELECT id, next_run_at
        FROM source_refresh_policies rp
        WHERE rp.enabled = TRUE
-         AND rp.next_run_at <= $1
+         AND rp.next_run_at <= $1::timestamptz + ($2::text || ' minutes')::interval
          AND NOT EXISTS (
            SELECT 1 FROM refresh_jobs rj
            WHERE rj.policy_id = rp.id AND rj.status IN ('queued','retrying','running')
          )
        ORDER BY rp.next_run_at
        FOR UPDATE`,
-      [now.toISOString()],
+      [now.toISOString(), String(DUE_GRACE_MINUTES)],
     );
     const ids: string[] = [];
     for (const policy of due.rows) {

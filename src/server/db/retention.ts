@@ -64,6 +64,19 @@ const RULES: Rule[] = [
     why: "The reader's own alert history. Kept long because the relevance filter is applied on read, so old rows must survive a threshold change.",
     where: "status = 'dismissed' OR read_at IS NOT NULL",
   },
+  {
+    table: "verify_queries", column: "last_seen_at", days: 180,
+    // LAST_seen_at, not first_seen_at, and the distinction is the whole rule. This table is an
+    // upsert with a counter, so a domain asked every week since March has an ancient first_seen_at
+    // and is the single most valuable row in it — keying on first_seen_at would delete exactly the
+    // rows the table exists to surface, while leaving one-off noise from last week untouched. This
+    // file already warns that naming the wrong column deletes nothing while reporting success; here
+    // it would delete the wrong thing while reporting success, which is worse.
+    why:
+      "The demand log behind /verify. It is written by an unauthenticated public endpoint, so its " +
+      "distinct-query count is bounded by nothing but time — and a query nobody has asked in six " +
+      "months has stopped being demand and become exhaust.",
+  },
 ];
 
 export interface RetentionResult { table: string; deleted: number; days: number }
