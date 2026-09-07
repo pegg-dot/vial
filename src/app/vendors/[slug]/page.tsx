@@ -22,6 +22,7 @@ import { persistVendorGrade } from "@/server/verify/grade-store";
 import { VialGradeCard } from "@/components/vial-grade-card";
 import { getVendorRegulatoryActions } from "@/server/regulatory/repository";
 import { EnforcementBanner } from "@/components/enforcement-banner";
+import { VendorHistoryRail } from "@/components/vendor-history-rail";
 import { FollowButton } from "@/components/follow-button";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
@@ -513,28 +514,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </div>
 
           <aside id="history" className="scroll-mt-[140px]">
-            <div className="ink-1 hard-sm sticky top-32 rounded-[16px] bg-white p-4">
-              <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#2b31d8]">History</p>
-              <h2 className="mt-2 text-lg font-extrabold tracking-[-.02em]">What has changed recently?</h2>
-              <p className="mt-2 text-xs font-medium leading-5 text-[var(--muted)]">
-                {vendor.history.length > 0
-                  ? `${vendor.history.length} change${vendor.history.length === 1 ? "" : "s"} we have recorded for ${vendor.name} — catalog, documents, profile and policy.`
-                  : `We haven’t recorded any change for ${vendor.name} yet.`}
-              </p>
-              <div className="mt-5 space-y-0">
-                {vendor.history.map((item, index) => (
-                  <div key={`${item.date}-${item.event}`} className="relative flex gap-3 pb-6 last:pb-0">
-                    {index < vendor.history.length - 1 && <span className="absolute left-[6px] top-4 h-full w-0.5 bg-[#111214]/12" />}
-                    <span className="relative mt-1 size-3.5 shrink-0 rounded-full border-2 border-[#111214] bg-[#2b31d8]" />
-                    <div>
-                      <p className="text-xs font-bold text-black/45">{item.date}</p>
-                      <p className="mt-1 text-sm font-semibold leading-5">{item.event}</p>
-                      <p className="mt-1 text-[10px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">{item.type}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <VendorHistoryRail history={vendor.history} vendorName={vendor.name} />
           </aside>
         </div>
       </section>
