@@ -72,7 +72,7 @@ if (env.DATABASE_URL?.trim()) {
   suiteEnv.NODE_ENV = "test";
   suiteEnv.NEXT_PUBLIC_SITE_URL = "http://127.0.0.1:3000";
   suiteEnv.VIALGRADE_PGLITE_MEMORY = "true";
-  suiteEnv.VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS = "true";
+  suiteEnv.VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS = "false";
   suiteEnv.VIALGRADE_SEED_FIXTURES = "true";
   suiteEnv.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
   suiteEnv.VIALGRADE_SESSION_SECRET = "build-suite-session-secret-at-least-32-characters";
