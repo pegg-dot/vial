@@ -10,12 +10,12 @@ I built the product end to end as an independent engineering project. The public
 
 ## What VialGrade does
 
-- **Market intelligence** — follows compounds, vendors, listings, availability, and pricing across a changing market.
-- **Evidence-backed research** — connects claims to supporting laboratory and source material when that evidence is available.
-- **Verification** — helps distinguish what is supported, what conflicts, and what remains unknown rather than collapsing everything into a binary trust label.
-- **Vendor context** — surfaces useful history and signals around the companies behind the listings.
-- **Provenance** — keeps source context attached to published information so important claims can be traced back toward where they came from.
-- **Operational review** — separates automated collection from higher-impact publication and review decisions.
+- **Market intelligence:** follows compounds, vendors, listings, availability, and pricing across a changing market.
+- **Evidence-backed research:** connects claims to supporting laboratory and source material when that evidence is available.
+- **Verification:** helps distinguish what is supported, what conflicts, and what remains unknown rather than collapsing everything into a binary trust label.
+- **Vendor context:** surfaces useful history and signals around the companies behind the listings.
+- **Provenance:** keeps source context attached to published information so important claims can be traced back toward where they came from.
+- **Operational review:** separates automated collection from higher-impact publication and review decisions.
 
 ## Why I built it
 
