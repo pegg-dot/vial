@@ -2,10 +2,12 @@ import { z } from "zod";
 
 const booleanString = z.enum(["true", "false"]).transform((value) => value === "true");
 const optionalString = (minimum = 1) => z.preprocess((value) => value === "" ? undefined : value, z.string().min(minimum).optional());
+const inferredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+  || (process.env.VERCEL_URL?.trim() ? `https://${process.env.VERCEL_URL.trim()}` : "http://localhost:3000");
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
+  NEXT_PUBLIC_SITE_URL: z.string().url().default(inferredSiteUrl),
   DATABASE_URL: optionalString(),
   DATABASE_SSL: booleanString.default(false),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(5),
@@ -67,7 +69,9 @@ export function getEnvironment() {
   if (!parsed.success) {
     throw new Error(`Invalid VialGrade environment: ${parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
   }
-  if (parsed.data.NODE_ENV === "production") {
+
+  const isVercelPreview = process.env.VERCEL_ENV === "preview";
+  if (parsed.data.NODE_ENV === "production" && !isVercelPreview) {
     const embedded = parsed.data.VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS && parsed.data.VIALGRADE_PGLITE_MEMORY && isLoopbackSite(parsed.data.NEXT_PUBLIC_SITE_URL);
     if (parsed.data.VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS && !embedded) {
       throw new Error("VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS is restricted to an in-memory database on a loopback site URL");
