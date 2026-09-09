@@ -23,23 +23,20 @@ env.VIALGRADE_SKIP_NEXT_TYPECHECK = "1";
 // Local and CI builds without managed PostgreSQL use the embedded, in-memory
 // database only to render static/server pages. Deployed runtimes still fail
 // closed unless DATABASE_URL and production secrets are present.
+//
 // A DEPLOYED build (DATABASE_URL present) must prove its environment before it bakes anything in.
-// scripts/check-env.mjs already existed and was never called, which is how the canonical-URL trap
-// stayed open: NEXT_PUBLIC_SITE_URL is inlined at BUILD time, so if it were missing in production
-// every page would ship <link rel="canonical" href="http://127.0.0.1:3000/..."> from the fallback
-// below and the whole site could be deindexed. A missing privacy salt is worse — visitor hashes
-// become reversible. Both fail silently at build and only surface as damage later, so the build is
-// the right place to stop.
-// The unit suite is a release gate on DEPLOYED builds.
+// NEXT_PUBLIC_SITE_URL is inlined at build time, so a missing canonical origin can damage every
+// generated canonical/share URL. A missing privacy salt is worse: visitor hashes lose their
+// intended secret. Both are release failures, not warnings.
 //
-// GitHub Actions is not available on this account, so the CI deploy job cannot run and Vercel
-// builds every push again. Without something here, nothing checks a commit before it reaches
-// vialgrade.com — which is the state that shipped eight red commits in August.
+// Vercel's Git integration is currently the production authority. GitHub Actions runs a larger
+// independent verification suite, while its CLI deployment job is opt-in. That means this file is
+// the gate that necessarily executes on the path capable of making a Git commit live.
 //
-// Unit only, deliberately: 600+ tests in ~15s, no browser, no database. The integration suite is
-// NOT run here. It would need DATABASE_URL stripped from a build whose whole purpose is to have
-// one, and databaseChoice now refuses that combination outright rather than let a test run touch
-// production. e2e needs a browser. Both stay in the local gate (`npm run verify`).
+// Unit only, deliberately: fast, no browser, no real database. The integration suite is NOT run
+// here. It would need DATABASE_URL stripped from a build whose whole purpose is having one, and
+// databaseChoice refuses a process that asks for both a real database and the isolated test store.
+// E2E needs a browser. Both stay in the larger local/CI gate (`npm run verify`).
 if (env.DATABASE_URL?.trim()) {
   // Build the child env explicitly. Setting a key to `undefined` is not a reliable way to unset it
   // for a spawned process, and leaving BOTH unset would drop the suite onto an on-disk store. The
