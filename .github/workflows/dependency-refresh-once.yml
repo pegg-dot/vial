@@ -1,0 +1,40 @@
+name: One-time dependency refresh
+
+on:
+  push:
+    branches:
+      - security/production-and-repo-hardening
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: security/production-and-repo-hardening
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply non-breaking security updates to the lockfile
+        run: npm audit fix --package-lock-only
+      - name: Verify no high-severity advisories remain
+        run: npm audit --audit-level=high
+      - name: Commit refreshed lockfile
+        run: |
+          if git diff --quiet -- package-lock.json package.json; then
+            echo "No dependency changes were required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json package.json
+          git commit -m "Refresh dependencies for security advisories"
+          git push origin HEAD:security/production-and-repo-hardening
