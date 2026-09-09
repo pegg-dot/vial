@@ -47,6 +47,13 @@ describe("choosing a database", () => {
     expect(() => databaseChoice({ DATABASE_URL: "postgres://x", VIALGRADE_PGLITE_MEMORY: "1" })).not.toThrow();
     expect(databaseChoice({ VIALGRADE_PGLITE_MEMORY: "1" }).kind).toBe("file");
   });
+
+  it("forces Vercel Preview onto memory even when DATABASE_URL leaked into its environment", () => {
+    expect(databaseChoice({
+      VERCEL_ENV: "preview",
+      DATABASE_URL: "postgres://u:p@db.example.com/prod",
+    })).toEqual({ kind: "memory" });
+  });
 });
 
 // The runner is what used to present the bad combination. Assert it still strips them rather than
