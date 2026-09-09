@@ -38,12 +38,50 @@ env.VIALGRADE_SKIP_NEXT_TYPECHECK = "1";
 // databaseChoice refuses a process that asks for both a real database and the isolated test store.
 // E2E needs a browser. Both stay in the larger local/CI gate (`npm run verify`).
 if (env.DATABASE_URL?.trim()) {
-  // Build the child env explicitly. Setting a key to `undefined` is not a reliable way to unset it
-  // for a spawned process, and leaving BOTH unset would drop the suite onto an on-disk store. The
-  // suite wants a real isolated in-memory database and no handle on the production one.
+  // A production build has production credentials in its environment. The unit suite must not.
+  // Earlier versions stripped only DATABASE_URL, which still handed tests the real privacy salt,
+  // admin password, webhooks, API keys and other live capability flags. Preview builds also failed
+  // whenever production-only secrets were absent because the suite inherited NODE_ENV=production.
+  // Build a deliberately sterile child environment instead: no handle on production data, no live
+  // network/payment capability, and explicit test-only secrets.
   const suiteEnv = { ...env };
-  for (const key of ["DATABASE_URL", "POSTGRES_URL", "DATABASE_POSTGRES_PRISMA_URL", "PGHOST", "PGUSER", "PGPASSWORD", "PGDATABASE"]) delete suiteEnv[key];
+  for (const key of [
+    "DATABASE_URL",
+    "POSTGRES_URL",
+    "DATABASE_POSTGRES_PRISMA_URL",
+    "PGHOST",
+    "PGUSER",
+    "PGPASSWORD",
+    "PGDATABASE",
+    "CRON_SECRET",
+    "VIALGRADE_MCP_SELLER_TOKEN",
+    "VIALGRADE_MCP_LAB_TOKEN",
+    "STRIPE_SECRET_KEY",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_CONNECT_CLIENT_ID",
+    "VIALGRADE_LIVE_COMMERCE_ACK",
+    "ANTHROPIC_API_KEY",
+    "VAPID_PUBLIC_KEY",
+    "VAPID_PRIVATE_KEY",
+    "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+    "VIALGRADE_ALERT_WEBHOOK",
+    "VIALGRADE_ADMIN_PASSWORD",
+  ]) delete suiteEnv[key];
+
+  suiteEnv.NODE_ENV = "test";
+  suiteEnv.NEXT_PUBLIC_SITE_URL = "http://127.0.0.1:3000";
   suiteEnv.VIALGRADE_PGLITE_MEMORY = "true";
+  suiteEnv.VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS = "true";
+  suiteEnv.VIALGRADE_SEED_FIXTURES = "true";
+  suiteEnv.VIALGRADE_SEED_DEMO_ACCOUNTS = "true";
+  suiteEnv.VIALGRADE_SESSION_SECRET = "build-suite-session-secret-at-least-32-characters";
+  suiteEnv.VIALGRADE_PRIVACY_HASH_SECRET = "build-suite-privacy-secret-at-least-32-characters";
+  suiteEnv.VIALGRADE_LIVE_INGEST_APPROVED = "false";
+  suiteEnv.VIALGRADE_COMMERCE_MODE = "sandbox";
+  suiteEnv.VIALGRADE_PAYMENT_PROVIDER = "mock";
+  suiteEnv.VIALGRADE_LIVE_COMMERCE_ENABLED = "false";
+
   const suite = spawnSync(
     process.execPath,
     ["node_modules/vitest/vitest.mjs", "run", "tests/unit", "--maxWorkers=1", "--no-file-parallelism"],
