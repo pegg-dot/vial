@@ -16,6 +16,7 @@ export interface DatabaseEnv {
   DATABASE_URL?: string | undefined;
   VIALGRADE_PGLITE_MEMORY?: string | undefined;
   VIALGRADE_PGLITE_PATH?: string | undefined;
+  VERCEL_ENV?: string | undefined;
 }
 
 export function databaseChoice(env: DatabaseEnv = process.env as DatabaseEnv):
@@ -24,6 +25,13 @@ export function databaseChoice(env: DatabaseEnv = process.env as DatabaseEnv):
   | { kind: "file"; dir: string } {
   const url = env.DATABASE_URL?.trim();
   const wantsMemory = env.VIALGRADE_PGLITE_MEMORY === "true";
+
+  // Preview deployments are disposable review environments. They must never inherit a managed
+  // database merely because DATABASE_URL was accidentally scoped to Preview in Vercel. Treat the
+  // platform's preview signal as a hard isolation boundary and use the embedded in-memory store.
+  // Production is unchanged and still requires the managed PostgreSQL path.
+  if (env.VERCEL_ENV === "preview") return { kind: "memory" };
+
   // Both readings of this pair are bad. Preferring DATABASE_URL points an isolated test run at
   // whatever that is — on a deploy machine, production. Preferring memory would serve a live site
   // from an empty database. DATABASE_URL was checked first, so it was the first of those, and the
@@ -41,5 +49,5 @@ export function databaseChoice(env: DatabaseEnv = process.env as DatabaseEnv):
 async function createAdapter():Promise<DatabaseAdapter>{const choice=databaseChoice();
 if(choice.kind==="postgres")return new PgAdapter(new Pool({connectionString:normalizePostgresUrl(choice.url),max:Number(process.env.DATABASE_POOL_MAX??5),ssl:process.env.DATABASE_SSL==="true"?{rejectUnauthorized:true}:undefined}));
 const d=choice.kind==="memory"?"memory://":choice.dir;if(d!=="memory://")await mkdir(d,{recursive:true});const{PGlite}=await import("@electric-sql/pglite");return new PGliteAdapter(new PGlite(d))}
-async function initialize(a:DatabaseAdapter){const version=await a.transaction(async tx=>{if(a.dialect==="postgres")await tx.query(`SELECT pg_advisory_xact_lock($1)`,[7031042026]);return runMigrations(tx)});const seed=process.env.VIALGRADE_SEED_FIXTURES==="false"?false:(process.env.NODE_ENV!=="production"||process.env.VIALGRADE_SEED_FIXTURES==="true");if(seed)await seedDatabase(a);await seedProductionFoundation(a);await ensureOwnerAdmin(a);await ensureCompoundLiterature(a);await ensureCuratedNews(a);if(seed)await seedMarketDataEngine(a);if(seed)await seedConsumerIntelligence(a);await ensureSearchIndex(a);await a.query(`INSERT INTO app_meta(key,value,updated_at) VALUES('schema_version',$1::jsonb,NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,[JSON.stringify({version,appliedAt:new Date().toISOString()})])}
+async function initialize(a:DatabaseAdapter){const version=await a.transaction(async tx=>{if(a.dialect==="postgres")await tx.query(`SELECT pg_advisory_xact_lock($1)`,[7031042026]);return runMigrations(tx)});const seed=process.env.VERCEL_ENV==="preview"?true:(process.env.VIALGRADE_SEED_FIXTURES==="false"?false:(process.env.NODE_ENV!=="production"||process.env.VIALGRADE_SEED_FIXTURES==="true"));if(seed)await seedDatabase(a);await seedProductionFoundation(a);await ensureOwnerAdmin(a);await ensureCompoundLiterature(a);await ensureCuratedNews(a);if(seed)await seedMarketDataEngine(a);if(seed)await seedConsumerIntelligence(a);await ensureSearchIndex(a);await a.query(`INSERT INTO app_meta(key,value,updated_at) VALUES('schema_version',$1::jsonb,NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,[JSON.stringify({version,appliedAt:new Date().toISOString()})])}
 export async function getDatabase(){if(!globalThis.__vialDbPromise)globalThis.__vialDbPromise=(async()=>{const a=await createAdapter();await initialize(a);return a})();return globalThis.__vialDbPromise}export async function withTransaction<T>(work:(tx:SqlConnection)=>Promise<T>){return(await getDatabase()).transaction(work)}export async function resetDatabaseForTests(){const c=globalThis.__vialDbPromise;globalThis.__vialDbPromise=undefined;if(c)try{await(await c).close()}catch{}}
