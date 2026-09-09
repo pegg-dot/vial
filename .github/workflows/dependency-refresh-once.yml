@@ -23,8 +23,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Apply non-breaking security updates to the lockfile
-        run: npm audit fix --package-lock-only
+      - name: Refresh the four advisory chains within existing semver ranges
+        run: npm update --package-lock-only vitest sharp hono js-yaml
       - name: Verify no high-severity advisories remain
         run: npm audit --audit-level=high
       - name: Commit refreshed lockfile
