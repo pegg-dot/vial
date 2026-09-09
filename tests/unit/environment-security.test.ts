@@ -3,6 +3,7 @@ import { getEnvironment, resetEnvironmentForTests } from "@/server/config/env";
 
 function productionEnv() {
   vi.stubEnv("NODE_ENV", "production");
+  vi.stubEnv("VERCEL_ENV", "production");
   vi.stubEnv("DATABASE_URL", "postgres://user:pass@db.example/vial?sslmode=verify-full");
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://vialgrade.example");
   vi.stubEnv("VIALGRADE_SESSION_SECRET", "session-secret-aaaaaaaaaaaaaaaaaaaa");
@@ -42,5 +43,19 @@ describe("production environment security", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
     resetEnvironmentForTests();
     expect(() => getEnvironment()).toThrow(/NEXT_PUBLIC_SITE_URL/);
+  });
+
+  it("does not demand production credentials from a Vercel Preview", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://vial-preview.example");
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("VIALGRADE_SESSION_SECRET", "");
+    vi.stubEnv("VIALGRADE_PRIVACY_HASH_SECRET", "");
+    vi.stubEnv("VIALGRADE_PGLITE_MEMORY", "false");
+    vi.stubEnv("VIALGRADE_ALLOW_EMBEDDED_DB_FOR_TESTS", "false");
+    resetEnvironmentForTests();
+
+    expect(getEnvironment().NEXT_PUBLIC_SITE_URL).toBe("https://vial-preview.example");
   });
 });
