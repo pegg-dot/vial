@@ -1,15 +1,26 @@
 name: VIAL verification
+
 on:
   pull_request:
   push:
     branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vialgrade-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -21,18 +32,12 @@ jobs:
       - run: npm run db:backup-drill
       - run: npm audit --audit-level=high
       - run: npm run build
-      # Was continue-on-error while its seller/lab token harness had drifted from the app. The
-      # harness has been reconciled and the audit now passes here (run 1d5594a: "HTTP role audit
-      # passed for anonymous, customer and staff page boundaries"), so it BLOCKS again. It is the
-      # only check that walks all 48 routes as each role and asserts the boundaries hold; leaving
-      # it advisory meant an unprotected /admin route could go green.
       - run: npm run audit:roles
       - run: npm run audit:accessibility
-      # Offline only: proves the live verifier's parsers can still reject known-bad input.
-      # The live checks themselves hit production and would race this very deploy.
       - run: npm run verify:live:selftest
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+
   postgres-contract:
     runs-on: ubuntu-latest
     services:
@@ -49,8 +54,10 @@ jobs:
           --health-timeout 5s
           --health-retries 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -72,84 +79,61 @@ jobs:
           VIALGRADE_SEED_FIXTURES: "true"
           VIALGRADE_SEED_DEMO_ACCOUNTS: "true"
 
-  # Deploy AFTER the checks, not four seconds after the push.
+  # Production has exactly one deployment authority at a time.
   #
-  # Vercel's Git integration builds whatever lands on main the moment it lands. On 2026-08-24 the
-  # commit was authored at 18:34:58 and the production deployment was created at 18:35:02 — while
-  # CI still had five minutes left to run. Between 20 and 24 August the verify workflow failed
-  # eight times in a row on main and every one of those commits shipped to vialgrade.com anyway.
+  # Today that authority is Vercel's Git integration. Vercel runs scripts/build.mjs before a
+  # deployment can become READY, so the environment contract, TypeScript check and unit suite are
+  # still release gates even though this job is disabled.
   #
-  # A GitHub ruleset cannot close this: rulesets govern MERGES, and this repo is worked by pushing
-  # straight to main. The only thing that makes green a real precondition is making CI the deploy
-  # path, so a red run has nothing to promote.
+  # This CLI promotion path is deliberately opt-in. A stale VERCEL_TOKEN previously made the whole
+  # workflow red after both verification jobs had passed, even though Vercel's Git integration had
+  # already deployed the same SHA successfully. Presence of a secret is not proof that this job is
+  # meant to own production.
   #
-  # This job stays inert until VERCEL_TOKEN exists, and says so loudly in the run summary rather
-  # than skipping in silence. The paired change — turning Vercel's own auto-deploy off in
-  # vercel.json — must land WITH that secret, never before it, or nothing ships at all.
+  # To migrate production authority to CI:
+  #   1. install a fresh VERCEL_TOKEN
+  #   2. set repository variable VERCEL_CI_DEPLOY_ENABLED=true
+  #   3. prove this job can promote a green main commit
+  #   4. only then disable Vercel Git auto-deploy
   deploy:
     needs: [verify, postgres-contract]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.VERCEL_CI_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: production
     env:
-      # Identifiers, not credentials — both are already public in every deployment URL.
       VERCEL_ORG_ID: team_MA7HI0IC6XvMpuw33G9utThB
       VERCEL_PROJECT_ID: prj_IsRs7YJEMkuBWGR7qCRbNrceqCCC
     steps:
-      - name: Is the deploy gate wired?
-        id: gate
-        env:
-          TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          if [ -z "$TOKEN" ]; then
-            echo "wired=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=Deploy gate is NOT wired::VERCEL_TOKEN is not set, so this green run did not deploy anything. Vercel is still auto-deploying every push to main without waiting for these checks. Add the secret to close the gate."
-            {
-              echo "### Deploy gate is not wired"
-              echo ""
-              echo "This run passed, but it did **not** deploy. Vercel is still building every push to"
-              echo "\`main\` on its own, before these checks finish."
-              echo ""
-              echo "To close it: \`gh secret set VERCEL_TOKEN\` with a token from"
-              echo "<https://vercel.com/account/settings/tokens>, then turn Vercel's auto-deploy off."
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "wired=true" >> "$GITHUB_OUTPUT"
-          fi
-      - uses: actions/checkout@v4
-        if: steps.gate.outputs.wired == 'true'
-      - uses: actions/setup-node@v4
-        if: steps.gate.outputs.wired == 'true'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
-      - name: Install Vercel CLI
-        if: steps.gate.outputs.wired == 'true'
-        run: npm i -g vercel@latest
-      # Build ON Vercel, not here.
-      #
-      # The obvious shape is `vercel pull` + `vercel build --prebuilt`, and it cannot work for this
-      # project: every production env var is marked Encrypted, and `vercel pull` returns those as
-      # EMPTY STRINGS rather than values. So a local build gets a blank
-      # VIALGRADE_SESSION_SECRET and dies in env validation — which is the check doing its job,
-      # correctly refusing to build a production bundle with no session secret.
-      #
-      # Uploading the source and letting Vercel build it means the real values are present, and it
-      # is the same path Vercel's own git integration uses. Slower, and right.
-      - name: Promote to production
-        if: steps.gate.outputs.wired == 'true'
-        id: promote
+      - name: Install pinned Vercel CLI
+        run: npm i -g vercel@59.11.7
+      - name: Validate Vercel credential
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}")
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error title=Missing Vercel credential::VERCEL_TOKEN is required when VERCEL_CI_DEPLOY_ENABLED=true"
+            exit 1
+          fi
+          vercel whoami --token="$VERCEL_TOKEN" >/dev/null
+      - name: Promote to production
+        id: promote
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(vercel deploy --prod --yes --token="$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed $GITHUB_SHA -> $url"
           echo "### Promoted ${GITHUB_SHA:0:7} to production" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "$url" >> "$GITHUB_STEP_SUMMARY"
-      # The deployment is only real if the site actually serves. A promote that returns a URL
-      # nobody checked is the same class of claim as a guard that never fails.
       - name: Prove the site serves
-        if: steps.gate.outputs.wired == 'true'
         run: |
           for i in $(seq 1 10); do
             code=$(curl -s -o /dev/null -w '%{http_code}' https://vialgrade.com/ || true)

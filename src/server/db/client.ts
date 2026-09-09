@@ -1,4 +1,4 @@
-import type { PGlite as PGliteClient } from "@electric-sql/pglite";import{Pool,type PoolClient,type QueryResultRow}from"pg";import{mkdir}from"node:fs/promises";import path from"node:path";import{runMigrations}from"./migrations";import{seedDatabase}from"./seed";import{seedProductionFoundation}from"@/server/auth/foundation-seed";import{ensureOwnerAdmin}from"@/server/auth/owner-admin";import{seedMarketDataEngine}from"@/server/market-data/seed";import{seedConsumerIntelligence}from"@/server/consumer-intelligence/seed";import{ensureSearchIndex}from"@/server/search/engine";import{ensureCompoundLiterature}from"./compound-literature-seed";
+import type { PGlite as PGliteClient } from "@electric-sql/pglite";import{Pool,type PoolClient,type QueryResultRow}from"pg";import{mkdir}from"node:fs/promises";import path from"node:path";import{runMigrations}from"./migrations";import{seedDatabase}from"./seed";import{seedProductionFoundation}from"@/server/auth/foundation-seed";import{ensureOwnerAdmin}from"@/server/auth/owner-admin";import{seedMarketDataEngine}from"@/server/market-data/seed";import{seedConsumerIntelligence}from"@/server/consumer-intelligence/seed";import{ensureSearchIndex}from"@/server/search/engine";import{ensureCompoundLiterature}from"./compound-literature-seed";import{normalizePostgresUrl}from"./postgres-url";
 import{ensureCuratedNews}from"./curated-news-seed";
 export interface SqlResult<T extends QueryResultRow=QueryResultRow>{rows:T[];rowCount?:number|null}export interface SqlConnection{query<T extends QueryResultRow=QueryResultRow>(text:string,params?:unknown[]):Promise<SqlResult<T>>}interface DatabaseAdapter extends SqlConnection{readonly dialect:"postgres"|"pglite";transaction<T>(work:(tx:SqlConnection)=>Promise<T>):Promise<T>;close():Promise<void>}
 class PGliteAdapter implements DatabaseAdapter{readonly dialect="pglite" as const;private tail:Promise<void>=Promise.resolve();constructor(private client:PGliteClient){}private exclusive<T>(work:()=>Promise<T>){const result=this.tail.then(work,work);this.tail=result.then(()=>undefined,()=>undefined);return result}async query<T extends QueryResultRow=QueryResultRow>(text:string,params:unknown[]=[]){return this.exclusive(async()=>{const r=await this.client.query<T>(text,params);return{rows:r.rows,rowCount:r.affectedRows??r.rows.length}})}async transaction<T>(work:(tx:SqlConnection)=>Promise<T>){return this.exclusive(()=>this.client.transaction(async t=>work({query:async<R extends QueryResultRow=QueryResultRow>(text:string,params:unknown[]=[])=>{const r=await t.query<R>(text,params);return{rows:r.rows,rowCount:r.affectedRows??r.rows.length}}})))}async close(){await this.tail;await this.client.close()}}
@@ -16,6 +16,7 @@ export interface DatabaseEnv {
   DATABASE_URL?: string | undefined;
   VIALGRADE_PGLITE_MEMORY?: string | undefined;
   VIALGRADE_PGLITE_PATH?: string | undefined;
+  VERCEL_ENV?: string | undefined;
 }
 
 export function databaseChoice(env: DatabaseEnv = process.env as DatabaseEnv):
@@ -24,6 +25,13 @@ export function databaseChoice(env: DatabaseEnv = process.env as DatabaseEnv):
   | { kind: "file"; dir: string } {
   const url = env.DATABASE_URL?.trim();
   const wantsMemory = env.VIALGRADE_PGLITE_MEMORY === "true";
+
+  // Preview deployments are disposable review environments. They must never inherit a managed
+  // database merely because DATABASE_URL was accidentally scoped to Preview in Vercel. Treat the
+  // platform's preview signal as a hard isolation boundary and use the embedded in-memory store.
+  // Production is unchanged and still requires the managed PostgreSQL path.
+  if (env.VERCEL_ENV === "preview") return { kind: "memory" };
+
   // Both readings of this pair are bad. Preferring DATABASE_URL points an isolated test run at
   // whatever that is — on a deploy machine, production. Preferring memory would serve a live site
   // from an empty database. DATABASE_URL was checked first, so it was the first of those, and the
@@ -39,7 +47,7 @@ export function databaseChoice(env: DatabaseEnv = process.env as DatabaseEnv):
 }
 
 async function createAdapter():Promise<DatabaseAdapter>{const choice=databaseChoice();
-if(choice.kind==="postgres")return new PgAdapter(new Pool({connectionString:choice.url,max:Number(process.env.DATABASE_POOL_MAX??5),ssl:process.env.DATABASE_SSL==="true"?{rejectUnauthorized:true}:undefined}));
+if(choice.kind==="postgres")return new PgAdapter(new Pool({connectionString:normalizePostgresUrl(choice.url),max:Number(process.env.DATABASE_POOL_MAX??5),ssl:process.env.DATABASE_SSL==="true"?{rejectUnauthorized:true}:undefined}));
 const d=choice.kind==="memory"?"memory://":choice.dir;if(d!=="memory://")await mkdir(d,{recursive:true});const{PGlite}=await import("@electric-sql/pglite");return new PGliteAdapter(new PGlite(d))}
-async function initialize(a:DatabaseAdapter){const version=await a.transaction(async tx=>{if(a.dialect==="postgres")await tx.query(`SELECT pg_advisory_xact_lock($1)`,[7031042026]);return runMigrations(tx)});const seed=process.env.VIALGRADE_SEED_FIXTURES==="false"?false:(process.env.NODE_ENV!=="production"||process.env.VIALGRADE_SEED_FIXTURES==="true");if(seed)await seedDatabase(a);await seedProductionFoundation(a);await ensureOwnerAdmin(a);await ensureCompoundLiterature(a);await ensureCuratedNews(a);if(seed)await seedMarketDataEngine(a);if(seed)await seedConsumerIntelligence(a);await ensureSearchIndex(a);await a.query(`INSERT INTO app_meta(key,value,updated_at) VALUES('schema_version',$1::jsonb,NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,[JSON.stringify({version,appliedAt:new Date().toISOString()})])}
+async function initialize(a:DatabaseAdapter){const version=await a.transaction(async tx=>{if(a.dialect==="postgres")await tx.query(`SELECT pg_advisory_xact_lock($1)`,[7031042026]);return runMigrations(tx)});const seed=process.env.VERCEL_ENV==="preview"?true:(process.env.VIALGRADE_SEED_FIXTURES==="false"?false:(process.env.NODE_ENV!=="production"||process.env.VIALGRADE_SEED_FIXTURES==="true"));if(seed)await seedDatabase(a);await seedProductionFoundation(a);await ensureOwnerAdmin(a);await ensureCompoundLiterature(a);await ensureCuratedNews(a);if(seed)await seedMarketDataEngine(a);if(seed)await seedConsumerIntelligence(a);await ensureSearchIndex(a);await a.query(`INSERT INTO app_meta(key,value,updated_at) VALUES('schema_version',$1::jsonb,NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,[JSON.stringify({version,appliedAt:new Date().toISOString()})])}
 export async function getDatabase(){if(!globalThis.__vialDbPromise)globalThis.__vialDbPromise=(async()=>{const a=await createAdapter();await initialize(a);return a})();return globalThis.__vialDbPromise}export async function withTransaction<T>(work:(tx:SqlConnection)=>Promise<T>){return(await getDatabase()).transaction(work)}export async function resetDatabaseForTests(){const c=globalThis.__vialDbPromise;globalThis.__vialDbPromise=undefined;if(c)try{await(await c).close()}catch{}}
