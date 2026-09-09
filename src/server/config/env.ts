@@ -76,8 +76,15 @@ export function getEnvironment() {
       ["VIALGRADE_SESSION_SECRET", parsed.data.VIALGRADE_SESSION_SECRET],
       ["VIALGRADE_PRIVACY_HASH_SECRET", parsed.data.VIALGRADE_PRIVACY_HASH_SECRET],
       ["DATABASE_URL", parsed.data.DATABASE_URL || (embedded ? "test-only-embedded-db" : undefined)],
+      ["NEXT_PUBLIC_SITE_URL", process.env.NEXT_PUBLIC_SITE_URL?.trim() || (embedded ? parsed.data.NEXT_PUBLIC_SITE_URL : undefined)],
     ].filter(([, value]) => !value).map(([name]) => name);
     if (missing.length) throw new Error(`Missing production environment variables: ${missing.join(", ")}`);
+    if (!embedded && new URL(parsed.data.NEXT_PUBLIC_SITE_URL).protocol !== "https:") {
+      throw new Error("NEXT_PUBLIC_SITE_URL must use https in production");
+    }
+    if (parsed.data.VIALGRADE_SESSION_SECRET === parsed.data.VIALGRADE_PRIVACY_HASH_SECRET) {
+      throw new Error("Session and privacy hash secrets must be independent values");
+    }
   }
   validateCommerceSafety(parsed.data);
   cached = parsed.data;
