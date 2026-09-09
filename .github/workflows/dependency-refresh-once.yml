@@ -24,9 +24,9 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Refresh the four advisory chains within existing semver ranges
-        run: npm update --package-lock-only vitest sharp hono js-yaml
+        run: npx --yes npm@12.0.2 update --package-lock-only vitest sharp hono js-yaml
       - name: Verify no high-severity advisories remain
-        run: npm audit --audit-level=high
+        run: npx --yes npm@12.0.2 audit --audit-level=high
       - name: Commit refreshed lockfile
         run: |
           if git diff --quiet -- package-lock.json package.json; then
