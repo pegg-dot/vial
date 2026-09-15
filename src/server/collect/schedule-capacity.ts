@@ -141,20 +141,29 @@ export function headroom(cron: string, counts: TargetCounts, maxTargets = TICK_M
 export const PROVENANCE_SWEEP_JOBS = 1400;
 
 /** In-flight refresh jobs. Never two against one vendor — see server/collect/pool.ts. */
-export const PROVENANCE_CONCURRENCY = 12;
+export const PROVENANCE_CONCURRENCY = 20;
 
 /** Wall-clock the sweep may spend starting jobs, inside a 300s function ceiling. */
-export const PROVENANCE_BUDGET_MS = 200_000;
+export const PROVENANCE_BUDGET_MS = 280_000;
 
 /**
  * The slowest a provenance fetch may average before the daily sweep stops keeping its promise.
  *
- * This is an ASSUMPTION, written down so it can be checked rather than believed: at 12 in flight
- * for 200s, 1,346 jobs get 1.78s each. A real fetch-and-parse against a storefront is comfortably
- * inside that, but it has not been measured against production yet — the first daily run reports
- * `processed` and `budgetExhausted`, and those two numbers are what confirm or refute it.
+ * Written on 2026-09-07 as an explicit ASSUMPTION of 1s per job, with the note that it had not been
+ * measured. Production answered on 2026-09-14: /status reported 497 jobs queued and 499 of 699
+ * policies stale — a steady backlog of about 71%, which is what it looks like when one daily run
+ * cannot finish a day of work. Jobs are network fetches against other people's storefronts and 1s
+ * was optimistic for them.
+ *
+ * The response is to widen the run rather than to thin the promise: 20 in flight for 280s inside a
+ * 300s ceiling gives 5,600 job-seconds against 200 x 12 = 2,400 before, so each job may now average
+ * over 4s instead of 1.8s. Concurrency is still serialised per vendor, so 20 in flight means 20
+ * DIFFERENT storefronts seeing one request each, never one storefront seeing 20.
+ *
+ * This number is still not a measurement. It is now a floor the tests hold, and the sweep records
+ * what it actually achieves (see runRefreshSweep) so the next answer comes from the data.
  */
-export const PROVENANCE_ASSUMED_JOB_MS = 1_000;
+export const PROVENANCE_ASSUMED_JOB_MS = 3_000;
 
 /** Interval a policy gets from registerLiveHttpSource when the caller does not specify one. */
 export const REFRESH_DEFAULT_INTERVAL_MINUTES = 720;

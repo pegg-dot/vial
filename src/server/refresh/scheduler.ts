@@ -6,6 +6,7 @@ import { getActiveFixture, claimNextRefreshJob, enqueueDueRefreshJobs, getRefres
 import { SafeFetchError, safeFetch } from "./safe-fetch";
 import type { RefreshJob } from "./types";
 import { runPooled } from "@/server/collect/pool";
+import { recordCollectorRun } from "@/server/health/data-health";
 
 interface RefreshPayload {
   body: string;
@@ -325,5 +326,19 @@ export async function runRefreshSweep(limit = 10, budgetMs = 90_000, concurrency
     }, { concurrency: workers, keyOf: (job) => job.vendorId ?? `job:${job.id}`, budgetMs: Math.max(0, deadline - Date.now()) });
     if (pooled.budgetExhausted) { budgetExhausted = true; break; }
   }
-  return { reclaimed, enqueued: enqueued.length, processed: results.length, results, budgetExhausted: budgetExhausted || Date.now() >= deadline };
+  const exhausted = budgetExhausted || Date.now() >= deadline;
+  // Record what the sweep actually achieved, the same way the collector queue and the notification
+  // sweep already do. Until now this was the ONLY queue that reported nothing about its own
+  // throughput: /status could say "497 queued" but nothing anywhere said whether the last run
+  // processed 700 jobs or 70, so a sweep quietly finishing a fraction of a day's work looked
+  // exactly like a healthy one. That is how a 71% backlog went a week without being noticed.
+  // `ok` is false when the budget ran out, because a run that stopped early IS the finding.
+  try {
+    await recordCollectorRun(await getDatabase(), {
+      collector: "provenance-sweep", target: "market", items: results.length, ok: !exhausted,
+    });
+  } catch {
+    // Bookkeeping never fails a sweep.
+  }
+  return { reclaimed, enqueued: enqueued.length, processed: results.length, results, budgetExhausted: exhausted };
 }
