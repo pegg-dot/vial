@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PasswordField } from "@/components/password-field";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { loginAction } from "@/server/auth/actions";
@@ -14,7 +15,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
         <form action={loginAction} className="mt-8 space-y-4">
           <input type="hidden" name="returnTo" value={p.next || "/account"} />
           <label className="block text-sm font-bold text-[#111214]">Email<input name="email" type="email" required className="field mt-2" /></label>
-          <label className="block text-sm font-bold text-[#111214]">Password<input name="password" type="password" required className="field mt-2" /></label>
+          <PasswordField name="password" required autoComplete="current-password" />
           <button className="ink hard-sm press-blue h-12 w-full rounded-full bg-[#2b31d8] text-sm font-bold text-white">Sign in</button>
         </form>
         <p className="mt-6 text-sm font-medium text-[var(--muted)]">New to VialGrade? <Link href={`/register?next=${encodeURIComponent(p.next || "/for-you")}`} className="font-bold text-[#2b31d8] underline underline-offset-4">Create an account</Link></p>

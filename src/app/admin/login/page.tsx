@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { KeyRound } from "lucide-react";
 import { staffLoginAction } from "@/server/auth/actions";
+import { PasswordField } from "@/components/password-field";
 export const metadata: Metadata = { title: "Staff access" };
 export default async function Page({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const p = await searchParams;
@@ -14,7 +15,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
         <form action={staffLoginAction} className="mt-8 space-y-4">
           <input type="hidden" name="returnTo" value={p.next || "/admin"} />
           <label className="block text-sm font-bold text-white">Staff email<input name="email" type="email" required className="mt-2 min-h-[3.25rem] w-full rounded-[12px] border-[1.5px] border-white/25 bg-white/5 px-4 text-sm font-medium text-white outline-none focus:border-[#8fa2ff] focus:shadow-[3px_3px_0_0_#2b31d8]" /></label>
-          <label className="block text-sm font-bold text-white">Password<input name="password" type="password" required className="mt-2 min-h-[3.25rem] w-full rounded-[12px] border-[1.5px] border-white/25 bg-white/5 px-4 text-sm font-medium text-white outline-none focus:border-[#8fa2ff] focus:shadow-[3px_3px_0_0_#2b31d8]" /></label>
+          <PasswordField name="password" required autoComplete="current-password" tone="dark" labelClassName="block text-sm font-bold text-white" className="mt-2 min-h-[3.25rem] w-full rounded-[12px] border-[1.5px] border-white/25 bg-white/5 px-4 text-sm font-medium text-white outline-none focus:border-[#8fa2ff] focus:shadow-[3px_3px_0_0_#2b31d8]" inputClassName="" />
           <button className="h-12 w-full rounded-full border-2 border-white bg-white text-sm font-bold text-[#111214] transition hover:bg-[#8fa2ff] hover:border-[#8fa2ff]">Continue securely</button>
         </form>
         {process.env.NODE_ENV !== "production" && <p className="mt-6 text-xs font-medium text-white/55">Admin: jon@vialgrade.test / VialGradeDemoAdmin!2026<br />Reviewer: maya@vialgrade.test / VialGradeDemoReviewer!2026</p>}

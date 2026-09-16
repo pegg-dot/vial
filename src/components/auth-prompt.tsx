@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { PasswordField } from "@/components/password-field";
 import { useRouter } from "next/navigation";
 import { BellPlus, Check, Loader2, ShieldCheck, X } from "lucide-react";
 
@@ -165,10 +166,7 @@ export function AuthPromptOverlay({ request, onClose }: { request: AuthPromptReq
               <label className="block text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Email
                 <input name="email" type="email" required autoComplete="email" className="field mt-1.5" />
               </label>
-              <label className="block text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Password
-                <input name="password" type="password" required minLength={mode === "register" ? 12 : 1} autoComplete={mode === "register" ? "new-password" : "current-password"} className="field mt-1.5" />
-                {mode === "register" && <span className="mt-1 block text-[11px] font-medium normal-case tracking-normal text-[var(--muted)]">At least 12 characters.</span>}
-              </label>
+              <PasswordField name="password" required minLength={mode === "register" ? 12 : 1} autoComplete={mode === "register" ? "new-password" : "current-password"} labelClassName="block text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]" inputClassName="mt-1.5" hint={mode === "register" ? "At least 12 characters." : undefined} />
               <button disabled={pending} className="ink hard-sm press-blue flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2b31d8] text-sm font-bold text-white disabled:opacity-60">
                 {pending && <Loader2 className="size-4 animate-spin" />}
                 {pending ? "One moment…" : mode === "register" ? "Create free account" : "Sign in"}

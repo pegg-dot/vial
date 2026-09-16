@@ -23,10 +23,28 @@ const STEPS = [
   { href: "/admin/traces", label: "Traces", hint: "Cause and effect" },
 ] as const;
 
+/**
+ * Admin pages that are NOT stages of the provenance pipeline.
+ *
+ * Kept separate because the row above is rendered with arrows between its links and labelled
+ * "Provenance pipeline" — appending Traffic to it read as "Traces → Traffic", announcing analytics
+ * as the step that follows cause-and-effect. It is a destination, not a stage. Same chrome, its own
+ * group, no arrows.
+ */
+const ELSEWHERE = [
+  { href: "/admin/analytics", label: "Traffic", hint: "Readers, clicks and sources, day by day" },
+] as const;
+
 export function AdminNav() {
   const pathname = usePathname();
 
+  const linkClass = (current: boolean) =>
+    `rounded-full px-2.5 py-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+      current ? "bg-white text-[#111214]" : "hover:bg-white/12 hover:text-white"
+    }`;
+
   return (
+    <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 sm:w-auto">
     <nav
       aria-label="Provenance pipeline"
       // Scrolls rather than wrapping or disappearing: five steps do not fit a phone, and hiding
@@ -54,5 +72,21 @@ export function AdminNav() {
         );
       })}
     </nav>
+
+    <nav aria-label="Admin sections" className="flex shrink-0 items-center gap-1 text-[11px] font-bold uppercase tracking-[.1em] text-white/55">
+      <span aria-hidden className="text-white/20">|</span>
+      {ELSEWHERE.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          title={item.hint}
+          aria-current={pathname === item.href ? "page" : undefined}
+          className={linkClass(pathname === item.href)}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+    </div>
   );
 }

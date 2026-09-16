@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 async function loginCustomer(page: import("@playwright/test").Page) {
   await page.goto("/login");
   await page.getByLabel("Email").fill("nora@example.test");
-  await page.getByLabel("Password").fill("VialGradeDemoCustomer!2026");
+  await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoCustomer!2026");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/account/);
 }
@@ -25,7 +25,7 @@ test.describe("following", () => {
 
     await dialog.getByLabel("Name").fill("E2E Follower");
     await dialog.getByLabel("Email").fill(`e2e-follow-${Date.now()}@example.test`);
-    await dialog.getByLabel("Password").fill("E2EFollowerPass!2026");
+    await dialog.getByLabel("Password", { exact: true }).fill("E2EFollowerPass!2026");
     await dialog.getByRole("button", { name: "Create free account" }).click();
 
     await expect(page.getByRole("button", { name: "Following" })).toBeVisible();

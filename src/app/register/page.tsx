@@ -1,6 +1,7 @@
 "use client";
 
 import { UserPlus } from "lucide-react";
+import { PasswordField } from "@/components/password-field";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -52,7 +53,7 @@ export default function RegisterPage() {
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <label className="block text-sm font-bold text-[#111214]">Name<input name="displayName" type="text" required autoComplete="name" className="field mt-2" /></label>
           <label className="block text-sm font-bold text-[#111214]">Email<input name="email" type="email" required autoComplete="email" className="field mt-2" /></label>
-          <label className="block text-sm font-bold text-[#111214]">Password<input name="password" type="password" required minLength={12} autoComplete="new-password" className="field mt-2" /><span className="mt-1 block text-xs font-medium text-[var(--muted)]">At least 12 characters.</span></label>
+          <PasswordField name="password" required minLength={12} autoComplete="new-password" hint="At least 12 characters." />
           <button disabled={pending} className="ink hard-sm press-blue h-12 w-full rounded-full bg-[#2b31d8] text-sm font-bold text-white disabled:opacity-60">{pending ? "Creating account…" : "Create account"}</button>
         </form>
         <p className="mt-6 text-sm font-medium text-[var(--muted)]">Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-bold text-[#2b31d8] underline underline-offset-4">Sign in</Link></p>
