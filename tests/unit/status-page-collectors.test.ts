@@ -16,6 +16,9 @@ vi.mock("@/server/db/client", () => ({
 }));
 vi.mock("@/server/refresh/repository", () => ({
   getRefreshMetrics: vi.fn(async () => ({ enabled: 12, due: 3, queued: 4, failed: 0, stale: 2, attempts: 0, worstLateness: 0.3 })),
+  // The refresh card also reports what the last sweep achieved — the queue counts alone cannot say
+  // whether the run meant to drain it finished or stopped on its budget.
+  getLastSweepRun: vi.fn(async () => ({ items: 612, ok: true, ranAt: new Date().toISOString() })),
 }));
 vi.mock("@/server/intelligence/repository", () => ({
   getIntelligenceMetrics: vi.fn(async () => ({ open: 5, watching: 6, traces: 118, alerts: 7 })),
