@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { deriveSystemHealth, refreshIsFailing } from "@/lib/system-health";
 import { SWEEP_STALE_HOURS, getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/server/notifications/sweep";
 import { AlertTriangle, BellRing, CheckCircle2, Database, RadioTower, ShieldCheck, Timer, XCircle } from "lucide-react";
-import { getRefreshMetrics } from "@/server/refresh/repository";
+import { getRefreshMetrics, getLastSweepRun } from "@/server/refresh/repository";
 import { getIntelligenceMetrics } from "@/server/intelligence/repository";
 import { checkReadiness } from "@/server/health/readiness";
 import { getCollectionMetrics, isKeepingUp, describeWait, LATENESS_DEGRADED } from "@/server/collect/metrics";
@@ -32,14 +32,15 @@ export default async function StatusPage() {
   // checkReadiness never throws — an unreachable database is a result, not an exception.
   const readiness = await checkReadiness();
   const online = readiness.database === "reachable";
-  const [refresh, intel, collect, sweep] = online
+  const [refresh, lastSweep, intel, collect, sweep] = online
     ? await Promise.all([
         getRefreshMetrics().catch((error) => { console.error("[status] refresh metrics unavailable:", error); return null; }),
+        getLastSweepRun().catch(() => null),
         getIntelligenceMetrics().catch((error) => { console.error("[status] intelligence metrics unavailable:", error); return null; }),
         getCollectionMetrics().catch((error) => { console.error("[status] collection metrics unavailable:", error); return null; }),
         getNotificationSweepHealth().catch((error) => { console.error("[status] notification sweep unavailable:", error); return null; }),
       ])
-    : [null, null, null, null];
+    : [null, null, null, null, null];
 
   // A starving queue is an outage with none of an outage's symptoms: every tick succeeds, nothing
   // errors, and the data quietly goes stale. Until this line the page could not have said so.
@@ -103,9 +104,15 @@ export default async function StatusPage() {
                   // queue looks like when nothing has run AND what it looks like when every job
                   // ran and failed — last_succeeded_at stays null either way. Those are opposite
                   // problems and the card could not tell them apart.
-                  : refresh.failed > 0
-                    ? `${refresh.failed} failing · ${refresh.queued} queued · ${refresh.stale} stale`
-                    : `${refresh.queued} queued · ${refresh.stale} stale`
+                  // The queue counts describe the BACKLOG. Whether the run meant to drain it
+                  // finished is a different fact, and "74 queued" reads identically whether the
+                  // sweep did six hundred jobs and left a tail or did thirty and gave up. The
+                  // sweep has recorded its own throughput since 2026-09-15; this is what reads it.
+                  : `${refresh.failed > 0 ? `${refresh.failed} failing · ` : ""}${refresh.queued} queued · ${refresh.stale} stale${
+                      lastSweep
+                        ? ` · last sweep did ${lastSweep.items.toLocaleString()} ${lastSweep.ok ? "and finished" : "and stopped on its budget"}`
+                        : ""
+                    }`
           }
           ok={refresh !== null && refresh.enabled > 0 && !refreshBehind && !refreshIsFailing(refresh)}
         />

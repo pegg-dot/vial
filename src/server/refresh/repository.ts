@@ -169,6 +169,29 @@ export async function getRefreshJobs(limit = 50): Promise<RefreshJob[]> {
   return result.rows.map(toJob);
 }
 
+/**
+ * What the last provenance sweep actually achieved.
+ *
+ * The counts above describe the QUEUE. They cannot tell you whether the run that was supposed to
+ * drain it finished or gave up: "74 queued" reads the same whether the sweep processed six hundred
+ * jobs and left a tail, or processed thirty and stopped on its budget. Those are opposite problems.
+ *
+ * The sweep has recorded a collector_runs row since 2026-09-15 — and until now nothing read it,
+ * which made it a write-only feature. `ok` is false when the run stopped on its budget.
+ */
+export async function getLastSweepRun(): Promise<{ items: number; ok: boolean; ranAt: string } | null> {
+  try {
+    const db = await getDatabase();
+    const r = await db.query<QueryResultRow & { items: number | string; ok: boolean; ran_at: string }>(
+      `SELECT items, ok, ran_at FROM collector_runs WHERE collector = 'provenance-sweep' ORDER BY ran_at DESC LIMIT 1`,
+    );
+    const row = r.rows[0];
+    return row ? { items: Number(row.items), ok: Boolean(row.ok), ranAt: new Date(row.ran_at).toISOString() } : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getRefreshMetrics() {
   const db = await getDatabase();
   const result = await db.query<QueryResultRow & {
