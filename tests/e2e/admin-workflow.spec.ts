@@ -72,7 +72,7 @@ test("health is public while run receipts require staff", async ({ request }) =>
 test("staff can ingest, review, publish, and observe a catalog update", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
-  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
+  await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
   await expect(page.getByRole("heading", { name: "Traffic you can prove you sent" })).toBeVisible();
 
@@ -102,7 +102,7 @@ test("staff can ingest, review, publish, and observe a catalog update", async ({
 test("a controlled fixture change creates one visible cascade", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
-  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
+  await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
   await expect(page.getByRole("heading", { name: "Traffic you can prove you sent" })).toBeVisible();
   await page.goto("/admin/sources");
@@ -141,7 +141,7 @@ test("a controlled fixture change creates one visible cascade", async ({ page })
 test("staff can click between every admin page", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
-  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
+  await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
   await expect(page).toHaveURL(/\/admin$/);
 
@@ -176,7 +176,7 @@ test("the admin pipeline is navigable on a phone", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/admin/login");
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
-  await page.getByLabel("Password").fill("VialGradeDemoAdmin!2026");
+  await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
   // Wait for the session to land. Navigating straight after the click races the login POST, and
   // the redirect back to /admin/login then looks exactly like a missing nav.

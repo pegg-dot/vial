@@ -215,6 +215,13 @@ export default async function AdminPage() {
         </p>
       </div>
 
+      <div className="mt-10 flex flex-wrap items-center gap-3">
+        <Link href="/admin/analytics" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#2b31d8] px-5 py-2.5 text-sm font-bold text-white">
+          Traffic, day by day <ArrowUpRight className="size-4" />
+        </Link>
+        <span className="text-xs font-medium text-[var(--muted)]">Per-day readers, views, same-day repeats and vendor click-through.</span>
+      </div>
+
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Where they came from</h2>
 
       {visitors.topSources.length > 0 && (
