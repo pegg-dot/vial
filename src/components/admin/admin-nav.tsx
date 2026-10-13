@@ -32,6 +32,7 @@ const STEPS = [
  * group, no arrows.
  */
 const ELSEWHERE = [
+  { href: "/admin/learning", label: "Learning", hint: "Accepted and rejected evidence trajectories" },
   { href: "/admin/analytics", label: "Traffic", hint: "Readers, clicks and sources, day by day" },
 ] as const;
 
