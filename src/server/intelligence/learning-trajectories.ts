@@ -65,6 +65,14 @@ export interface EvidenceLearningTrajectory {
     reviewerLabel: string;
     createdAt: string;
   };
+  correction: null | {
+    id: string;
+    status: string;
+    rejectedValue: unknown;
+    keptValue: unknown;
+    reason: string;
+    createdAt: string;
+  };
   publication: null | {
     id: string;
     version: number;
@@ -218,6 +226,35 @@ async function loadReview(claimId: string) {
   } : null;
 }
 
+async function loadCorrection(claimId: string) {
+  const db = await getDatabase();
+  const result = await db.query<QueryResultRow & {
+    id: string;
+    status: string;
+    previous_value: unknown;
+    corrected_value: unknown;
+    reason: string;
+    created_at: Date | string;
+  }>(
+    `SELECT id,status,previous_value,corrected_value,reason,created_at
+     FROM correction_feedback
+     WHERE claim_id=$1
+       AND correction_type='review-rejection'
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [claimId],
+  );
+  const row = result.rows[0];
+  return row ? {
+    id: row.id,
+    status: row.status,
+    rejectedValue: parseJson(row.previous_value, null),
+    keptValue: parseJson(row.corrected_value, null),
+    reason: row.reason,
+    createdAt: iso(row.created_at),
+  } : null;
+}
+
 async function loadPublication(claimId: string) {
   const db = await getDatabase();
   // published_claim_ids is an array because a publication may eventually carry
@@ -291,9 +328,10 @@ export async function getEvidenceLearningTrajectory(claimId: string): Promise<Ev
   const row = await loadClaimRow(claimId);
   if (!row) return null;
 
-  const [toolCalls, review, publication] = await Promise.all([
+  const [toolCalls, review, correction, publication] = await Promise.all([
     loadToolCalls(row.agent_run_id),
     loadReview(claimId),
+    loadCorrection(claimId),
     loadPublication(claimId),
   ]);
   const lineage = await loadLineage(publication?.rootEventId ?? null);
@@ -333,6 +371,7 @@ export async function getEvidenceLearningTrajectory(claimId: string): Promise<Ev
     },
     toolCalls,
     review,
+    correction,
     publication,
     lineage,
   };
@@ -379,6 +418,9 @@ export interface EvidenceLearningSummary {
     accepted: number;
     rejected: number;
     pending: number;
+    activeCorrections: number;
+    repeatProposalsSuppressed: number;
+    freshEvidenceBypasses: number;
     rejectionRatePct: number;
   };
   byPredicate: Array<{
@@ -408,7 +450,7 @@ function pct(numerator: number, denominator: number) {
  */
 export async function getEvidenceLearningSummary(): Promise<EvidenceLearningSummary> {
   const db = await getDatabase();
-  const [totalsResult, predicateResult, workflowResult] = await Promise.all([
+  const [totalsResult, predicateResult, workflowResult, correctionResult, applicationResult] = await Promise.all([
     db.query<QueryResultRow & {
       total: string | number;
       accepted: string | number;
@@ -449,6 +491,28 @@ export async function getEvidenceLearningSummary(): Promise<EvidenceLearningSumm
         GROUP BY ar.workflow
         ORDER BY COUNT(*) DESC, ar.workflow ASC
         LIMIT 12`),
+    db.query<QueryResultRow & { active: string | number }>(
+      `SELECT COUNT(*) active
+       FROM correction_feedback
+       WHERE correction_type='review-rejection'
+         AND status='accepted'`,
+    ),
+    db.query<QueryResultRow & { suppressed: string | number; bypassed: string | number }>(
+      `SELECT
+         COALESCE(SUM(
+           CASE WHEN jsonb_typeof(output_json->'suppressed')='array'
+             THEN jsonb_array_length(output_json->'suppressed')
+             ELSE 0 END
+         ),0) suppressed,
+         COALESCE(SUM(
+           CASE WHEN jsonb_typeof(output_json->'bypassedForFreshEvidence')='array'
+             THEN jsonb_array_length(output_json->'bypassedForFreshEvidence')
+             ELSE 0 END
+         ),0) bypassed
+       FROM tool_calls
+       WHERE tool_name='corrections.apply'
+         AND status='completed'`,
+    ),
   ]);
 
   const totalsRow = totalsResult.rows[0];
@@ -457,6 +521,9 @@ export async function getEvidenceLearningSummary(): Promise<EvidenceLearningSumm
   const rejected = Number(totalsRow?.rejected ?? 0);
   const pending = Number(totalsRow?.pending ?? 0);
   const decided = accepted + rejected;
+  const activeCorrections = Number(correctionResult.rows[0]?.active ?? 0);
+  const repeatProposalsSuppressed = Number(applicationResult.rows[0]?.suppressed ?? 0);
+  const freshEvidenceBypasses = Number(applicationResult.rows[0]?.bypassed ?? 0);
 
   return {
     totals: {
@@ -464,6 +531,9 @@ export async function getEvidenceLearningSummary(): Promise<EvidenceLearningSumm
       accepted,
       rejected,
       pending,
+      activeCorrections,
+      repeatProposalsSuppressed,
+      freshEvidenceBypasses,
       rejectionRatePct: pct(rejected, decided),
     },
     byPredicate: predicateResult.rows.map((row) => {

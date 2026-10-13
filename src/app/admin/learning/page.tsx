@@ -35,18 +35,20 @@ export default async function LearningPage() {
   return (
     <div className="mx-auto max-w-[1100px] px-5 py-10 sm:px-8">
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#2b31d8]">Learning loop</p>
-      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Where the system disagreed with reality.</h1>
-      <p className="mt-4 max-w-[72ch] text-[15px] leading-7 text-[var(--muted)]">
-        This page turns the evidence pipeline into trajectory data: source snapshot → extraction run → proposed claim →
-        review decision → publication or rejection. A rejection means the proposed system state was rejected by the
-        review authority. It does not, by itself, mean the source or vendor was false.
+      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Corrections the pipeline is actually using.</h1>
+      <p className="mt-4 max-w-[76ch] text-[15px] leading-7 text-[var(--muted)]">
+        A rejection is no longer just a record on this page. VialGrade saves it as active correction memory. If the same
+        source repeats the same rejected value without new evidence for that field, the pipeline suppresses the repeat
+        before it reaches review. If fresh field evidence appears, the correction steps aside and the claim comes back
+        to a human. That keeps the system from repeating known mistakes without turning old feedback into a permanent blind spot.
       </p>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-4">
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Claims observed", summary.totals.total],
           ["Accepted", summary.totals.accepted],
-          ["Rejected proposals", summary.totals.rejected],
+          ["Active corrections", summary.totals.activeCorrections],
+          ["Repeats prevented", summary.totals.repeatProposalsSuppressed],
           ["Still waiting", summary.totals.pending],
         ].map(([label, value]) => (
           <div key={String(label)} className="ink hard rounded-[16px] bg-white p-5">
@@ -101,18 +103,18 @@ export default async function LearningPage() {
       <section className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">Verified discrepancies</p>
-            <h2 className="mt-1 text-2xl font-extrabold tracking-[-.04em]">Recent rejected proposals.</h2>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">Active correction memory</p>
+            <h2 className="mt-1 text-2xl font-extrabold tracking-[-.04em]">What VialGrade learned not to repeat.</h2>
           </div>
           <p className="max-w-[60ch] text-right text-xs leading-5 text-[var(--muted)]">
-            These are reusable negative examples because the proposed state, source, model confidence, and review consequence are connected.
+            {summary.totals.freshEvidenceBypasses.toLocaleString()} correction bypass{summary.totals.freshEvidenceBypasses === 1 ? "" : "es"} so far because new field evidence appeared.
           </p>
         </div>
 
         <div className="mt-4 grid gap-4">
           {discrepancies.length === 0 ? (
             <div className="ink hard rounded-[18px] bg-white p-7 text-sm text-[var(--muted)]">
-              No rejected proposals yet. Once reviewers reject claims, they will appear here as trajectory-backed learning examples.
+              No active corrections yet. When a reviewer rejects a proposal, the kept value becomes correction memory automatically.
             </div>
           ) : discrepancies.map((item) => (
             <article key={item.claimId} className="ink hard rounded-[18px] bg-white p-6">
@@ -120,7 +122,7 @@ export default async function LearningPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="ink-1 rounded-full bg-[#fff3e0] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#8a5500]">
-                      rejected proposal
+                      {item.correction?.status === "accepted" ? "active correction" : "rejected proposal"}
                     </span>
                     <span className="font-mono text-sm font-extrabold">{item.proposal.predicate}</span>
                   </div>
@@ -135,18 +137,23 @@ export default async function LearningPage() {
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[12px] bg-[#f7f7f4] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Before</p>
-                  <p className="mt-2 font-mono text-sm">{show(item.proposal.previousValue)}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Kept authoritative value</p>
+                  <p className="mt-2 font-mono text-sm">{show(item.correction?.keptValue ?? item.proposal.previousValue)}</p>
                 </div>
                 <div className="rounded-[12px] bg-[#fff3e0] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[#8a5500]">Proposed</p>
-                  <p className="mt-2 font-mono text-sm">{show(item.proposal.proposedValue)}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[#8a5500]">Rejected extraction</p>
+                  <p className="mt-2 font-mono text-sm">{show(item.correction?.rejectedValue ?? item.proposal.proposedValue)}</p>
                 </div>
               </div>
 
               <div className="mt-4 grid gap-2 text-sm">
                 <p><span className="font-extrabold">Why the extractor proposed it:</span> {item.proposal.rationale}</p>
-                <p><span className="font-extrabold">Why review rejected it:</span> {item.review?.notes || item.review?.reasonCode || "No note recorded"}</p>
+                <p><span className="font-extrabold">Why review rejected it:</span> {item.correction?.reason || item.review?.notes || item.review?.reasonCode || "No note recorded"}</p>
+                <p>
+                  <span className="font-extrabold">What changes now:</span>{" "}
+                  the same <span className="font-mono">{item.proposal.predicate}</span> value from this source is suppressed when it is stale.
+                  Fresh evidence for the field bypasses the correction and returns to review.
+                </p>
                 <p className="text-xs text-[var(--muted)]">
                   Workflow <span className="font-mono">{item.proposal.workflow}</span> · extractor <span className="font-mono">{item.proposal.extractorVersion}</span> · snapshot <span className="font-mono">{item.source.snapshotId}</span>
                 </p>

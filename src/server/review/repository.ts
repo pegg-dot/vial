@@ -3,6 +3,7 @@ import type { StaffRole } from "@/server/auth/session";
 import { getDatabase, withTransaction, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { runPublicationCascade, type ListingProjection } from "@/server/intelligence/cascade";
+import { recordReviewRejectionCorrection } from "@/server/intelligence/correction-memory";
 
 export type ReviewDecision = "approve" | "reject";
 
@@ -54,6 +55,7 @@ export interface AdminMetrics {
 type ClaimRow = QueryResultRow & {
   id: string;
   agent_run_id: string;
+  subject_type: string;
   subject_id: string;
   predicate: string;
   value_json: unknown;
@@ -361,12 +363,24 @@ export async function reviewClaim(input: {
     );
 
     if (input.decision === "reject") {
+      const rejectedValue = parseJson(claim.value_json);
+      const keptValue = parseJson(claim.previous_value_json);
+      const correctionId = await recordReviewRejectionCorrection(tx, {
+        claimId: claim.id,
+        subjectType: claim.subject_type,
+        subjectId: claim.subject_id,
+        rejectedValue,
+        keptValue,
+        reason: input.notes?.trim() || `Reviewer rejected the proposed ${claim.predicate}; the previously published value remains authoritative.`,
+        reviewer: input.actor,
+        impact: claim.risk_level,
+      });
       await tx.query(
         `UPDATE evidence_claims SET review_status = 'rejected', reviewed_at = NOW() WHERE id = $1`,
         [claim.id],
       );
       await settleAgentRun(tx, claim.agent_run_id);
-      return { claimId: claim.id, status: "rejected" as const };
+      return { claimId: claim.id, status: "rejected" as const, correctionId };
     }
 
     const before = serializeListing(listing);

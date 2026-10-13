@@ -6,6 +6,7 @@ import { logShadowRun } from "./control-repository";
 import { getDatabase, withTransaction, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
 import { computeSnapshotDiff } from "@/server/refresh/diff";
+import { applyCorrectionMemory } from "@/server/intelligence/correction-memory";
 
 interface TargetRow extends QueryResultRow {
   id: string;
@@ -32,6 +33,11 @@ export interface PipelineResult {
   changedPredicates: string[];
   parserProfile: string;
   diff: ReturnType<typeof computeSnapshotDiff>;
+  correctionFeedback?: {
+    suppressed: number;
+    bypassedForFreshEvidence: number;
+    appliedCorrectionIds: string[];
+  };
 }
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -196,7 +202,30 @@ export async function runSourceIngestion(raw: IngestionInput): Promise<PipelineR
         await logShadowRun(tx, { agentRunId: runId, modelExtractorVersion: shadow.modelExtractorVersion, deterministicClaims: candidates, modelClaims: shadow.modelCandidates ?? [], agreementRate: shadow.agreement ?? 0, costCents: shadow.modelCostCents ?? 0 });
       }
       const resolved = await recordTool(tx, runId, "Resolver", "entity.resolve", { targetListingSlug: input.targetListingSlug, candidateCount: candidates.length }, () => candidates.map((candidate) => ({ ...candidate, subjectType: "listing", subjectId: target.id })));
-      const changed = await recordTool(tx, runId, "Verifier", "claims.diff", { listing: target.slug, candidateCount: resolved.length }, () => resolved
+      const correctionMemory = await recordTool(
+        tx,
+        runId,
+        "Learner",
+        "corrections.apply",
+        { listing: target.slug, sourceId, candidateCount: resolved.length },
+        () => applyCorrectionMemory(tx, {
+          subjectId: target.id,
+          sourceId,
+          candidates: resolved,
+          currentValues: {
+            price: Number(target.price),
+            availability: target.availability,
+            shipping: target.shipping_claim,
+            batchCode: target.batch_code,
+            reportDate: target.report_date,
+            reportIssuer: target.report_issuer,
+            reportConfirmed: target.report_confirmed,
+          },
+          previousSourceContent: priorSnapshot?.raw_content,
+          currentSourceContent: input.rawContent,
+        }),
+      );
+      const changed = await recordTool(tx, runId, "Verifier", "claims.diff", { listing: target.slug, candidateCount: correctionMemory.candidates.length }, () => correctionMemory.candidates
         .map((candidate) => {
           const previousValue = currentValue(target, candidate.predicate);
           let riskLevel = candidate.riskLevel;
@@ -205,7 +234,7 @@ export async function runSourceIngestion(raw: IngestionInput): Promise<PipelineR
             riskLevel = "material" as const;
             confidence = Math.min(confidence, 0.75);
           }
-          return { ...candidate, previousValue, riskLevel, confidence };
+          return { ...candidate, subjectType: "listing" as const, subjectId: target.id, previousValue, riskLevel, confidence };
         })
         .filter((candidate) => !sameValue(candidate.previousValue, candidate.value)));
 
@@ -235,6 +264,11 @@ export async function runSourceIngestion(raw: IngestionInput): Promise<PipelineR
         changedPredicates: changed.map((candidate) => candidate.predicate),
         parserProfile: input.parserProfile,
         diff,
+        correctionFeedback: {
+          suppressed: correctionMemory.suppressed.length,
+          bypassedForFreshEvidence: correctionMemory.bypassedForFreshEvidence.length,
+          appliedCorrectionIds: correctionMemory.suppressed.map((item) => item.correctionId),
+        },
       } satisfies PipelineResult;
     });
 
