@@ -79,7 +79,7 @@ function Claim({ claim }: { claim: ReviewClaim }) {
           Approve and publish
         </button>
         <button type="submit" name="rejectOne" value={claim.id} className="ink-1 rounded-full bg-white px-5 py-2.5 text-sm font-extrabold text-[#111214]">
-          Reject
+          Reject + teach
         </button>
       </div>
     </article>
@@ -100,8 +100,9 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
       <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Review queue</h1>
       <p className="mt-4 max-w-[62ch] text-[15px] leading-7 text-[var(--muted)]">
         Nothing here has reached a buyer. Approving one writes the new value and a publication receipt in the
-        same transaction; rejecting records the decision and changes nothing. Tick checkboxes to decide a
-        batch at once — a bulk approval still writes one receipt per claim.
+        same transaction; rejecting keeps the current value and teaches the extraction pipeline not to repeat the
+        same stale proposal from that source. Fresh field evidence can still bring it back for review. Tick checkboxes
+        to decide a batch at once — a bulk approval still writes one receipt per claim.
       </p>
 
       {error ? (
@@ -116,7 +117,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
 
       {Number.isFinite(declinedCount) && declinedCount > 0 ? (
         <p className="ink-1 mt-6 rounded-[12px] bg-[#f7f7f4] px-4 py-3 text-sm font-semibold text-[var(--muted)]">
-          Rejected {declinedCount} claim{declinedCount === 1 ? "" : "s"}. Decisions recorded; nothing was published.
+          Rejected {declinedCount} claim{declinedCount === 1 ? "" : "s"}. Correction memory recorded; nothing was published.
         </p>
       ) : null}
 
@@ -130,7 +131,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
 
       {rejected ? (
         <p className="ink-1 mt-6 rounded-[12px] bg-[#f7f7f4] px-4 py-3 text-sm font-semibold text-[var(--muted)]">
-          Decision recorded. Nothing was published.
+          Decision recorded and correction memory activated. Nothing was published.
         </p>
       ) : null}
 
@@ -153,7 +154,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
                   Approve selected
                 </button>
                 <button type="submit" name="bulk" value="reject" className="ink-1 rounded-full bg-white px-4 py-2 text-sm font-extrabold text-[#111214]">
-                  Reject selected
+                  Reject selected + teach
                 </button>
               </div>
             </div>
