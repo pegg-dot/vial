@@ -1,100 +1,97 @@
-// US legal / regulatory reality for research peptides — the "know the law before you buy" layer.
-//
-// Purely informational, NOT legal or medical advice, and NOT an eligibility gate. It states how
-// these compounds are regulated in the United States so a buyer understands the risk they're
-// taking on. VialGrade sells nothing and encourages no human use. Consult a licensed attorney and
-// physician. Framing follows AGENTS.md: no dosing/use guidance, unknowns stay visible.
+// Informational U.S. regulatory context for research listings.
+// These are broad educational labels, not legal clearance determinations.
+// Approval attaches to a finished drug product, not a molecule or catalog entry.
 
 export type LegalCategory = "prescription" | "investigational" | "research-only";
 
 export interface UsLegalStatus {
   category: LegalCategory;
-  headline: string;   // short status line
-  detail: string;     // one plain paragraph
-  flags: string[];    // extra caution tags (WADA, do-not-compound, import risk…)
+  headline: string;
+  detail: string;
+  flags: string[];
 }
 
-// FDA-approved prescription drugs. Buying a "research" version bypasses the prescription and the
-// approved supply chain — a materially higher legal and safety exposure.
-const PRESCRIPTION: Record<string, string> = {
-  semaglutide: "the active drug in Ozempic and Wegovy",
-  tirzepatide: "the active drug in Mounjaro and Zepbound",
-  liraglutide: "the active drug in Victoza and Saxenda",
-  tesamorelin: "an approved drug (Egrifta)",
-  sermorelin: "a formerly FDA-approved drug",
-  gonadorelin: "an approved GnRH drug",
-  oxytocin: "an approved drug (Pitocin)",
+// Ingredients appearing in particular FDA-approved prescription products.
+// Individual third-party listings have NOT been verified or approved by FDA.
+const APPROVED_PRODUCT_INGREDIENTS: Record<string, string> = {
+  semaglutide: "Ozempic and Wegovy",
+  tirzepatide: "Mounjaro and Zepbound",
+  liraglutide: "Victoza and Saxenda",
+  tesamorelin: "Egrifta",
+  oxytocin: "Pitocin",
 };
 
-// Not approved, under active FDA scrutiny — newer GLP-1-class agonists still in trials.
 const INVESTIGATIONAL: Record<string, string> = {
-  retatrutide: "an investigational triple-agonist still in clinical trials",
-  survodutide: "an investigational dual-agonist still in trials",
-  mazdutide: "an investigational dual-agonist still in trials",
-  cagrilintide: "an investigational amylin analog still in trials",
+  retatrutide: "an investigational triple-agonist",
+  survodutide: "an investigational dual-agonist",
+  mazdutide: "an investigational dual-agonist",
+  cagrilintide: "an investigational amylin analog",
 };
 
-// Compounds the FDA has singled out.
-//
-// ⚠️ Verified against fda.gov 2026-08-14. BPC-157 was added to Category 2 in 2023, but its
-// nomination was later WITHDRAWN BY THE NOMINATOR — it now sits in the FDA's "nominated but
-// withdrawn" table, not in Category 2. The practical conclusion is unchanged (it is not on the
-// 503A list, so a licensed pharmacy still cannot compound it) but the mechanism is different, and
-// stating the wrong mechanism about a real regulatory action is the kind of error this product
-// exists to catch. FDA's advisory committee met 23-24 July 2026 on whether several of these should
-// go ON the 503A list, so this has a shelf life — re-verify before relying on it.
-const FDA_FLAGGED: Record<string, string> = {
-  "bpc-157": "BPC-157 is not on the FDA's 503A list of substances pharmacies may compound with, so even a licensed compounding pharmacy can't legally make it. The FDA flagged it in 2023 over safety concerns (immunogenicity risk by some routes); that nomination was later withdrawn, and an FDA advisory committee reviewed it again in July 2026.",
+const FDA_REVIEW_NOTES: Record<string, string> = {
+  "bpc-157": "FDA has considered BPC-157-related bulk substances during its compounding review process. A prior nomination was withdrawn. The outcome does not establish permission to market, dispense or compound any particular drug.",
 };
 
-// Compounds broadly prohibited in drug-tested sport (WADA / USADA). Not exhaustive.
-const WADA_BANNED = new Set([
-  "ipamorelin", "cjc-1295", "sermorelin", "tesamorelin", "hexarelin", "ghrp-2", "ghrp-6", "mk-677",
-  "igf-1-lr3", "mgf", "peg-mgf", "tb-500", "thymosin-beta-4", "follistatin-344", "aod-9604",
-  "hgh-fragment-176-191", "semaglutide", "tirzepatide", "gonadorelin", "kisspeptin-10",
-]);
-
-const RESEARCH_ONLY_DETAIL =
-  "Sold “for research use only,” this compound is not FDA-approved for human use and has not been evaluated for safety, purity, or sterility in people. It is generally not a scheduled controlled substance, so buying it as a research chemical is typically not itself a drug crime — but marketing or using it as a drug is not lawful, and it is not a dietary supplement.";
-
+// Do not publish sports-ban determinations from an unmaintained static set.
+// Athletes must check the current WADA/USADA prohibited and monitoring lists.
 export function usLegalFor(slug: string): UsLegalStatus {
-  const flags: string[] = [];
-  if (WADA_BANNED.has(slug)) flags.push("Banned in drug-tested sport (WADA/USADA)");
-  if (FDA_FLAGGED[slug]) flags.push("FDA safety flag — no pharmacy may compound it");
-
-  if (PRESCRIPTION[slug]) {
+  const flags = FDA_REVIEW_NOTES[slug] ? ["FDA compounding status requires review"] : [];
+  if (APPROVED_PRODUCT_INGREDIENTS[slug]) {
     return {
       category: "prescription",
-      headline: "This is a prescription drug in the US",
-      detail: `This is ${PRESCRIPTION[slug]} — an FDA-approved prescription medication. Buying a “research” version sidesteps the prescription requirement and the approved, quality-controlled supply chain. The FDA has warned about and acted against unapproved and compounded copies. Higher legal and safety exposure than an unapproved research peptide.`,
+      headline: "An FDA-approved prescription formulation exists",
+      detail: `This ingredient appears in FDA-approved prescription products, including ${APPROVED_PRODUCT_INGREDIENTS[slug]}. Approval of a finished drug product does not extend to other vials sold under the same molecular name. This listing has not been established as approved, lawful to distribute, safe, sterile or suitable for human use.`,
       flags,
     };
   }
   if (INVESTIGATIONAL[slug]) {
     return {
       category: "investigational",
-      headline: "Investigational drug — not approved, under FDA scrutiny",
-      detail: `This is ${INVESTIGATIONAL[slug]}. It has no FDA approval for any use, is not a supplement, and the FDA is actively watching the GLP-1-class “research” market. Sold research-use-only; marketing or using it as a drug is not lawful.`,
+      headline: "Investigational compound; human-use approval not established",
+      detail: `This substance is ${INVESTIGATIONAL[slug]}. Clinical investigation does not constitute FDA marketing authorization. Statements such as “for research use only” do not by themselves exclude a product from drug requirements. This is an information record, not a product endorsement.`,
       flags,
     };
   }
+  const suffix = FDA_REVIEW_NOTES[slug] ? ` ${FDA_REVIEW_NOTES[slug]}` : "";
   return {
     category: "research-only",
-    headline: "Research-use-only — not FDA-approved",
-    detail: FDA_FLAGGED[slug] ? `${RESEARCH_ONLY_DETAIL} ${FDA_FLAGGED[slug]}` : RESEARCH_ONLY_DETAIL,
+    headline: "Human-use approval not established for this listing",
+    detail: `A laboratory-use label alone does not decide whether an article is a drug under U.S. law. FDA may examine all evidence of intended use, including website claims and marketing context. A laboratory report also cannot establish the contents or sterility of a later shipment. This site does not provide purchase or use advice.${suffix}`,
     flags,
   };
 }
 
-// The general facts for the full US-regulation explainer page.
 export const US_REGULATION_FACTS: { title: string; body: string }[] = [
-  { title: "Sold “for research use only”", body: "Every vendor labels these “for laboratory research use only — not for human consumption.” That label isn't a formality; it's the line that keeps the sale outside FDA drug regulation. It also means no one is claiming the product is safe or fit to use." },
-  { title: "Not FDA-approved", body: "The vast majority of research peptides (BPC-157, TB-500, epitalon, MOTS-c, and most others) are not approved by the FDA for any use in humans. They have not been evaluated for safety, efficacy, purity, or sterility for human use." },
-  { title: "Generally legal to buy — but not to use as a drug", body: "Most research peptides are not DEA-scheduled controlled substances, so purchasing them as research chemicals is typically not itself a drug crime in the US. Selling or marketing an unapproved substance for human use, however, violates the federal Food, Drug & Cosmetic Act. The research-use label is how vendors stay on the legal side of that." },
-  { title: "Not dietary supplements", body: "Synthetic peptides like BPC-157 are not lawful dietary ingredients. The FDA has stated they fall outside the supplement definition, so any “supplement” framing you see is not legally valid." },
-  { title: "Some are prescription drugs — a different category entirely", body: "Semaglutide, tirzepatide, liraglutide, tesamorelin, sermorelin, gonadorelin and others are FDA-approved prescription medications. Buying a “research” version bypasses the prescription and the approved supply chain, and the FDA has warned about and acted against unapproved and compounded copies — most aggressively for the GLP-1 weight-loss drugs after they came off the shortage list." },
-  { title: "Not something a pharmacy can legally compound", body: "A licensed compounding pharmacy may only use bulk substances on the FDA's 503A list. BPC-157 and most research peptides are not on it. The FDA flagged several of them in 2023 over safety concerns; those nominations were later withdrawn, and an FDA advisory committee revisited seven peptides in July 2026 — so the picture can change. Either way, research-chemical peptides sit entirely outside that oversight." },
-  { title: "Import can be seized", body: "The FDA can detain or refuse importation of unapproved drugs, and personal importation of unapproved drugs is generally not permitted. Orders from overseas vendors carry a real customs-seizure risk." },
-  { title: "State law varies and is changing", body: "Peptide-specific rules differ by state and are evolving. Some states regulate research chemicals more tightly than others; check your own state's current law." },
-  { title: "Banned in drug-tested sport", body: "Many of these — growth-hormone secretagogues, GHRPs, TB-500, IGF-1, GLP-1 drugs and more — are prohibited by WADA and USADA. Competing athletes face sanctions independent of any purchase legality." },
+  {
+    title: "Research-use labeling is not a safe harbor",
+    body: "FDA assesses intended use in context. A 'research use only' or 'not for human consumption' label does not automatically remove a product marketed for human use from federal drug regulation.",
+  },
+  {
+    title: "Drug approval applies to specific products",
+    body: "The presence of an active ingredient in an FDA-approved prescription product does not mean an unapproved vial containing a similarly named substance is approved, suitable or lawful to distribute.",
+  },
+  {
+    title: "Research status does not establish purchase legality",
+    body: "Legality can depend on the exact product, intended use, seller, handling, importation, distribution, and federal and state law. VialGrade does not certify any transaction as legal.",
+  },
+  {
+    title: "Lab certificates have narrow evidentiary value",
+    body: "A laboratory report may document findings for one submitted sample using identified methods. Without independently verified custody and sample-to-shipment matching, it does not prove what a future buyer receives, sterility, clinical efficacy or safety.",
+  },
+  {
+    title: "Human drug compounding has separate requirements",
+    body: "Under section 503A, applicable bulk-ingredient pathways include a qualifying USP/NF monograph, use of an ingredient present in an FDA-approved drug where no such monograph exists, or inclusion on the 503A bulks list when neither applies. Additional conditions apply, and section 503B has different rules. FDA also has interim policies; substance-specific status should be verified from current agency material.",
+  },
+  {
+    title: "Importation and distribution can trigger drug laws",
+    body: "Unapproved drugs may be detained or refused at the border. Packaging, labeling and claims can be relevant to whether an article is considered a drug; no general statement here establishes that a purchase or importation is lawful.",
+  },
+  {
+    title: "Regulatory status can change",
+    body: "FDA and state actions, advisory processes and shortage-related policies can change. Verify a specific question through official sources and qualified counsel before taking action.",
+  },
+  {
+    title: "Sports anti-doping rules are separate",
+    body: "The WADA prohibited list and monitoring program are distinct, updated instruments. Do not infer that a substance is prohibited merely because it is monitored. Consult the current official list for the substance and sport.",
+  },
 ];
