@@ -3,9 +3,9 @@ import { ArrowUpRight, Layers3, ShieldCheck } from "lucide-react";
 // The lean "what VialGrade is" strip — the verification layer, said in buyer language.
 // No "safe"/endorsement claims.
 const BEATS = [
-  { Icon: Layers3, title: "Every vendor & price, side by side", line: "One screen for what a compound costs across the market." },
-  { Icon: ShieldCheck, title: "Cross-checked against independent lab tests", line: "Real third-party COAs you can verify — not vendor marketing." },
-  { Icon: ArrowUpRight, title: "We hand you to the vendor", line: "VialGrade never sells or takes payment. It helps you not get scammed." },
+  { Icon: Layers3, title: "Observed listings and historical prices", line: "Third-party snapshots shown for comparison, not a buying recommendation." },
+  { Icon: ShieldCheck, title: "Laboratory evidence with source context", line: "Reports show the available level of issuer confirmation and sample linkage." },
+  { Icon: ArrowUpRight, title: "No buying or sales referrals", line: "VialGrade does not handle transactions or provide seller checkout links." },
 ];
 
 export function VialValueBand() {

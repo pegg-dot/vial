@@ -20,11 +20,11 @@ export function HomeHero() {
         </div>
 
         <h1 className="mx-auto mt-8 max-w-[15ch] text-balance text-[clamp(3.4rem,9.5vw,8rem)] font-extrabold leading-[.84] tracking-[-.055em]">
-          Know what&rsquo;s really <span className="text-[#2b31d8]">in the vial.</span>
+          See what the <span className="text-[#2b31d8]">records actually show.</span>
         </h1>
 
         <p className="mx-auto mt-7 max-w-[50ch] text-balance text-lg font-medium leading-8 text-[var(--muted)] sm:text-xl">
-          Every vendor&rsquo;s real lab tests, prices, and reputation &mdash; gathered and fact-checked in one place. So you never take a stranger&rsquo;s word for what&rsquo;s in the bottle.
+          Public laboratory reports, vendor records, and historical price observations, gathered with links to supporting sources. A report about one sample cannot verify a later vial or establish safety.
         </p>
 
         <div className="mx-auto mt-10 max-w-2xl">
@@ -32,7 +32,7 @@ export function HomeHero() {
         </div>
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold text-[#111214]/70">
-          {["Prices compared across every vendor", "Lab tests matched to the exact batch", "Free — and we never sell anything"].map((t) => (
+          {["Observed prices with dated sources", "Batch linkage only when supported", "Free — and we never sell anything"].map((t) => (
             <span key={t} className="inline-flex items-center gap-1.5"><Check className="size-4 text-[#12b3a6]" /> {t}</span>
           ))}
         </div>
