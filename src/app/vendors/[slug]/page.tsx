@@ -194,7 +194,6 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   // "Is X legit?" is only asked where the page can answer it. A vendor with nothing listed is graded
   // as a maker rather than a shop (`gradeFromVerdict` keys off exactly this), so asking whether to
   // buy from them would head the page with a question its own verdict then refuses.
-  const referenceOnly = maker || vendor.productCount === 0;
   const headlineQuestion = `What evidence is on record for ${vendor.name}?`;
 
   // One sentence naming every seam the verdict rests on. Each clause is a count this page renders

@@ -126,22 +126,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   //    and never touches payment — the offer belongs to whoever can actually fulfil it.
   //  - No aggregateRating unless the reviews behind it are real, which for this field means a
   //    Live record. A seeded demo rating is fabricated review data.
+  // Index this as a documentary dataset, never as an offer or shoppable product.
   const structuredData = product.origin === "live" ? {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "Dataset",
     name: displayProductTitle(product.name, product.quantity),
-    description: `Research listing from ${vendor.name}, aggregated from their public product page.`,
-    brand: { "@type": "Brand", name: vendor.name },
-    sku: product.batchCode,
-    ...(product.reviewCount > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.reviewCount } } : {}),
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "USD",
-      price: product.price,
-      availability: product.availability === "In stock" ? "https://schema.org/InStock" : "https://schema.org/LimitedAvailability",
-      seller: { "@type": "Organization", name: vendor.name },
-      ...(product.externalUrl ? { url: product.externalUrl } : {}),
-    },
+    description: `Historical third-party listing observation from ${vendor.name}, with available evidence limitations. Not a verified physical product or a purchase offer.`,
+    identifier: product.slug,
+    creator: { "@type": "Organization", name: "VialGrade" },
   } : null;
 
   return (
@@ -186,7 +178,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <h1 className="mt-1 text-[clamp(1.45rem,2.8vw,2.1rem)] font-extrabold leading-[1.05] tracking-[-.03em]">{displayProductName(product.name)} <span className="text-black/35">{displaySize(product.name, product.quantity)}</span></h1>
             <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-[var(--muted)]">{compound.description}</p>
 
-            {/* Buy box — price + market context + facts + action + vendor track record, grouped */}
+            {/* Research snapshot — published price history, evidence, and vendor context */}
             <div className="ink hard-sm mt-4 rounded-[16px] bg-white p-4 sm:p-5">
               <ProductMarketStats
                 price={product.price}
@@ -233,8 +225,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 // The research-use framing belongs HERE — at the moment someone leaves to buy —
                 // not in a modal on arrival. A gate on an information site establishes nothing and
                 // this is the point where it is actually relevant.
-                ? "Real listing aggregated from the vendor's public page. Buying happens on their site, never on VialGrade — we take no payment and hold no stock. These are sold for laboratory research use only, not for human consumption; the seller sets their own terms and age limits at checkout."
-                : "Demo listing shown to illustrate the interface — not a real vendor — so its link stays off. On real (Live) listings, buying happens on the vendor's own site, never on VialGrade."}
+                ? "Historical third-party listing captured from a public source. This is a documentary record, not a sale or referral. Descriptions and COAs cannot determine what a later vial contains or establish fitness for human use."
+                : "Demo record shown only to illustrate the interface; it is not a real product, vendor endorsement or transaction."}
             </p>
 
             <div className="mt-4 lg:hidden">
