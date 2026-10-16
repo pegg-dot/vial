@@ -5,7 +5,7 @@ import type { GradeBand, DimensionKey, DimensionState, VialGradeResult } from "@
 // rather than a full VialGradeResult — same fields, no dimensions.
 export type GradeLike = { letter: string | null; band: string; rationale?: string };
 
-// The headline grade. It is deliberately never shown alone: the letter, the reason it landed
+// The headline evidence grade. It is deliberately never shown alone: the letter, the reason it landed
 // there, and the per-dimension evidence ship as one block, so the reader can always audit the
 // number instead of trusting it. When the evidence is too thin, there is no letter at all.
 const BAND: Record<GradeBand, { wrap: string; chip: string; accent: string; icon: typeof ShieldCheck }> = {
@@ -80,6 +80,7 @@ export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summ
               for it. The verdict section below owns the heading. */}
           <p className="text-2xl font-extrabold leading-tight tracking-[-.03em]">{grade.headline}</p>
           <p className="mt-1.5 text-[15px] font-medium leading-6 text-[#111214]/75">{summary}</p>
+          <p className="mt-2 text-[11px] font-semibold leading-5 text-[#111214]/65">Evidence summary only. Not a safety, authenticity, approval, or lawful-sale certification.</p>
         </div>
       </div>
 

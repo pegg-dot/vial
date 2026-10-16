@@ -195,7 +195,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   // as a maker rather than a shop (`gradeFromVerdict` keys off exactly this), so asking whether to
   // buy from them would head the page with a question its own verdict then refuses.
   const referenceOnly = maker || vendor.productCount === 0;
-  const headlineQuestion = referenceOnly ? `What is on record for ${vendor.name}?` : `Is ${vendor.name} legit?`;
+  const headlineQuestion = `What evidence is on record for ${vendor.name}?`;
 
   // One sentence naming every seam the verdict rests on. Each clause is a count this page renders
   // further down — nothing new is derived here, so the summary can never drift from the sections.
@@ -325,7 +325,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <span className="font-extrabold">{grade.headline}.</span> What that rests on: {restsOn}.
         </p>
         <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-          Never a safety claim or an endorsement &mdash; VialGrade sells nothing and takes no money from vendors. Where we hold no evidence, we say so instead of hiding it.
+          This grade describes documented observations only. It is not a determination of product safety, vendor legality, shipment authenticity, or whether a transaction should occur. Missing evidence stays visible.
         </p>
 
         <h3 className="mt-8 text-[clamp(1.15rem,2vw,1.45rem)] font-extrabold tracking-[-.03em]">Which checks did we run, and what did each one find?</h3>
