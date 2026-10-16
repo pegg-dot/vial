@@ -20,7 +20,7 @@ import { reportError } from "@/server/observability/alerts";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "VialGrade — Don't get scammed buying peptides",
+    default: "VialGrade — Research records and laboratory evidence",
     template: "%s · VialGrade",
   },
   description: siteConfig.description,
@@ -30,18 +30,18 @@ export const metadata: Metadata = {
   // control of this site — and it must stay put: removing it un-verifies the property and silently
   // cuts off the only place indexing and search performance can be seen.
   verification: { google: "Diid1gTzaORBswpj2aFdIgXw3p2UAAsZPSb1qsKrip8" },
-  keywords: ["peptide market", "research products", "vendor comparison", "batch evidence", "market intelligence"],
+  keywords: ["peptide research evidence", "laboratory reports", "document provenance", "compound reference", "market observations"],
   openGraph: {
     type: "website",
-    title: "VialGrade — Don't get scammed buying peptides",
-    description: "Every vendor's price, lab test, and reputation on one screen.",
+    title: "VialGrade — Research records and laboratory evidence",
+    description: "Documented laboratory reports, public records, and historical market observations.",
     siteName: "VialGrade",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VialGrade marketplace interface" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VialGrade research records interface" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "VialGrade — Don't get scammed buying peptides",
-    description: "Every vendor's price, lab test, and reputation on one screen.",
+    title: "VialGrade — Research records and laboratory evidence",
+    description: "Documented laboratory reports, public records, and historical market observations.",
     images: ["/og-image.png"],
   },
   icons: {

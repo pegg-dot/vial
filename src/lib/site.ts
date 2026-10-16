@@ -2,8 +2,8 @@ export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://vialgrade.e
 
 export const siteConfig = {
   name: "VialGrade",
-  title: "VialGrade — The peptide market, made legible",
+  title: "VialGrade — Peptide research and evidence records",
   description:
-    "Know what's really in the vial. Independent lab tests, prices, and reputation for every peptide vendor — aggregated from public sources and graded on the evidence.",
+    "Public laboratory reports, documented vendor histories and dated marketplace observations, with sources and limitations shown.",
   url: siteUrl,
 } as const;
