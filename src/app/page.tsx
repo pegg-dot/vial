@@ -7,7 +7,6 @@ import { HomeTicker } from "@/components/home/ticker";
 import { HomeHero } from "@/components/home/hero";
 import { HomeManifesto } from "@/components/home/manifesto";
 import { HomeFeatures } from "@/components/home/features";
-import { HomeGoalRail } from "@/components/home-goal-rail";
 import { HomeVendorCarousel } from "@/components/home-vendor-carousel";
 import { HomeBigNumber } from "@/components/home/big-number";
 import { HomeCompoundsShowcase } from "@/components/home/compounds-showcase";
@@ -58,15 +57,15 @@ export default async function HomePage() {
       <HomeManifesto />
       <HomeFeatures />
 
-      {/* Browse by goal */}
+      {/* Documentary research entry point, not treatment-goal navigation */}
       <section className="border-b-2 border-[#111214] bg-white">
         <div className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24">
           <div className="max-w-2xl">
-            <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Start with a goal</p>
-            <h2 className="mt-4 text-balance text-[clamp(2.4rem,5.5vw,4rem)] font-extrabold leading-[.92] tracking-[-.045em]">What are you researching?</h2>
-            <p className="mt-4 max-w-xl text-lg font-medium leading-8 text-[var(--muted)]">Pick a research area &mdash; we&rsquo;ll line up the compounds with every vendor, price, and lab test. No idea where to start? That&rsquo;s exactly the point.</p>
+            <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Explore the research</p>
+            <h2 className="mt-4 text-balance text-[clamp(2.4rem,5.5vw,4rem)] font-extrabold leading-[.92] tracking-[-.045em]">Browse the records</h2>
+            <p className="mt-4 max-w-xl text-lg font-medium leading-8 text-[var(--muted)]">Explore compound records and available laboratory evidence. Categories and past prices are not medical or purchasing recommendations.</p>
           </div>
-          <div className="mt-9"><HomeGoalRail /></div>
+          <div className="mt-9"><Link href="/compounds" className="ink hard-sm press inline-flex items-center rounded-full bg-white px-5 py-3 text-sm font-bold">Explore compound records <ArrowRight className="ml-2 size-4" /></Link></div>
         </div>
       </section>
 
