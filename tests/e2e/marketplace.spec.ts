@@ -26,7 +26,7 @@ test("home page and command search expose the market", async ({ page }) => {
 
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /records actually show/i })).toBeVisible();
-  await page.getByRole("button", { name: /Search the market/i }).click();
+  await page.getByRole("button", { name: /Search research records/i }).click();
   await expect(page.getByRole("dialog", { name: "Search VialGrade" })).toBeVisible();
   await page.getByLabel("Search query").fill("MOTS-c");
   await expect(page.getByRole("link", { name: /MOTS-c/i }).first()).toBeVisible();
