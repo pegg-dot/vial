@@ -50,6 +50,9 @@ export const AUTH_PROMPT_DELAY_MS = 10_000;
 const SUPPRESSED = ["/login", "/register", "/admin", "/seller", "/lab", "/checkout", "/cart", "/offline"];
 
 export function shouldAutoPrompt({ pathname, authenticated, dismissed }: { pathname: string; authenticated: boolean; dismissed: boolean }) {
+  // New consumer accounts are paused during the privacy remediation.
+  void pathname; void authenticated; void dismissed;
+  return false;
   if (authenticated || dismissed) return false;
   return !SUPPRESSED.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }

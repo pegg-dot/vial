@@ -3,7 +3,7 @@ import { DisclosureBanner } from "@/components/disclosure-banner";
 import { MarketplaceProvider } from "@/components/marketplace-state";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { TrackView } from "@/components/track-view";
+
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 import { JsonLd } from "@/components/json-ld";
 import { organizationSchema, webSiteSchema } from "@/lib/structured-data";
@@ -106,7 +106,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             nodes that per-page schema references by @id, instead of each page redeclaring them. */}
         <JsonLd data={[organizationSchema(), webSiteSchema()]} />
         <MarketplaceProvider catalog={catalog} initialWatchlist={watchlist} initialSavedStacks={savedStacks} initialCompare={comparison?.listingSlugs ?? []} authenticated={Boolean(principal)}>
-          <TrackView />
           <DisclosureBanner hasDemo={hasDemo} />
           <SiteHeader authenticated={Boolean(principal)} />
           <main>{children}</main>
