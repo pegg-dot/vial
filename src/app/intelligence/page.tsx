@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { fetchPublicTrialIndex } from "@/server/intelligence/public-trials";
 import Link from "next/link";
 import { ArrowUpRight, BookOpen, ChartNoAxesCombined, FileCheck2, Network, Radar, Scale } from "lucide-react";
 
@@ -33,7 +34,8 @@ const sources = [
   { label: "OpenAlex", purpose: "Scholarly metadata and linked publications", url: "https://openalex.org/" },
 ];
 
-export default function IntelligencePage() {
+export default async function IntelligencePage() {
+  const trialIndex = await fetchPublicTrialIndex();
   return (
     <div>
       <section className="border-b-2 border-[#111214] bg-[#f0edff]">
@@ -77,6 +79,71 @@ export default function IntelligencePage() {
           clinical, patent or financing database. AI-generated research summaries are not
           published as verified findings without source links and review.
         </p>
+      </section>
+
+
+      <section id="trials" className="border-t-2 border-[#111214] bg-[#f7f7f4]">
+        <div className="mx-auto max-w-[1100px] px-5 py-16 sm:px-8 sm:py-20">
+          <span className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">Working source index · ClinicalTrials.gov</span>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">
+            Public trial records, directly traceable.
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--muted)]">
+            A small live-source prototype using fixed R&amp;D search terms, not an AI-generated
+            summary. Each study links to its original NCT record. A study's registration,
+            recruitment status or reported phase is not evidence of clinical efficacy,
+            FDA approval or the safety of any third-party vial.
+          </p>
+          <div className="mt-8 grid gap-5">
+            {trialIndex.map((topic) => (
+              <section key={topic.key} className="ink hard-sm rounded-[18px] bg-white p-5 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-xl font-extrabold">{topic.label}</h3>
+                  <a href={`https://clinicaltrials.gov/search?term=${encodeURIComponent(topic.label)}`}
+                     target="_blank" rel="noopener noreferrer"
+                     className="text-xs font-bold text-[#2b31d8] underline underline-offset-2">
+                    Search original registry
+                  </a>
+                </div>
+                {topic.unavailable ? (
+                  <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
+                    The registry could not be reached for this preview. No trial status
+                    or trial count is inferred from an unavailable source.
+                  </p>
+                ) : topic.studies.length === 0 ? (
+                  <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
+                    No records were returned for this exact source search. That does not prove
+                    an absence of research under other names.
+                  </p>
+                ) : (
+                  <div className="mt-5 divide-y divide-[#111214]/10">
+                    {topic.studies.map((trial) => (
+                      <article key={trial.nctId} className="py-4 first:pt-0 last:pb-0">
+                        <a href={`https://clinicaltrials.gov/study/${trial.nctId}`}
+                           target="_blank" rel="noopener noreferrer"
+                           className="text-sm font-extrabold leading-6 text-[#2b31d8] underline-offset-2 hover:underline">
+                          {trial.title}
+                        </a>
+                        <p className="mt-2 text-[12px] font-medium leading-6 text-[var(--muted)]">
+                          <span className="font-bold text-[#111214]">{trial.nctId}</span>
+                          {" · "}Reported status: {trial.status.replaceAll("_", " ")}
+                          {trial.phase ? ` · ${trial.phase.replaceAll("_", " ")}` : ""}
+                          {trial.lastUpdated ? ` · Registry updated ${trial.lastUpdated}` : ""}
+                        </p>
+                        {trial.sponsor ? <p className="text-xs text-[var(--muted)]">Lead sponsor on record: {trial.sponsor}</p> : null}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ))}
+          </div>
+          <p className="mt-6 text-xs leading-6 text-[var(--muted)]">
+            Records are attributed to ClinicalTrials.gov and may be cached for up to six hours.
+            This prototype does not collect visitors' search terms or profiles. Source changes
+            and errors are possible; verify decisions against each underlying NCT record.
+          </p>
+        </div>
       </section>
 
       <section className="border-t-2 border-[#111214] bg-white">
