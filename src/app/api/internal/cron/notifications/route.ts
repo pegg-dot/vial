@@ -42,6 +42,11 @@ function authorized(request: NextRequest) {
 export async function GET(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // A research-interest notification sweep would create new personalized records.
+  // Keep the scheduled endpoint responsive but do not process users until
+  // a lawful privacy-control and withdrawal flow has been implemented.
+  return NextResponse.json({ paused: true, reason: "Research notifications under privacy review" });
+
   // The budget is well inside maxDuration so the sweep stops itself and writes its receipt rather
   // than being killed mid-user with nothing recorded.
   const result = await runNotificationSweep({ maxUsers: NOTIFICATION_SWEEP_USERS, budgetMs: 90_000 });

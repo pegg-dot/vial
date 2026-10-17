@@ -78,11 +78,11 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
               sign-in prompt hands off to. Below `sm` it collapses to the icon to keep the bar. */}
           <Link
             href={authenticated ? "/account" : "/login"}
-            aria-label={authenticated ? "Account" : "Sign in"}
+            aria-label={authenticated ? "Account" : "Existing account sign in"}
             className="ink hard-sm press grid size-10 place-items-center rounded-full bg-[#111214] text-sm font-bold text-white sm:block sm:size-auto sm:px-5 sm:py-2.5"
           >
             <UserRound className="size-4 sm:hidden" />
-            <span className="hidden sm:inline">{authenticated ? "Account" : "Sign in"}</span>
+            <span className="hidden sm:inline">{authenticated ? "Account" : "Existing account"}</span>
           </Link>
           <button
             onClick={() => setMobileOpen((value) => !value)}
