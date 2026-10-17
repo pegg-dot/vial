@@ -85,7 +85,19 @@ async function oneTopic(topic: (typeof PUBLIC_RESEARCH_TOPICS)[number]): Promise
     });
     if (!response.ok) throw new Error("Registry request failed");
     const payload: unknown = await response.json();
-    return { ...topic, studies: parseTrialRegistryResponse(payload).slice(0, 4), unavailable: false, checkedAt };
+    // An invalid API schema or a page of malformed records is not a result
+    // set containing zero studies. Fail closed rather than publishing an
+    // incorrect "nothing on record" inference.
+    if (!payload || typeof payload !== "object" || !("studies" in payload)) {
+      throw new Error("Unexpected registry response");
+    }
+    const raw = (payload as { studies: unknown }).studies;
+    if (!Array.isArray(raw)) throw new Error("Unexpected registry studies");
+    const studies = parseTrialRegistryResponse(payload).slice(0, 4);
+    if (raw.length > 0 && studies.length === 0) {
+      throw new Error("Registry records could not be verified");
+    }
+    return { ...topic, studies, unavailable: false, checkedAt };
   } catch {
     // Network or API faults are not the same as a trial search returning no records.
     return { ...topic, studies: [], unavailable: true, checkedAt };
