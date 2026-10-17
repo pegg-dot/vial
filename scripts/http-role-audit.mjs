@@ -63,6 +63,14 @@ try {
   const admin = await login(base, "jon@vialgrade.test", "VialGradeDemoAdmin!2026", "staff");
   for (const path of adminRoutes) await check(path, 200, { cookie: admin });
 
+  // The public new-sale hold must not disable handling of prior refunds or disputes.
+  await check("/go?l=legacy", 410);
+  await check("/api/partner/conversion", 410, { method: "POST", body: {} });
+  await check("/api/v1/commerce/checkout", 410, { cookie: customer, method: "POST", body: {} });
+  await check("/api/v1/commerce/approved-checkout", 410, { cookie: customer, method: "POST", body: {} });
+  await check("/api/v1/commerce/activation", 410, { cookie: customer, method: "POST", body: {} });
+  await check("/api/v1/commerce/cart", 410, { cookie: customer, method: "POST", body: {} });
+
   // Money moves only for an administrator. A reviewer is staff and still must not: 403, not 200.
   const reviewer = await login(base, "maya@vialgrade.test", "VialGradeDemoReviewer!2026", "staff");
   await check("/api/v1/commerce/control-plane", 200, { cookie: reviewer });

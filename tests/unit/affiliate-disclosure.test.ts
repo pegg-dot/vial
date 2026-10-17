@@ -22,8 +22,11 @@ describe("evidence-only commerce hold", () => {
   });
   it("blocks public transaction and conversion endpoints at the proxy", () => {
     const source = readSource("../../src/proxy.ts");
-    expect(source).toContain('path.startsWith("/api/v1/commerce/")');
-    expect(source).toContain('path==="/go"');
+    expect(source).toContain("isPausedTransactionEndpoint(path)");
+    const pause = readSource("../../src/lib/commerce-pause.ts");
+    expect(pause).toContain('"/api/v1/commerce/checkout"');
+    expect(pause).toContain('"/go"');
+    expect(source).not.toContain('path.startsWith("/api/v1/commerce/")');
     expect(source).toContain("status:410");
   });
 });

@@ -12,7 +12,7 @@ A public documentary registry of historic laboratory reports, compound research 
 
 ## Implemented, pending tests and legal review
 
-1. /go no longer redirects to peptide sellers. Perimeter rejects /go, /api/v1/commerce/\*, and /api/partner/conversion with HTTP 410.
+1. /go no longer redirects to peptide sellers. Perimeter rejects the legacy /go handoff, partner conversion callbacks, and explicit new-sale cart/checkout/activation/provider-onboarding endpoints with HTTP 410. Existing customer refund/return/dispute and payment-provider reconciliation/webhook pathways remain accessible under their role or signature gates.
 2. Product action controls have no vendor checkout CTA; coupons and promotion panels are disabled. Related personal recommendations and stack/blend shopping analyses are paused.
 3. Public legal materials no longer state that “research use only” makes a human-use drug market exempt; they distinguish approved finished drugs, investigational molecules, and research listings.
 4. Home, help, terms, privacy, SEO metadata and price/purity language no longer promise guaranteed authenticity, sterility, zero scams, or a legal route to buy.
@@ -55,3 +55,7 @@ A public documentary registry of historic laboratory reports, compound research 
 - FTC: [Endorsements and testimonials guidance](https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking)
 
 **No claim in this file constitutes attorney-client advice or a government approval.**
+
+### Second pass: preserve existing consumer rights
+
+The initial blanket /api/v1/commerce/* block also disabled existing order refunds, returns, admin dispute handling, and payment-provider events. That was overbroad and has been replaced with an explicit list of prohibited new-sale endpoints. The authenticated remedies and finance routes retain their original authorization checks. The HTTP role audit checks both restrictions and permissions.
