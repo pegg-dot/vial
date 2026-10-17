@@ -7,12 +7,12 @@ import { splitByRankability } from "./market-picks";
 export type CompoundSortKey = "cheapest" | "value" | "purity" | "tested" | "price" | "fresh";
 
 export const SORTS: Array<{ key: CompoundSortKey; label: string; blurb: string }> = [
-  { key: "cheapest", label: "Cheapest per mg", blurb: "What a milligram actually costs, so a big vial isn't mistaken for a bargain." },
-  { key: "value", label: "Best real value", blurb: "Price per mg divided by measured purity — the cost of the actual peptide." },
-  { key: "purity", label: "Highest tested purity", blurb: "Ranked by the vendor's median independently-tested purity. Purity is not a grade." },
-  { key: "tested", label: "Most independently tested", blurb: "Vendors with the most third-party certificates on record for this compound." },
-  { key: "price", label: "Lowest sticker price", blurb: "The number on the page, ignoring size. Useful for a budget, misleading for value." },
-  { key: "fresh", label: "Most recently checked", blurb: "How long ago we last read this listing from the vendor's own store." },
+  { key: "cheapest", label: "Reported price/mg ↑", blurb: "Observed price divided by listed quantity. Not a verified unit cost or a purchasing recommendation." },
+  { key: "value", label: "COA-adjusted estimate ↑", blurb: "A calculation from a reported sample purity, not proof of the purity or contents of a later vial." },
+  { key: "purity", label: "Reported sample purity ↓", blurb: "Ordered by available laboratory-reported sample findings, not by product safety or clinical quality." },
+  { key: "tested", label: "Lab reports on record ↓", blurb: "Document counts do not establish a vendor's production quality or legality." },
+  { key: "price", label: "Reported listing price ↑", blurb: "Historical third-party prices with varying quantities and dates; not live purchasing offers." },
+  { key: "fresh", label: "Most recently observed", blurb: "When the source page was last read, not a statement of current availability." },
 ];
 
 /**

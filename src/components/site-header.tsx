@@ -54,13 +54,13 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
             className="ink-1 group hidden h-10 min-w-[210px] items-center gap-2.5 rounded-full bg-white/80 px-3.5 text-left text-sm font-medium text-[var(--muted)] transition hover:-translate-y-0.5 hover:bg-white lg:flex"
           >
             <Search className="size-4" aria-hidden="true" />
-            <span className="flex-1">Search the market</span>
+            <span className="flex-1">Search research records</span>
             <kbd className="ink-1 rounded-md bg-black/[.035] px-1.5 py-0.5 text-[10px] font-bold">⌘K</kbd>
           </button>
           <button
             onClick={openSearch}
             className="ink-1 grid size-10 place-items-center rounded-full bg-white/80 text-black transition hover:bg-white lg:hidden"
-            aria-label="Search the market"
+            aria-label="Search research records"
           >
             <Search className="size-4" />
           </button>
