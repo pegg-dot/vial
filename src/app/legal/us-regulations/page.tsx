@@ -63,7 +63,8 @@ export default function Page() {
       <div className="mt-5 text-xs leading-6 text-[var(--muted)]">
         Primary sources: <a className="underline" target="_blank" rel="noopener noreferrer" href="https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/gram-peptides-721806-03312026">FDA: intended use despite research labels</a>;{" "}
         <a className="underline" target="_blank" rel="noopener noreferrer" href="https://www.fda.gov/drugs/human-drug-compounding/bulk-drug-substances-used-compounding-under-section-503a-fdc-act">FDA: section 503A bulk substances</a>;{" "}
-        <a className="underline" target="_blank" rel="noopener noreferrer" href="https://www.fda.gov/drugs/human-drug-compounding/fdc-act-provisions-apply-human-drug-compounding">FDA: sections 503A and 503B</a>.
+        <a className="underline" target="_blank" rel="noopener noreferrer" href="https://www.fda.gov/drugs/human-drug-compounding/fdc-act-provisions-apply-human-drug-compounding">FDA: sections 503A and 503B</a>;{" "}
+        <a className="underline" target="_blank" rel="noopener noreferrer" href="https://www.fda.gov/drugs/drug-alerts-and-statements/fdas-concerns-unapproved-glp-1-drugs-used-weight-loss">FDA: unapproved GLP-1 products and specific compounding restrictions</a>.
       </div>
       <div className="mt-8 flex flex-wrap gap-3 text-sm font-bold text-[#2b31d8]">
         <Link href="/legal/disclaimer">Research & medical disclaimer</Link>

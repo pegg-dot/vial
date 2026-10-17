@@ -36,6 +36,7 @@ const FDA_REVIEW_NOTES: Record<string, string> = {
 // Athletes must check the current WADA/USADA prohibited and monitoring lists.
 export function usLegalFor(slug: string): UsLegalStatus {
   const flags = FDA_REVIEW_NOTES[slug] ? ["FDA compounding status requires review"] : [];
+  if (slug === "retatrutide" || slug === "cagrilintide") flags.push("FDA: cannot be used in federal drug compounding");
   if (APPROVED_PRODUCT_INGREDIENTS[slug]) {
     return {
       category: "prescription",
@@ -48,7 +49,7 @@ export function usLegalFor(slug: string): UsLegalStatus {
     return {
       category: "investigational",
       headline: "Investigational compound; human-use approval not established",
-      detail: `This substance is ${INVESTIGATIONAL[slug]}. Clinical investigation does not constitute FDA marketing authorization. Statements such as “for research use only” do not by themselves exclude a product from drug requirements. This is an information record, not a product endorsement.`,
+      detail: `This substance is ${INVESTIGATIONAL[slug]}. Clinical investigation does not constitute FDA marketing authorization. Statements such as “for research use only” do not by themselves exclude a product from drug requirements. ${slug === "retatrutide" || slug === "cagrilintide" ? "FDA states this substance cannot be used in drug compounding under federal law." : "Specific compounding and distribution rules must be checked separately."} This is an information record, not a product endorsement.`,
       flags,
     };
   }
@@ -89,6 +90,10 @@ export const US_REGULATION_FACTS: { title: string; body: string }[] = [
   {
     title: "Regulatory status can change",
     body: "FDA and state actions, advisory processes and shortage-related policies can change. Verify a specific question through official sources and qualified counsel before taking action.",
+  },
+  {
+    title: "FDA restrictions on specific investigational GLP-1 ingredients",
+    body: "FDA expressly states that retatrutide and cagrilintide cannot be used for human drug compounding under federal law. They are not components of FDA-approved drugs and have not been found safe and effective for any condition. This finding does not imply that all investigational compounds have identical status.",
   },
   {
     title: "Sports anti-doping rules are separate",

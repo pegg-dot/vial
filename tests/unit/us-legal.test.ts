@@ -10,7 +10,13 @@ describe("US regulatory research context", () => {
   it("identifies investigational research without suggesting approval", () => {
     const s = usLegalFor("retatrutide");
     expect(s.category).toBe("investigational");
+    expect(s.flags).toContain("FDA: cannot be used in federal drug compounding");
+    expect(s.detail).toMatch(/cannot be used in drug compounding/i);
     expect(s.detail).toMatch(/does not constitute FDA/i);
+  });
+  it("does not misclassify all investigated substances as having the same compounding status", () => {
+    expect(usLegalFor("survodutide").flags).not.toContain("FDA: cannot be used in federal drug compounding");
+    expect(usLegalFor("cagrilintide").flags).toContain("FDA: cannot be used in federal drug compounding");
   });
   it("does not call the research-use label a legal exemption", () => {
     expect(usLegalFor("tb-500").detail).toMatch(/label alone does not decide/i);
