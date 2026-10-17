@@ -55,7 +55,7 @@ export default function HowWeCheckPage() {
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#8fffd6]">How we check</p>
           <h1 className="mt-5 max-w-4xl text-balance text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">Trust is a chain of evidence, <span className="text-[#8fffd6]">not a green check.</span></h1>
           <p className="mt-7 max-w-2xl text-lg font-medium leading-8 text-white/70">
-            Before you spend money on a peptide, you want three answers: is it real, will I get scammed, and is this the fair price. This page shows exactly how VialGrade earns each answer — and what we refuse to guess about.
+            A laboratory report may establish narrow facts about an identified sample. This page shows how VialGrade organizes those facts, what different forms of provenance mean, and what remains unverified. No report is a purchasing or safety recommendation.
           </p>
         </div>
       </section>
@@ -64,7 +64,7 @@ export default function HowWeCheckPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Principle icon={Database} title="We keep the receipts" detail="A saved, timestamped copy of what every vendor and lab actually showed — so history can't be quietly rewritten." />
           <Principle icon={CircleDashed} title="We don't hide what's missing" detail="No sterility test? We say so, instead of quietly rounding it up to “trusted.” Unknown always stays visible." />
-          <Principle icon={ShieldCheck} title="A human checks the big claims" detail="Software gathers the data. Before a scam flag, legal note, or accusation goes public, a person reviews it." />
+          <Principle icon={ShieldCheck} title="Major claims need review" detail="VialGrade aims to require supporting primary sources and human escalation for adverse vendor allegations. We have not independently established that every historical publication met this standard." />
         </div>
       </section>
 
@@ -129,15 +129,15 @@ export default function HowWeCheckPage() {
         <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Governance</p>
-            <h2 className="mt-3 text-[clamp(2.2rem,5vw,3.6rem)] font-extrabold leading-[.95] tracking-[-.045em]">Software proposes. People publish.</h2>
+            <h2 className="mt-3 text-[clamp(2.2rem,5vw,3.6rem)] font-extrabold leading-[.95] tracking-[-.045em]">Automation is not legal verification.</h2>
             <p className="mt-5 max-w-xl text-base font-medium leading-7 text-[var(--muted)]">
-              Automation does the repetitive collecting and comparing. It never controls money, permissions, legal conclusions, or what gets published about a vendor.
+              Automation collects and organizes records. Its outputs are not legal determinations, and source provenance and editorial oversight must be reviewed before making claims about people or businesses.
             </p>
           </div>
           <div className="ink hard rounded-[20px] bg-[#111214] p-6 text-white sm:p-8">
             <GovernanceRow icon={Database} title="Nothing is rewritten" detail="Every published change keeps the original snapshot and timestamp behind it." />
             <GovernanceRow icon={Check} title="Structured before reviewed" detail="Extracted claims must fit typed fields before they can even enter review." />
-            <GovernanceRow icon={ShieldCheck} title="High-impact claims wait for a person" detail="Scam flags, legal events, and adverse findings require deterministic rules or human approval." />
+            <GovernanceRow icon={ShieldCheck} title="Human review is required for high-impact claims" detail="New accusations, legal-status conclusions and adverse findings must undergo documented source review and an accountable human decision. Historical records require retrospective audit." />
           </div>
         </div>
       </section>

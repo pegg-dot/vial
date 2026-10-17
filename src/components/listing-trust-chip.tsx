@@ -82,7 +82,7 @@ export function TrustLine({ trust, showNeutral = true, className = "" }: { trust
 
 function priceFlagDisplay(trust: ListingTrust | undefined): { tone: "warn" | "good"; Icon: typeof TriangleAlert; label: string; title?: string } | null {
   if (!trust?.priceFlag) return null;
-  if (trust.priceFlag === "too-cheap") return { tone: "warn", Icon: TriangleAlert, label: "Too cheap?", title: trust.priceNote ?? undefined };
+  if (trust.priceFlag === "too-cheap") return { tone: "warn", Icon: TriangleAlert, label: "Price outlier", title: "Reported price differs significantly from observed peers. This does not establish fraud, identity, safety or legal compliance." };
   const pct = trust.priceNote?.match(/\d+%/)?.[0] ?? "drop";
   return { tone: "good", Icon: TrendingDown, label: `Price ↓ ${pct}`, title: trust.priceNote ?? undefined };
 }

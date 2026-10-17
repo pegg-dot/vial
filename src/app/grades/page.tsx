@@ -8,7 +8,7 @@ import { articleSchema } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "Purity vs grade",
-  description: "“99% pure” and “pharmaceutical grade” are two different claims, and vendors blur them on purpose. What research-use-only, pharmaceutical grade, and GMP actually mean — and the one question that tells you which you are being sold.",
+  description: "“99% pure” and “pharmaceutical grade” are two different claims, and vendors blur them on purpose. What research-use-only, pharmaceutical grade, and GMP actually mean — and the documents that help evaluate manufacturing claims.",
   alternates: { canonical: "/grades" },
 };
 
@@ -70,7 +70,7 @@ const ASKS = [
   {
     q: "“Who picked the vial that was tested?”",
     good: "A sealed retail unit sent in, or a third-party blind purchase. The vendor did not choose which one went to the lab.",
-    dodge: "“We test every batch,” with no word on where the sample came from. A vendor-chosen sample is the vendor’s best vial, and you are not buying that vial.",
+    dodge: "“We test every batch,” with no word on where the sample came from. A vendor-chosen sample can introduce selection bias; its results may not be representative of other inventory, regardless of what is later distributed.",
   },
   {
     q: "“What batch number is that certificate for, and is it the batch I’d receive?”",
@@ -263,7 +263,7 @@ export default function GradesPage() {
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Compounded is a fourth thing</p>
           <h2 className="mt-3 text-[clamp(2rem,5vw,3.6rem)] font-extrabold leading-[.95] tracking-[-.045em]">A pharmacy is not a website</h2>
           <p className="mt-5 text-base font-medium leading-7 text-[var(--muted)]">
-            If you have seen a clinic or telehealth service offer a peptide, that is compounding — a licensed pharmacy making a drug for a named patient. It is a separate legal lane from a site that ships a vial to anyone. It is worth understanding, because the vendor language borrows from it.
+            A clinic or telehealth service advertising a peptide does not establish that the product was legally compounded. Section 503A sets requirements for qualifying patient-specific compounding by licensed pharmacists or physicians; section 503B addresses registered outsourcing facilities under different conditions. A clinic advertisement, a prescription, or a research-use label alone is not proof of compliance.
           </p>
         </div>
 
@@ -272,7 +272,7 @@ export default function GradesPage() {
             <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-[#eef0ff] px-3 py-1 text-[11px] font-bold uppercase tracking-[.14em] text-[#2b31d8]"><Landmark className="size-3" /> 503A</span>
             <h3 className="mt-5 text-xl font-extrabold tracking-[-.03em]">A state-licensed pharmacy</h3>
             <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">
-              Day-to-day oversight sits mainly with state boards of pharmacy. The FDA says plainly that drugs compounded this way are <span className="font-bold text-[#111214]">not</span> subject to GMP requirements.
+              State boards of pharmacy oversee licensed pharmacies alongside applicable federal rules. A drug compounded in full compliance with section 503A qualifies for exemptions from specified federal requirements, including section 501(a)(2)(B) current good manufacturing practice requirements. It is not a general exemption for all products made or marketed by a pharmacy.
             </p>
           </div>
           <div className="ink hard rounded-[20px] bg-white p-6 sm:p-7">
@@ -290,7 +290,7 @@ export default function GradesPage() {
             <div className="min-w-0">
               <h3 className="text-xl font-extrabold tracking-[-.03em]">The line the FDA draws, which is this whole page in one rule</h3>
               <p className="mt-3 text-sm font-medium leading-7 text-[#111214]/75">
-                For a pharmacy to compound with a bulk substance, the FDA requires two separate things: a valid certificate of analysis, <span className="font-bold">and</span> that the substance was made by an establishment registered with the FDA. The paper is not accepted in place of the facility. That is the same distinction a vendor collapses when a purity number is offered as proof of quality.
+                Eligible bulk ingredients in qualifying section 503A compounding generally require a valid certificate of analysis and must meet applicable establishment-registration and other sourcing conditions. The ingredient must also meet the appropriate eligibility pathway under section 503A. A COA alone cannot establish those conditions, much less approval of a finished drug or proof of the contents of any later vial.
               </p>
             </div>
           </div>
@@ -302,7 +302,7 @@ export default function GradesPage() {
             The FDA keeps a public list of bulk substances it has flagged as possibly presenting significant safety risks in compounding &mdash; &ldquo;category 2.&rdquo; On 29 September 2023 it added several peptide substances, including GHRP-2, GHRP-6, ipamorelin acetate and kisspeptin-10. For a substance in category 2, the FDA says it would consider taking action against a compounder who used it.
           </p>
           <p className="mt-4 text-sm font-medium leading-7 text-[var(--muted)]">
-            A larger group &mdash; among them BPC-157, CJC-1295, TB-500, MOTS-c, semax, epitalon, selank, melanotan II, GHK-Cu for injection, LL-37 and AOD-9604 &mdash; appears on the same FDA page in a second table, of substances that were previously in category 2 and whose nominations were then withdrawn by the people who filed them. Withdrawn is not the same as cleared. None of these is on the 503A list a pharmacy may compound from.
+            A larger group &mdash; among them BPC-157, CJC-1295, TB-500, MOTS-c, semax, epitalon, selank, melanotan II, GHK-Cu for injection, LL-37 and AOD-9604 &mdash; appears on the same FDA page in a second table, of substances that were previously in category 2 and whose nominations were then withdrawn by the people who filed them. Withdrawn is not the same as cleared. A withdrawn nomination is not affirmative authorization to compound. Status must be checked substance by substance against current FDA decisions and the applicable 503A pathways, rather than assumed from a static web list.
           </p>
           <p className="mt-4 text-sm font-medium leading-7 text-[var(--muted)]">
             And it is still moving. On 23&ndash;24 July 2026 the FDA&rsquo;s Pharmacy Compounding Advisory Committee met to discuss whether BPC-157, KPV, TB-500, MOTS-c, emideltide (DSIP), semax and epitalon should go on that list.
