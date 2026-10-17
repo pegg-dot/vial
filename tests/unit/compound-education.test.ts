@@ -9,7 +9,7 @@ describe("compound education data", () => {
   });
 
   it("labels goals and falls back to the raw key", () => {
-    expect(goalLabel("recovery")).toBe("Recovery & healing");
+    expect(goalLabel("recovery")).toBe("Tissue-repair research");
     expect(goalLabel("mystery")).toBe("mystery");
   });
 

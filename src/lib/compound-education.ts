@@ -1,4 +1,4 @@
-// Plain-English education so a first-time buyer understands what a compound actually IS
+// Plain-English research context explaining a compound without making a purchase recommendation
 // and what it's researched for — the "I just want to know what this is for" need.
 //
 // STRICT framing: research-context only. Goals are neutral category tags (what communities
@@ -15,16 +15,16 @@ export interface CompoundEducation {
 // Canonical goal tags: the short label + tint for the chip, and a plain-English blurb that
 // explains what that research area actually is (research context only — never efficacy).
 export const GOAL_TAGS: Record<string, { label: string; tone: string; blurb: string }> = {
-  recovery: { label: "Recovery & healing", tone: "emerald", blurb: "Studied in tissue-repair research — tendon, ligament, muscle, and wound-healing models." },
-  gut: { label: "Gut health", tone: "emerald", blurb: "Studied in gastrointestinal research, including gut-lining integrity and inflammatory-condition models." },
-  gh: { label: "Growth hormone support", tone: "blue", blurb: "Studied for how it interacts with the body's own growth-hormone axis in research settings." },
-  metabolic: { label: "Weight & metabolic", tone: "violet", blurb: "Studied in weight, appetite, blood-sugar, and fat-metabolism research." },
-  longevity: { label: "Longevity & anti-aging", tone: "violet", blurb: "Studied in aging, cellular-senescence, and mitochondrial-function research." },
+  recovery: { label: "Tissue-repair research", tone: "emerald", blurb: "Studied in tissue-repair research — tendon, ligament, muscle, and wound-healing models." },
+  gut: { label: "Gastrointestinal research", tone: "emerald", blurb: "Studied in gastrointestinal research, including gut-lining integrity and inflammatory-condition models." },
+  gh: { label: "Growth-hormone research", tone: "blue", blurb: "Studied for how it interacts with the body's own growth-hormone axis in research settings." },
+  metabolic: { label: "Metabolic research", tone: "violet", blurb: "Studied in weight, appetite, blood-sugar, and fat-metabolism research." },
+  longevity: { label: "Aging research", tone: "violet", blurb: "Studied in aging, cellular-senescence, and mitochondrial-function research." },
   cognitive: { label: "Cognitive & mood", tone: "blue", blurb: "Studied in memory, focus, mood, and neuroprotection research." },
   skin: { label: "Skin & cosmetic", tone: "amber", blurb: "Studied in cosmetic and skin research — collagen, elasticity, and appearance." },
-  tanning: { label: "Tanning & libido", tone: "amber", blurb: "Studied in melanocortin research — skin pigmentation and related pathways." },
+  tanning: { label: "Melanocortin research", tone: "amber", blurb: "Studied in melanocortin research — skin pigmentation and related pathways." },
   immune: { label: "Immune & thymic", tone: "emerald", blurb: "Studied in immune-modulation and thymic-function research." },
-  muscle: { label: "Muscle & performance", tone: "blue", blurb: "Studied in muscle-growth, repair, and physical-performance research." },
+  muscle: { label: "Muscle physiology research", tone: "blue", blurb: "Studied in muscle-growth, repair, and physical-performance research." },
   sleep: { label: "Sleep", tone: "violet", blurb: "Studied in sleep-cycle and stress-recovery research." },
   hormonal: { label: "Reproductive & hormonal", tone: "violet", blurb: "Studied in reproductive-hormone and endocrine-axis research." },
 };

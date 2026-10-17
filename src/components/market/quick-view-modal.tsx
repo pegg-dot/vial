@@ -108,7 +108,7 @@ export function QuickViewModal({
             <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em]">{current.medianPrice > 0 ? formatCurrency(current.medianPrice) : "—"}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Best / mg</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Lowest / mg</p>
             <p className="mt-1 text-lg font-extrabold tabular-nums tracking-[-.03em] text-[#0e8f80]">
               {bv?.pricePerMg ? formatPricePerMg(bv.pricePerMg) : "—"}
             </p>
@@ -128,7 +128,7 @@ export function QuickViewModal({
 
         {vendors.length > 0 && (
           <div className="mt-4">
-            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Top vendors</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Listed vendors</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {vendors.map((slug) => (
                 <Link key={slug} href={`/vendors/${slug}`} onClick={(e) => e.stopPropagation()} className="ink-1 rounded-full px-2.5 py-1 text-[12px] font-bold press">
