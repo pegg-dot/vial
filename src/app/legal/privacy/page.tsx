@@ -4,50 +4,23 @@ import { HOSTING_PROVIDER, PRIVACY_EMAIL, RESPONSE_TARGET_DAYS } from "@/lib/con
 
 export const metadata: Metadata = { title: "Privacy notice", alternates: { canonical: "/legal/privacy" } };
 
-// This page describes what the code actually does today — not an intention, not a template. Each
-// section below has a file behind it, and they must be changed together:
-//
-//   page views              src/app/api/track/view/route.ts, src/server/analytics/visitors.ts
-//   visitor hash            src/server/outbound/attribution.ts (visitorHash)
-//   outbound clicks + UTMs  src/server/outbound/clicks.ts, attribution.ts (tagDestination)
-//   accounts and sessions   src/server/auth/register.ts, repository.ts, session-envelope.ts
-//   push notifications      src/server/push/repository.ts
-//   retention windows       src/server/db/retention.ts
-//
-// A privacy notice that claims less collection than the software performs is a deceptive practice,
-// so treat any change to those files as a change to this page.
+// Describe documented software behaviors without treating hashes as anonymous,
+// account saves as non-health data, or hosting processors as nonexistent.
+const sections: Array<[string, string]> = [
+  ["Scope and operator", "This notice describes VialGrade's current public research website, its account features and certain legacy systems. VialGrade does not offer public checkout or seller-referral links. Product records are informational and do not establish treatment options or lawful supply."],
+  ["Pseudonymous page analytics", "A visit may create a record containing a coarse page category, referring website hostname, device class, time, and an identifier derived from the request's IP address, browser user-agent, an application secret and a rotating counting day. New records no longer retain individual compound, product, verification, or account paths. Earlier analytics rows may contain specific paths until cleaned up. The analytics table does not intentionally store raw IP addresses or user-agent strings, although infrastructure and security systems can process them."],
+  ["Research interests may be sensitive", "An account can store products and compounds you save, vendors you follow, saved search phrases, comparisons, alerts, preference filters and history. These choices may reveal or suggest health or medication interests even though VialGrade does not ask for a diagnosis. Such records may qualify as sensitive or consumer health data under laws applicable to particular people or locations. Signing in may synchronize saves made locally on your device."],
+  ["Account and security data", "To create an account we collect an email address, display name, password hash, session information and related security records. We process IP and browser information to establish sessions and limit abuse. Account actions and sign-in attempts may be retained as security or audit records."],
+  ["Search and verification activity", "The public verify tool may save search strings, times, counts and related vendor or document queries. A lookup can also cause the software to retrieve and retain a publicly accessible vendor page. Avoid entering your name, medical conditions, prescriptions or other private information in a free-text research or verification query."],
+  ["Browser storage, cookies and notifications", "A session cookie is used when signed in. Signed-out saves or comparisons may be held in your browser's local storage. If you opt in to push notifications, the system stores a push-service endpoint, cryptographic subscription keys and associated technical data and transmits notifications through your browser provider's push infrastructure. Hosting and service-worker functions may also use technical storage."],
+  ["Outbound referrals and legacy activity", "The former third-party seller redirect function has been disabled. Earlier redirect records may include a clicked compound and listing, vendor, destination hostname, timestamp, device type, a rotating visitor hash and an opaque click reference. They remain subject to a separate retention and deletion review. The public website no longer records new purchase referrals through that route."],
+  ["Service providers and sharing", "VialGrade uses " + HOSTING_PROVIDER + " for its infrastructure. Hosting and database service providers can process technical or account data on VialGrade's behalf. Enabled email or push delivery can involve other service providers. We do not intend to sell research interests to data brokers or use third-party behavioral-advertising pixels on the public research pages. The complete vendor inventory, processing regions and processor agreements require verification; we cannot claim that personal data never reaches a service provider."],
+  ["Retention", "The application has a 90-day cleanup rule for ordinary page-view analytics, 30 days for crawler views, 60 days for collector-run records, 90 days for source-reliability and market-summary records, and 180 days for verification-query logs. These are software retention rules, not proof that every scheduled purge, backup or third-party copy has been removed. Historical referral records and certain source snapshots lack a fixed automatic deletion rule and require review. Account data is generally retained while an account exists, subject to further applicable legal and operational retention rules."],
+  ["Your choices and data requests", "Core public information pages can be read without an account. To ask about an account record, access, correction, or deletion, email " + PRIVACY_EMAIL + ". A person handles these requests because a verified self-service deletion flow is not yet available. We aim to respond within " + RESPONSE_TARGET_DAYS + " days, without limiting any deadline or rights imposed by applicable law. Some technical or historical records may need a separate identification and retention assessment before removal."],
+  ["Jurisdiction and health-data laws", "Certain laws, such as Washington's My Health My Data Act, regulate reasonably linkable and inferred health data. Their application depends on factors including a consumer's location, what is collected, and how the service targets consumers. VialGrade does not claim a blanket exemption or that this notice substitutes for legally required consent. Additional notices, opt-in controls, geographic limitations, and data-rights mechanisms may be required before continuing some account features in particular jurisdictions."],
+  ["Updates and corrections", "This notice was revised during the October 2026 compliance review. We will update it when verified collection, processing, or retention practices materially change. If you find inaccurate information in this description, please contact the privacy address above."],
+];
+
 export default function Page() {
-  return <LegalPage eyebrow="Legal" title="Privacy notice" updated="Updated October 2026" sections={[
-
-["What this covers","This is what VialGrade collects when you use the site, and what happens to it. The current public website provides documentary records and does not offer checkout or vendor purchase referrals. Some legacy experimental commerce infrastructure remains under administrative review; this notice should be read together with the historical-record explanation below."],
-
-["Every page view is counted","Opening a page records one row: the path you opened without its query string, a coarse page type such as product or vendor, the bare hostname of the site that linked you here — never the full referring URL — a device class of mobile, tablet, or desktop, the time, and the visitor hash described below. Your IP address and your browser's user-agent string are not stored. Requests that identify themselves as crawlers are dropped before anything is written, and administrative pages are never counted."],
-
-["How we count people without knowing who they are","To count visitors rather than raw hits we take your IP address and user-agent string, combine them with a secret key held on the server and with today's date, and keep only the resulting hash. Because the date is part of the input, the same person produces a different hash tomorrow. That is enough to say how many people visited today, and not enough to follow anyone across days or build a profile. The IP address and user-agent themselves are never written down, and the hash is never linked to an account."],
-
-["Historical referral records","VialGrade previously offered a link that redirected visitors to third-party seller pages. When used, that feature recorded the listing, vendor and compound identifiers, destination hostname, device class, a randomly generated click reference, a rotating daily visitor hash, the time and an available source path. The feature is disabled, so new seller-referral clicks are not being recorded through that route. Historical click records may remain until a retention review is completed."],
-
-["Previously used outbound tracking","Before the outbound-referral function was disabled, seller links could include campaign and listing parameters used to identify referral traffic. Current pages do not provide the old seller purchase links. Third-party websites reached through independent navigation operate under their own privacy policies."],
-
-["Accounts are optional","You can use all of VialGrade without one. Create an account and we store your email address, the name you enter, your password as a hash (never the password itself), and your notification preferences. While you are signed in we also store what you save to your watchlist, what you put in a comparison, and a record of those actions, so the lists follow you between devices. Signed out, watchlists and comparisons stay in your own browser's local storage and never reach us."],
-
-["Sign-in security records","Signing in creates a session row holding a request ID and a keyed hash of your IP address and user-agent — again, not the values themselves. Sign-in attempts and security-relevant account actions are recorded the same way. Unlike the visitor hash, these use a fixed key rather than a daily one, because being comparable over time is the point: they are what shows you your own active sessions and what lets us rate-limit password guessing. They are never used for analytics."],
-
-["Push notifications","Only if you turn them on. Doing so stores the push endpoint your browser issues, the two keys needed to encrypt a message to it, and your browser's user-agent string. The endpoint belongs to your browser maker's push service — Apple, Google, or Mozilla — which necessarily handles the notification on its way to your device. Turning notifications off deletes the subscription."],
-
-["Cookies","One: vial_session, set only when you sign in. It is HTTP-only, same-site strict, marked secure in production, and expires after twelve hours. There is no analytics cookie and no advertising cookie, and a signed-out visitor is set no cookie at all."],
-
-["No third-party trackers","There is no Google Analytics, no advertising or conversion pixel, no session recorder, no A/B testing service, no embedded social, chat, or comment widget, and no third-party script of any kind on this site. Every record described here is written to our own database by our own code. Nothing about your activity is sold, and nothing is shared with advertisers, ad networks, or data brokers. Analytics records carry no account identifier, so they cannot be attached to a person even by us."],
-
-["How long we keep things","Page views from real visitors are deleted after 400 days, and any recorded from crawlers after 30. Collector-run history is deleted after 60 days, source-reliability snapshots after 90, and operational metric snapshots after 30. Historical outbound click records are currently retained without a fixed expiration period, pending review of operational need and data minimization. They include rotating visitor hashes rather than account IDs. Source snapshots, price history, and published catalog records are also kept indefinitely — they are the provenance behind public claims and contain nothing about you. Account data is kept until the account is deleted."],
-
-["Research-service data boundaries","The public research pages do not request health symptoms, prescriptions, peptide-use histories, payment-card details, or precise location. Legacy sandbox commerce infrastructure is not a public purchasing service and is subject to a separate retained-record review. The verify tool may fetch and retain public pages from vendors under examination."],
-
-["Where it is stored",`The site and its PostgreSQL database run on ${HOSTING_PROVIDER}, which processes data only to host the service. VialGrade does not transfer personal information to any other company.`],
-
-["Your requests",`Email ${PRIVACY_EMAIL} for a copy of what is attached to your account, to correct it, or to delete it. There is no self-service delete button yet, so a person handles the request; we aim to reply within ${RESPONSE_TARGET_DAYS} days. Deleting an account removes the account records. It does not reach into page-view or click rows, because nothing in them identifies you or points back to an account.`],
-
-["Changes and pending review","This notice is being updated alongside the suspension of commerce and outbound referrals. The retained-data inventory, service providers, and applicable regional privacy obligations require further review. Significant practice changes will be reflected here."],
-
-  ]} />;
+  return <LegalPage eyebrow="Legal" title="Privacy notice" updated="Updated October 2026" sections={sections} />;
 }

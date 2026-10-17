@@ -59,3 +59,9 @@ A public documentary registry of historic laboratory reports, compound research 
 ### Second pass: preserve existing consumer rights
 
 The initial blanket /api/v1/commerce/* block also disabled existing order refunds, returns, admin dispute handling, and payment-provider events. That was overbroad and has been replaced with an explicit list of prohibited new-sale endpoints. The authenticated remedies and finance routes retain their original authorization checks. The HTTP role audit checks both restrictions and permissions.
+
+### Second pass: privacy, sensitive research history and retention
+
+The old privacy notice said VialGrade collected no health information and transferred no personal information to another company, although account follows/watchlists/preferences can reveal inferred health interests and Vercel/Neon are service providers. The notice was rewritten to describe pseudonymous visit hashes, saved interests, vendor verification searches, historical referral logs and service providers. New page-view entries redact detailed research URLs into coarse categories. Ordinary page-view cleanup is shortened from 400 to 90 days. No claim is made that the historic rows and backup copies have already been purged, or that website notice alone meets specialized health-data consent requirements.
+
+Washington RCW 19.373.010 expressly includes some inferred or derived linkable health data. Applicability to VialGrade remains subject to the actual targeting and processing facts. Primary statute: https://app.leg.wa.gov/RCW/default.aspx?cite=19.373.010.

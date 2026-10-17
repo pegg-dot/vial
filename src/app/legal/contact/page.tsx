@@ -31,7 +31,7 @@ export default function Page() {
     <div className="mx-auto max-w-[900px] px-5 py-16 sm:px-8 sm:py-24">
       <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">Legal</p>
       <h1 className="mt-4 text-5xl font-extrabold tracking-[-.065em] sm:text-7xl">Contact and corrections</h1>
-      <p className="mt-5 text-sm text-[var(--muted)]">Updated August 2026</p>
+      <p className="mt-5 text-sm text-[var(--muted)]">Updated October 2026</p>
       <p className="mt-6 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">
         VialGrade publishes grades, flags, and enforcement records about real companies. Anyone named here can challenge what we say, and a person reads every message.
       </p>
@@ -73,7 +73,7 @@ export default function Page() {
 
         <Section title="What we cannot help with">
           <p>
-            VialGrade sells nothing and never handles an order, so we cannot track a shipment, refund a purchase, or resolve a dispute with a vendor — that is between you and the company you bought from. We also do not give medical, dosing, or legal advice, and we do not recommend a vendor or a compound to anyone.
+            VialGrade does not offer public checkout or seller referrals. For orders placed directly with unrelated vendors, contact the vendor about shipments and refunds. If you have a legacy VialGrade sandbox order or a charge associated with VialGrade, contact us: previously created order, refund, return and dispute pathways remain separately reviewed. We do not provide medical, dosing or legal advice.
           </p>
         </Section>
 
