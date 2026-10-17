@@ -90,7 +90,7 @@ export default async function IntelligencePage() {
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--muted)]">
             A small live-source prototype using fixed R&amp;D search terms, not an AI-generated
-            summary. Each study links to its original NCT record. A study's registration,
+            summary. Each study links to its original NCT record. A study&rsquo;s registration,
             recruitment status or reported phase is not evidence of clinical efficacy,
             FDA approval or the safety of any third-party vial.
           </p>
@@ -140,7 +140,7 @@ export default async function IntelligencePage() {
           </div>
           <p className="mt-6 text-xs leading-6 text-[var(--muted)]">
             Records are attributed to ClinicalTrials.gov and may be cached for up to six hours.
-            This prototype does not collect visitors' search terms or profiles. Source changes
+            This prototype does not collect visitors&rsquo; search terms or profiles. Source changes
             and errors are possible; verify decisions against each underlying NCT record.
           </p>
         </div>
