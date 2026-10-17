@@ -70,12 +70,12 @@ export function parseTrialRegistryResponse(input: unknown): RegistryTrial[] {
   });
 }
 
-async function oneTopic(topic: (typeof PUBLIC_RESEARCH_TOPICS)[number]): Promise<TopicTrials> {
+export async function getTopicTrials(topic: (typeof PUBLIC_RESEARCH_TOPICS)[number]): Promise<TopicTrials> {
   const checkedAt = new Date().toISOString();
   try {
     const url = new URL("https://clinicaltrials.gov/api/v2/studies");
     url.searchParams.set("query.term", topic.label);
-    url.searchParams.set("pageSize", "4");
+    url.searchParams.set("pageSize", "8");
     url.searchParams.set("countTotal", "false");
     url.searchParams.set("format", "json");
     const response = await fetch(url.toString(), {
@@ -93,7 +93,7 @@ async function oneTopic(topic: (typeof PUBLIC_RESEARCH_TOPICS)[number]): Promise
     }
     const raw = (payload as { studies: unknown }).studies;
     if (!Array.isArray(raw)) throw new Error("Unexpected registry studies");
-    const studies = parseTrialRegistryResponse(payload).slice(0, 4);
+    const studies = parseTrialRegistryResponse(payload).slice(0, 8);
     if (raw.length > 0 && studies.length === 0) {
       throw new Error("Registry records could not be verified");
     }
@@ -105,5 +105,5 @@ async function oneTopic(topic: (typeof PUBLIC_RESEARCH_TOPICS)[number]): Promise
 }
 
 export async function fetchPublicTrialIndex(): Promise<TopicTrials[]> {
-  return Promise.all(PUBLIC_RESEARCH_TOPICS.map(oneTopic));
+  return Promise.all(PUBLIC_RESEARCH_TOPICS.map(getTopicTrials));
 }

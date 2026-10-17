@@ -1,181 +1,94 @@
 import type { Metadata } from "next";
-import { fetchPublicTrialIndex } from "@/server/intelligence/public-trials";
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, ChartNoAxesCombined, FileCheck2, Network, Radar, Scale } from "lucide-react";
+import { ArrowUpRight, BookOpenCheck, DatabaseZap, GitCompareArrows, ShieldCheck } from "lucide-react";
+import { getAllPublicDossiers } from "@/server/intelligence/public-dossiers";
+import { ResearchWorkspace } from "@/components/intelligence/research-workspace";
 
 export const metadata: Metadata = {
   title: "Research intelligence",
-  description: "A proposed evidence-first research intelligence workspace for peptide R&D: trace sources, trials, regulatory changes and the limits of laboratory documentation.",
+  description: "Investigate peptide R&D topics through linked public clinical-trial and scholarly metadata, dated source records, transparent limitations and portable citations.",
   alternates: { canonical: "/intelligence" },
 };
 
-const areas = [
-  {
-    icon: BookOpen, title: "Scientific evidence",
-    body: "Separate preclinical findings from human trials. Record study design, endpoints, dates, limits and contradictions with a link back to the original source.",
-  },
-  {
-    icon: Radar, title: "Development and regulatory signals",
-    body: "Map public trial status, development milestones and agency actions over time. Never confuse a pipeline milestone with authorization or clinical benefit.",
-  },
-  {
-    icon: Network, title: "Document and sample provenance",
-    body: "Link laboratory reports to their issuer and described sample. Show gaps in the chain of custody instead of translating a purity number into a product endorsement.",
-  },
-  {
-    icon: ChartNoAxesCombined, title: "An analyst's research trail",
-    body: "Track where two credible sources disagree, what changed since the last review and which conclusions still need human expert assessment.",
-  },
-];
-const sources = [
-  { label: "ClinicalTrials.gov", purpose: "Trial records and development status", url: "https://clinicaltrials.gov/" },
-  { label: "PubMed", purpose: "Published biomedical research", url: "https://pubmed.ncbi.nlm.nih.gov/" },
-  { label: "FDA / openFDA", purpose: "U.S. regulatory actions and public FDA datasets", url: "https://open.fda.gov/" },
-  { label: "OpenAlex", purpose: "Scholarly metadata and linked publications", url: "https://openalex.org/" },
-];
+export const revalidate = 21_600;
 
 export default async function IntelligencePage() {
-  const trialIndex = await fetchPublicTrialIndex();
+  const dossiers = await getAllPublicDossiers();
+
   return (
     <div>
       <section className="border-b-2 border-[#111214] bg-[#f0edff]">
-        <div className="mx-auto max-w-[1100px] px-5 py-16 sm:px-8 sm:py-24">
-          <span className="ink-1 inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[.15em] text-[#2b31d8]">
-            Product direction · preview, not a launched research terminal
-          </span>
-          <h1 className="mt-8 max-w-[900px] text-balance text-[clamp(2.9rem,6.5vw,5.8rem)] font-extrabold leading-[.98] tracking-[-.06em]">
-            The evidence behind peptide research, in one place.
+        <div className="mx-auto max-w-[1120px] px-5 py-16 sm:px-8 sm:py-24">
+          <p className="inline-flex items-center gap-2 rounded-full border border-[#111214]/20 bg-white px-4 py-2 text-[11px] font-extrabold uppercase tracking-[.15em] text-[#2b31d8]">
+            <BookOpenCheck className="size-4" /> VialGrade Intelligence · Research beta
+          </p>
+          <h1 className="mt-7 max-w-[950px] text-balance text-[clamp(3rem,6.6vw,6.2rem)] font-extrabold leading-[.99] tracking-[-.065em]">
+            Investigate the evidence, not the hype.
           </h1>
-          <p className="mt-7 max-w-2xl text-base leading-8 text-[#111214]/75 sm:text-lg">
-            VialGrade is exploring a research intelligence workspace for scientists,
-            biotech analysts and investors who want to inspect the original evidence,
-            not another untraceable AI answer or peptide-shopping directory.
+          <p className="mt-7 max-w-[710px] text-base leading-8 text-[#111214]/75 sm:text-lg">
+            Compare public trial records and scholarly publication metadata on investigational
+            peptide research. Follow original-source links, identify gaps and export citations.
+            No peptide storefronts, purchase recommendations or user research profiles.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="#trials" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#111214] px-6 py-3 text-sm font-bold text-white">
-              Browse public trial records <ArrowUpRight className="size-4" />
-            </Link>
+            <a href="#workspace" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#111214] px-6 py-3 text-sm font-bold text-white">
+              Explore evidence dossiers <ArrowUpRight className="size-4" />
+            </a>
             <Link href="/legal/us-regulations" className="ink hard-sm press inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-bold text-[#111214]">
-              U.S. regulatory overview
+              Understand regulatory limits
             </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[1100px] px-5 py-16 sm:px-8 sm:py-20">
-        <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">What a research terminal should answer</p>
-        <h2 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-[-.04em] sm:text-4xl">Find the source. See what&rsquo;s missing. Understand what changed.</h2>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {areas.map(({ icon: Icon, title, body }) => (
-            <article key={title} className="ink hard-sm rounded-[18px] bg-white p-6">
-              <span className="ink-1 inline-flex size-10 items-center justify-center rounded-xl bg-[#f0edff]"><Icon className="size-5 text-[#2b31d8]" /></span>
-              <h3 className="mt-5 text-lg font-extrabold tracking-[-.025em]">{title}</h3>
-              <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{body}</p>
-            </article>
-          ))}
-        </div>
-        <p className="mt-5 text-[13px] leading-6 text-[var(--muted)]">
-          These are proposed workflows, not a claim that VialGrade already operates a complete
-          clinical, patent or financing database. AI-generated research summaries are not
-          published as verified findings without source links and review.
-        </p>
-      </section>
-
-
-      <section id="trials" className="border-t-2 border-[#111214] bg-[#f7f7f4]">
-        <div className="mx-auto max-w-[1100px] px-5 py-16 sm:px-8 sm:py-20">
-          <span className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">Working source index · ClinicalTrials.gov</span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">
-            Public trial records, directly traceable.
-          </h2>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--muted)]">
-            A small live-source prototype using fixed R&amp;D search terms, not an AI-generated
-            summary. Each study links to its original NCT record. A study&rsquo;s registration,
-            recruitment status or reported phase is not evidence of clinical efficacy,
-            FDA approval or the safety of any third-party vial.
-          </p>
-          <div className="mt-8 grid gap-5">
-            {trialIndex.map((topic) => (
-              <section key={topic.key} className="ink hard-sm rounded-[18px] bg-white p-5 sm:p-7">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-xl font-extrabold">{topic.label}</h3>
-                  <a href={`https://clinicaltrials.gov/search?term=${encodeURIComponent(topic.label)}`}
-                     target="_blank" rel="noopener noreferrer"
-                     className="text-xs font-bold text-[#2b31d8] underline underline-offset-2">
-                    Search original registry
-                  </a>
-                </div>
-                {topic.unavailable ? (
-                  <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
-                    The registry could not be reached for this preview. No trial status
-                    or trial count is inferred from an unavailable source.
-                  </p>
-                ) : topic.studies.length === 0 ? (
-                  <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
-                    No records were returned for this exact source search. That does not prove
-                    an absence of research under other names.
-                  </p>
-                ) : (
-                  <div className="mt-5 divide-y divide-[#111214]/10">
-                    {topic.studies.map((trial) => (
-                      <article key={trial.nctId} className="py-4 first:pt-0 last:pb-0">
-                        <a href={`https://clinicaltrials.gov/study/${trial.nctId}`}
-                           target="_blank" rel="noopener noreferrer"
-                           className="text-sm font-extrabold leading-6 text-[#2b31d8] underline-offset-2 hover:underline">
-                          {trial.title}
-                        </a>
-                        <p className="mt-2 text-[12px] font-medium leading-6 text-[var(--muted)]">
-                          <span className="font-bold text-[#111214]">{trial.nctId}</span>
-                          {" · "}Reported status: {trial.status.replaceAll("_", " ")}
-                          {trial.phase ? ` · ${trial.phase.replaceAll("_", " ")}` : ""}
-                          {trial.lastUpdated ? ` · Registry updated ${trial.lastUpdated}` : ""}
-                        </p>
-                        {trial.sponsor ? <p className="text-xs text-[var(--muted)]">Lead sponsor on record: {trial.sponsor}</p> : null}
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </section>
-            ))}
-          </div>
-          <p className="mt-6 text-xs leading-6 text-[var(--muted)]">
-            Records are attributed to ClinicalTrials.gov and may be cached for up to six hours.
-            This prototype does not collect visitors&rsquo; search terms or profiles. Source changes
-            and errors are possible; verify decisions against each underlying NCT record.
-          </p>
-        </div>
-      </section>
-
-      <section className="border-t-2 border-[#111214] bg-white">
-        <div className="mx-auto max-w-[1100px] px-5 py-16 sm:px-8 sm:py-20">
-          <div className="flex items-center gap-2"><FileCheck2 className="size-5 text-[#2b31d8]" /><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Source-first development</p></div>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-[-.04em]">Primary records before AI conclusions.</h2>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--muted)]">
-            A future AI research assistant should identify the question, retrieve permitted
-            evidence, extract claim-level citations, reconcile conflicting reports and say
-            when no answer is supported. These source systems illustrate where that work
-            could begin. Their availability does not automatically authorize wholesale
-            copying of articles, protected source documents or restricted datasets.
-          </p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {sources.map((s) => (
-              <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" className="ink-1 flex items-center justify-between gap-4 rounded-[14px] p-4 hover:bg-[#f7f7f4]">
-                <span><span className="block font-extrabold">{s.label}</span><span className="mt-1 block text-xs text-[var(--muted)]">{s.purpose}</span></span>
-                <ArrowUpRight className="size-4 shrink-0" />
-              </a>
-            ))}
+          <div className="mt-12 grid max-w-[810px] gap-4 border-t border-[#111214]/20 pt-5 sm:grid-cols-3">
+            <div><p className="text-xl font-extrabold">02</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Independent public source systems</p></div>
+            <div><p className="text-xl font-extrabold">03</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Fixed research topics to explore</p></div>
+            <div><p className="text-xl font-extrabold">0</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">User searches stored by this workspace</p></div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1100px] px-5 py-14 sm:px-8">
-        <div className="flex items-start gap-3 rounded-[18px] border border-[#111214]/15 bg-[#fff9ed] p-6">
-          <Scale className="mt-0.5 size-5 shrink-0 text-[#b26a00]" aria-hidden="true" />
+      <ResearchWorkspace dossiers={dossiers} />
+
+      <section className="border-y-2 border-[#111214] bg-white">
+        <div className="mx-auto grid max-w-[1120px] gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_1.1fr]">
           <div>
-            <h2 className="font-extrabold">Research isn&rsquo;t regulatory permission.</h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--muted)]">This platform does not offer medication, dosing, peptide purchases or seller checkout links. A “research use only” label does not decide whether a product is an unapproved drug, and a cited laboratory report does not establish a future vial&rsquo;s identity or safety. Read the <Link href="/legal/us-regulations" className="font-bold text-[#2b31d8] underline underline-offset-2">U.S. regulatory overview</Link> and <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-2">privacy notice</Link>.</p>
+            <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">What makes this different</p>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">
+              A research trail you can audit.
+            </h2>
+            <p className="mt-5 max-w-lg text-sm leading-7 text-[var(--muted)]">
+              Instead of asking an AI model to improvise a conclusion, start with a traceable
+              source register. The next stage is a citation-checked analysis assistant that can
+              explain changes and contradictions without erasing uncertainty.
+            </p>
+          </div>
+          <div className="grid gap-3">
+            <div className="flex items-start gap-4 rounded-[16px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
+              <DatabaseZap className="mt-1 size-5 shrink-0 text-[#2b31d8]" />
+              <div><h3 className="font-extrabold">Direct source retrieval</h3><p className="mt-1 text-sm leading-6 text-[var(--muted)]">Registry IDs, publication dates, DOI links and the source of every displayed record.</p></div>
+            </div>
+            <div className="flex items-start gap-4 rounded-[16px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
+              <GitCompareArrows className="mt-1 size-5 shrink-0 text-[#2b31d8]" />
+              <div><h3 className="font-extrabold">Compare without false rankings</h3><p className="mt-1 text-sm leading-6 text-[var(--muted)]">Explore different source coverage without confusing paper counts with evidence of benefit.</p></div>
+            </div>
+            <div className="flex items-start gap-4 rounded-[16px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
+              <ShieldCheck className="mt-1 size-5 shrink-0 text-[#2b31d8]" />
+              <div><h3 className="font-extrabold">Limits in the open</h3><p className="mt-1 text-sm leading-6 text-[var(--muted)]">Retrieval errors, research gaps and retraction metadata are never quietly converted into recommendations.</p></div>
+            </div>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-[1120px] px-5 py-12 sm:px-8">
+        <p className="max-w-4xl text-xs leading-7 text-[var(--muted)]">
+          Research-use notices are informational, not drug-law exemptions or researcher credentials.
+          Clinical trial listings and scholarly metadata are not clinical advice, securities advice,
+          FDA authorization or confirmation that a particular product is authentic or lawful to sell.
+          OpenAlex metadata and ClinicalTrials.gov records are retrieved on the server through fixed
+          public search topics, may be cached for up to six hours, and can be unavailable.
+          We do not republish full article text or laboratory reports here. Read the{" "}
+          <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline">privacy notice</Link>
+          {" "}and <Link href="/legal/disclaimer" className="font-bold text-[#2b31d8] underline">research limitations</Link>.
+        </p>
       </section>
     </div>
   );

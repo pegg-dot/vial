@@ -4,6 +4,9 @@ import { MarketplaceProvider } from "@/components/marketplace-state";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
+import { ResearchReleaseHeader, ResearchReleaseFooter } from "@/components/research-release-chrome";
+import { ResearchWorkerRetirement } from "@/components/research-worker-retirement";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 import { JsonLd } from "@/components/json-ld";
 import { organizationSchema, webSiteSchema } from "@/lib/structured-data";
@@ -20,28 +23,36 @@ import { reportError } from "@/server/observability/alerts";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "VialGrade — Research records and laboratory evidence",
+    default: evidenceOnlyPublicRelease() ? "VialGrade Intelligence — Traceable research sources" : "VialGrade — Research records and laboratory evidence",
     template: "%s · VialGrade",
   },
-  description: siteConfig.description,
+  description: evidenceOnlyPublicRelease()
+    ? "Source-linked clinical trial and scholarly research metadata for selected peptide R&D topics. No seller referrals or medical recommendations."
+    : siteConfig.description,
   applicationName: "VialGrade",
   // Proves ownership of the domain to Google Search Console, which is how the ~1,000 URLs in the
   // sitemap get discovered deliberately instead of by chance. Not a secret — it only asserts
   // control of this site — and it must stay put: removing it un-verifies the property and silently
   // cuts off the only place indexing and search performance can be seen.
   verification: { google: "Diid1gTzaORBswpj2aFdIgXw3p2UAAsZPSb1qsKrip8" },
-  keywords: ["peptide research evidence", "laboratory reports", "document provenance", "compound reference", "market observations"],
+  keywords: evidenceOnlyPublicRelease()
+    ? ["clinical trial intelligence", "peptide research metadata", "research evidence", "scientific source records"]
+    : ["peptide research evidence", "laboratory reports", "document provenance", "compound reference", "market observations"],
   openGraph: {
     type: "website",
-    title: "VialGrade — Research records and laboratory evidence",
-    description: "Documented laboratory reports, public records, and historical market observations.",
+    title: evidenceOnlyPublicRelease() ? "VialGrade Intelligence — Research evidence" : "VialGrade — Research records and laboratory evidence",
+    description: evidenceOnlyPublicRelease()
+      ? "Primary-source clinical trial and publication metadata, transparently limited."
+      : "Documented laboratory reports, public records, and historical market observations.",
     siteName: "VialGrade",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VialGrade research records interface" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "VialGrade — Research records and laboratory evidence",
-    description: "Documented laboratory reports, public records, and historical market observations.",
+    title: evidenceOnlyPublicRelease() ? "VialGrade Intelligence — Research evidence" : "VialGrade — Research records and laboratory evidence",
+    description: evidenceOnlyPublicRelease()
+      ? "Primary-source clinical trial and publication metadata, transparently limited."
+      : "Documented laboratory reports, public records, and historical market observations.",
     images: ["/og-image.png"],
   },
   icons: {
@@ -65,6 +76,24 @@ export const viewport: Viewport = {
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // The public R&D product has no legacy market catalog or personal discovery
+  // chrome. It should not read the vendor database, initialize a watchlist,
+  // register a push/offline worker, or hydrate old seller data merely to serve
+  // a public source record. Private administrative/remediation pages retain
+  // their own existing authentication and database permissions.
+  if (evidenceOnlyPublicRelease()) {
+    return (
+      <html lang="en">
+        <body className="min-h-screen bg-[var(--background)] text-[var(--foreground)] antialiased">
+          <ResearchReleaseHeader />
+          <main id="main-content">{children}</main>
+          <ResearchReleaseFooter />
+          <ResearchWorkerRetirement />
+        </body>
+      </html>
+    );
+  }
+
   // The layout must NEVER throw. It wraps every route, including pages that need no data at all —
   // /about, /grades, every /legal page — and an error thrown here escapes error.tsx entirely
   // (a boundary does not wrap the layout above it), so it lands on global-error.tsx and takes the

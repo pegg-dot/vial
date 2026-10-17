@@ -65,3 +65,14 @@ The initial blanket /api/v1/commerce/* block also disabled existing order refund
 The old privacy notice said VialGrade collected no health information and transferred no personal information to another company, although account follows/watchlists/preferences can reveal inferred health interests and Vercel/Neon are service providers. The notice was rewritten to describe pseudonymous visit hashes, saved interests, vendor verification searches, historical referral logs and service providers. New page-view entries redact detailed research URLs into coarse categories. Ordinary page-view cleanup is shortened from 400 to 90 days. No claim is made that the historic rows and backup copies have already been purged, or that website notice alone meets specialized health-data consent requirements.
 
 Washington RCW 19.373.010 expressly includes some inferred or derived linkable health data. Applicability to VialGrade remains subject to the actual targeting and processing facts. Primary statute: https://app.leg.wa.gov/RCW/default.aspx?cite=19.373.010.
+
+
+### October 17 research workspace + public quarantine
+
+The research-only deployment configuration now serves a separate shell for the public source workspace. It neither initializes the legacy catalog on public research pages nor registers the former push/offline service worker. Existing same-origin service-worker registrations and known old VialGrade app-shell caches are retired in-browser. This is a precaution to avoid stale marketplace UI after a pivot, not proof all historical data have been deleted.
+
+The public workspace uses fixed, server-side ClinicalTrials.gov and OpenAlex searches. It displays dated study and bibliographic metadata without copying article full text or vendors' COA PDFs, recording personal queries, or publishing therapeutic efficacy, drug legality, product identity or securities conclusions. OpenAlex supplies a CC0 metadata graph but does not relicense the underlying publisher PDFs.
+
+Release mode is controlled by VIALGRADE_PUBLIC_EVIDENCE_ONLY=true and must be explicitly set for the intended preview or production environment. In that mode the previous vendor/product/catalog APIs and page routes are unavailable to public users; refund/dispute/account/security/authorized cron pathways retain their original access checks, and marketplace ingestion is disabled. Robots and sitemap are restricted to the reviewed research/legal surface. The specific code gates are a risk reduction measure only and require complete end-to-end testing.
+
+The launch remains blocked pending the operator's jurisdiction/privacy obligations, review of historical accounts and backups, verified source rights and provenance for any additional records later republished, and appropriately scoped regulatory legal sign-off.

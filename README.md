@@ -1,8 +1,12 @@
 # VialGrade
 
-**Evidence-backed market intelligence for the peptide market.**
+**VialGrade Intelligence is becoming a source-linked research platform for peptide R&D.**
 
-[**Explore the live product → vialgrade.com**](https://vialgrade.com)
+The current draft, [PR #22](https://github.com/pegg-dot/vial/pull/22), builds a public research workspace around ClinicalTrials.gov and OpenAlex metadata. It includes three fixed-topic dossiers, original-source timelines, cross-topic comparisons, retraction warnings, and locally generated citation exports. A special research-only deployment mode hides the legacy vendor marketplace and avoids loading the old personalized catalog.
+
+**This is a draft product, not a claim of legal clearance or a paid research service.** [vialgrade.com](https://vialgrade.com) still serves an earlier release until the technical gates, source-rights review, and qualified legal review are complete.
+
+The details below describe the earlier V10 market/evidence platform and the engineering work behind it. They are historical context, not an endorsement or invitation to purchase unapproved peptides.
 
 VialGrade is a production research platform I built to make a fragmented and difficult-to-verify market easier to understand. It brings together peptide listings, vendor signals, laboratory evidence, pricing context, and source history so people can inspect the evidence behind a claim instead of relying on a single number or storefront.
 

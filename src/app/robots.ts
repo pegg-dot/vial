@@ -2,7 +2,9 @@ import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/site";
 import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 
-export const dynamic = "force-static";
+// The public research-only release can be enabled at runtime. Robots rules
+// must follow that gate rather than serving a legacy build-time cached policy.
+export const dynamic = "force-dynamic";
 
 // Crawlers that produce CITATIONS in AI answers, named explicitly so they match this group instead
 // of inheriting the wildcard group below.

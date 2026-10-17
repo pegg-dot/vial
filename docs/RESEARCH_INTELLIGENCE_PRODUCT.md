@@ -130,3 +130,38 @@ Source: https://www.sec.gov/files/divisions/investment/iaregulation/memoia.htm
 **Goal check:** the popup and legal notice are just an enabler; the real product is better evidence and more reliable R&D decisions. Neither a checkbox nor a name change creates legal compliance.
 
 **Release decision:** the current PR stays draft until exact-head CI is green, the preview is verified, source and privacy obligations are resolved, and qualified legal counsel signs off on the specific published version.
+
+
+## October 17, 2026: working multi-source research release candidate
+
+**Goal anchor.** Make public peptide R&D evidence auditable for scientists and biotech research/BD analysts. A good answer preserves a source identifier, date, link, uncertainty and limits. No peptide marketplace, dose/safety advice, personalized financial advice or health-interest data sales.
+
+**Roadmap pivot.** Earlier: a concept page, then five curated dossiers, then a complete source graph. Revised: three working metadata-only keyword dossiers and a side-by-side research interface first; use this to validate workflows, then create five manually source-reviewed dossiers, a typed evidence graph and expert-supervised AI claim extraction. The current keyword dossiers are NOT systematic reviews and do not fulfill the five-curated-dossier milestone.
+
+**Shipped in the draft branch:**
+- A research workspace with three fixed R&D topics. Links to ClinicalTrials.gov studies by NCT ID and OpenAlex works by canonical ID or DOI.
+- Timeline sorted by the recorded trial update date or work publication date, with original-source links and retraction flags.
+- Cross-topic sample coverage comparison. Counts are strictly returned SEARCH SAMPLES, not complete research totals or efficacy scores.
+- Client-side source filters, ordering, a Markdown source register, and one-click local export. This does not create a personal account or store a query.
+- A research-only release shell without the old vendor catalog, search overlay, watchlists, seller navigation, recommendations or push worker. Previous VialGrade app-shell caches are retired.
+- Provider outage and malformed-response handling. The UI displays unavailable sources rather than asserting that no research exists.
+- Fixed source queries on the server, with six-hour cache directives. Optional OPENALEX_API_KEY is server-side only and is not set by this work.
+
+**What is not shipped:** verified efficacy/safety findings, research-claim extraction by a model, automatic contradiction judgments, complete trial/paper coverage, FDA product-status determinations, company/financing datasets, user research accounts, subscriptions or regulatory clearance.
+
+**Source rights and cost boundaries:**
+- OpenAlex describes its own metadata as CC0. The corresponding full article PDFs/text retain their own copyright and license: https://help.openalex.org/data/how-its-built/ and https://help.openalex.org/access/fulltext/.
+- OpenAlex changed to API-usage pricing in 2026. Keyless access has a shared smaller daily budget, so use caching and always show outages honestly: https://help.openalex.org/api/authentication/.
+- ClinicalTrials.gov public data are accessed through the official v2 studies API. Trial registration and study status are not statements of clinical success: https://clinicaltrials.gov/data-api/api.
+- There are no automated full-text downloads, copied vendor reviews, seller certificates or posted snippets of copyrighted article text in the new public research workspace.
+
+**Verified technical behavior so far:** local lint/typecheck, targeted unit tests and production build; an evidence-only browser run covering anonymous access, original-source controls, citations, legacy-data quarantine and legal-page availability. Final GitHub CI, production-like environment, permissions to other material and regulatory counsel review are separate gates.
+
+**Current phase:** release-candidate verification and source metadata integrity.
+**Next:** full suite and preview verification; then manually validate relevance and completeness with professional researchers before automated AI claim summaries.
+**Parking lot:** marketplace, affiliate fees, paid vendor grades, personal watchlists, treatment and investment recommendations.
+**Open decisions:** operating entity and jurisdiction; history/backup data-rights procedures; ownership of older reports; first B2B customer niche; institution willingness to pay; whether optional API keys are worth managing.
+
+**Goal check:** The benefit is less time reconstructing evidence, not more pages or a “research use only” pop-up. AI only becomes useful when its citations and claims can be validated against licensed primary material.
+
+**Release decision:** Remain in draft until the exact-head CI is green, preview and access controls are verified, the actually exposed sources and privacy practices are legally reviewed, and there is an operator-approved release of the research-only configuration.

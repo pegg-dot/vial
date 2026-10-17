@@ -18,7 +18,7 @@ describe("public research-only deployment quarantine", () => {
     expect(publicReleaseAction("/vendors/a", "POST", true)).toBe("gone");
   });
 
-  it.each(["/intelligence", "/intelligence/", "/legal/privacy",
+  it.each(["/intelligence", "/intelligence/", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/legal/privacy",
     "/legal/us-regulations", "/legal/contact", "/sitemap.xml", "/robots.txt",
     "/login", "/register",
   ])("preserves the narrow public research and legal paths: %s", path => {
