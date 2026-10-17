@@ -16,7 +16,7 @@ export function ResearchScopeNotice() {
             <p className="text-sm font-extrabold">Research documentation, not a purchasing or treatment service</p>
             <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">
               A lab report describes a submitted sample. It cannot verify a future vial,
-              sterility, suitability for human use, FDA approval, or whether a seller's
+              sterility, suitability for human use, FDA approval, or whether a seller&rsquo;s
               transaction would be lawful.
             </p>
             <details className="group mt-2">
@@ -25,7 +25,7 @@ export function ResearchScopeNotice() {
               </summary>
               <div className="mt-3 space-y-2 border-l-2 border-[#2b31d8]/20 pl-4 text-[13px] leading-6 text-[var(--muted)]">
                 <p>
-                  It may be a vendor's description of intended use. It is not a general
+                  It may be a vendor&rsquo;s description of intended use. It is not a general
                   FDA exemption for an unapproved drug. Regulators assess the product and
                   all evidence of intended use, including surrounding marketing claims.
                 </p>
@@ -40,7 +40,7 @@ export function ResearchScopeNotice() {
                   </Link>.
                   For the basis of the rule, see the{" "}
                   <a href="https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/gram-peptides-721806-03312026" target="_blank" rel="noopener noreferrer" className="font-bold text-[#2b31d8] underline underline-offset-2">
-                    FDA's 2026 explanation of intended use
+                    FDA&rsquo;s 2026 explanation of intended use
                   </a>.
                 </p>
               </div>

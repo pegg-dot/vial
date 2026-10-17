@@ -62,7 +62,7 @@ export default function IntelligencePage() {
 
       <section className="mx-auto max-w-[1100px] px-5 py-16 sm:px-8 sm:py-20">
         <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">What a research terminal should answer</p>
-        <h2 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-[-.04em] sm:text-4xl">Find the source. See what's missing. Understand what changed.</h2>
+        <h2 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-[-.04em] sm:text-4xl">Find the source. See what&rsquo;s missing. Understand what changed.</h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {areas.map(({ icon: Icon, title, body }) => (
             <article key={title} className="ink hard-sm rounded-[18px] bg-white p-6">
@@ -105,8 +105,8 @@ export default function IntelligencePage() {
         <div className="flex items-start gap-3 rounded-[18px] border border-[#111214]/15 bg-[#fff9ed] p-6">
           <Scale className="mt-0.5 size-5 shrink-0 text-[#b26a00]" aria-hidden="true" />
           <div>
-            <h2 className="font-extrabold">Research isn't regulatory permission.</h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--muted)]">This platform does not offer medication, dosing, peptide purchases or seller checkout links. A “research use only” label does not decide whether a product is an unapproved drug, and a cited laboratory report does not establish a future vial's identity or safety. Read the <Link href="/legal/us-regulations" className="font-bold text-[#2b31d8] underline underline-offset-2">U.S. regulatory overview</Link> and <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-2">privacy notice</Link>.</p>
+            <h2 className="font-extrabold">Research isn&rsquo;t regulatory permission.</h2>
+            <p className="mt-2 text-sm leading-7 text-[var(--muted)]">This platform does not offer medication, dosing, peptide purchases or seller checkout links. A “research use only” label does not decide whether a product is an unapproved drug, and a cited laboratory report does not establish a future vial&rsquo;s identity or safety. Read the <Link href="/legal/us-regulations" className="font-bold text-[#2b31d8] underline underline-offset-2">U.S. regulatory overview</Link> and <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-2">privacy notice</Link>.</p>
           </div>
         </div>
       </section>

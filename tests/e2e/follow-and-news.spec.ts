@@ -3,14 +3,6 @@ import { expect, test } from "@playwright/test";
 // NOTE: do NOT clear localStorage via addInitScript — it runs on EVERY navigation, which would
 // wipe the sign-in prompt's dismissal flag between page loads and make "ask once" look broken.
 
-async function loginCustomer(page: import("@playwright/test").Page) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill("nora@example.test");
-  await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoCustomer!2026");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/account/);
-}
-
 test.describe("privacy-first research mode", () => {
   test("shows research limitations instead of personal following", async ({ page }) => {
     await page.goto("/compounds/bpc-157");

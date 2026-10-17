@@ -26,7 +26,7 @@ export default function VerifyPage() {
       <div className="ink-1 mt-8 flex items-start gap-3 rounded-[16px] bg-[#fff6e6] p-5">
         <CircleAlert className="mt-1 size-5 shrink-0 text-[#b26a00]" />
         <p className="text-sm leading-7">
-          A found certificate, code, PDF or vendor grade does not establish a vial's identity,
+          A found certificate, code, PDF or vendor grade does not establish a vial&rsquo;s identity,
           sterility, safety, FDA approval or legality. Do not treat a laboratory report
           as a purchasing or treatment recommendation.
         </p>
