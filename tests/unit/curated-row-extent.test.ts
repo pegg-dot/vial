@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import { bestValue, hasIndependentEvidence, hasPerMgPrice, mostVerified } from "@/lib/curation";
 import type { Compound, Product } from "@/lib/types";
 
-// The market page built four curated rows — trending(compounds, 10), mostVerified(compounds, 10),
-// bestValue(products, 8), newest(live, 8) — and said nothing about any of them being a top-N.
+// The evidence-only market page retains research summary rows, but no longer has the
+// "best-value" purchase-oriented ranking. The remaining rows must identify top-N scopes.
 // `CollectionRow` accepted a `seeAllHref` and no caller ever passed one, so "Lowest cost per mg"
 // showed eight listings, offered no route to the ninth, and read as the whole market.
 //
@@ -20,7 +20,7 @@ const ROW_FILES = [
 ];
 
 /** A curated slice — a ranking called with a hard numeric limit. Each one is a row that truncates. */
-const SLICE_CALL = /\b(?:trending|mostVerified|bestValue|newest)\(\s*[A-Za-z][A-Za-z0-9_]*\s*,\s*\d+\s*\)/g;
+const SLICE_CALL = /\b(?:trending|mostVerified|newest)\(\s*[A-Za-z][A-Za-z0-9_]*\s*,\s*\d+\s*\)/g;
 
 const compound = (over: Partial<Compound>): Compound => ({
   slug: "x", name: "X", shorthand: "X", category: "c", aliases: [], listings: 1, coaCount: 0,
@@ -36,7 +36,7 @@ describe("a curated row says what it is a top of", () => {
   // Positive control: if the scan stops finding sliced rows, the assertions below pass vacuously.
   it("finds the rows that truncate", () => {
     const calls = ROW_FILES.flatMap((file) => [...read(file).matchAll(SLICE_CALL)]);
-    expect(calls.length, "the curated-slice scan found nothing — the regex has stopped matching").toBeGreaterThanOrEqual(5);
+    expect(calls.length, "the curated-slice scan found nothing — the regex has stopped matching").toBeGreaterThanOrEqual(4);
   });
 
   it.each(ROW_FILES.map((file) => [file]))("%s declares an extent for every row it truncates", (file) => {
@@ -95,6 +95,7 @@ describe("the denominator is the pool the ranking ran over", () => {
   it("the market page counts its totals with those predicates, not a second filter", () => {
     const source = read("src/components/market/market-experience.tsx");
     expect(source).toMatch(/compounds\.filter\(hasIndependentEvidence\)\.length/);
-    expect(source).toMatch(/products\.filter\(hasPerMgPrice\)\.length/);
+    expect(source).not.toMatch(/products\.filter\(hasPerMgPrice\)\.length/);
+    expect(source).not.toMatch(/bestValue\(products/);
   });
 });
