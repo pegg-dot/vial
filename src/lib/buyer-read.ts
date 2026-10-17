@@ -36,33 +36,33 @@ export function buildBuyerRead(i: BuyerReadInput): BuyerRead {
 
   // Cheap-fake signal first — the single most useful warning for a buyer scanning the grey market.
   if (i.priceFlag === "too-cheap") {
-    points.push({ tone: "bad", text: `Priced far below the typical rate for ${i.compoundName} — a common sign of underdosing or a fake, not a deal.` });
+    points.push({ tone: "bad", text: `Priced far below observed peers for ${i.compoundName}. This is a statistical outlier, not proof of underdosing, fraud or a particular product's composition.` });
   }
   if (i.vendorFlagged) {
-    points.push({ tone: "bad", text: `${i.vendorName} carries a certificate-integrity flag on record — treat its claims with extra caution.` });
+    points.push({ tone: "bad", text: `A certificate-integrity issue is recorded for ${i.vendorName}. Review the source and any response before drawing conclusions.` });
   }
 
   // Independently tested for THIS seller+compound — the ~11%.
   if (i.status === "verified" || i.status === "batch-verified") {
     const p = i.independentPurity != null ? ` at ${i.independentPurity.toFixed(1)}%` : "";
-    points.unshift({ tone: "good", text: `An independent lab record backs ${poss(i.vendorName)} ${i.compoundName}${p} — the exact evidence most listings lack.` });
-    points.push({ tone: "info", text: "A certificate covers one submitted batch, not every vial — confirm it matches the batch you receive." });
+    points.unshift({ tone: "good", text: `A reported independent laboratory record is associated with ${poss(i.vendorName)} ${i.compoundName}${p}. It describes a submitted sample, not a delivered vial.` });
+    points.push({ tone: "info", text: "A report is limited to the submitted batch or sample; matching identifiers alone do not establish a later shipment's contents." });
     return {
       verdict: "tested",
-      headline: "Independently tested — with one caveat",
+      headline: "Laboratory report on record — scope is limited",
       points,
-      action: `Check the seller's COA is for YOUR batch number, then paste it into Verify to confirm it's a real, unedited Janoshik record.`,
+      action: `Inspect the available issuer, sample number and source documents in Verify. A report does not authenticate a future physical shipment.`,
     };
   }
 
   // The cited certificate resolves to a different maker — a counterfeit signal.
   if (i.status === "mismatch") {
-    points.unshift({ tone: "bad", text: "The certificate this listing points to resolves to a different manufacturer — a counterfeit signal." });
+    points.unshift({ tone: "bad", text: "The certificate identifies a different manufacturer from the listing. This attribution mismatch does not establish counterfeiting." });
     return {
       verdict: "flagged",
       headline: "The cited certificate doesn't check out",
       points,
-      action: `Don't rely on the cited certificate. Ask ${i.vendorName} for a Janoshik COA tied to this product and your batch, then verify it here.`,
+      action: `Review the conflicting identifiers and issuer documents using Verify. Do not infer product identity or misconduct without additional evidence.`,
     };
   }
 
@@ -73,7 +73,7 @@ export function buildBuyerRead(i: BuyerReadInput): BuyerRead {
   // The untested majority — honest, scoped context instead of a dead end.
   if (i.compoundCoas > 0) {
     const p = i.compoundMedianPurity != null ? ` around ${i.compoundMedianPurity.toFixed(1)}% purity` : "";
-    points.push({ tone: "info", text: `${i.compoundName} generally tests${p} across ${i.compoundCoas} independent certificate${i.compoundCoas === 1 ? "" : "s"} — but from other makers, so treat it as a benchmark, not proof of this seller's stock.` });
+    points.push({ tone: "info", text: `The registry has ${i.compoundCoas} independent certificate${i.compoundCoas === 1 ? "" : "s"} for ${i.compoundName}${p}, from other makers; these are not proof of this seller's stock.` });
   } else {
     points.push({ tone: "info", text: `We hold no independent tests for ${i.compoundName} from any maker yet — unknown stays visible.` });
   }
@@ -82,8 +82,8 @@ export function buildBuyerRead(i: BuyerReadInput): BuyerRead {
   // was never evaluated, and asserting "within normal range" would be a fabricated clearance.
   if (i.priceFlag !== "too-cheap") {
     points.push(i.priceAssessable
-      ? { tone: "info", text: `Price sits within the normal range for ${i.compoundName} — no cheap-fake red flag.` }
-      : { tone: "info", text: `We couldn't place this listing's price — its size isn't readable or the market's too thin — so there's no cheap-fake check here.` });
+      ? { tone: "info", text: `The observed price falls within the normal range for ${i.compoundName}. Price alone cannot establish authenticity, sterility or lawful sale.` }
+      : { tone: "info", text: `We couldn't place this listing's price because its size is unreadable or the market has too few comparable observations.` });
   }
 
   const isLowPurity = i.status === "low-purity";
@@ -96,7 +96,7 @@ export function buildBuyerRead(i: BuyerReadInput): BuyerRead {
       : `No independent test of ${poss(i.vendorName)} ${i.compoundName} yet`,
     points,
     action: isLowPurity
-      ? `Purity can vary batch to batch — ask ${i.vendorName} for the COA covering YOUR batch and check it in Verify.`
-      : `To verify before you buy: ask ${i.vendorName} for the Janoshik COA for your batch number, then paste it into Verify — VialGrade confirms it's a real, unedited lab record.`,
+      ? `Inspect the cited laboratory document in Verify. One sample's reported purity cannot establish the contents of any later vial.`
+      : `Review the available issuer and sample identifiers in Verify. VialGrade cannot certify a physical vial or a seller's inventory.`,
   };
 }
