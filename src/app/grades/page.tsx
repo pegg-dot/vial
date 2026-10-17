@@ -19,7 +19,7 @@ const CHECKED_ON = "14 August 2026";
 // The same date, machine-readable, for the Article's dateModified. Kept as a literal beside the
 // displayed string rather than derived from it so the rendered wording can never shift under a
 // locale change; update both together.
-const CHECKED_ON_ISO = "2026-08-14";
+const CHECKED_ON_ISO = "2026-10-16";
 
 // The three words a buyer meets, in the order they escalate. Each one gets the same treatment:
 // what it actually is, what it is NOT, and the thing you can say out loud to test it.

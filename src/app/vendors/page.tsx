@@ -7,7 +7,7 @@ import { DataUnavailable } from "@/components/home-data-unavailable";
 import { ArtMagnifierVial, ArtShieldCheck, ArtDroplet } from "@/components/vial-art";
 import { reportError } from "@/server/observability/alerts";
 
-export const metadata: Metadata = { title: "Vendor directory", description: "Rank peptide vendors by what matters to you — reliability, price, purity, testing, or reputation — from real evidence.", alternates: { canonical: "/vendors" } };
+export const metadata: Metadata = { title: "Vendor directory", description: "Browse historical vendor records, laboratory reports, regulatory source links and the limits of available evidence; not a purchasing recommendation.", alternates: { canonical: "/vendors" } };
 export const dynamic = "force-dynamic";
 
 // Vendors signature = light violet — the "records" tint, same warm-paper register as every other
@@ -36,7 +36,7 @@ export default async function VendorsPage() {
         </div>
         {/* Plain masthead figures — numbers sit on the page, not in a box. */}
         <div className="mt-9 flex flex-wrap gap-x-12 gap-y-5">
-          <HeroStat icon={Store} value={String(storefronts)} label="Storefronts you can shop" />
+          <HeroStat icon={Store} value={String(storefronts)} label="Storefronts on record" />
           <HeroStat icon={Factory} value={String(manufacturers)} label="Upstream manufacturers" />
           <HeroStat icon={FileCheck2} value={String(totalCoa)} label="Lab certificates on record" />
         </div>
