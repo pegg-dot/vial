@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { secretMatches } from "@/server/auth/secret-compare";
 import { runIntelligenceSweep } from "@/server/intelligence/scanner";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { getDatabase } from "@/server/db/client";
 import { pruneProbeCache } from "@/server/verify/probe-cache";
 import { applyRetention } from "@/server/db/retention";
@@ -29,7 +30,9 @@ export async function GET(request: NextRequest) {
   // claiming 20 jobs once a day, which was invisible while nothing was enrolled and would have
   // starved instantly once every catalogue listing was. What remains here is housekeeping, and
   // none of it wants to run 24 times a day.
-  const intelligence = await runIntelligenceSweep("system:cron");
+  const intelligence = evidenceOnlyPublicRelease()
+    ? { paused: true, reason: "Legacy market intelligence is under source-rights review" }
+    : await runIntelligenceSweep("system:cron");
   // Housekeeping runs with the daily sweep. Operational history used to grow forever — one row per
   // collector run, per page view, per reliability pass, none of it ever removed — which turns into
   // read volume the database bills for. applyRetention never throws, so it cannot fail the sweep.

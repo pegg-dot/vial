@@ -33,7 +33,7 @@ export default function VerifyPage() {
       </div>
       <div className="mt-8 flex flex-wrap gap-4">
         <Link href="/intelligence" className="ink hard-sm press inline-flex rounded-full bg-[#111214] px-6 py-3 text-sm font-bold text-white">Explore research intelligence</Link>
-        <Link href="/research" className="ink hard-sm press inline-flex rounded-full bg-white px-6 py-3 text-sm font-bold">Browse public laboratory records</Link>
+        <Link href="/intelligence#trials" className="ink hard-sm press inline-flex rounded-full bg-white px-6 py-3 text-sm font-bold">Browse public trial records</Link>
       </div>
       <p className="mt-6 text-xs leading-6 text-[var(--muted)]">
         Primary documents should be checked with their original issuer. The old interactive

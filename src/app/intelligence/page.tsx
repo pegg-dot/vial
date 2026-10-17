@@ -52,11 +52,11 @@ export default async function IntelligencePage() {
             not another untraceable AI answer or peptide-shopping directory.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/compounds" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#111214] px-6 py-3 text-sm font-bold text-white">
-              Browse current compound records <ArrowUpRight className="size-4" />
+            <Link href="#trials" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#111214] px-6 py-3 text-sm font-bold text-white">
+              Browse public trial records <ArrowUpRight className="size-4" />
             </Link>
-            <Link href="/how-we-check" className="ink hard-sm press inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-bold text-[#111214]">
-              How the current evidence checks work
+            <Link href="/legal/us-regulations" className="ink hard-sm press inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-bold text-[#111214]">
+              U.S. regulatory overview
             </Link>
           </div>
         </div>
