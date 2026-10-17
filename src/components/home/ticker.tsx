@@ -2,12 +2,12 @@ import { BadgeCheck, FlaskConical, Link2, Lock, ScanLine, Wallet } from "lucide-
 
 // Ascend-style announcement ticker — a bold bar of what VialGrade actually is, scrolling. Facts, not sales.
 const ITEMS: Array<{ icon: React.ComponentType<{ className?: string }>; text: string }> = [
-  { icon: FlaskConical, text: "279 lab tests read by hand" },
-  { icon: ScanLine, text: "COA-verified — batch by batch" },
-  { icon: BadgeCheck, text: "83 vendors tracked, always updating" },
-  { icon: Link2, text: "Every claim linked to its source" },
-  { icon: Wallet, text: "We never sell — we link you straight to the vendor" },
-  { icon: Lock, text: "Free forever · no account needed" },
+  { icon: FlaskConical, text: "Laboratory reports on record" },
+  { icon: ScanLine, text: "Evidence limited to named samples" },
+  { icon: BadgeCheck, text: "Vendor records may be incomplete" },
+  { icon: Link2, text: "Claims and provenance reviewed" },
+  { icon: Wallet, text: "Evidence registry — no purchase links" },
+  { icon: Lock, text: "Free to read · no account needed" },
 ];
 
 export function HomeTicker() {

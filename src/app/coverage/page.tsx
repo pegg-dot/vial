@@ -68,7 +68,7 @@ export default async function CoveragePage() {
           <Figure icon={Package} value={num(report.listings)} label="Listings tracked"
             sub={`${num(report.listingsWithPrice)} carry a price we have re-read ourselves.`} />
           <Figure icon={Store} value={num(report.storefronts)} label="Storefronts"
-            sub={`Shops you can actually buy from. ${num(report.gradedStorefronts)} carry a grade.`} />
+            sub={`Third-party storefronts observed in public records. ${num(report.gradedStorefronts)} have evidence grades.`} />
           <Figure icon={Factory} value={num(report.makers)} label="Upstream makers"
             sub="The party a certificate names as having made the material — not a shop. Surfaced because who made it is the question behind who sells it." />
           <Figure icon={Scale} value={num(report.enforcementRecords)} label="Public enforcement records"

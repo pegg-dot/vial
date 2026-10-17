@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Bookmark, GitCompareArrows } from "lucide-react";
+import { GitCompareArrows } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatCurrency, formatPricePerMg, evidenceTone } from "@/lib/format";
 import { valueVsMarketPerMg } from "@/lib/curation";
@@ -37,9 +37,8 @@ const EVIDENCE_TEXT: Record<ReturnType<typeof evidenceTone>, string> = {
 };
 
 export function ProductCard({ product }: { product: Product }) {
-  const { catalog, isWatched, isCompared, toggleWatchlist, toggleCompare } = useMarketplace();
+  const { catalog, isCompared, toggleCompare } = useMarketplace();
   const vendor = catalog.vendors.find((item) => item.slug === product.vendorSlug);
-  const watched = isWatched(product.slug);
   const compared = isCompared(product.slug);
   const medPerMg = catalog.compounds.find((item) => item.slug === product.compoundSlug)?.medianPricePerMg ?? null;
   const vsMed = valueVsMarketPerMg(product.pricePerMg, medPerMg);
@@ -56,14 +55,6 @@ export function ProductCard({ product }: { product: Product }) {
           <ProductPhoto name={product.name} quantity={product.quantity} accent={product.accent} imageUrl={product.imageUrl} compact decorative />
         </Link>
         <div className="absolute right-2 top-2 flex gap-1.5">
-          <button
-            onClick={() => toggleWatchlist(product.slug)}
-            aria-label={watched ? "Remove from watchlist" : "Add to watchlist"}
-            aria-pressed={watched}
-            className={`${iconBtn} ${watched ? "bg-[#111214] text-white" : "bg-white text-[#111214] hover:bg-[var(--background)]"}`}
-          >
-            <Bookmark className={`size-3.5 ${watched ? "fill-current" : ""}`} />
-          </button>
           <button
             onClick={() => toggleCompare(product.slug)}
             aria-label={compared ? "Remove from comparison" : "Add to comparison"}
@@ -118,7 +109,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="mt-auto flex items-center justify-between gap-2 border-t-2 border-[#111214]/10 pt-2.5 text-[11px] font-semibold text-[var(--muted)]">
           <span className="flex min-w-0 items-center gap-2">
             <DataOriginBadge origin={product.origin} compact />
-            <span className={`truncate font-bold ${AVAIL[product.availability] ?? ""}`}>{product.availability}</span>
+            <span className={`truncate font-bold ${AVAIL[product.availability] ?? ""}`}>Reported: {product.availability}</span>
           </span>
           <span className="shrink-0">Checked {product.lastChecked}</span>
         </div>

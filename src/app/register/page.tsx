@@ -1,62 +1,31 @@
-"use client";
-
-import { UserPlus } from "lucide-react";
-import { PasswordField } from "@/components/password-field";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { UserPlus } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "New account registration paused",
+  robots: { index: false, follow: true },
+};
 
 export default function RegisterPage() {
-  const params = useSearchParams();
-  const next = params.get("next") || "/for-you";
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setPending(true);
-    const form = new FormData(event.currentTarget);
-    const payload = {
-      displayName: String(form.get("displayName") ?? ""),
-      email: String(form.get("email") ?? ""),
-      password: String(form.get("password") ?? ""),
-    };
-    try {
-      const res = await fetch("/api/v1/auth/register", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(body.error ?? "Could not create your account.");
-        setPending(false);
-        return;
-      }
-      // Full navigation so the app reloads authenticated — the marketplace provider
-      // then merges any guest watchlist saved before signing up.
-      window.location.assign(next);
-    } catch {
-      setError("Something went wrong. Please try again.");
-      setPending(false);
-    }
-  }
-
   return (
-    <section className="mx-auto max-w-[520px] px-5 py-20 sm:px-8">
-      <div className="ink hard-lg rounded-[24px] bg-white p-8">
-        <span className="ink inline-grid size-12 place-items-center rounded-[14px] bg-[#2b31d8] text-white"><UserPlus className="size-6" /></span>
-        <h1 className="mt-6 text-4xl font-extrabold tracking-[-.04em] text-[#111214]">Create your VialGrade account.</h1>
-        <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">Free. Save vendors and compounds, and get alerted when a price or lab test changes. VialGrade never sells anything.</p>
-        {error && <p className="ink-1 mt-4 rounded-[10px] bg-[#fff1f0] px-4 py-3 text-sm font-semibold text-[#d3372c]">{error}</p>}
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
-          <label className="block text-sm font-bold text-[#111214]">Name<input name="displayName" type="text" required autoComplete="name" className="field mt-2" /></label>
-          <label className="block text-sm font-bold text-[#111214]">Email<input name="email" type="email" required autoComplete="email" className="field mt-2" /></label>
-          <PasswordField name="password" required minLength={12} autoComplete="new-password" hint="At least 12 characters." />
-          <button disabled={pending} className="ink hard-sm press-blue h-12 w-full rounded-full bg-[#2b31d8] text-sm font-bold text-white disabled:opacity-60">{pending ? "Creating account…" : "Create account"}</button>
-        </form>
-        <p className="mt-6 text-sm font-medium text-[var(--muted)]">Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-bold text-[#2b31d8] underline underline-offset-4">Sign in</Link></p>
+    <section className="mx-auto max-w-[600px] px-5 py-20 sm:px-8">
+      <div className="ink hard-lg rounded-[22px] bg-white p-8 sm:p-10">
+        <UserPlus className="size-7 text-[#2b31d8]" />
+        <h1 className="mt-6 text-3xl font-extrabold tracking-[-.04em]">New account registration is paused.</h1>
+        <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
+          VialGrade is reviewing how saved compounds, searches, preferences and alerts
+          might reveal health interests. Public research records remain available without
+          an account. We are not accepting new personal profiles during this review.
+        </p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link href="/intelligence" className="ink hard-sm press rounded-full bg-[#111214] px-5 py-3 text-sm font-bold text-white">Explore public research</Link>
+          <Link href="/login" className="ink hard-sm press rounded-full bg-white px-5 py-3 text-sm font-bold">Sign in to an existing account</Link>
+        </div>
+        <p className="mt-6 text-xs leading-6 text-[var(--muted)]">
+          Existing users can contact us about account data and deletion through the{" "}
+          <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline">privacy notice</Link>.
+        </p>
       </div>
     </section>
   );

@@ -32,7 +32,7 @@ function Toggle({ on, onClick, children, count }: { on: boolean; onClick: () => 
 }
 
 export function CompoundMarket({ compoundName, listings, labTests }: { compoundName: string; listings: Product[]; labTests: LabTestRow[] }) {
-  const [sort, setSort] = useState<CompoundSortKey>("cheapest");
+  const [sort, setSort] = useState<CompoundSortKey>("fresh");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [testedOnly, setTestedOnly] = useState(false);
   const [query, setQuery] = useState("");
@@ -96,7 +96,7 @@ export function CompoundMarket({ compoundName, listings, labTests }: { compoundN
           />
         </div>
         <Toggle on={inStockOnly} onClick={() => apply(() => setInStockOnly((v) => !v))} count={inStockCount}>In stock</Toggle>
-        <Toggle on={testedOnly} onClick={() => apply(() => setTestedOnly((v) => !v))} count={testedCount}>Independently tested</Toggle>
+        <Toggle on={testedOnly} onClick={() => apply(() => setTestedOnly((v) => !v))} count={testedCount}>Lab report on record</Toggle>
         <p className="text-sm font-medium text-[var(--muted)]">
           <span data-testid="compound-market-count"><span className="font-extrabold text-black tabular-nums">{results.length}</span> listing{results.length === 1 ? "" : "s"}</span>
           {active && <span className="tabular-nums"> of {listings.length}</span>}

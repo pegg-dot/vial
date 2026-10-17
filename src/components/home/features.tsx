@@ -1,10 +1,10 @@
 import { ArtMagnifierVial, ArtCoa, ArtShieldCheck, ArtMolecule } from "@/components/vial-art";
 
 const CARDS = [
-  { art: <ArtMolecule className="w-16" />, tint: "bg-[#eef0ff]", title: "Every price, side by side", body: "Same compound, same size, every vendor — lined up so the fair price (and the too-cheap-to-be-real one) is obvious at a glance." },
-  { art: <ArtMagnifierVial className="w-16" />, tint: "bg-[#e6fbf6]", title: "Lab tests, matched to the batch", body: "We don't take a COA's word for it. We match the third-party test to the exact batch you'd be buying — or tell you plainly there isn't one." },
+  { art: <ArtMolecule className="w-16" />, tint: "bg-[#eef0ff]", title: "Every price, side by side", body: "Observed prices for comparable listings, including their dates and evidence gaps. Price alone does not establish authenticity or safety." },
+  { art: <ArtMagnifierVial className="w-16" />, tint: "bg-[#e6fbf6]", title: "Lab tests, matched to the batch", body: "We distinguish laboratory-issued reports from vendor claims and indicate documented batch links. A report cannot verify a later shipment." },
   { art: <ArtCoa className="w-14" />, tint: "bg-[#eef0ff]", title: "The receipts, kept", body: "A timestamped copy of what every vendor and lab actually showed. When a page quietly 'disappears,' we still have the proof." },
-  { art: <ArtShieldCheck className="w-14" />, tint: "bg-[#e6fbf6]", title: "Buy direct. We never touch it.", body: "No cart, no checkout, no markup. Once you've decided, we hand you to the vendor's own site. VialGrade never sells or sees a dollar." },
+  { art: <ArtShieldCheck className="w-14" />, tint: "bg-[#e6fbf6]", title: "Evidence, not transactions", body: "VialGrade documents public records. We do not sell peptides, process orders, direct visitors to checkout, or certify products as safe or lawful." },
 ];
 
 export function HomeFeatures() {

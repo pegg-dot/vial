@@ -55,13 +55,27 @@ try {
   for (const path of customerRoutes) await check(path, 200, { cookie: customer });
   // The boundary that matters: a customer session must not open a staff surface.
   for (const path of adminRoutes) await check(path, [307, 308], { cookie: customer });
-  for (const path of ["/api/v1/watchlist", "/api/v1/consumer/preferences", "/api/v1/saved-searches", "/api/v1/comparisons", "/api/v1/follows", "/api/v1/notifications", "/api/v1/market-summary"]) {
+  // Historical read/remediation surfaces remain usable, while personal
+  // research preference/saved-search/follow/alert endpoints are intentionally
+  // paused for all sessions. A 200 on the latter is now a privacy regression.
+  for (const path of ["/api/v1/watchlist", "/api/v1/comparisons", "/api/v1/market-summary"]) {
     await check(path, 200, { cookie: customer });
+  }
+  for (const path of ["/api/v1/consumer/preferences", "/api/v1/saved-searches", "/api/v1/follows", "/api/v1/notifications"]) {
+    await check(path, 410, { cookie: customer });
   }
 
   // ── Staff ───────────────────────────────────────────────────────────────────────────────────
   const admin = await login(base, "jon@vialgrade.test", "VialGradeDemoAdmin!2026", "staff");
   for (const path of adminRoutes) await check(path, 200, { cookie: admin });
+
+  // The public new-sale hold must not disable handling of prior refunds or disputes.
+  await check("/go?l=legacy", 410);
+  await check("/api/partner/conversion", 410, { method: "POST", body: {} });
+  await check("/api/v1/commerce/checkout", 410, { cookie: customer, method: "POST", body: {} });
+  await check("/api/v1/commerce/approved-checkout", 410, { cookie: customer, method: "POST", body: {} });
+  await check("/api/v1/commerce/activation", 410, { cookie: customer, method: "POST", body: {} });
+  await check("/api/v1/commerce/cart", 410, { cookie: customer, method: "POST", body: {} });
 
   // Money moves only for an administrator. A reviewer is staff and still must not: 403, not 200.
   const reviewer = await login(base, "maya@vialgrade.test", "VialGradeDemoReviewer!2026", "staff");

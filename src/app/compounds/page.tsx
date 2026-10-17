@@ -40,7 +40,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
         <div className="max-w-3xl">
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#4c3fd6]">Compound directory</p>
           <h1 className="mt-4 text-balance text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">Every peptide <span className="text-[#5a4be0]">we track.</span></h1>
-          <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">One page per compound: every vendor selling it, the price range, and how much of the market actually has current lab tests. Read it like a market terminal &mdash; never a recommendation to use anything.</p>
+          <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">One page per compound with documented vendor observations, historical price ranges and laboratory-report coverage. Research topics are indexing labels, not validated health benefits or purchasing recommendations.</p>
         </div>
         <div className="mt-9 grid max-w-2xl grid-cols-3 gap-3">
           <Stat icon={Layers3} value={String(compounds.length)} label="Records" />

@@ -129,24 +129,20 @@ const goRequest = (listingSlug: string, cookie?: string) =>
 const clickCount = async (db: Awaited<ReturnType<typeof getDatabase>>) =>
   Number((await db.query<QueryResultRow & { n: string }>(`SELECT COUNT(*) n FROM outbound_clicks`)).rows[0]!.n);
 
-describe("our own vendor clicks are not counted as demand", () => {
-  it("still hands an admin through to the vendor, but records no click", async () => {
+describe("purchase referral endpoints are disabled for everyone", () => {
+  it("refuses a former admin referral without recording a click", async () => {
     const db = await seedClickable();
     const cookie = await signedCookieFor("user:staff-self", "staff");
-
     const res = await goOutbound(goRequest("self-listing", cookie));
-
-    expect(res.status).toBe(302);
-    expect(res.headers.get("location")).toContain("selfvendor.example");
+    expect(res.status).toBe(410);
+    expect(res.headers.get("location")).toBeNull();
     expect(await clickCount(db)).toBe(0);
   });
-
-  it("records a signed-out reader's click on the same listing", async () => {
+  it("refuses a former customer referral without recording a click", async () => {
     const db = await seedClickable();
-
     const res = await goOutbound(goRequest("self-listing"));
-
-    expect(res.status).toBe(302);
-    expect(await clickCount(db)).toBe(1);
+    expect(res.status).toBe(410);
+    expect(res.headers.get("location")).toBeNull();
+    expect(await clickCount(db)).toBe(0);
   });
 });

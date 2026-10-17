@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
@@ -55,7 +56,7 @@ export const dynamic = "force-dynamic";
 // the summary at the top and the section further down can never say two different things.
 const REVIEW_PLAIN: Record<string, string> = {
   positive: "mostly positive", mixed: "mixed", negative: "mostly negative",
-  scam: "scam or fraud reports", unknown: "no clear signal",
+  scam: "unverified adverse allegations", unknown: "no clear signal",
 };
 
 /** "a", "a and b", "a, b and c" — for reading a list of findings out loud in a sentence. */
@@ -81,19 +82,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // "Is X legit?" is only an honest title where the page can answer it. A vendor with nothing
   // listed is graded as a maker, not a shop (see `gradeFromVerdict`) — the same predicate is used
   // for the page's own headline, so the tab title and the h2 can never ask different questions.
-  const title = vendor.kind === "manufacturer" || vendor.productCount === 0
-    ? `${vendor.name}: what the lab record shows`
-    : `Is ${vendor.name} legit? Lab tests & grade`;
+  const title = `${vendor.name}: public laboratory and vendor evidence`;
   // The description states the evidence position we actually hold — read off the materialized
   // grade and the real counts on the vendor row, so anything quoting it quotes the real thing.
   // `vendor` comes from the cached catalog snapshot, so none of this costs an extra query.
-  const grade = vendor.grade;
   const evidence = [
     vendor.coaCount > 0 ? `${vendor.coaCount} independent lab test${vendor.coaCount === 1 ? "" : "s"} on record` : "no independent lab test on record",
     vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}% median tested purity` : null,
     vendor.reviewCount > 0 ? `${vendor.reviewCount} buyer-reputation record${vendor.reviewCount === 1 ? "" : "s"}` : "no buyer-reputation record on file",
   ].filter(Boolean).join(", ");
-  const description = `${grade?.headline ? `${grade.headline}. ` : ""}Evidence on file: ${evidence}. Independent lab tests, prices, regulatory records and buyer reports for ${vendor.name} — evidence, never an endorsement.`;
+  const description = `Evidence on file: ${evidence}. Dated laboratory, regulatory and vendor records for ${vendor.name}. Reports do not establish authenticity, safety, legality or reliable delivery.`;
   return {
     title,
     description,
@@ -130,8 +128,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers, vendorNews } = publicData;
   // How this vendor's per-mg pricing sits against the market (the "are they a good deal?" stat).
   const priceIndex = vendorPriceIndex(listings, catalog.products);
-  // Best value first — same market-consistent ordering as the rest of the app.
-  const catalogSorted = [...listings].sort((a, b) => (a.pricePerMg ?? Infinity) - (b.pricePerMg ?? Infinity) || a.price - b.price);
+  // Order documentary snapshots by observation date, not purchasing value.
+  const catalogSorted = [...listings].sort((a, b) => (b.observedAt ?? "").localeCompare(a.observedAt ?? "") || a.slug.localeCompare(b.slug));
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
 
@@ -194,8 +192,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   // "Is X legit?" is only asked where the page can answer it. A vendor with nothing listed is graded
   // as a maker rather than a shop (`gradeFromVerdict` keys off exactly this), so asking whether to
   // buy from them would head the page with a question its own verdict then refuses.
-  const referenceOnly = maker || vendor.productCount === 0;
-  const headlineQuestion = referenceOnly ? `What is on record for ${vendor.name}?` : `Is ${vendor.name} legit?`;
+  const headlineQuestion = `What evidence is on record for ${vendor.name}?`;
 
   // One sentence naming every seam the verdict rests on. Each clause is a count this page renders
   // further down — nothing new is derived here, so the summary can never drift from the sections.
@@ -253,6 +250,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           our own derived verdict over evidence seams, not customers rating a seller, and shipping
           it as a star rating would both invent review data and read as an endorsement. */}
       <JsonLd data={vendorSchema({ slug, name: vendor.name, description: vendor.description, location: vendor.location, founded: vendor.founded })} />
+      <ResearchScopeNotice />
 
       {/* ── Report header: paper, not slate — the tier-colored grade card is the only heavy
           color, a rating letter stamped on a white tearsheet. ─────────────────────────── */}
@@ -325,7 +323,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <span className="font-extrabold">{grade.headline}.</span> What that rests on: {restsOn}.
         </p>
         <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-          Never a safety claim or an endorsement &mdash; VialGrade sells nothing and takes no money from vendors. Where we hold no evidence, we say so instead of hiding it.
+          This grade describes documented observations only. It is not a determination of product safety, vendor legality, shipment authenticity, or whether a transaction should occur. Missing evidence stays visible.
         </p>
 
         <h3 className="mt-8 text-[clamp(1.15rem,2vw,1.45rem)] font-extrabold tracking-[-.03em]">Which checks did we run, and what did each one find?</h3>

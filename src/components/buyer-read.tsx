@@ -3,9 +3,9 @@ import { ShieldCheck, ShieldAlert, ShieldQuestion, CheckCircle2, AlertTriangle, 
 import type { BuyerRead, BuyerReadTone } from "@/lib/buyer-read";
 
 const HEAD: Record<BuyerRead["verdict"], { bg: string; chip: string; icon: typeof ShieldCheck; tag: string }> = {
-  tested: { bg: "bg-[#e6fbf6]", chip: "bg-white text-[#0e8f80]", icon: ShieldCheck, tag: "Best-case evidence" },
+  tested: { bg: "bg-[#e6fbf6]", chip: "bg-white text-[#0e8f80]", icon: ShieldCheck, tag: "Reported lab evidence" },
   untested: { bg: "bg-[#f7f7f4]", chip: "bg-white text-[#5a4be0]", icon: ShieldQuestion, tag: "What we know so far" },
-  flagged: { bg: "bg-[#fff1f0]", chip: "bg-white text-[#d3372c]", icon: ShieldAlert, tag: "Proceed carefully" },
+  flagged: { bg: "bg-[#fff1f0]", chip: "bg-white text-[#d3372c]", icon: ShieldAlert, tag: "Documentation needs review" },
 };
 
 const DOT: Record<BuyerReadTone, { icon: typeof Info; className: string }> = {
@@ -40,7 +40,7 @@ export function BuyerReadCard({ read }: { read: BuyerRead }) {
       </ul>
 
       <div className="ink-1 mt-4 rounded-[14px] bg-white/70 p-3.5">
-        <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#5a4be0]">How to verify this yourself</p>
+        <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#5a4be0]">How to inspect the record</p>
         <p className="mt-1 text-[13px] font-medium leading-5 text-black/75">{read.action}</p>
         <Link href="/verify" className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#2b31d8] hover:underline">
           Open the Verify tool <ArrowRight className="size-3.5" />

@@ -10,6 +10,7 @@
 // the commerce double-gate. Live fetching is intentional, never a silent default.
 
 import { proposeCataloguePrice, type FeedCapture } from "./catalogue-claims";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import type { SqlConnection } from "@/server/db/client";
 import { mintRegistryId } from "@/server/registry/repository";
 
@@ -23,6 +24,7 @@ export class LiveIngestNotApprovedError extends Error {
 }
 
 export function isLiveIngestApproved(options?: { approved?: boolean }): boolean {
+  if (evidenceOnlyPublicRelease()) return false;
   if (options?.approved === true) return true;
   return process.env.VIALGRADE_LIVE_INGEST_APPROVED === "true";
 }

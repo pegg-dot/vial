@@ -1,3 +1,4 @@
+import { isPausedTransactionEndpoint } from "@/lib/commerce-pause";
 import type { QueryResultRow } from "pg";
 import { getDatabase, type SqlConnection } from "@/server/db/client";
 import { newId } from "@/server/db/ids";
@@ -17,6 +18,9 @@ export async function resolveAndRecordClick(
   connection?: SqlConnection,
   visitor?: { ip?: string | null; userAgent?: string | null; landingPath?: string | null; staff?: boolean },
 ): Promise<OutboundResolution | null> {
+  // Defense in depth: nobody can obtain a referral destination through this helper
+  // while the compliance suspension is active, even from a new internal caller.
+  if (isPausedTransactionEndpoint("/go")) return null;
   const db = connection ?? (await getDatabase());
   const row = (await db.query<QueryResultRow & { external_url: string | null; vendor_slug: string | null; compound_slug: string | null; origin: string | null }>(
     `SELECT l.external_url, o.slug vendor_slug, c.slug compound_slug, l.origin

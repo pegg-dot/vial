@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
@@ -22,7 +23,6 @@ import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { PassportCarousel, type PassportRow } from "@/components/passport-carousel";
 import { listPublicPassportsForCompound } from "@/server/evidence-network/repository";
 import { PriceLeaderboard } from "@/components/price-leaderboard";
-import { TopPicks } from "@/components/top-picks";
 import { SectionNav } from "@/components/section-nav";
 import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 import { getDatabase } from "@/server/db/client";
@@ -103,6 +103,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           asserting one for a grey-market research peptide would claim a standing no evidence on
           this page supports. */}
       <JsonLd data={compoundSchema({ slug, name: compound.name, description: compound.description, aliases: compound.aliases, category: compound.category })} />
+      <ResearchScopeNotice />
 
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#f0edff]">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -182,7 +183,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Current market</p>
             <h2 className="mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] font-extrabold leading-[.98] tracking-[-.04em]">The {compound.name} market</h2>
             <div className="mb-7 mt-3 flex flex-wrap items-end justify-between gap-4">
-              <p className="max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Every {compound.name} listing we track &mdash; {listings.length} in all. The standout picks first where the evidence supports them, then the full table, ranked by what a milligram really costs wherever the vendor published a strength we can read.</p>
+              <p className="max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Every {compound.name} listing we track &mdash; {listings.length} in all. Historical prices are shown with evidence and data quality limitations. Prices do not amount to a recommendation or an assurance of product identity, safety or lawful sale.</p>
               {/* The way out of the summary. Picks answer "which one?"; the full market answers
                   "show me everything, my way" — sorted by real value, tested purity, how recently
                   we read the store. */}
@@ -190,7 +191,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                 Open full market <ArrowUpRight className="size-4" />
               </Link>
             </div>
-            <TopPicks listings={listings} labTests={labTests} />
+
           </section>
           <PriceLeaderboard compoundName={compound.name} marketHref={`/compounds/${slug}/market`} listings={listings} labTests={labTests} />
         </div>

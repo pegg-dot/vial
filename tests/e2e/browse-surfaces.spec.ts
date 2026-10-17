@@ -52,7 +52,7 @@ test.describe("facets can always return something", () => {
 
   test("/vendors offers no vendor kind it holds none of", async ({ page }) => {
     await page.goto("/vendors");
-    const chips = page.getByRole("button", { name: /Everyone|Shops you can buy from|Upstream makers/ });
+    const chips = page.getByRole("button", { name: /Everyone|Third-party storefronts|Upstream makers/ });
     const count = await chips.count();
     for (let index = 0; index < count; index += 1) {
       const label = (await chips.nth(index).textContent())?.trim();

@@ -33,8 +33,8 @@ const RULES: Rule[] = [
     why: "Crawler hits are never read by any surface — the funnel filters them out — so they are pure storage and scan cost.",
   },
   {
-    table: "page_views", column: "created_at", days: 400, where: "NOT is_bot",
-    why: "Real visits stay well over a year so year-over-year comparisons remain possible; the funnel itself only reads 30 days.",
+    table: "page_views", column: "created_at", days: 90, where: "NOT is_bot",
+    why: "Coarse visitor-day analytics are retained for up to 90 days instead of more than a year to limit pseudonymous browsing history.",
   },
   {
     table: "collector_runs", column: "ran_at", days: 60,

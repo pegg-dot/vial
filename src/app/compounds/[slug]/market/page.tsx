@@ -17,12 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!compound) return {};
   return {
     title: `Every ${compound.name} listing`,
-    description: `Compare every ${compound.name} listing we track — by real cost per milligram, independently tested purity, and how recently each vendor's store was read.`,
+    description: `View historical ${compound.name} listing observations, reported price/quantity estimates, documented lab reports and their limits.`,
     alternates: { canonical: `/compounds/${slug}/market` },
   };
 }
 
-// The full market for one compound. The compound page answers "which one?" with picks and a
+// The full documentary registry for one compound. The compound page answers "which one?" with picks and a
 // cheapest-first table; this answers "show me everything, my way" — the room you open when the
 // summary is not enough. Deliberately its own route so it can be linked, shared and bookmarked.
 export default async function CompoundMarketPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -55,13 +55,13 @@ export default async function CompoundMarketPage({ params }: { params: Promise<{
           <p className="mt-3 max-w-2xl text-[15px] font-medium leading-7 text-[#111214]/70">
             {listings.length === 0
               ? `We hold no ${compound.name} listings right now.`
-              : `All ${listings.length} we track from ${vendors} vendor${vendors === 1 ? "" : "s"}, sorted the way you want to compare them. Prices are read from each vendor's own store; VialGrade sells nothing and takes no money from vendors.`}
+              : `All ${listings.length} we track from ${vendors} vendor${vendors === 1 ? "" : "s"}, sorted the way you want to compare them. Prices are historical third-party observations. VialGrade provides no purchase links or product endorsements.`}
           </p>
           {listings.length > 0 && (
             <div className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
               <Stat icon={Layers3} value={String(listings.length)} label="Listings on record" />
               <Stat icon={Tag} value={prices.length ? `${formatCurrency(prices[0])}–${formatCurrency(prices[prices.length - 1])}` : "—"} label="Sticker price range" />
-              <Stat icon={FlaskConical} value={cheapestPerMg != null ? formatPricePerMg(cheapestPerMg) : "—"} label="Cheapest per mg" />
+              <Stat icon={FlaskConical} value={cheapestPerMg != null ? formatPricePerMg(cheapestPerMg) : "—"} label="Lowest recorded price/mg" />
             </div>
           )}
         </div>

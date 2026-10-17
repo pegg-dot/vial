@@ -154,7 +154,7 @@ export async function runIntelligenceSweep(actor = "system:curator") {
       if (spread >= 20) await emit({
         signalKey: `price-dispersion:${compoundId}`, rootEventId: root.rootEventId, parentEventId: metricEvent.id,
         signalType: "price-dispersion", entityType: "compound", entityId: compoundId,
-        title: `${rows[0].compound_name} prices are all over the map`, summary: `The same thing sells for $${Math.round(Math.min(...prices))} to $${Math.round(Math.max(...prices))} right now — worth comparing before you buy.`,
+        title: `${rows[0].compound_name} prices are all over the map`, summary: `The same thing sells for $${Math.round(Math.min(...prices))} to $${Math.round(Math.max(...prices))} in the sources examined. This is not a purchasing recommendation.`,
         score: Math.min(100, 45 + spread), confidence: 0.98, evidence: { medianPrice: midpoint, priceSpreadPct: spread, listingCount: rows.length },
       }); else evaluated += 1;
       if (available <= 1) await emit({
@@ -166,7 +166,7 @@ export async function runIntelligenceSweep(actor = "system:curator") {
       if (coverage < 70) await emit({
         signalKey: `compound-evidence-gap:${compoundId}`, rootEventId: root.rootEventId, parentEventId: metricEvent.id,
         signalType: "compound-evidence-gap", entityType: "compound", entityId: compoundId,
-        title: `Lab reports are patchy for ${rows[0].compound_name}`, summary: `Only ${coverage}% of the listings we track show a dated lab report. For the rest you are taking the seller's word for it.`,
+        title: `Lab reports are patchy for ${rows[0].compound_name}`, summary: `Only ${coverage}% of the listings we track show a dated lab report. Missing reports are evidence gaps, not proof about the contents or safety of any product.`,
         score: 100 - coverage, confidence: 0.97, evidence: { coverage, documented, listings: rows.length },
       }); else evaluated += 1;
       if (topIssuerShare >= 0.75 && rows.length >= 2) await emit({

@@ -13,7 +13,7 @@ export function VendorFlagsBanner({ flags, vendorName }: { flags: CoaFlag[]; ven
         <div>
           <p className={`text-[11px] font-semibold uppercase tracking-[.16em] ${high ? "text-[#d3372c]" : "text-[#b26a00]"}`}>Certificate integrity warning</p>
           {/* h3: nested under the vendor page's alert-group h2. */}
-          <h3 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s posted lab certificates don&rsquo;t hold up</h3>
+          <h3 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s posted lab certificates need additional review</h3>
         </div>
       </div>
       <ul className="mt-4 space-y-3">
@@ -24,7 +24,7 @@ export function VendorFlagsBanner({ flags, vendorName }: { flags: CoaFlag[]; ven
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-[11px] leading-4 text-black/45">Derived from the certificates this vendor publishes. A red flag here doesn&rsquo;t mean the product is fake — it means the vendor&rsquo;s proof of testing can&rsquo;t be trusted at face value. Not an accusation of intent.</p>
+      <p className="mt-4 text-[11px] leading-4 text-black/45">Derived from the certificates this vendor publishes. A red flag here doesn&rsquo;t mean the product is fake — it means the available documents need additional verification before conclusions are drawn. Not an accusation of intent.</p>
     </div>
   );
 }
