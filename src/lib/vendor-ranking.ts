@@ -24,11 +24,11 @@ export interface Priority { key: string; label: string; question: string; blurb:
 // The priorities a buyer picks between. Fact-based, never use-case based. "reliable" is the
 // default so a newcomer who can't yet judge a COA is steered to safe vendors first.
 export const PRIORITIES: Priority[] = [
-  { key: "reliable", label: "Most reliable", question: "Which one won't scam me?", blurb: "Independently tested, no enforcement flags, and a real track record — the safe default if you're new to this." },
-  { key: "price", label: "Best price", question: "What's cheapest that's still legit?", blurb: "Lowest real cost per milligram versus the market. A price far below everyone else is flagged, not celebrated — it usually means underdosed or fake." },
-  { key: "purity", label: "Highest purity", question: "What's the purest?", blurb: "Ranked by median independently-tested purity. A document is not proof a whole batch is pure, but it's the strongest signal there is." },
-  { key: "tested", label: "Most tested", question: "Who proves it the most?", blurb: "The most independent third-party lab certificates on record — proof, repeated over time, not a one-off stunt test." },
-  { key: "reputation", label: "Best reputation", question: "What do real buyers say?", blurb: "Off-site buyer and community sentiment — never a vendor's own testimonials, which can't be trusted." },
+  { key: "reliable", label: "Evidence coverage", question: "What evidence does the registry contain?", blurb: "A composite order of lab reports, public records and reported sentiment. Not a seller-reliability or product-safety certification." },
+  { key: "price", label: "Observed price", question: "What prices were documented?", blurb: "Historical source prices and reported quantities, not current offers or proof of product identity." },
+  { key: "purity", label: "Reported sample purity", question: "What sample results are available?", blurb: "Ranked by laboratory-reported sample measurements, not the quality of untested inventory." },
+  { key: "tested", label: "Report coverage", question: "Where are more reports on record?", blurb: "Certificate counts alone cannot prove product authenticity, safety, lawful sale or shipment quality." },
+  { key: "reputation", label: "Reported sentiment", question: "What do public reviews say?", blurb: "Unverified discussion can be incomplete or mistaken; a report is not a finding of fraud or reliability." },
 ];
 
 const SENTIMENT_RANK: Record<ReviewSentiment, number> = { positive: 3, mixed: 2, unknown: 1, negative: 0, scam: -1 };

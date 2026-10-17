@@ -165,8 +165,8 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
     const wellSupported = conf === "high" || vol === "moderate" || vol === "heavy";
     const thin = wellSupported ? "" : " — but from limited or low-confidence reports, so we weigh it lightly";
     if (s === "scam" || s === "negative") {
-      factors.push({ ok: false, label: "Buyer reviews", detail: (s === "scam" ? "Buyers report scam/fraud" : "Reviews are mostly negative") + thin + ".", confidence: "reported" });
-      if (wellSupported) reasons.avoid.push("well-supported buyer scam/fraud reports");
+      factors.push({ ok: false, label: "Buyer reviews", detail: (s === "scam" ? "Unverified buyer allegations of fraud" : "Reviews are mostly negative") + thin + ".", confidence: "reported" });
+      if (wellSupported) reasons.avoid.push("repeated adverse buyer allegations (not independently adjudicated)");
       else reasons.caution.push("some negative buyer reports (limited or low-confidence)");
     } else if (s === "mixed") {
       factors.push({ ok: null, label: "Buyer reviews", detail: "Mixed reports from buyers.", confidence: "reported" });
@@ -188,8 +188,8 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
     const mentions = v.community.mentionCount ?? 0;
     if (/scam|negative|fraud/.test(c)) {
       const wellSupported = neg >= 2 || (mentions >= 3 && neg >= 1);
-      factors.push({ ok: false, label: "Community", detail: wellSupported ? "Community reports lean toward scam/quality complaints." : "A community mention flags a possible problem — thin so far; read it before you buy.", confidence: "reported" });
-      if (wellSupported) reasons.avoid.push("corroborated community scam reports");
+      factors.push({ ok: false, label: "Community", detail: wellSupported ? "Some community posts allege product or order problems; these are not findings of wrongdoing." : "A community post alleges a possible problem; its attribution and accuracy require review.", confidence: "reported" });
+      if (wellSupported) reasons.avoid.push("multiple community allegations (not independent proof)");
       else reasons.caution.push("an unconfirmed community complaint");
     } else if (/vouch|positive|trust/.test(c)) {
       factors.push({ ok: true, label: "Community", detail: "Community mentions lean positive.", confidence: "reported" });
@@ -199,7 +199,7 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
 
   // 8. Operator-network linkage — shared HARD identifiers with a flagged storefront.
   const scamLink = v.links.find((l) => l.strength === "strong" && findKnownVendorBySlug(l.linkedSlug)?.redFlag);
-  if (scamLink) { factors.push({ ok: false, label: "Operator network", detail: `Shares hard identifiers with ${findKnownVendorBySlug(scamLink.linkedSlug)?.name ?? scamLink.linkedSlug}, a flagged storefront.`, confidence: "verified" }); reasons.avoid.push("shared identifiers with a flagged storefront"); }
+  if (scamLink) { factors.push({ ok: false, label: "Operator network", detail: `Shares observed technical identifiers with ${findKnownVendorBySlug(scamLink.linkedSlug)?.name ?? scamLink.linkedSlug}. Shared infrastructure does not prove common ownership or wrongdoing.`, confidence: "verified" }); reasons.avoid.push("shared identifiers with a flagged storefront"); }
 
   // 9. Site status — a single unretried probe, so it's the lowest-confidence seam. It still names the
   // problem (and a genuinely dead store is a real reason to avoid), but the tier marks it as inferred.
@@ -234,20 +234,20 @@ export function composeVerdict(v: VerdictInput): ComposedVerdict {
   const verifiedCount = factors.filter((f) => f.confidence === "verified").length;
   if (reasons.avoid.length > 0) {
     verdict = "avoid";
-    headline = `${v.vendorName} — avoid`;
-    summary = `We'd steer clear: this rests on ${list(reasons.avoid)}. That outweighs anything else on the record.`;
+    headline = `${v.vendorName} — adverse evidence requires review`;
+    summary = `Adverse records or allegations on file: ${list(reasons.avoid)}. Verify original sources; this is not a finding of fraud, a product assessment or purchasing advice.`;
   } else if (reasons.caution.length > 0) {
     verdict = "caution";
-    headline = `${v.vendorName} — proceed with caution`;
-    summary = `Worth a closer look before you buy: ${list(reasons.caution)}${reasons.trust.length ? `, though it does have ${list(reasons.trust)}` : ""}.`;
+    headline = `${v.vendorName} — evidence needs further review`;
+    summary = `Follow-up signals on record: ${list(reasons.caution)}${reasons.trust.length ? `; other documentation includes ${list(reasons.trust)}` : ""}.`;
   } else if (reasons.trust.length >= 2 || (reasons.trust.length >= 1 && v.coaCount > 0)) {
     verdict = "trusted";
-    headline = `${v.vendorName} — generally trusted`;
-    summary = `No red flags on record, and the evidence is real: ${list(reasons.trust)}. Not an endorsement — just what the data shows.`;
+    headline = `${v.vendorName} — documentary evidence on record`;
+    summary = `No adverse signals were recorded in these checks. Documented observations include ${list(reasons.trust)}. This does not establish safety, authenticity, quality or lawful supply.`;
   } else {
     verdict = "unproven";
     headline = `${v.vendorName} — not enough to say yet`;
-    summary = `We track this vendor but hold thin evidence${v.coaCount === 0 ? " and no independent lab tests" : ""}. Unknown isn't the same as safe — check the specific listing before you buy.`;
+    summary = `We track this vendor but hold thin evidence${v.coaCount === 0 ? " and no independent lab tests" : ""}. Unknown is not an assurance of authenticity, safety, legal status or absence of problems.`;
   }
 
   return { verdict, headline, summary, factors, weighed, verifiedCount };

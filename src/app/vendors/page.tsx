@@ -31,8 +31,8 @@ export default async function VendorsPage() {
       <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
         <div className="max-w-3xl">
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Vendor directory</p>
-          <h1 className="mt-4 text-balance text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">Rank every vendor by <span className="text-[#2b31d8]">what you care about.</span></h1>
-          <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">Most reliable, cheapest, purest, most-tested, best-reviewed &mdash; sorted from lab records and public evidence, not marketing. A shady seller can rebrand overnight; the record follows them.</p>
+          <h1 className="mt-4 text-balance text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">Explore vendors through <span className="text-[#2b31d8]">documented evidence.</span></h1>
+          <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">Browse documented vendor observations, laboratory sample findings and source histories. Sorting these records does not certify a vendor or recommend purchasing anything.</p>
         </div>
         {/* Plain masthead figures — numbers sit on the page, not in a box. */}
         <div className="mt-9 flex flex-wrap gap-x-12 gap-y-5">
