@@ -8,7 +8,7 @@ import { useMarketplace } from "./marketplace-state";
 import { Wordmark } from "./wordmark";
 
 const nav = [
-  { href: "/verify", label: "Verify" },
+  { href: "/intelligence", label: "Intelligence" },
   { href: "/market", label: "Market" },
   { href: "/compounds", label: "Compounds" },
   { href: "/vendors", label: "Vendors" },

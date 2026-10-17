@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
@@ -102,6 +103,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           asserting one for a grey-market research peptide would claim a standing no evidence on
           this page supports. */}
       <JsonLd data={compoundSchema({ slug, name: compound.name, description: compound.description, aliases: compound.aliases, category: compound.category })} />
+      <ResearchScopeNotice />
 
       <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#f0edff]">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

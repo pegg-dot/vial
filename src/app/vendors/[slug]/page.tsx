@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
@@ -249,6 +250,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           our own derived verdict over evidence seams, not customers rating a seller, and shipping
           it as a star rating would both invent review data and read as an endorsement. */}
       <JsonLd data={vendorSchema({ slug, name: vendor.name, description: vendor.description, location: vendor.location, founded: vendor.founded })} />
+      <ResearchScopeNotice />
 
       {/* ── Report header: paper, not slate — the tier-colored grade card is the only heavy
           color, a rating letter stamped on a white tearsheet. ─────────────────────────── */}

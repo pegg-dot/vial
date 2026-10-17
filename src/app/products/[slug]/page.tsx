@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
@@ -140,6 +141,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       {principal && <DecisionRecorder eventType="listing_viewed" subjectType="listing" subjectId={product.slug} metadata={{ compoundSlug: product.compoundSlug, vendorSlug: product.vendorSlug }} />}
       {structuredData && <JsonLd data={structuredData} />}
+      <ResearchScopeNotice />
       <section className="mx-auto max-w-[1320px] px-5 py-5 sm:px-8 sm:py-6">
         <Link href="/market" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black">
           <ArrowLeft className="size-4" /> Back to market
