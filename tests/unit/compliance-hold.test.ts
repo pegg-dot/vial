@@ -32,7 +32,8 @@ describe("public evidence-only safety constraints", () => {
   it("aligns policy pages with suspended referrals", () => {
     const privacy = file("../../src/app/legal/privacy/page.tsx");
     const terms = file("../../src/app/legal/terms/page.tsx");
-    expect(privacy).toContain("The feature is disabled");
+    expect(privacy).toContain("The former third-party seller redirect function has been disabled");
+    expect(privacy).toContain("Research interests may be sensitive");
     expect(terms).toContain("does not sell listed products");
   });
 });
