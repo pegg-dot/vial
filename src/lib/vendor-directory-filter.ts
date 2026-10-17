@@ -27,14 +27,14 @@ export interface VendorKindFacet {
 export const VENDOR_KIND_FACETS: VendorKindFacet[] = [
   {
     id: "storefront",
-    label: "Shops you can buy from",
-    note: "Sells directly to buyers — the vendors a purchase actually goes through",
+    label: "Third-party storefronts",
+    note: "Third-party commercial storefronts represented in historical sources. This is not a recommendation or verified purchasing channel.",
     match: (entry) => entry.vendor.kind === "storefront",
   },
   {
     id: "manufacturer",
     label: "Upstream makers",
-    note: "Manufactures or supplies the material other sellers resell — you generally cannot buy here",
+    note: "Upstream manufacturers named in the collected records, not necessarily sellers of finished products.",
     match: (entry) => entry.vendor.kind === "manufacturer",
   },
 ];
