@@ -43,9 +43,9 @@ describe("inbound visitor funnel", () => {
     expect(sources["direct"]).toBe(1);
   });
 
-  // Arrivals we can tie to an outbound click. Recorded through the REAL click writer, because a
-  // hand-built row can satisfy the join while diverging from what production actually stores.
-  it("matches an arrival to a real outbound click on the same day", async () => {
+  // A real click writer must not mint fresh referral traffic in research-only mode.
+  // Legacy recorded clicks are tested separately by the historical attribution suite.
+  it("does not match readers to new referral clicks while outbound sales are suspended", async () => {
     const db = await getDatabase();
     await upsertLiveCompound(db, {
       slug: "funnel-compound", name: "Funnel Compound", shorthand: "FUN",
@@ -62,11 +62,11 @@ describe("inbound visitor funnel", () => {
     await recordPageView({ path: "/products/x", ip: "1.1.1.1", userAgent: BROWSER }, db);
     await recordPageView({ path: "/products/y", ip: "3.3.3.3", userAgent: BROWSER }, db);
     // Same ip + agent as the first reader, so the daily hash matches — that is what links them.
-    await resolveAndRecordClick("funnel-listing", db, { ip: "1.1.1.1", userAgent: BROWSER });
+    expect(await resolveAndRecordClick("funnel-listing", db, { ip: "1.1.1.1", userAgent: BROWSER })).toBeNull();
 
     const s = await getVisitorSummary({ connection: db });
     expect(s.readerDays).toBe(2);
-    expect(s.matchedClickers).toBe(1);
+    expect(s.matchedClickers).toBe(0);
   });
 
   // The counting unit, stated out loud: a hash rotates daily, so `readerDays` is reader-days, not
