@@ -11,94 +11,36 @@ async function loginCustomer(page: import("@playwright/test").Page) {
   await expect(page).toHaveURL(/\/account/);
 }
 
-test.describe("following", () => {
-  // The bug this covers: a signed-out "Follow changes" click used to redirect to /login and drop
-  // the follow. The visitor came back to the same page with the button reset and nothing said so.
-  test("a signed-out follow survives signing up", async ({ page }) => {
+test.describe("privacy-first research mode", () => {
+  test("shows research limitations instead of personal following", async ({ page }) => {
     await page.goto("/compounds/bpc-157");
-    await page.getByRole("button", { name: "Follow changes" }).click();
-
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    // The ask names what was clicked, so it never reads as an arbitrary interruption.
-    await expect(dialog.getByText(/Follow BPC-157 for changes/i)).toBeVisible();
-
-    await dialog.getByLabel("Name").fill("E2E Follower");
-    await dialog.getByLabel("Email").fill(`e2e-follow-${Date.now()}@example.test`);
-    await dialog.getByLabel("Password", { exact: true }).fill("E2EFollowerPass!2026");
-    await dialog.getByRole("button", { name: "Create free account" }).click();
-
-    await expect(page.getByRole("button", { name: "Following" })).toBeVisible();
-
-    // A reload is the real test. An optimistic button that resets on refresh is the same bug in a
-    // nicer coat, so assert the follow reached the database.
-    await page.reload();
-    await expect(page.getByRole("button", { name: "Following" })).toBeVisible();
-
-    // And it must be visible to the person who made it. Follows used to be write-only: nothing in
-    // the app ever rendered them back.
-    await page.goto("/for-you");
-    await expect(page.getByRole("heading", { name: "What you asked to hear about" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /BPC-157/ }).first()).toBeVisible();
+    await expect(page.getByText(/Personal research alerts are paused during privacy review/)).toBeVisible();
+    const notice = page.getByRole("complementary", { name: "Research record limitations" });
+    await expect(notice).toBeVisible();
+    await notice.getByText(/What does.*research use only.*actually mean/).click();
+    await expect(notice.getByText(/not a general FDA exemption/i)).toBeVisible();
   });
 
-  test("a signed-in follow can be undone from For you", async ({ page }) => {
-    await loginCustomer(page);
-    await page.goto("/vendors");
-    const vendorHref = await page.locator('a[href^="/vendors/"]').first().getAttribute("href");
-    await page.goto(vendorHref!);
-    const button = page.getByRole("button", { name: /Follow changes|Following/ });
-    if ((await button.textContent())?.includes("Following")) await button.click();
-    await expect(page.getByRole("button", { name: "Follow changes" })).toBeVisible();
-
-    await page.getByRole("button", { name: "Follow changes" }).click();
-    await expect(page.getByRole("button", { name: "Following" })).toBeVisible();
-
-    await page.goto("/for-you");
-    const unfollow = page.getByRole("button", { name: /^Stop following / }).first();
-    await expect(unfollow).toBeVisible();
-    const label = await unfollow.getAttribute("aria-label");
-    await unfollow.click();
-    await expect(page.getByRole("button", { name: label! })).toBeHidden();
-
-    // Undone in the database, not only on screen.
-    await page.reload();
-    await expect(page.getByRole("button", { name: label! })).toBeHidden();
-  });
-});
-
-test.describe("sign-in prompt", () => {
-  test("appears after the delay, and stays gone once dismissed", async ({ page }) => {
+  test("does not solicit account creation from browsing readers", async ({ page }) => {
     await page.goto("/market");
     await page.evaluate(() => window.localStorage.clear());
     await page.reload();
-    await expect(page.getByRole("dialog")).toBeHidden();
-
-    await page.waitForTimeout(11_500);
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await page.getByRole("button", { name: "Not now" }).click();
-    await expect(page.getByRole("dialog")).toBeHidden();
-
-    // The whole point of "not now": a second page must not ask again.
-    await page.goto("/compounds");
-    await page.waitForTimeout(11_500);
+    await page.waitForTimeout(11_200);
     await expect(page.getByRole("dialog")).toBeHidden();
   });
 
-  test("never interrupts the sign-in and register pages themselves", async ({ page }) => {
-    await page.goto("/login");
-    await page.evaluate(() => window.localStorage.clear());
-    await page.reload();
-    await page.waitForTimeout(11_500);
-    await expect(page.getByRole("dialog")).toBeHidden();
-  });
-
-  test("a phone visitor has a sign-in control in the header", async ({ page }) => {
+  test("keeps existing sign-in available but pauses registration", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
-    // This was `hidden sm:block`: on the device most buyers arrive with there was no sign-in
-    // affordance in the header bar at all.
-    await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Existing account sign in" })).toBeVisible();
+    await page.goto("/register");
+    await expect(page.getByRole("heading", { name: /New account registration is paused/i })).toBeVisible();
+  });
+
+  test("closes interactive verifier until provenance and privacy review", async ({ page }) => {
+    await page.goto("/verify");
+    await expect(page.getByRole("heading", { name: /Interactive verification is temporarily paused/i })).toBeVisible();
+    expect((await page.request.post("/api/v1/verify", { data: { query: "BPC-157" } })).status()).toBe(410);
   });
 });
 

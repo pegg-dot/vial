@@ -13,6 +13,7 @@ describe("evidence-only privacy hold", () => {
   it.each([
     "/api/v1/watchlist", "/api/v1/comparisons", "/api/v1/account/preferences"
   ])("prevents new personalization writes but leaves legacy reads for %s", p => {
+    expect(isPausedPersonalDataEndpoint(p,"POST")).toBe(true);
     expect(isPausedPersonalDataEndpoint(p,"PUT")).toBe(true);
     expect(isPausedPersonalDataEndpoint(p,"PATCH")).toBe(true);
     expect(isPausedPersonalDataEndpoint(p,"GET")).toBe(false);
