@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, Bell, BellPlus, Bookmark, Clock3, History, Search, Sparkles } from "lucide-react";
-import { ProductCard } from "@/components/product-card";
 import { FollowingPanel, type FollowedEntity } from "@/components/following-panel";
 import { requirePrincipal } from "@/server/auth/principal";
 import { getPersonalizedMarket, generateMarketChangeSummary, syncWatchlistNotifications } from "@/server/consumer-intelligence/service";
@@ -48,7 +47,7 @@ export default async function ForYouPage() {
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#6d5dfc]">Your feed</p>
           <h1 className="mt-3 text-[clamp(2.2rem,5vw,3.5rem)] font-extrabold leading-[.95] tracking-[-.05em]">Welcome back, {firstName}.</h1>
-          <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">The compounds and vendors you follow, what changed since you last looked, and why each pick is here.</p>
+          <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">The compounds and vendors you follow, what changed since you last looked, and the supporting source records.</p>
         </div>
         <div className="grid grid-cols-4 gap-3">
           <Metric icon={BellPlus} value={following.length} label="Following" />
@@ -99,45 +98,14 @@ export default async function ForYouPage() {
         <div className="mt-7"><FollowingPanel initial={following} /></div>
       </section>
 
-      {/* Picked for you */}
-      <section className="mt-12">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#6d5dfc]">Worth a look</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">Picked for you, with reasons</h2>
-          </div>
-          <Link href="/account/preferences" className="ink hard-sm press inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold">Adjust preferences</Link>
-        </div>
-        {data.recommendations.length === 0 ? (
-          /* Required evidence levels and hidden vendors are HARD filters, so a reader can empty
-             this section themselves. Every other panel on this page has an empty state; without one
-             here their own setting produced a blank grid and no explanation. */
-          <div className="ink hard mt-7 rounded-[18px] bg-white p-6">
-            <p className="text-sm font-bold">Nothing clears the bar you set.</p>
-            <p className="mt-2 max-w-lg text-sm font-medium leading-6 text-[var(--muted)]">
-              {data.preferences.requiredEvidenceLevels.length > 0 || data.preferences.hiddenVendorSlugs.length > 0
-                ? "Your required evidence level or your hidden vendors are excluding every listing we hold. That is the filter working, not an empty market."
-                : "No listing matches your current preferences. Widening your price range or shipping window usually brings results back."}
-            </p>
-            <Link href="/account/preferences" className="ink hard-sm press mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#111214] px-4 py-2.5 text-sm font-bold text-white">Adjust preferences <ArrowUpRight className="size-3.5" /></Link>
-          </div>
-        ) : (
-        <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {data.recommendations.map((item) => (
-            <div key={item.product.slug} className="flex flex-col gap-2.5">
-              <ProductCard product={item.product} />
-              {item.reasons.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 px-1">
-                  <span className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Why</span>
-                  {item.reasons.map((reason) => (
-                    <span key={reason} className="ink-1 rounded-full bg-[#f0edff] px-2.5 py-1 text-[10px] font-bold text-[#5a4be0]">{reason}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        )}
+      {/* Personal purchase recommendations are paused; follows and research alerts remain. */}
+      <section className="ink hard-sm mt-12 rounded-[18px] bg-white p-6">
+        <p className="text-[11px] font-bold uppercase tracking-[.15em] text-[#6d5dfc]">Your research</p>
+        <h2 className="mt-2 text-2xl font-extrabold">Saved research, without product recommendations</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+          We continue to show source updates, alerts and saved searches. Personalized vendor or
+          product recommendations are unavailable during regulatory review.
+        </p>
       </section>
 
       {/* Supporting panels */}

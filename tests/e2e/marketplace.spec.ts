@@ -81,7 +81,7 @@ test("consumer intelligence preserves decisions across the authenticated experie
   await loginCustomer(page);
   await page.goto("/for-you");
   await expect(page.getByRole("heading", { name: /Welcome back, Nora/i })).toBeVisible();
-  await expect(page.getByText(/Picked for you, with reasons/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Saved research, without product recommendations/i })).toBeVisible();
 
   await page.goto("/saved-searches");
   await expect(page.getByRole("heading", { name: /Your saved searches/i })).toBeVisible();
