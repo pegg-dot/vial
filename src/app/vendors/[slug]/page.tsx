@@ -55,7 +55,7 @@ export const dynamic = "force-dynamic";
 // the summary at the top and the section further down can never say two different things.
 const REVIEW_PLAIN: Record<string, string> = {
   positive: "mostly positive", mixed: "mixed", negative: "mostly negative",
-  scam: "scam or fraud reports", unknown: "no clear signal",
+  scam: "unverified adverse allegations", unknown: "no clear signal",
 };
 
 /** "a", "a and b", "a, b and c" — for reading a list of findings out loud in a sentence. */
@@ -81,19 +81,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // "Is X legit?" is only an honest title where the page can answer it. A vendor with nothing
   // listed is graded as a maker, not a shop (see `gradeFromVerdict`) — the same predicate is used
   // for the page's own headline, so the tab title and the h2 can never ask different questions.
-  const title = vendor.kind === "manufacturer" || vendor.productCount === 0
-    ? `${vendor.name}: what the lab record shows`
-    : `Is ${vendor.name} legit? Lab tests & grade`;
+  const title = `${vendor.name}: public laboratory and vendor evidence`;
   // The description states the evidence position we actually hold — read off the materialized
   // grade and the real counts on the vendor row, so anything quoting it quotes the real thing.
   // `vendor` comes from the cached catalog snapshot, so none of this costs an extra query.
-  const grade = vendor.grade;
   const evidence = [
     vendor.coaCount > 0 ? `${vendor.coaCount} independent lab test${vendor.coaCount === 1 ? "" : "s"} on record` : "no independent lab test on record",
     vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}% median tested purity` : null,
     vendor.reviewCount > 0 ? `${vendor.reviewCount} buyer-reputation record${vendor.reviewCount === 1 ? "" : "s"}` : "no buyer-reputation record on file",
   ].filter(Boolean).join(", ");
-  const description = `${grade?.headline ? `${grade.headline}. ` : ""}Evidence on file: ${evidence}. Independent lab tests, prices, regulatory records and buyer reports for ${vendor.name} — evidence, never an endorsement.`;
+  const description = `Evidence on file: ${evidence}. Dated laboratory, regulatory and vendor records for ${vendor.name}. Reports do not establish authenticity, safety, legality or reliable delivery.`;
   return {
     title,
     description,
@@ -130,8 +127,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const { listings, catalog, reputation, communitySignal, vendorLabTests, vendorFlags, vendorLinks, vendorReview, vendorStatus, enforcement, aggregatorRatings, vendorSignals, vendorOffers, vendorNews } = publicData;
   // How this vendor's per-mg pricing sits against the market (the "are they a good deal?" stat).
   const priceIndex = vendorPriceIndex(listings, catalog.products);
-  // Best value first — same market-consistent ordering as the rest of the app.
-  const catalogSorted = [...listings].sort((a, b) => (a.pricePerMg ?? Infinity) - (b.pricePerMg ?? Infinity) || a.price - b.price);
+  // Order documentary snapshots by observation date, not purchasing value.
+  const catalogSorted = [...listings].sort((a, b) => (b.observedAt ?? "").localeCompare(a.observedAt ?? "") || a.slug.localeCompare(b.slug));
   const follows = principal ? await listFollows(principal.id) : [];
   const followed = follows.some((item) => item.entityType === "vendor" && item.entitySlug === slug);
 
