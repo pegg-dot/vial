@@ -55,8 +55,14 @@ try {
   for (const path of customerRoutes) await check(path, 200, { cookie: customer });
   // The boundary that matters: a customer session must not open a staff surface.
   for (const path of adminRoutes) await check(path, [307, 308], { cookie: customer });
-  for (const path of ["/api/v1/watchlist", "/api/v1/consumer/preferences", "/api/v1/saved-searches", "/api/v1/comparisons", "/api/v1/follows", "/api/v1/notifications", "/api/v1/market-summary"]) {
+  // Historical read/remediation surfaces remain usable, while personal
+  // research preference/saved-search/follow/alert endpoints are intentionally
+  // paused for all sessions. A 200 on the latter is now a privacy regression.
+  for (const path of ["/api/v1/watchlist", "/api/v1/comparisons", "/api/v1/market-summary"]) {
     await check(path, 200, { cookie: customer });
+  }
+  for (const path of ["/api/v1/consumer/preferences", "/api/v1/saved-searches", "/api/v1/follows", "/api/v1/notifications"]) {
+    await check(path, 410, { cookie: customer });
   }
 
   // ── Staff ───────────────────────────────────────────────────────────────────────────────────

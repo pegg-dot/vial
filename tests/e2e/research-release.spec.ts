@@ -59,3 +59,40 @@ test.describe("research-only production release gate", () => {
     await expect(page.locator("main")).toBeVisible();
   });
 });
+
+
+test.describe("legacy account rights in research-only mode", () => {
+  test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Only applicable to the research-only deployment mode");
+
+  test("existing customers can reach account security while new research tracking stays paused", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill("nora@example.test");
+    await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoCustomer!2026");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/account/);
+    await page.goto("/account/security");
+    await expect(page.getByRole("heading", { name: "Security" })).toBeVisible();
+    const watchlistWrite = await page.request.put("/api/v1/watchlist", {
+      data: { slug: "bpc-157", watched: true },
+    });
+    expect(watchlistWrite.status()).toBe(410);
+    const admin = await page.request.get("/admin", { maxRedirects: 0 });
+    expect(admin.status()).toBe(307);
+  });
+
+  test("legacy staff privacy tools remain behind staff authentication", async ({ page }) => {
+    const denied = await page.request.get("/admin/privacy", { maxRedirects: 0 });
+    expect(denied.status()).toBe(307);
+    const login = await page.request.post("/api/v1/auth/login", {
+      data: {
+        email: "jon@vialgrade.test",
+        password: "VialGradeDemoAdmin!2026",
+        workspace: "staff",
+      },
+    });
+    expect(login.status()).toBe(200);
+    await page.goto("/admin/privacy");
+    await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByText("Internal Server Error")).toHaveCount(0);
+  });
+});
