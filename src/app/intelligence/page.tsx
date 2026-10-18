@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, BookOpenCheck, CheckCircle2, CircleHelp, FileSearch, FlaskConical, GitCompareArrows, LockKeyhole, SearchCheck, ShieldAlert } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpenCheck, CheckCircle2, FileSearch, GitCompareArrows, LockKeyhole, ShieldAlert } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "VialGrade Intelligence | Source-checked research",
-  description: "Investigate selected clinical research programs by checking actual study designs, official source records, results availability, and unresolved questions.",
+  title: "VialGrade Intelligence | Understand what the research actually says",
+  description: "A working example that connects a clinical trial to its published paper and explains what remains unverified.",
   alternates: { canonical: "/intelligence" },
 };
 
@@ -12,9 +12,9 @@ const topicCards = [
   {
     key: "cagrilintide",
     label: "Cagrilintide",
-    tag: "Working study audit",
-    lead: "See how four official trial records differ in design, named interventions, primary outcomes and results reporting.",
-    action: "Open source dossier",
+    tag: "Working example",
+    lead: "Follow four selected trial records and see which published papers are connected to the actual study IDs.",
+    action: "Explore trial records",
   },
   {
     key: "retatrutide",
@@ -59,53 +59,58 @@ export default async function IntelligencePage({
               <BookOpenCheck className="size-4" /> VialGrade Intelligence · Research preview
             </p>
             <h1 className="mt-6 max-w-[680px] text-balance text-[clamp(2.8rem,5.5vw,5.1rem)] font-extrabold leading-[1.03] tracking-[-.06em]">
-              Understand the study. Not just the search result.
+              Does a trial have a paper, even if no results are posted?
             </h1>
             <p className="mt-6 max-w-xl text-base leading-8 text-[#111214]/75 sm:text-lg">
-              ClinicalTrials.gov already has the records. Google Scholar already has more papers.
-              We are testing a different job: bringing the relevant source details together so
-              you can check what was studied, what is reported, and what remains unresolved.
+              This is the first question we can actually help investigate. We check official clinical trial records,
+              find papers linked to the same trial, and show where the evidence stops. Instead of handing you
+              another list of search results, we put the relevant sources next to one another.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="/intelligence/cagrilintide/audit"
                 className="inline-flex items-center gap-2 rounded-full bg-[#111214] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#303039]">
-                Try a study audit <ArrowUpRight className="size-4" />
+                See the working example <ArrowUpRight className="size-4" />
               </Link>
               <Link href="#workspace" className="inline-flex items-center gap-2 rounded-full border border-[#111214]/25 bg-white px-5 py-3 text-sm font-bold hover:bg-[#eee]">
-                Explore research topics <ArrowRight className="size-4" />
+                What else is available? <ArrowRight className="size-4" />
               </Link>
             </div>
-            <p className="mt-5 text-xs leading-6 text-[#666]">No account needed. No buying or seller recommendations. No AI clinical verdicts.</p>
+            <p className="mt-5 text-xs leading-6 text-[#666]">A four-trial research demo, not a complete literature database. No account, purchases or medical recommendations.</p>
           </div>
 
           <div className="overflow-hidden rounded-[20px] border-2 border-[#111214] bg-white">
-            <div className="border-b border-[#111214]/10 bg-[#e9e7ff] px-6 py-4">
-              <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#2b31d8]">The first working research task</p>
-              <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">Audit cagrilintide studies</h2>
-              <p className="mt-2 text-sm leading-6 text-[#111214]/70">Four hand-selected official records, with links back to each original source.</p>
+            <div className="border-b border-[#111214]/10 bg-[#e9e7ff] px-6 py-5">
+              <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#2b31d8]">One real example · Checked October 18, 2026</p>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">The missing-results puzzle</h2>
+              <p className="mt-2 text-sm leading-6 text-[#111214]/70">Study NCT05804162 investigates cagrilintide. What can we find about it?</p>
             </div>
-            <div className="space-y-0 px-6">
+            <div className="px-6">
               <div className="flex gap-3 border-b border-[#111214]/10 py-5">
-                <SearchCheck className="mt-0.5 size-5 shrink-0 text-[#2b31d8]" />
-                <div><p className="text-sm font-extrabold">Check the right research entity</p>
-                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">Separate molecule development codes from a combination-product name.</p>
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f0edff] text-sm font-extrabold text-[#2b31d8]">1</span>
+                <div>
+                  <p className="text-sm font-extrabold">The trial registry has no posted results section.</p>
+                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">That describes the registry record, not whether a paper exists.</p>
+                  <a href="https://clinicaltrials.gov/study/NCT05804162" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] underline">View official trial <ArrowUpRight className="size-3" /></a>
                 </div>
               </div>
               <div className="flex gap-3 border-b border-[#111214]/10 py-5">
-                <FlaskConical className="mt-0.5 size-5 shrink-0 text-[#2b31d8]" />
-                <div><p className="text-sm font-extrabold">Understand the actual study design</p>
-                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">See registered interventions, outcomes, populations and trial timing.</p>
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f0edff] text-sm font-extrabold text-[#2b31d8]">2</span>
+                <div>
+                  <p className="text-sm font-extrabold">PubMed indexes a published paper under that exact study ID.</p>
+                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">PMID 39279639. We can verify the connection without guessing from similar names.</p>
+                  <a href="https://pubmed.ncbi.nlm.nih.gov/39279639/" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] underline">View linked paper <ArrowUpRight className="size-3" /></a>
                 </div>
               </div>
               <div className="flex gap-3 py-5">
-                <CircleHelp className="mt-0.5 size-5 shrink-0 text-[#2b31d8]" />
-                <div><p className="text-sm font-extrabold">Know what is still missing</p>
-                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">Link published papers back to the actual NCT IDs, even when a trial has no posted registry results section.</p>
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#111214] text-sm font-extrabold text-white">3</span>
+                <div>
+                  <p className="text-sm font-extrabold">VialGrade connects both sources and explains the difference.</p>
+                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">A published paper does not automatically satisfy registry reporting requirements or prove a clinical claim.</p>
                 </div>
               </div>
             </div>
-            <Link href="/intelligence/cagrilintide/audit" className="flex items-center justify-between border-t border-[#111214]/10 bg-[#f7f7f4] px-6 py-4 text-sm font-extrabold text-[#2b31d8] hover:bg-[#eeecff]">
-              Review the four-study audit <ArrowRight className="size-4" />
+            <Link href="/intelligence/cagrilintide/audit#findings" className="flex items-center justify-between border-t border-[#111214]/10 bg-[#f7f7f4] px-6 py-4 text-sm font-extrabold text-[#2b31d8] hover:bg-[#eeecff]">
+              Follow the source trail <ArrowRight className="size-4" />
             </Link>
           </div>
         </div>
@@ -114,10 +119,10 @@ export default async function IntelligencePage({
       <section id="workspace" className="mx-auto max-w-[1120px] scroll-mt-24 px-5 py-14 sm:px-8 sm:py-20">
         <div className="max-w-2xl">
           <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Research areas</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">Choose what you need to investigate.</h2>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-[-.045em] sm:text-4xl">What can you explore today?</h2>
           <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-            One guided audit is available for testing. The other two areas currently offer only small,
-            unsystematic search samples from ClinicalTrials.gov and OpenAlex. We label that difference clearly.
+            Today only cagrilintide has a guided, source-checked example. The other topics are basic
+            search previews and may not answer a real research question yet. We are keeping them clearly labeled.
           </p>
         </div>
 
@@ -130,7 +135,7 @@ export default async function IntelligencePage({
               {topic.key === "cagrilintide" && (
                 <Link href="/intelligence/cagrilintide/audit"
                   className="mt-3 inline-flex items-center gap-2 text-sm font-extrabold text-[#2b31d8] underline-offset-4 hover:underline">
-                  Run the study audit <ArrowUpRight className="size-4" />
+                  See the worked example <ArrowUpRight className="size-4" />
                 </Link>
               )}
               <Link href={"/intelligence/" + topic.key}
@@ -147,24 +152,25 @@ export default async function IntelligencePage({
           <div className="flex max-w-3xl items-start gap-3">
             <GitCompareArrows className="mt-1 size-6 shrink-0 text-[#2b31d8]" />
             <div>
-              <h2 className="text-3xl font-extrabold tracking-[-.045em]">What VialGrade adds, and what it does not</h2>
+              <h2 className="text-3xl font-extrabold tracking-[-.045em]">Who is this for? What is still missing?</h2>
               <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-                The goal is an auditable research workflow, not to compete with Google Scholar on index size.
-                The current prototype makes source identity, trial design and uncertainties easier to inspect.
-                It does not independently verify every clinical claim or track all relevant sources.
+                Our first potential users are scientists and biotech research or diligence teams trying to verify
+                a study before writing a research brief. The point is fewer missed papers and fewer mistaken
+                connections between trial records and publications. That is a hypothesis, not a validated customer need.
+                Google Scholar and PubMed have much broader search coverage, and we have not proven this saves time.
               </p>
             </div>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-[14px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
               <CheckCircle2 className="size-5 text-[#2b31d8]" />
-              <h3 className="mt-4 text-base font-extrabold">Original records first</h3>
-              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">Each selected study links to its NCT identifier and registered intervention and outcome details.</p>
+              <h3 className="mt-4 text-base font-extrabold">What works today</h3>
+              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">Four selected trials, links to the official records, and checks connecting cited papers to the same trial IDs.</p>
             </div>
             <div className="rounded-[14px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
               <FileSearch className="size-5 text-[#2b31d8]" />
-              <h3 className="mt-4 text-base font-extrabold">Open questions stay visible</h3>
-              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">Registry-posted results and source-linked papers are checked separately. A missing field is a follow-up question, not a verdict.</p>
+              <h3 className="mt-4 text-base font-extrabold">What is still missing</h3>
+              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">You cannot enter any trial ID yet. There is not comprehensive coverage, independent paper-quality review or reliable historical change tracking.</p>
             </div>
             <div className="rounded-[14px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
               <LockKeyhole className="size-5 text-[#2b31d8]" />

@@ -213,29 +213,59 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
   ].includes(item.heading));
   const highlighted = topFindings.length ? topFindings : insights.slice(0, 2);
   const remainingInsights = insights.filter(item => !highlighted.includes(item));
+  const featured = audit.rows.find(row => row.selection.nctId === "NCT05804162");
+  const sourceState = featured?.available ? featured.study.registryResults : null;
+  const paper = featured?.available ? featured.study.pubmedChecks.find(check =>
+    check.reference.pmid === "39279639" && check.reference.role === "RESULT") : null;
+  const featuredVerified = sourceState === "not-shown" && paper?.secondaryIdMatch === "confirmed" && paper.article !== null;
 
   return (
     <div className="pb-20">
       <section className="border-b-2 border-[#111214] bg-[#f0edff]">
         <div className="mx-auto max-w-[1120px] px-5 py-14 sm:px-8 sm:py-20">
-          <Link href="/intelligence/cagrilintide" className="inline-flex items-center gap-2 text-xs font-bold text-[#2b31d8] hover:underline"><ArrowLeft className="size-4" /> Back to dossier</Link>
+          <Link href="/intelligence" className="inline-flex items-center gap-2 text-xs font-bold text-[#2b31d8] hover:underline"><ArrowLeft className="size-4" /> Back to Intelligence home</Link>
           <p className="mt-9 text-xs font-extrabold uppercase tracking-[.15em] text-[#2b31d8]">Source-audited research task · Prototype</p>
-          <h1 className="mt-3 max-w-4xl text-balance text-[clamp(2.6rem,5.6vw,4.9rem)] font-extrabold leading-[1.03] tracking-[-.055em]">What can these cagrilintide trial records tell us?</h1>
+          <h1 className="mt-3 max-w-4xl text-balance text-[clamp(2.6rem,5.6vw,4.9rem)] font-extrabold leading-[1.03] tracking-[-.055em]">Did this clinical trial publish any findings?</h1>
           <p className="mt-6 max-w-3xl text-base leading-8 text-[#111214]/75">
-            Instead of more search results, inspect a deliberately selected group of studies:
-            which names appear in intervention fields, what each study planned to measure,
-            whether registry results are present, which cited papers PubMed can independently associate
-            with the same trial, and which questions remain unanswered.
+            We checked whether trial NCT05804162 has results in its official registry record,
+            and whether a published paper can be linked to the same study. Then we compare
+            the source details across four selected trials to show what a researcher would need to verify.
           </p>
           <div className="mt-7"><ResearchAuditExport markdown={cagrilintideAuditMarkdown(audit)} /></div>
           <p className="mt-5 max-w-3xl text-xs leading-6 text-[var(--muted)]">
-            These four records are not the entire clinical program. Assembled {audit.assembledAt}.
+            This is a worked example with four selected records, not a general trial-search engine. Assembled {audit.assembledAt}.
             Source responses can be cached for up to six hours; assembling an audit is not the same as fetching a new upstream version.
           </p>
         </div>
       </section>
       <div className="mx-auto max-w-[1120px] px-5 pt-11 sm:px-8">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <section aria-label="Example answer" className="rounded-[20px] border-2 border-[#111214] bg-white p-6 sm:p-8">
+          <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">The question we are testing</p>
+          <h2 className="mt-3 text-2xl font-extrabold tracking-[-.035em]">If the trial registry has no posted results, does that mean no paper exists?</h2>
+          <p className="mt-4 text-base leading-8 text-[#111214]">
+            {featuredVerified
+              ? "No. For this example, ClinicalTrials.gov has no posted results section, but PubMed lists a paper indexed under the exact same trial ID. That relationship is independently checked."
+              : "We cannot currently verify both original sources. The paper and trial links below are available for direct review, but VialGrade will not claim the connection is confirmed during a source outage or record change."}
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <a href="https://clinicaltrials.gov/study/NCT05804162" target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-between gap-2 rounded-xl border border-[#111214]/15 bg-[#f7f7f4] p-4 text-sm font-bold text-[#2b31d8] hover:bg-[#f0edff]">
+              Official trial NCT05804162 <ArrowUpRight className="size-4 shrink-0" />
+            </a>
+            <a href="https://pubmed.ncbi.nlm.nih.gov/39279639/" target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-between gap-2 rounded-xl border border-[#111214]/15 bg-[#f7f7f4] p-4 text-sm font-bold text-[#2b31d8] hover:bg-[#f0edff]">
+              PubMed paper PMID 39279639 <ArrowUpRight className="size-4 shrink-0" />
+            </a>
+          </div>
+          <p className="mt-4 text-xs leading-6 text-[var(--muted)]">
+            Why this matters: researchers can miss relevant work when registry results and published articles are stored in different places.
+            Finding a paper does not prove its conclusions or settle reporting requirements.
+          </p>
+          <a href="#findings" className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-[#2b31d8] underline">
+            See exactly what we checked <ArrowUpRight className="size-4" />
+          </a>
+        </section>
+        <div className="mt-7 grid gap-3 sm:grid-cols-3">
           <div className="rounded-[16px] border border-[#111214]/20 bg-white p-5">
             <p className="text-xs font-bold text-[var(--muted)]">Selected studies</p>
             <p className="mt-2 text-3xl font-extrabold">{counts.selected}</p>
@@ -264,10 +294,10 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
           </p>
         )}
 
-        <section aria-label="Source-audited review prompts" className="mt-12">
+        <section id="findings" aria-label="Source-audited review prompts" className="mt-12 scroll-mt-28">
           <h2 className="text-2xl font-extrabold tracking-[-.04em]">What the records flag for follow-up</h2>
           <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--muted)]">
-            Start with the source relationships that could change an analyst's answer.
+            Start with the source relationships that could change what a researcher checks next.
             Registered design differences and other verification questions remain below.
             These are factual checks, not automated clinical judgments.
           </p>

@@ -89,6 +89,10 @@ molecules or infer treatment effects from study registration.
 
 The first evidence-gap reconciliation found that NCT05804162 has no registry results section in its checked record, but links a RESULT paper indexed in PubMed under the same exact NCT (PMID 39279639). NCT04982575 labels its cited PMID 37364590 as BACKGROUND; PubMed also indexes that paper under NCT04982575. Those two facts can co-exist and must remain separately labeled until a human checks the article. The implementation reads only official NCT/PMID relationships, makes one batched NIH bibliographic lookup, and does not synthesize clinical findings. Details: docs/RESEARCH_PUBLICATION_RECONCILIATION_2026-10-18.md.
 
+## Owner-requested public preview: visibility before further expansion
+
+The founder needs to see the accumulated work on the live site to decide whether the workflow is coherent at all. This is a sequence change: previously, five professional tasks preceded public release of the local audit; now one clearly labeled four-study example is released first with a plain-language NCT/PMID case, then five external task tests are run. No conclusion of product-market fit, scientific efficacy, repeat use or willingness to pay follows from deployment. Widening the index and rebranding stay deferred until users demonstrate a recurring job. Review criterion: can a new user identify the exact question, two original sources, the takeaway and the limits in under a minute?
+
 ## Next real value test
 
 Give 5+ professionals a recent real research question, not "Do you like our app?"

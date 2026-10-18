@@ -10,6 +10,16 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 - **Not the product:** a human-use peptide seller, affiliate directory, medical adviser, drug-approval predictor, personalized investment adviser, or user-behavior data brokerage.
 - **Constraints:** exact source relevance/citations, restricted content rights, scientific review, privacy, responsible drug-advertising boundaries, costs, limited engineering scope.
 
+## October 18 owner-requested release and positioning correction
+
+**Goal anchor:** help a scientist or biotech diligence analyst avoid missing or misattributing evidence when reconciling official trials with published papers. This is a first-customer hypothesis. A general Scholar replacement, clinical interpretation, retail storefront, investor recommendation, automated trial change intelligence and comprehensive disease/compound search are not current capabilities.
+
+**Roadmap pivot (explicit):** previous near-term order was complete at least five observed analyst tasks before any public release of the local audit. The owner now needs to see and evaluate the accumulated interface because the current public product is confusing. The revised order is: (1) ship one clearly limited public example with an understandable source question, source proof and the commerce quarantine unchanged, then (2) test five real professional tasks and decide whether a bigger product is justified. Broader indexing and major rebranding remain deferred. Revisit the direction after that pilot, not after adding arbitrary features.
+
+**Release scope:** the combined local source-reconciliation work (four pinned NCT studies, official PMID links, registered source labels, eligibility fields, citation export); source-relevance benchmark and read-only historical account pages; a simplified homepage showing the NCT05804162/PubMed 39279639 example; retired-marketplace redirects, 410 transaction blocks, and an explicit production build safety check. This release does not add a buyer flow or reactivate archived marketplace code. Product usefulness is still unproven.
+
+**Release verification:** run local unit/integration, production-mode build, all research/browser commerce tests, source checks and dependency audits. Verify Vercel production setting VIALGRADE_PUBLIC_EVIDENCE_ONLY=true; then verify the actual production deployment SHA, the public pages, all original links and direct purchase endpoint denials. Do not assume success from a GitHub push alone. A failed deployed build should leave the older production release active. The admin mailbox and legal/privacy/source-rights questions remain open and must not be falsely represented as complete.
+
 ## Workstream ledger
 
 | Workstream | Current evidence | Next action | Release gate |

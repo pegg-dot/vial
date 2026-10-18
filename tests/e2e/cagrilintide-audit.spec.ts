@@ -9,9 +9,9 @@ test.describe("source-based research task prototype", () => {
     await audit.click();
     await expect(page).toHaveURL(/\/intelligence\/cagrilintide\/audit$/);
     await expect(page.getByRole("heading", {
-      name: "What can these cagrilintide trial records tell us?",
+      name: "Did this clinical trial publish any findings?",
     })).toBeVisible();
-    await expect(page.getByText("These four records are not the entire clinical program.", { exact: false })).toBeVisible();
+    await expect(page.getByText("This is a worked example with four selected records", { exact: false })).toBeVisible();
   });
 
   test("compares pinned source IDs with cautious availability, outcomes and no sales", async ({ page }) => {
