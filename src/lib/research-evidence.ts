@@ -10,6 +10,16 @@ export type EvidenceItem = {
   retracted: boolean;
 };
 
+/** A match location, not an independent study-quality or efficacy assessment. */
+export function registryMatchNote(association: "intervention-recorded" | "named-in-title" | "search-hit-only" | undefined): string {
+  switch (association) {
+    case "intervention-recorded": return "Compound name/code appears in the registered intervention fields (possibly as a comparator)";
+    case "named-in-title": return "Compound name/code appears in the study title; intervention role unconfirmed";
+    case "search-hit-only": return "Keyword search hit; compound's role is not confirmed";
+    default: return "Registry match location not checked";
+  }
+}
+
 function displayStatus(text: string): string {
   return text.replaceAll("_", " ").toLowerCase();
 }
@@ -23,7 +33,8 @@ export function evidenceItems(dossier: ResearchDossier): EvidenceItem[] {
     url: "https://clinicaltrials.gov/study/" + study.nctId,
     details: "Registry status: " + displayStatus(study.status) +
       (study.phase ? " | " + displayStatus(study.phase) : "") +
-      (study.resultsReported ? " | registry results section available" : " | results section not reported"),
+      (study.resultsReported ? " | registry results section available" : " | results section not reported") +
+      " | " + registryMatchNote(study.association),
     retracted: false,
   }));
   const works: EvidenceItem[] = dossier.publications.works.map(work => ({
@@ -50,6 +61,7 @@ export function evidenceCaveats(dossier: ResearchDossier): string[] {
   if (dossier.publications.works.some(w => w.retracted)) list.push("At least one returned OpenAlex record is flagged as retracted. Check its original source and any corrections.");
   list.push("These are small search-result samples, not a systematic literature review or complete trial inventory.");
   list.push("Keyword matches can include incidental mentions, reviews, unrelated indications or other compounds; confirm relevance in the original record.");
+  list.push("Intervention-field matches may identify comparators or controls, not just the main investigational treatment.");
   list.push("Trial registration, phase, paper counts and reported sample purity do not establish efficacy, safety, FDA approval or lawful supply.");
   return list;
 }
@@ -67,7 +79,8 @@ export function citationPack(dossier: ResearchDossier, generatedAt = new Date().
   ];
   for (const trial of dossier.trials.studies) {
     out.push("- " + trial.nctId + " | " + trial.title + " | " +
-      (trial.lastUpdated ?? "date not provided") + " | https://clinicaltrials.gov/study/" + trial.nctId);
+      (trial.lastUpdated ?? "date not provided") + " | https://clinicaltrials.gov/study/" + trial.nctId +
+      " | " + registryMatchNote(trial.association));
   }
   out.push("", "## OpenAlex (scholarly metadata)");
   out.push(dossier.publications.unavailable ? "Source temporarily unavailable; no conclusions drawn." : "Returned source records: " + dossier.publications.works.length + " (sample, not the total).");

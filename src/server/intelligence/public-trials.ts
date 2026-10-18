@@ -1,3 +1,5 @@
+import { classifyTrialAssociation, getResearchIdentityCandidate, type TrialAssociation } from "./topic-identity-candidates";
+
 /**
  * Deliberately narrow, read-only, public R&D data experiment.
  *
@@ -19,6 +21,8 @@ export type RegistryTrial = {
   sponsor: string | null;
   lastUpdated: string | null;
   resultsReported: boolean;
+  /** Tells where a fixed candidate name/code was found. Not a relevance or efficacy verdict. */
+  association?: TrialAssociation;
 };
 export type TopicTrials = {
   key: string;
@@ -97,7 +101,18 @@ export async function getTopicTrials(topic: (typeof PUBLIC_RESEARCH_TOPICS)[numb
     if (raw.length > 0 && studies.length === 0) {
       throw new Error("Registry records could not be verified");
     }
-    return { ...topic, studies, unavailable: false, checkedAt };
+    // Attach a narrow, factual match-location annotation to returned trial metadata.
+    // We DO NOT expand public source searches from the archived marketplace yet:
+    // relevance, rights, and false-positive checks are separate prerequisites.
+    const identity = getResearchIdentityCandidate(topic.key);
+    const annotatedStudies = studies.map(study => {
+      const original = raw.find(record => record?.protocolSection?.identificationModule?.nctId === study.nctId);
+      return {
+        ...study,
+        association: identity ? classifyTrialAssociation(original, identity) : "search-hit-only" as const,
+      };
+    });
+    return { ...topic, studies: annotatedStudies, unavailable: false, checkedAt };
   } catch {
     // Network or API faults are not the same as a trial search returning no records.
     return { ...topic, studies: [], unavailable: true, checkedAt };

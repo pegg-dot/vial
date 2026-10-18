@@ -206,6 +206,7 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
           <h2 className="text-3xl font-extrabold tracking-[-.045em]">The dated evidence trail</h2>
           <p className="mt-2 max-w-xl text-sm leading-7 text-[var(--muted)]">
             Entries reflect source publication dates or registry update dates, not when a scientific conclusion became established.
+            Registry records also show where a compound name or development code was found; a title or intervention mention does not confirm study results.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 text-xs font-bold text-[var(--muted)]"><SlidersHorizontal className="size-4" /> Filter source records</div>
