@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { CompareClient } from "@/components/compare-client";
 import { ComparisonWorkspaceTools } from "@/components/comparison-workspace-tools";
 
@@ -9,6 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default function ComparePage() {
+  // Avoid mounting legacy MarketplaceProvider consumers in research-only mode.
+  if (evidenceOnlyPublicRelease()) redirect("/intelligence");
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
       <div className="mb-10 max-w-3xl">
