@@ -2,9 +2,9 @@
 
 **VialGrade Intelligence is becoming a source-linked research platform for peptide R&D.**
 
-The current draft, [PR #22](https://github.com/pegg-dot/vial/pull/22), builds a public research workspace around ClinicalTrials.gov and OpenAlex metadata. It includes three fixed-topic dossiers, original-source timelines, cross-topic comparisons, retraction warnings, and locally generated citation exports. A special research-only deployment mode hides the legacy vendor marketplace and avoids loading the old personalized catalog.
+The work documented in [PR #22](https://github.com/pegg-dot/vial/pull/22) builds a public research workspace around ClinicalTrials.gov and OpenAlex metadata. It includes three fixed-topic dossiers, original-source timelines, cross-topic comparisons, retraction warnings, and locally generated citation exports. A special research-only deployment mode hides the legacy vendor marketplace and avoids loading the old personalized catalog.
 
-**This is a draft product, not a claim of legal clearance or a paid research service.** [vialgrade.com](https://vialgrade.com) still serves an earlier release until the technical gates, source-rights review, and qualified legal review are complete.
+**This is a research prototype, not a claim of legal clearance or a paid research service.** The public [vialgrade.com](https://vialgrade.com) domain tracks the latest approved production deployment; inspect the live site to determine whether the research-only release is active. The production environment must run with `VIALGRADE_PUBLIC_EVIDENCE_ONLY=true` and legacy live vendor ingestion disabled. Source rights, historic personal data, a working privacy contact address, and appropriate legal review remain separate obligations.
 
 The details below describe the earlier V10 market/evidence platform and the engineering work behind it. They are historical context, not an endorsement or invitation to purchase unapproved peptides.
 

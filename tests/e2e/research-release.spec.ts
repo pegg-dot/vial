@@ -80,8 +80,8 @@ test.describe("legacy account rights in research-only mode", () => {
     expect(admin.status()).toBe(307);
   });
 
-  test("legacy staff privacy tools remain behind staff authentication", async ({ page }) => {
-    const denied = await page.request.get("/admin/privacy", { maxRedirects: 0 });
+  test("legacy staff dashboard remains behind staff authentication", async ({ page }) => {
+    const denied = await page.request.get("/admin", { maxRedirects: 0 });
     expect(denied.status()).toBe(307);
     const login = await page.request.post("/api/v1/auth/login", {
       data: {
@@ -91,8 +91,13 @@ test.describe("legacy account rights in research-only mode", () => {
       },
     });
     expect(login.status()).toBe(200);
-    await page.goto("/admin/privacy");
-    await expect(page.locator("main")).toBeVisible();
-    await expect(page.getByText("Internal Server Error")).toHaveCount(0);
+    const response = await page.goto("/admin");
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole("heading", { name: /Traffic you can prove/i })).toBeVisible();
+    // A dedicated privacy admin UI is NOT presently implemented. Data requests
+    // remain a documented manual process; don't mistake the generic 404 page
+    // for an operational privacy console.
+    const missing = await page.request.get("/admin/privacy", { maxRedirects: 0 });
+    expect(missing.status()).toBe(404);
   });
 });
