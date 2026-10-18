@@ -30,6 +30,11 @@ test.describe("source-based research task prototype", () => {
     } else {
       await expect(page.getByText("source(s) unavailable", { exact: false })).toBeVisible();
     }
+    const firstDetail = page.locator("details").first();
+    expect(await firstDetail.evaluate(el => (el as HTMLDetailsElement).open)).toBe(false);
+    await firstDetail.locator("summary").click();
+    await expect(firstDetail.getByRole("heading", { name: "Interventions actually named" })).toBeVisible();
+    await expect(firstDetail.getByRole("heading", { name: "Primary outcomes registered" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Study-design audit" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Questions the current evidence cannot answer" })).toBeVisible();
     await expect(page.getByText("No two verified historical versions", { exact: false })).toBeVisible();

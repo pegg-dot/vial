@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, AlertTriangle, BookOpenCheck, GitCompareArrows } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, AlertTriangle, BookOpenCheck, ChevronDown, GitCompareArrows } from "lucide-react";
 import {
   cagrilintideAuditMarkdown,
   getAuditCounts,
@@ -54,7 +54,18 @@ function StudyCard({ row }: { row: CagrilintideAuditRow }) {
           <a href={row.study.url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#2b31d8] underline">
             Original ClinicalTrials.gov record <ArrowUpRight className="size-4" />
           </a>
-          <dl className="mt-6 grid gap-x-7 gap-y-4 border-t border-[#111214]/10 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-5 grid gap-4 rounded-xl border border-[#111214]/10 bg-[#f7f7f4] p-4 sm:grid-cols-3">
+            <div><p className="text-xs font-bold text-[var(--muted)]">Registered status</p><p className="mt-1 text-sm font-extrabold">{row.study.status?.replaceAll("_", " ") ?? "Unknown"}</p></div>
+            <div><p className="text-xs font-bold text-[var(--muted)]">Registry results</p><p className="mt-1 text-sm font-extrabold">{resultLabel(row.study.registryResults)}</p></div>
+            <div><p className="text-xs font-bold text-[var(--muted)]">First recorded primary outcome</p><p className="mt-1 text-xs font-semibold leading-6">{row.study.primaryOutcomes[0]?.measure ?? "Not available"}</p></div>
+          </div>
+          <details className="group mt-5 overflow-hidden rounded-xl border border-[#111214]/20">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-extrabold hover:bg-[#f7f7f4] [&::-webkit-details-marker]:hidden">
+              Inspect study interventions, dates and registered outcomes
+              <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="border-t border-[#111214]/10 px-4 pb-5 sm:px-5">
+              <dl className="mt-5 grid gap-x-7 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
             <div><dt className="text-xs text-[var(--muted)]">Registry status</dt><dd className="mt-1 text-sm font-extrabold">{row.study.status?.replaceAll("_", " ") ?? "Not reported"}</dd></div>
             <div><dt className="text-xs text-[var(--muted)]">Phase</dt><dd className="mt-1 text-sm font-extrabold">{row.study.phase?.replaceAll("PHASE", "Phase ") ?? "Not reported"}</dd></div>
             <div><dt className="text-xs text-[var(--muted)]">Enrollment</dt><dd className="mt-1 text-sm font-extrabold">{row.study.enrollment ? row.study.enrollment.count.toLocaleString("en-US") + " (" + row.study.enrollment.precision.toLowerCase() + ")" : "Not reported"}</dd></div>
@@ -87,6 +98,8 @@ function StudyCard({ row }: { row: CagrilintideAuditRow }) {
               )}
             </section>
           </div>
+            </div>
+          </details>
         </>
       )}
     </article>
