@@ -17,6 +17,7 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 | Research-only production boundary | PR #22 merged. Historic seller checkout, referrals, vendor API and catalog quarantined; verify production separately | Keep 410/redirect and no-ingest tests green across every subsequent PR | Browser and exact-commit release checks; do not re-enable commerce |
 | Discovery usability | PR #27 merged 2026-10-18: clearer product explanation and local title/ID/filter search | Check production visibility and filter/search usability on desktop/mobile | CI, browser, deployment verification |
 | Historic data reuse | PR #29 (review in progress as of ledger authoring) documents 15 tracked datasets with read-only inventory | Merge only after CI; review provenance and source-rights before any import | No production DB import; no PII or vendor grading |
+| Task-first research audit (LOCAL ONLY) | Local Cagrilintide pilot with 4 bounded official NCT lookups, results-section checks, outcomes and source-backed review prompts; no deploy/push | Run a real analyst task benchmark vs registry/Scholar and get an independent source-identity check | Quality, safety, 5 observed tasks, clear improvement and operator release approval |
 | Scientific entity/alias quality | This branch: scoped 3-topic identifier candidates, registry-field match annotations on existing results, and opt-in alias coverage evaluation | Benchmark official query results, human-check mismatches and false positives; promote selectively | At least 30-50 independently annotated examples; preserve identity/source provenance |
 | Source availability and freshness | ClinicalTrials.gov + OpenAlex fixed queries, 6-hour server cache; samples of up to 8 each | Record retrieval/observation time and differentiate stale, offline, and genuinely empty | Timeouts, malformed response, rate limits and broken-link tests |
 | Actual intelligence workflow | Dated source trail and citation export, not meaningful record-version diffs yet | Create official-source version snapshots and deterministic change reports | Pinpoint citations, no claims based only on counts or keywords |
@@ -26,6 +27,20 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 | Mail and rights requests | Issue #23: recipient chosen, delivery and DNS still unverified | Configure domain MX/routing, verify Gmail recipient, send outside test message | Real receipt and reply test; process owner and timeline |
 | Privacy, source rights, legal | Issue #24: historical records/backups and counsel review remain open | Inventory retained personal records separately; prepare retention/deletion and licensing register; independent counsel review | Do not claim legal clearance or republish unlicensed/harmful claims |
 | Preserved marketplace | Issue #26: archival Git tag exists at pre-PR #22 commit | Keep available for independently reviewed, product-specific lawful future | No checkout/vendor referrals on research production |
+
+## October 18 course correction and cost gate
+
+**Old short-term order:** increase aliases/search coverage and filters, expand feature surfaces, then rebrand or add AI analysis.
+
+**New order:** test one concrete analyst job end-to-end with exact primary sources, independent quality review and measurable task-completion advantage **before** expanding the index, adding chat, or redesigning.
+
+**Why:** Google Scholar already wins on academic search breadth; commercial systems such as Citeline and TrialRedline already serve data and trial-change workflows. VialGrade must prove a narrower capability that avoids identity mistakes and source-verification work. This is a value-proposition correction, not a legal/marketplace reversal.
+
+**Deferred until task evidence:** broad coverage expansion, expensive model-based synthesis, interface rebrand and subscription infrastructure. Revisit if 5 real professional tasks show reduced effort without correctness regression and several users return for another task.
+
+**Cost control:** Develop locally; no remote pushes, new PRs/preview builds, merges or production deployments for each minor edit. Use one reviewed, batched feature PR and one operator-approved release after local tests and actual task validation. Do not confuse local test runs with Vercel deployment spend. Keep existing open PRs #29/#31/#32 tracked separately.
+
+**Pilot details and competitive comparison:** docs/RESEARCH_USEFULNESS_REFOCUS_2026-10-18.md. This file is updated only on the local development branch until a batch release is approved.
 
 ## Planned sequence and rationale
 
