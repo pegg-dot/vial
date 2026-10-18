@@ -1,0 +1,1293 @@
+{
+  "schemaVersion": 1,
+  "origin": "ClinicalTrials.gov public v2 metadata; minimal identification and intervention fields",
+  "capturedAt": "2026-10-18T16:48:55.412Z",
+  "reviewStatus": "Provisional field-level case annotations by automated assistant; independent domain-review NOT complete",
+  "scope": "Only entity-name match locations; not clinical efficacy, causality, safety, registry completeness or confirmed scientific relevance",
+  "cases": [
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT05936151",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT05936151",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT05936151",
+            "briefTitle": "A Study of Retatrutide (LY3437943) on Renal Function in Participants With Overweight or Obesity and Chronic Kidney Disease With or Without Type 2 Diabetes",
+            "officialTitle": "A Phase 2b, Double-Blind Study to Investigate the Effect of Retatrutide on Renal Function in Participants With Overweight or Obesity and Chronic Kidney Disease With or Without Type 2 Diabetes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Retatrutide",
+                "otherNames": [
+                  "LY3437943"
+                ]
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT07165028",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07165028",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07165028",
+            "briefTitle": "A Master Protocol of Multiple Agents in Adults With Metabolic Dysfunction-Associated Steatotic Liver Disease (SYNERGY-Outcomes)",
+            "officialTitle": "A Master Protocol for a Randomized, Controlled, Clinical Trial of Multiple Pharmacologic Agents in Adult Participants With Metabolic Dysfunction-Associated Steatotic Liver Disease Who Are at Increased Risk of Developing Major Adverse Liver Outcomes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Tirzepatide",
+                "otherNames": [
+                  "LY3298176"
+                ]
+              },
+              {
+                "name": "Retatrutide",
+                "otherNames": [
+                  "LY3437943"
+                ]
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT06808802",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT06808802",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT06808802",
+            "briefTitle": "To Investigate the Effect of Retatrutide (LY3437943) on Metoprolol Pharmacokinetics in Healthy Participants",
+            "officialTitle": "A Phase 1, Open-label, Single-arm Study to Investigate the Effect of Retatrutide on Metoprolol Pharmacokinetics in Healthy Participants"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Retatrutide",
+                "otherNames": [
+                  "LY3437943"
+                ]
+              },
+              {
+                "name": "Metoprolol",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT05445232",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT05445232",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT05445232",
+            "briefTitle": "A Drug-Drug Interaction (DDI) Study of LY3437943 in Obese Participants",
+            "officialTitle": "A Multiple-Dose Drug-Drug Interaction Study to Determine the Effect of LY3437943 on Drug Metabolizing Enzymes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "LY3437943",
+                "otherNames": []
+              },
+              {
+                "name": "Midazolam",
+                "otherNames": []
+              },
+              {
+                "name": "Warfarin",
+                "otherNames": []
+              },
+              {
+                "name": "Caffeine",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT06313528",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT06313528",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT06313528",
+            "briefTitle": "A Study to Measure Calorie Consumption and Usage in Participants With Obesity Using LY3437943",
+            "officialTitle": "A Randomized, Double-Blind, Phase 1 Study to Investigate the Effect of LY3437943 Versus Placebo on Calorie Intake and Energy Expenditure in Participants With Obesity Under Calorie Restriction"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "LY3437943",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT04867785",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT04867785",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT04867785",
+            "briefTitle": "A Study of LY3437943 in Participants With Type 2 Diabetes",
+            "officialTitle": "A Phase 2 Study of Once-Weekly LY3437943 Compared With Placebo and Dulaglutide in Participants With Type 2 Diabetes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "LY3437943",
+                "otherNames": []
+              },
+              {
+                "name": "Dulaglutide",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT07035093",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07035093",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07035093",
+            "briefTitle": "A Study of Retatrutide (LY3437943) in Participants Who Have Obesity or Overweight and Chronic Low Back Pain",
+            "officialTitle": "A Phase 3, Randomized, Double-Blind, Placebo-Controlled Study to Investigate the Efficacy and Safety of Retatrutide Once Weekly in Participants Who Have Obesity or Overweight and Chronic Low Back Pain"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Retatrutide",
+                "otherNames": [
+                  "LY3437943"
+                ]
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT05929079",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT05929079",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT05929079",
+            "briefTitle": "A Study of Retatrutide (LY3437943) in Participants With Type 2 Diabetes Mellitus Who Have Obesity or Overweight",
+            "officialTitle": "A Master Protocol to Investigate the Efficacy and Safety of LY3437943 Once Weekly in Participants With Type 2 Diabetes Mellitus Who Have Obesity or Overweight: A Randomized Double-Blind, Placebo-Controlled Trial"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Retatrutide",
+                "otherNames": [
+                  "LY3437943"
+                ]
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "retatrutide",
+      "nctId": "NCT07226947",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07226947",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07226947",
+            "briefTitle": "Body Composition and Exercise to Prevent Muscle Loss With GLP1 Agonist Treatment",
+            "officialTitle": "BIA Monitoring and Exercise for the Prevention of Muscle Loss With Incretin Therapy (BICEP Study)"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Smartwatch activity and body composition monitor",
+                "otherNames": []
+              },
+              {
+                "name": "General guidance on recommended exercise",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT04982575",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT04982575",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT04982575",
+            "briefTitle": "Research Study to Look at How Well Cagrilintide Together With Semaglutide Works in People With Type 2 Diabetes",
+            "officialTitle": "Efficacy and Safety of Co-administration of Cagrilintide s.c. 2.4 mg and Semaglutide s.c. 2.4 mg Once Weekly in Subjects With Type 2 Diabetes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Semaglutide 2.4 mg",
+                "otherNames": []
+              },
+              {
+                "name": "Cagrilintide 2.4 mg",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo (semaglutide)",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo (cagrilintide)",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT05804162",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT05804162",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT05804162",
+            "briefTitle": "A Research Study Looking at How Cagrilintide Works on the Heart Rhythm in Healthy Participants",
+            "officialTitle": "A Thorough QTc Study Evaluating the Effect of Cagrilintide on Cardiac Repolarisation in Healthy Participants"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Cagrilintide",
+                "otherNames": [
+                  "Cagrilintide A",
+                  "NNC0174-0833 A"
+                ]
+              },
+              {
+                "name": "Cagrilintide Placebo",
+                "otherNames": [
+                  "Cagrilintide A",
+                  "NNC0174-0833 A"
+                ]
+              },
+              {
+                "name": "Moxifloxacin",
+                "otherNames": [
+                  "Moxifloxacinratiopharm"
+                ]
+              },
+              {
+                "name": "Moxifloxacin Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT05564104",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT05564104",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT05564104",
+            "briefTitle": "A Research Study Looking at How a Single Dose of the Medicine Cagrilintide Works in Participants With Reduced Liver Function and in Healthy Participants With Normal Liver Function and How Cagrilintide is Absorbed and Used by the Body",
+            "officialTitle": "A Study Investigating the Pharmacokinetic Properties of Cagrilintide in Participants With Various Degrees of Hepatic Impairment and Assessing the Absolute Bioavailability of Subcutaneous Cagrilintide in Healthy Volunteers"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Cagrilintide",
+                "otherNames": [
+                  "NNC0174-0833"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT06403761",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT06403761",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT06403761",
+            "briefTitle": "Investigating How CagriSema, Semaglutide and Cagrilintide Regulate Insulin Effects in the Body of People With Type 2 Diabetes",
+            "officialTitle": "Effect of CagriSema, Semaglutide and Cagrilintide on Insulin Sensitivity and Pancreatic Endocrine Function in Adults With Type 2 Diabetes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Semaglutide",
+                "otherNames": []
+              },
+              {
+                "name": "Cagrilintide",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo semaglutide",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo cagrilintide",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT07253285",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07253285",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07253285",
+            "briefTitle": "A Research Study on How Well Cagrilintide and CagriSema Work in Children and Adolescents With Excess Body Weight",
+            "officialTitle": "Efficacy, Safety and Pharmacokinetics of Cagrilintide s.c. 2.4 mg as Monotherapy and in Combination With Semaglutide s.c. 2.4 mg (CagriSema) Once Weekly for Weight Management in Chidren and Adolescents With Overweight or Obesity"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Cagrilintide",
+                "otherNames": []
+              },
+              {
+                "name": "Semaglutide",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo cagrilintide",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo semaglutide",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT03856047",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT03856047",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT03856047",
+            "briefTitle": "Research Study Investigating How Well NNC0174-0833 Works in People Suffering From Overweight or Obesity.",
+            "officialTitle": "Investigation of Safety and Efficacy of NNC0174-0833 for Weight Management - a Dose Finding Trial."
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0174-0833",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo (NNC0174-0833)",
+                "otherNames": []
+              },
+              {
+                "name": "Liraglutide 3.0 mg",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo (Liraglutide 3.0 mg)",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT06797869",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT06797869",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT06797869",
+            "briefTitle": "A Research Study to Investigate the Effects of CagriSema Compared to Placebo in People With Type 2 Diabetes and Painful Diabetic Peripheral Neuropathy",
+            "officialTitle": "Efficacy and Safety of co Administered Cagrilintide and Semaglutide (CagriSema) Once Weekly Versus Placebo in Participants With Type 2 Diabetes and Painful Diabetic Peripheral Neuropathy"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "CagriSema (Cagrilintide B and Semaglutide I)",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo matched to CagriSema (Cagrilintide B and Semaglutide I)",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT02958085",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT02958085",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT02958085",
+            "briefTitle": "Investigation of Safety, Tolerability, Pharmacokinetics and Pharmacodynamics of Multiple Dosing of NNC0174-0833 in Subjects With Obesity or Overweight",
+            "officialTitle": "Investigation of Safety, Tolerability, Pharmacokinetics and Pharmacodynamics of Multiple Dosing of NNC0174-0833 in Subjects With Obesity or Overweight"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0174-0833",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT02300844",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT02300844",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT02300844",
+            "briefTitle": "Investigation on Safety, Tolerability and Pharmacokinetics of Single Doses of NNC0174-0833 in Normal Weight, Overweight to Obese But Otherwise Healthy Male Subjects",
+            "officialTitle": "Investigation on Safety, Tolerability and Pharmacokinetics of Single Doses of NNC0174-0833 in Normal Weight, Overweight to Obese But Otherwise Healthy Male Subjects"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0174-0833",
+                "otherNames": []
+              },
+              {
+                "name": "placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT04209049",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT04209049",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT04209049",
+            "briefTitle": "A Research Study Looking Into Blood Levels of NNC0174-0833 in People With Normal and Impaired Kidney Function",
+            "officialTitle": "An Open-label Trial Investigating the Pharmacokinetics and the Tolerability of NNC0174-0833 in Subjects With Normal Renal Function and Impaired Renal Function"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0174-0833",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT04074174",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT04074174",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT04074174",
+            "briefTitle": "Research Study to Investigate the Effect of NNC0174-0833 on a Birth Control Pill in Women Who Are Not Able to Become Pregnant",
+            "officialTitle": "Investigation of the Effect of NNC0174-0833 on Pharmacokinetics of an Oral Combination Contraceptive (Ethinylestradiol and Levonorgestrel) in Females of Non-childbearing Potential"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0174-0833",
+                "otherNames": []
+              },
+              {
+                "name": "Oral contraceptive (OC) tablets",
+                "otherNames": []
+              },
+              {
+                "name": "Acetaminophen",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT05254158",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT05254158",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT05254158",
+            "briefTitle": "A Research Study of How NNC0174-0833 Behaves in Chinese Volunteers Who Are Normal Weight, Overweight or With Obesity",
+            "officialTitle": "Investigation of Pharmacokinetic Properties of Single Subcutaneous Doses of NNC0174-0833 in Chinese Male Subjects Being Normal Weight, Overweight or With Obesity"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0174 0833",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT03787225",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT03787225",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT03787225",
+            "briefTitle": "A Research Study of How NNC0174-0833 Behaves in Japanese and Caucasian Volunteers Who Are Normal Weight, Overweight or With Obesity",
+            "officialTitle": "Investigation of Pharmacokinetic Properties, Safety and Tolerability of Single Subcutaneous Doses of NNC0174-0833 in Male Japanese and Caucasian Subjects Being Normal Weight, Overweight or With Obesity"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0174-0833",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo (NNC0174-0833)",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT07564414",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07564414",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07564414",
+            "briefTitle": "A Research Study to Look at How Two Different Doses of CagriSema and One Dose of Semaglutide Help People Living With Obesity With or Without Type 2 Diabetes Lose Weight",
+            "officialTitle": "A Clinical Study to Compare Efficacy and Safety of Two Different Doses of CagriSema and Semaglutide in Participants With Obesity With or Without Type 2 Diabetes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Cagrisema",
+                "otherNames": []
+              },
+              {
+                "name": "Semaglutide",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT07357766",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07357766",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07357766",
+            "briefTitle": "A Research Study to Compare Different Versions of Injectable CagriSema and Placebo in People With Excess Body Weight",
+            "officialTitle": "A Placebo-controlled Comparability Study to Compare Two Presentations of CagriSema in Participants With Overweight or Obesity"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Cagrisema",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo CagriSema",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT07357740",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07357740",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07357740",
+            "briefTitle": "A Research Study to Compare Two Different Versions of Injectable CagriSema in People With Type 2 Diabetes",
+            "officialTitle": "A Phase 2 Study to Compare Two Presentations of CagriSema in Participants With Type 2 Diabetes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "CagriSema",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo CagriSema",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT03617081",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT03617081",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT03617081",
+            "briefTitle": "First Research Study of the Possible New Medicine NNC0113-2023 in Healthy Men.",
+            "officialTitle": "A First Human Dose Trial Investigating the Safety, Tolerability and Pharmacokinetics of Single Doses of Oral NNC0113-2023 in Healthy Male Subjects"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "NNC0113-2023",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo (NNC0113-2023)",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "cagrilintide",
+      "nctId": "NCT07817251",
+      "expected": "named-in-title",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07817251",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07817251",
+            "briefTitle": "Research Study on How People With Type 2 Diabetes Tolerate Switching From Semaglutide to Cagrisema",
+            "officialTitle": "Safety And Tolerability of 3 Switch Regimens From Semaglutide 1.0 mg and 2.0 mg to Co-Administered Cagrilintide and Semaglutide (Cagrisema) in Participants With Type 2 Diabetes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "CagriSema",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07777575",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07777575",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07777575",
+            "briefTitle": "Resistance Training to Prevent Muscle Loss During Treatment With Tirzepatide",
+            "officialTitle": "A Phase IV, Randomized Controlled Trial to Evaluate the Effects of Resistance Training Versus Usual Care on Thigh Muscle Volume During Treatment With the Dual GIP/GLP-1 Receptor Agonist Tirzepatide in Adults With Obesity"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Dual GIP/GLP-1 Receptor Agonist Tirzepatide",
+                "otherNames": []
+              },
+              {
+                "name": "Resistance Training",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT04081337",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT04081337",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT04081337",
+            "briefTitle": "A Study to Measure Energy Expenditure and Food Intake in Participants With Obesity Using Tirzepatide",
+            "officialTitle": "A Randomized, Placebo-Controlled, Parallel-Arm Study to Investigate the Effect of Once-Weekly Tirzepatide on Energy Expenditure and Food Intake in Obese Subjects"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Tirzepatide",
+                "otherNames": [
+                  "LY3298176"
+                ]
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07099742",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07099742",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07099742",
+            "briefTitle": "Effectiveness and Safety of Tirzepatide Among Participants With Obesity With or Without Type 2 Diabetes Mellitus (T2DM)",
+            "officialTitle": "A Study of Real-World Effectiveness and Safety of Tirzepatide Among Participants With Obesity With or Without Type 2 Diabetes Mellitus (T2DM) in Bangladesh"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Tirzepatide",
+                "otherNames": []
+              },
+              {
+                "name": "Life Style Modification",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07588984",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07588984",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07588984",
+            "briefTitle": "GLP-1 Medication & Behavioral Health Programs on Weight & Metabolic Outcomes: FLOURISH and THRIVE Prospective Cohort Study",
+            "officialTitle": "GLP-1 Medication & Behavioral Health on Weight and Metabolic Outcomes: FLOURISH (Functional Longitudinal Outcomes Under Intentional Small Habits) & THRIVE (Trajectories of Health, Resilience & Integrated Vitality Evaluation) Cohort Study"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Noom Weight",
+                "otherNames": [
+                  "Noom"
+                ]
+              },
+              {
+                "name": "Free Tier",
+                "otherNames": []
+              },
+              {
+                "name": "Education-only control",
+                "otherNames": []
+              },
+              {
+                "name": "Semaglutide",
+                "otherNames": [
+                  "Noom standard dose semaglutide"
+                ]
+              },
+              {
+                "name": "Tirzepatide",
+                "otherNames": [
+                  "Noom standard dose tirzepatide"
+                ]
+              },
+              {
+                "name": "Microdose semaglutide",
+                "otherNames": []
+              },
+              {
+                "name": "Microdose tirzepatide",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07671391",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07671391",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07671391",
+            "briefTitle": "A Randomized, Double-blind, Placebo-controlled Study Evaluating the Effect of LAE102 Injection in Combination With Tirzepatide on Body in Obese Participants",
+            "officialTitle": "A Randomized, Double-blind, Placebo-controlled Study Evaluating the Effect of LAE102 Injection in Combination With Tirzepatide on Body Composition in Obese Participants"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "LAE102 +Tirzepatide",
+                "otherNames": []
+              },
+              {
+                "name": "LAE102 placebo,+Tirzepatide",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT05536804",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT05536804",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT05536804",
+            "briefTitle": "A Study of Tirzepatide (LY3298176) in Participants With Overweight or Obesity and Chronic Kidney Disease With or Without Type 2 Diabetes",
+            "officialTitle": "Tirzepatide Study of Renal Function in People With Overweight or Obesity and Chronic Kidney Disease With or Without Type 2 Diabetes: Focus on Kidney Hypoxia in Relation to Fatty Kidney Disease Using Multiparametric Magnetic Resonance Imaging"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Tirzepatide",
+                "otherNames": []
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07165028",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07165028",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07165028",
+            "briefTitle": "A Master Protocol of Multiple Agents in Adults With Metabolic Dysfunction-Associated Steatotic Liver Disease (SYNERGY-Outcomes)",
+            "officialTitle": "A Master Protocol for a Randomized, Controlled, Clinical Trial of Multiple Pharmacologic Agents in Adult Participants With Metabolic Dysfunction-Associated Steatotic Liver Disease Who Are at Increased Risk of Developing Major Adverse Liver Outcomes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Tirzepatide",
+                "otherNames": [
+                  "LY3298176"
+                ]
+              },
+              {
+                "name": "Retatrutide",
+                "otherNames": [
+                  "LY3437943"
+                ]
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT02759107",
+      "expected": "intervention-recorded",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT02759107",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT02759107",
+            "briefTitle": "A Study of Tirzepatide (LY3298176) in Healthy Participants and Participants With Type 2 Diabetes (T2DM)",
+            "officialTitle": "A Single- and Multiple-Ascending Dose Study in Healthy Subjects to Investigate the Safety, Tolerability, Pharmacokinetics, and Pharmacodynamics of LY3298176 and Multiple Doses in Patients With Type 2 Diabetes Mellitus"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Tirzepatide",
+                "otherNames": [
+                  "LY3298176"
+                ]
+              },
+              {
+                "name": "Placebo",
+                "otherNames": []
+              },
+              {
+                "name": "Dulaglutide",
+                "otherNames": [
+                  "Trulicity®"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT06790160",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT06790160",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT06790160",
+            "briefTitle": "Study of Patients Being Treated With Anti-obesity Medication",
+            "officialTitle": "Observational Study of Patients Being Treated With Anti-obesity Medication"
+          },
+          "armsInterventionsModule": {
+            "interventions": []
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07835360",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07835360",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07835360",
+            "briefTitle": "Body Composition Changes After Initiation of GLP-1 Receptor Agonists in Adults With Obesity or Type 2 Diabetes",
+            "officialTitle": "Cambios en la composición Corporal Tras el Inicio de Agonistas Del Receptor de GLP-1 (GLP-1RA) en Adultos Con Obesidad o Diabetes Tipo 2: Cohorte Prospectiva multicéntrica en Vida Real"
+          },
+          "armsInterventionsModule": {
+            "interventions": []
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT06734312",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT06734312",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT06734312",
+            "briefTitle": "MAINTAIN (Mucosal AblatIoN Therapy After INcretins)",
+            "officialTitle": "Gastric Fundal Mucosal Ablation for Weight Management in Patients Stopping Glucagon-like Peptide-1 Receptor Agonists"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Gastric Fundal Mucosal Ablation (GFMA)",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07244445",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07244445",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07244445",
+            "briefTitle": "Pistachio Intake and Nutrition-Related Outcomes in Individuals on GLP-1 Therapy",
+            "officialTitle": "Dietary Pistachio Intake and Nutrition-Related Outcomes in Individuals Using GLP-1 Receptor Agonists: A Randomized Controlled Trial"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Pistachios",
+                "otherNames": []
+              },
+              {
+                "name": "Dual-energy X-ray absorptiometry (DEXA) scans",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07787936",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07787936",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07787936",
+            "briefTitle": "GLP-1/GIP Receptor Agonists in Obesity-Related HFpEF: The GLIDE-HF Registry",
+            "officialTitle": "GLIDE-HF Registry: A Prospective, Single-Center, Observational Cohort of Patients With Obesity-Related Heart Failure With Preserved Ejection Fraction, With GLP-1/GIP Receptor Agonist Therapy as an Observed Exposure and Serial Exercise Echocardiographic Phenotyping"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "GLP-1 / GIP receptor agonist",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07758231",
+      "expected": "search-hit-only",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07758231",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07758231",
+            "briefTitle": "Impact of GLP-1 Receptor Agonist Therapy on Alcohol Pharmacokinetics",
+            "officialTitle": "Impact of GLP-1 Receptor Agonist Therapy on Alcohol Pharmacokinetics"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Acute Ethanol Dose",
+                "otherNames": [
+                  "vodka"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07262762",
+      "expected": "named-in-title",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07262762",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07262762",
+            "briefTitle": "Spartina® (Tirzepatide) Effectiveness and Safety Evaluation",
+            "officialTitle": "A Post-marketing Real-world Study for Evaluating Effectiveness and Safety of Spartina® (Tirzepatide Manufactured by CinnaGen) in Patients With Obesity and Overweight"
+          },
+          "armsInterventionsModule": {
+            "interventions": []
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07398222",
+      "expected": "named-in-title",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07398222",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07398222",
+            "briefTitle": "Gastric Content in Fasting Volunteers and in Tirzepatide Users: an Observational and Cross-sectional Study",
+            "officialTitle": "Ultrasonographic Evaluation of Gastric Content in Fasting Volunteers and in Tirzepatide Users: an Observational and Cross-sectional Study"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Ultrasonographic evaluation of gastric content",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT06484114",
+      "expected": "named-in-title",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT06484114",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT06484114",
+            "briefTitle": "Evaluation of the Safety and Efficacy of Revita® DMR on Body Weight Maintenance in Subjects With Obesity Who Have Achieved at Least 15% Weight Loss on Tirzepatide",
+            "officialTitle": "A Prospective, Randomized, Double-Blind, Sham-Controlled, Multicenter, Pivotal Study to Assess the Efficacy of Revita® Duodenal Mucosal Resurfacing (DMR) on Body Weight Maintenance in Participants With Obesity and Who Have Achieved at Least 15% Weight Loss on Tirzepatide Obesity Pharmacotherapy"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "Revita Duodenal Mucosal Resurfacing (DMR)",
+                "otherNames": []
+              },
+              {
+                "name": "Sham",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "topic": "tirzepatide",
+      "nctId": "NCT07740291",
+      "expected": "named-in-title",
+      "sourceUrl": "https://clinicaltrials.gov/study/NCT07740291",
+      "record": {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT07740291",
+            "briefTitle": "Tirzepatide Impact Assessment Study",
+            "officialTitle": "Tirzepatide Impact Assessment: Exploring Health and Wellness Outcomes"
+          },
+          "armsInterventionsModule": {
+            "interventions": [
+              {
+                "name": "GLP-1 Receptor Agonist Therapy",
+                "otherNames": []
+              },
+              {
+                "name": "Structured Lifestyle Intervention",
+                "otherNames": []
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

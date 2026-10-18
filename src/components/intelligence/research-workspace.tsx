@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, Check, ClipboardCopy, Download, ExternalLink, FileSearch, GitCompareArrows, LibraryBig, Radar, SlidersHorizontal } from "lucide-react";
 import type { ResearchDossier } from "@/server/intelligence/public-dossiers";
-import { citationPack, evidenceCaveats, evidenceItems, type EvidenceItem } from "@/lib/research-evidence";
+import { citationPack, evidenceCaveats, evidenceItems, filterByRegistryMatch, type EvidenceItem, type RegistryMatchFilter } from "@/lib/research-evidence";
 
 type Filter = "all" | "trial" | "publication";
 type Ordering = "newest" | "oldest";
@@ -40,6 +40,7 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
   const [filter, setFilter] = useState<Filter>("all");
   const [ordering, setOrdering] = useState<Ordering>("newest");
   const [recordQuery, setRecordQuery] = useState("");
+  const [registryMatchFilter, setRegistryMatchFilter] = useState<RegistryMatchFilter>("all");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
 
@@ -49,10 +50,10 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
     if (!dossier) return [];
     const all = evidenceItems(dossier);
     const query = recordQuery.trim().toLocaleLowerCase();
-    const matching = all.filter(item => (filter === "all" || item.kind === filter) &&
+    const matching = filterByRegistryMatch(all, registryMatchFilter).filter(item => (filter === "all" || item.kind === filter) &&
       (!query || [item.title, item.id, item.details].some(value => value.toLocaleLowerCase().includes(query))));
     return ordering === "newest" ? matching : [...matching].reverse();
-  }, [dossier, filter, ordering, recordQuery]);
+  }, [dossier, filter, ordering, recordQuery, registryMatchFilter]);
 
   const rawCitations = dossier ? citationPack(dossier) : "";
 
@@ -222,7 +223,7 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
       <div className="mt-6 flex flex-wrap items-center gap-2">
         {filterLabels.map(item => (
           <button key={item.value} type="button" aria-pressed={filter === item.value}
-            onClick={() => setFilter(item.value)}
+            onClick={() => { setFilter(item.value); if (item.value !== "trial") setRegistryMatchFilter("all"); }}
             className={filter === item.value
               ? "rounded-full border-2 border-[#111214] bg-[#111214] px-4 py-2 text-xs font-extrabold text-white"
               : "rounded-full border border-[#111214]/20 bg-white px-4 py-2 text-xs font-bold text-[#111214] hover:bg-[#eee]"}>
@@ -237,6 +238,25 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
             <option value="oldest">Oldest first</option>
           </select>
         </label>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <label htmlFor="registry-match-filter" className="text-xs font-bold">Trial name appears in</label>
+        <select id="registry-match-filter" value={registryMatchFilter}
+          onChange={event => {
+            const next = event.target.value as RegistryMatchFilter;
+            setRegistryMatchFilter(next);
+            if (next !== "all") setFilter("trial");
+          }}
+          className="max-w-full rounded-full border border-[#111214]/25 bg-white px-3 py-2 text-xs">
+          <option value="all">Any field (all trial matches)</option>
+          <option value="intervention-recorded">Registered intervention field</option>
+          <option value="named-in-title">Study title only</option>
+          <option value="search-hit-only">Keyword match; role unconfirmed</option>
+        </select>
+        <p className="text-xs leading-5 text-[var(--muted)]">
+          These are match locations within the returned sample, not evidence quality ratings. Some combination studies may need manual review.
+        </p>
       </div>
 
       <div className="mt-6 divide-y divide-[#111214]/10 overflow-hidden rounded-[18px] border-2 border-[#111214] bg-white">

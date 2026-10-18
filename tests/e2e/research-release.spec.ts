@@ -26,6 +26,19 @@ test.describe("public research intelligence", () => {
     await expect(page.getByText("These are small search-result samples", { exact: false })).toBeVisible();
   });
 
+  test("allows cautious registry match-field filtering without changing server queries", async ({ page }) => {
+    await page.goto("/intelligence/cagrilintide");
+    const field = page.getByRole("combobox", { name: "Trial name appears in" });
+    await expect(field).toHaveValue("all");
+    await field.selectOption("search-hit-only");
+    await expect(field).toHaveValue("search-hit-only");
+    await expect(page.getByRole("button", { name: "Trial registry", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("These are match locations within the returned sample", { exact: false })).toBeVisible();
+    await page.getByRole("button", { name: "Publications", exact: true }).click();
+    await expect(field).toHaveValue("all");
+    await expect(page.getByRole("button", { name: "Publications", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
+
   test("supports all fixed public dossier routes, not arbitrary URL topics", async ({ page }) => {
     for (const key of ["retatrutide", "cagrilintide", "tirzepatide"]) {
       await page.goto("/intelligence/" + key);
