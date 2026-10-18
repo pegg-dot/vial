@@ -73,8 +73,8 @@ export default async function ResearchDossierPage({
           <div className="flex flex-col items-start justify-between gap-5 rounded-[18px] border-2 border-[#111214] bg-white p-6 sm:flex-row sm:items-center sm:p-7">
             <div className="max-w-2xl">
               <p className="text-xs font-extrabold uppercase tracking-[.15em] text-[#2b31d8]">New research-task prototype</p>
-              <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">Compare actual study designs, not just search results.</h2>
-              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">Inspect four selected registry records side by side for registered primary outcomes, intervention-name ambiguity, reported results sections and questions that still need verification. This is not a complete clinical review.</p>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">Follow the evidence from trial registrations to linked papers.</h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">Inspect four selected official trials, compare the registered outcomes and result sections, and follow protocol-linked papers whose exact trial IDs PubMed independently indexes. This is not a complete clinical review.</p>
             </div>
             <Link href="/intelligence/cagrilintide/audit"
               className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111214] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#333]">

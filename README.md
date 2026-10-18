@@ -8,6 +8,8 @@ The work documented in [PR #22](https://github.com/pegg-dot/vial/pull/22) builds
 
 **This is a research prototype, not a claim of legal clearance or a paid research service.** The public [vialgrade.com](https://vialgrade.com) domain tracks the latest approved production deployment; inspect the live site to determine whether the research-only release is active. The production environment must run with `VIALGRADE_PUBLIC_EVIDENCE_ONLY=true` and legacy live vendor ingestion disabled. Source rights, historic personal data, a working privacy contact address, and appropriate legal review remain separate obligations.
 
+**Local work in progress (not deployed):** A four-study cagrilintide workflow now verifies original ClinicalTrials.gov citations against exact PubMed study IDs, revealing independently linked papers that simple results-section badges would miss. The technical mechanism, limited evidence sample and source-quality caveats are documented in [Publication reconciliation](docs/RESEARCH_PUBLICATION_RECONCILIATION_2026-10-18.md). Commerce remains suspended; the original marketplace is preserved only as archived source.
+
 The details below describe the earlier V10 market/evidence platform and the engineering work behind it. They are historical context, not an endorsement or invitation to purchase unapproved peptides.
 
 VialGrade is a production research platform I built to make a fragmented and difficult-to-verify market easier to understand. It brings together peptide listings, vendor signals, laboratory evidence, pricing context, and source history so people can inspect the evidence behind a claim instead of relying on a single number or storefront.

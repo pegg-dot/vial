@@ -7,6 +7,7 @@
  * model call, vendor grade, or third-party PDF/full text.
  */
 import { classifyTrialAssociation, getResearchIdentityCandidate, type TrialAssociation } from "./topic-identity-candidates";
+import { crossCheckRegistryPublications, registryPubMedReferences, type TrialPublicationCheck, type TrialRegistryReference } from "./pubmed-source-check";
 
 export const CAGRILINTIDE_AUDIT_SELECTION = [
   {
@@ -33,6 +34,16 @@ export const CAGRILINTIDE_AUDIT_SELECTION = [
 
 export type RegistryDate = { date: string; precision: "ACTUAL" | "ESTIMATED" | "NOT SPECIFIED" };
 export type RegistryOutcome = { measure: string; timeFrame: string | null };
+export type RegistryPopulation = {
+  conditions: string[];
+  sex: string | null;
+  minimumAge: string | null;
+  maximumAge: string | null;
+  healthyVolunteers: boolean | null;
+  /** Registry treatment-arm labels, not clinical administration instructions. */
+  armLabels: string[];
+};
+
 export type CagrilintideStudy = {
   nctId: string;
   title: string;
@@ -46,8 +57,13 @@ export type CagrilintideStudy = {
   interventions: string[];
   primaryOutcomes: RegistryOutcome[];
   primaryOutcomeCount: number;
+  population: RegistryPopulation;
   registryResults: "present" | "not-shown" | "uncertain";
   matchLocation: TrialAssociation;
+  /** Protocol-linked papers and their original registry-assigned labels. */
+  registryReferences: TrialRegistryReference[];
+  /** Independently checked PubMed metadata and exact-NCT association; may be unavailable. */
+  pubmedChecks: TrialPublicationCheck[];
 };
 
 export type CagrilintideAuditRow =
@@ -129,6 +145,20 @@ export function parseCagrilintideStudy(input: unknown, requestedId: string): Cag
       if (!measure) return null;
       return { measure, timeFrame: clean(row.timeFrame, 170) };
     }).filter((item): item is RegistryOutcome => item !== null);
+  const eligibility = record(protocol.eligibilityModule);
+  const conditions = record(protocol.conditionsModule).conditions;
+  const armGroups = record(protocol.armsInterventionsModule).armGroups;
+  const population: RegistryPopulation = {
+    conditions: (Array.isArray(conditions) ? conditions : []).map(value => clean(value, 90))
+      .filter((value): value is string => value !== null).slice(0, 5),
+    sex: clean(eligibility.sex, 30),
+    minimumAge: clean(eligibility.minimumAge, 40),
+    maximumAge: clean(eligibility.maximumAge, 40),
+    healthyVolunteers: typeof eligibility.healthyVolunteers === "boolean" ? eligibility.healthyVolunteers : null,
+    armLabels: (Array.isArray(armGroups) ? armGroups : [])
+      .map(item => clean(record(item).label, 140))
+      .filter((value): value is string => value !== null).slice(0, 8),
+  };
   const registryResults = root.hasResults === true && Object.keys(record(root.resultsSection)).length > 0
     ? "present"
     : root.hasResults === false && Object.keys(record(root.resultsSection)).length === 0
@@ -150,8 +180,11 @@ export function parseCagrilintideStudy(input: unknown, requestedId: string): Cag
     interventions,
     primaryOutcomes: outcomes.slice(0, 3),
     primaryOutcomeCount: outcomes.length,
+    population,
     registryResults,
     matchLocation: classifyTrialAssociation(input, identity),
+    registryReferences: registryPubMedReferences(input),
+    pubmedChecks: [],
   };
 }
 
@@ -173,7 +206,18 @@ export async function getCagrilintideAudit(): Promise<CagrilintideAudit> {
       return { available: false, selection, issue: "registry-unavailable" };
     }
   }));
-  return { assembledAt, cacheSeconds: 21_600, rows };
+  const requests = rows.flatMap(row => row.available
+    ? row.study.registryReferences.map(reference => ({ nctId: row.study.nctId, reference }))
+    : []);
+  const checked = await crossCheckRegistryPublications(requests);
+  const enrichedRows = rows.map(row => row.available ? {
+    ...row,
+    study: {
+      ...row.study,
+      pubmedChecks: checked.filter(check => check.nctId === row.study.nctId),
+    },
+  } : row);
+  return { assembledAt, cacheSeconds: 21_600, rows: enrichedRows };
 }
 
 export function getAuditCounts(audit: CagrilintideAudit) {
@@ -189,6 +233,14 @@ export function getAuditCounts(audit: CagrilintideAudit) {
     directWithResultsSection: direct.filter(row => row.study.registryResults === "present").length,
     directWithoutResultsSection: direct.filter(row => row.study.registryResults === "not-shown").length,
     directUncertainResults: direct.filter(row => row.study.registryResults === "uncertain").length,
+    directResultPapersCorroborated: direct.filter(row => row.study.pubmedChecks.some(check =>
+      check.reference.role === "RESULT" && check.secondaryIdMatch === "confirmed" && check.article !== null)).length,
+    withoutRegistryResultsButWithResultPaper: direct.filter(row =>
+      row.study.registryResults === "not-shown" && row.study.pubmedChecks.some(check =>
+        check.reference.role === "RESULT" && check.secondaryIdMatch === "confirmed" && check.article !== null)).length,
+    missingRegistryResultsWithUnverifiedPaper: direct.filter(row =>
+      row.study.registryResults === "not-shown" && row.study.pubmedChecks.some(check =>
+        check.reference.role === "RESULT" && check.secondaryIdMatch === "unavailable")).length,
     combinationNameOnly: available.filter(row => row.selection.scope === "combination-name").length,
   };
 }
@@ -214,6 +266,37 @@ export function getCagrilintideAuditInsights(audit: CagrilintideAudit): AuditIns
   const present = audit.rows.filter(row => row.available);
   const direct = present.filter(row => row.selection.scope === "direct-name" && row.study.matchLocation === "intervention-recorded");
   const insights: AuditInsight[] = [];
+  const resultPaperWithoutRegistryResults = direct.flatMap(row => row.study.registryResults === "not-shown"
+    ? row.study.pubmedChecks.filter(check => check.reference.role === "RESULT" &&
+      check.secondaryIdMatch === "confirmed" && check.article !== null).map(check => ({ row, check }))
+    : []);
+  for (const { row, check } of resultPaperWithoutRegistryResults) {
+    insights.push({
+      heading: "A results publication exists outside the registry results section",
+      observation: row.study.nctId + " has no registry results section in the retrieved record, " +
+        "but its protocol links PubMed " + check.reference.pmid + " as RESULT and PubMed independently indexes the exact NCT ID.",
+      interpretationLimit: "A published article and a posted registry results section are separate source types. This does not establish results-posting compliance, clinical safety or quality; inspect the paper and registry directly.",
+      sources: [
+        { title: "ClinicalTrials.gov " + row.study.nctId, url: row.study.url },
+        { title: "PubMed " + check.reference.pmid, url: "https://pubmed.ncbi.nlm.nih.gov/" + check.reference.pmid + "/" },
+      ],
+    });
+  }
+  for (const row of direct) {
+    for (const check of row.study.pubmedChecks) {
+      if (check.reference.role !== "BACKGROUND" || check.secondaryIdMatch !== "confirmed" || !check.article) continue;
+      insights.push({
+        heading: "A registry BACKGROUND citation is linked to the same study in PubMed",
+        observation: row.study.nctId + " labels PMID " + check.reference.pmid +
+          " BACKGROUND, while PubMed independently indexes that publication under " + row.study.nctId + ".",
+        interpretationLimit: "A registry reference label and an indexed study association mean different things. The article must be read before calling it results from this trial or calling the registry label wrong.",
+        sources: [
+          { title: "ClinicalTrials.gov " + row.study.nctId, url: row.study.url },
+          { title: "PubMed " + check.reference.pmid, url: check.article.url },
+        ],
+      });
+    }
+  }
   const combination = present.find(row => row.selection.scope === "combination-name" &&
     row.study.interventions.some(name => /\bcagrisema\b/i.test(name)) && row.study.matchLocation === "search-hit-only");
   if (combination) insights.push({
@@ -227,7 +310,8 @@ export function getCagrilintideAuditInsights(audit: CagrilintideAudit): AuditIns
     ],
   });
   const completedWithoutRegistryResults = direct.filter(row =>
-    row.study.status === "COMPLETED" && row.study.registryResults === "not-shown");
+    row.study.status === "COMPLETED" && row.study.registryResults === "not-shown" &&
+    !resultPaperWithoutRegistryResults.some(item => item.row.study.nctId === row.study.nctId));
   if (completedWithoutRegistryResults.length) insights.push({
     heading: "Completed studies needing a results-source check",
     observation: completedWithoutRegistryResults.map(row => row.study.nctId).join(", ") +
@@ -235,6 +319,19 @@ export function getCagrilintideAuditInsights(audit: CagrilintideAudit): AuditIns
     interpretationLimit: "This does NOT prove a reporting violation, missing publications, clinical failure, or absence of external results. Check the original registry and other permitted sources.",
     sources: completedWithoutRegistryResults.map(row => ({ title: row.study.nctId, url: row.study.url })),
   });
+  const withHealthyVolunteers = direct.filter(row => row.study.population.healthyVolunteers === true);
+  const withoutHealthyVolunteers = direct.filter(row => row.study.population.healthyVolunteers === false);
+  if (withHealthyVolunteers.length && withoutHealthyVolunteers.length) {
+    insights.push({
+      heading: "The selected trials register different participant eligibility",
+      observation: withHealthyVolunteers.map(row => row.study.nctId).join(", ") +
+        " permits healthy volunteers in the registry, while " +
+        withoutHealthyVolunteers.map(row => row.study.nctId).join(", ") +
+        " records healthy volunteers as not accepted.",
+      interpretationLimit: "These are registry eligibility flags, not verified descriptions of every enrolled participant; use original inclusion criteria before comparing study findings.",
+      sources: [...withHealthyVolunteers, ...withoutHealthyVolunteers].map(row => ({ title: row.study.nctId, url: row.study.url })),
+    });
+  }
   const distinctOutcomeRecords = direct.filter(row => Boolean(row.study.primaryOutcomes[0]?.measure));
   const measures = new Set(distinctOutcomeRecords.map(row => row.study.primaryOutcomes[0].measure.toLowerCase()));
   if (distinctOutcomeRecords.length > 1 && measures.size > 1) insights.push({
@@ -267,6 +364,8 @@ export function cagrilintideAuditMarkdown(audit: CagrilintideAudit): string {
     "Source responses may be cached up to 6 hours. Assembled time is not the upstream retrieval time.",
     "No earlier version baseline has been collected; no change-in-study claim is possible.",
     "Results-section presence does not establish clinical effectiveness, safety, or regulatory compliance.",
+    "Protocol reference types (RESULT/BACKGROUND) are the registry labels, not independent article verdicts.",
+    "Exact-NCT PubMed crosschecks are limited to links already cited by the selected protocol records.",
     "",
   ];
   for (const row of audit.rows) {
@@ -286,6 +385,11 @@ export function cagrilintideAuditMarkdown(audit: CagrilintideAudit): string {
       "Enrollment: " + (study.enrollment ? study.enrollment.count + " (" + study.enrollment.precision.toLowerCase() + ")" : "not reported"),
       "Primary completion: " + (study.primaryCompletion ? study.primaryCompletion.date + " (" + study.primaryCompletion.precision.toLowerCase() + ")" : "not reported"),
       "Results section in registry response: " + study.registryResults,
+      "Registered conditions: " + (study.population.conditions.join("; ") || "not reported"),
+      "Registered age range: " + (study.population.minimumAge ?? "not reported") + " to " + (study.population.maximumAge ?? "not reported"),
+      "Registered participant sex: " + (study.population.sex ?? "not reported"),
+      "Healthy volunteers accepted: " + (study.population.healthyVolunteers === null ? "not reported" : String(study.population.healthyVolunteers)),
+      "Registered arm labels: " + (study.population.armLabels.join("; ") || "not reported"),
       "Recorded interventions: " + (study.interventions.join("; ") || "not reported"),
       "Name location: " + study.matchLocation,
       "Selection rationale: " + row.selection.whySelected,
@@ -297,6 +401,20 @@ export function cagrilintideAuditMarkdown(audit: CagrilintideAudit): string {
     if (study.primaryOutcomeCount > study.primaryOutcomes.length) {
       out.push("Additional primary outcomes omitted from this short audit; inspect original record.");
     }
+    out.push("Registry-linked PubMed references: " + study.registryReferences.length + " parsed (bounded sample)");
+    for (const reference of study.registryReferences) {
+      const crosscheck = study.pubmedChecks.find(check => check.reference.pmid === reference.pmid);
+      out.push("PubMed PMID " + reference.pmid +
+        " | Registry reference label: " + reference.role +
+        " | Exact NCT-to-PMID crosscheck: " + (crosscheck?.secondaryIdMatch ?? "unavailable") +
+        " | Original PubMed URL: https://pubmed.ncbi.nlm.nih.gov/" + reference.pmid + "/");
+      if (crosscheck?.article) {
+        out.push("PubMed bibliographic title: " + crosscheck.article.title,
+          "PubMed journal: " + (crosscheck.article.journal ?? "unreported"),
+          "PubMed publication date: " + (crosscheck.article.publicationDate ?? "unreported"));
+      }
+    }
+    if (study.registryReferences.length === 0) out.push("No linked PMID found in these protocol reference fields; this does not mean no studies or papers exist.");
     out.push("");
   }
   out.push("## What this selected metadata flags for verification", "");

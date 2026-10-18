@@ -10,6 +10,8 @@ import {
 
 function syntheticRecord(nctId: string, opts?: {
   intervention?: string; title?: string; results?: boolean; status?: string; enrollment?: number; measure?: string;
+  references?: Array<{ pmid: string; type: string; citation: string }>;
+  healthyVolunteers?: boolean; conditions?: string[];
 }) {
   return {
     hasResults: opts?.results ?? true,
@@ -28,11 +30,18 @@ function syntheticRecord(nctId: string, opts?: {
         phases: ["PHASE2"], enrollmentInfo: { count: opts?.enrollment ?? 92, type: "ACTUAL" },
       },
       sponsorCollaboratorsModule: { leadSponsor: { name: "Example research sponsor" } },
+      eligibilityModule: {
+        sex: "ALL", minimumAge: "18 Years", maximumAge: "55 Years",
+        healthyVolunteers: opts?.healthyVolunteers,
+      },
+      conditionsModule: { conditions: opts?.conditions ?? ["Overweight"] },
       armsInterventionsModule: {
         interventions: [
           { type: "DRUG", name: opts?.intervention ?? "Cagrilintide", otherNames: !opts?.intervention || opts.intervention === "Cagrilintide" ? ["NNC0174-0833"] : [] },
         ],
+        armGroups: [{ label: "Registered Arm 1" }, { label: "Registered Arm 2" }],
       },
+      referencesModule: { references: opts?.references ?? [] },
       outcomesModule: {
         primaryOutcomes: [
           { measure: opts?.measure ?? "Synthetic outcome 1", timeFrame: "Baseline, Week 32" },
@@ -67,6 +76,11 @@ describe("single-task cagrilintide study audit prototype", () => {
     expect(study?.primaryOutcomeCount).toBe(2);
     expect(study?.primaryOutcomes[0].timeFrame).toBe("Baseline, Week 32");
     expect(study?.sponsor).toBe("Example research sponsor");
+    expect(study?.population).toEqual({
+      conditions: ["Overweight"], sex: "ALL", minimumAge: "18 Years",
+      maximumAge: "55 Years", healthyVolunteers: null,
+      armLabels: ["Registered Arm 1", "Registered Arm 2"],
+    });
   });
 
   it("keeps missing registry results distinct from missing outcomes, and flags contradictory sections", () => {
@@ -158,6 +172,111 @@ describe("single-task cagrilintide study audit prototype", () => {
     const auditExport = cagrilintideAuditMarkdown(audit);
     expect(auditExport).toContain("## What this selected metadata flags for verification");
     expect(auditExport).toContain("Novo Nordisk sponsor statement");
+  });
+
+  it("reconciles absent registry results with an independently indexed PubMed RESULT citation", async () => {
+    const calls: string[] = [];
+    const mockFetch = vi.fn(async (raw: string) => {
+      const url = new URL(raw);
+      calls.push(url.hostname);
+      if (url.hostname === "clinicaltrials.gov") {
+        const nctId = url.pathname.split("/").at(-1)!;
+        const roleAndPmid: Record<string, [string, string]> = {
+          NCT03856047: ["RESULT", "34798060"],
+          NCT04982575: ["BACKGROUND", "37364590"],
+          NCT05804162: ["RESULT", "39279639"],
+        };
+        return Response.json(syntheticRecord(nctId, {
+          intervention: nctId === "NCT07564414" ? "CagriSema" : "Cagrilintide",
+          results: nctId !== "NCT05804162" && nctId !== "NCT07564414",
+          status: nctId === "NCT07564414" ? "RECRUITING" : "COMPLETED",
+          references: roleAndPmid[nctId] ? [{
+            type: roleAndPmid[nctId][0], pmid: roleAndPmid[nctId][1], citation: "Official registry citation for " + nctId,
+          }] : [],
+        }));
+      }
+      expect(url.hostname).toBe("eutils.ncbi.nlm.nih.gov");
+      expect(url.pathname).toBe("/entrez/eutils/efetch.fcgi");
+      return new Response([
+        "<PubmedArticleSet>",
+        ...Object.entries({
+          NCT03856047: "34798060", NCT04982575: "37364590", NCT05804162: "39279639",
+        }).map(([nct, pmid]) => [
+          "<PubmedArticle><MedlineCitation><PMID>", pmid, "</PMID><Article>",
+          "<ArticleTitle>Paper for ", nct, "</ArticleTitle>",
+          "<DataBankList><DataBank><DataBankName>ClinicalTrials.gov</DataBankName><AccessionNumberList>",
+          "<AccessionNumber>", nct, "</AccessionNumber>",
+          "</AccessionNumberList></DataBank></DataBankList>",
+          "</Article></MedlineCitation></PubmedArticle>",
+        ].join("")),
+        "</PubmedArticleSet>",
+      ].join(""));
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    const audit = await getCagrilintideAudit();
+    expect(mockFetch).toHaveBeenCalledTimes(5);
+    expect(calls.filter(h => h === "clinicaltrials.gov")).toHaveLength(4);
+    expect(calls.filter(h => h === "eutils.ncbi.nlm.nih.gov")).toHaveLength(1);
+    expect(getAuditCounts(audit)).toMatchObject({
+      directWithResultsSection: 2,
+      directWithoutResultsSection: 1,
+      directResultPapersCorroborated: 2,
+      withoutRegistryResultsButWithResultPaper: 1,
+    });
+    const insights = getCagrilintideAuditInsights(audit);
+    expect(insights[0].heading).toBe("A results publication exists outside the registry results section");
+    expect(insights[0].sources).toEqual([
+      { title: "ClinicalTrials.gov NCT05804162", url: "https://clinicaltrials.gov/study/NCT05804162" },
+      { title: "PubMed 39279639", url: "https://pubmed.ncbi.nlm.nih.gov/39279639/" },
+    ]);
+    expect(insights.some(i => i.heading === "A registry BACKGROUND citation is linked to the same study in PubMed")).toBe(true);
+    expect(insights.some(i => i.heading === "Completed studies needing a results-source check")).toBe(false);
+    const exported = cagrilintideAuditMarkdown(audit);
+    expect(exported).toContain("Registry reference label: RESULT | Exact NCT-to-PMID crosscheck: confirmed");
+    expect(exported).toContain("Registry reference label: BACKGROUND | Exact NCT-to-PMID crosscheck: confirmed");
+    expect(exported).toContain("https://pubmed.ncbi.nlm.nih.gov/39279639/");
+    expect(exported).toContain("A results publication exists outside the registry results section");
+    expect(exported).not.toContain("clinically effective treatment");
+  });
+
+  it("shows factual eligibility differences without claiming different populations have equal outcomes", async () => {
+    const stub = vi.fn(async (raw: string) => {
+      const nctId = raw.split("/").at(-1)!;
+      return Response.json(syntheticRecord(nctId, {
+        intervention: nctId === "NCT07564414" ? "CagriSema" : "Cagrilintide",
+        healthyVolunteers: nctId === "NCT05804162",
+        conditions: nctId === "NCT05804162" ? ["Obesity"] : ["Diabetes Mellitus, Type 2"],
+      }));
+    });
+    vi.stubGlobal("fetch", stub);
+    const audit = await getCagrilintideAudit();
+    const insights = getCagrilintideAuditInsights(audit);
+    const difference = insights.find(item => item.heading === "The selected trials register different participant eligibility");
+    expect(difference?.observation).toContain("NCT05804162 permits healthy volunteers");
+    expect(difference?.interpretationLimit).toContain("not verified descriptions");
+    expect(difference?.sources.map(row => row.title)).toEqual(["NCT05804162", "NCT03856047", "NCT04982575"]);
+    expect(cagrilintideAuditMarkdown(audit)).toContain("Healthy volunteers accepted: true");
+    expect(cagrilintideAuditMarkdown(audit)).toContain("Registered arm labels: Registered Arm 1; Registered Arm 2");
+  });
+
+  it("marks source verification unknown rather than zero when PubMed is unavailable", async () => {
+    const stub = vi.fn(async (raw: string) => {
+      if (raw.includes("eutils.ncbi.nlm.nih.gov")) return new Response("source unavailable", { status: 503 });
+      const id = raw.split("/").at(-1)!;
+      return Response.json(syntheticRecord(id, {
+        intervention: id === "NCT07564414" ? "CagriSema" : "Cagrilintide",
+        results: id !== "NCT05804162" && id !== "NCT07564414",
+        references: id === "NCT05804162" ? [{ pmid: "39279639", type: "RESULT", citation: "Original NLM citation" }] : [],
+      }));
+    });
+    vi.stubGlobal("fetch", stub);
+    const audit = await getCagrilintideAudit();
+    expect(getAuditCounts(audit)).toMatchObject({
+      withoutRegistryResultsButWithResultPaper: 0,
+      missingRegistryResultsWithUnverifiedPaper: 1,
+    });
+    expect(cagrilintideAuditMarkdown(audit)).toContain("PMID 39279639 | Registry reference label: RESULT | Exact NCT-to-PMID crosscheck: unavailable");
+    expect(getCagrilintideAuditInsights(audit).some(insight => insight.heading === "A results publication exists outside the registry results section")).toBe(false);
   });
 
   it("flags a changed direct-name relationship for manual review rather than counting it as verified", async () => {

@@ -100,7 +100,7 @@ export default async function IntelligencePage({
               <div className="flex gap-3 py-5">
                 <CircleHelp className="mt-0.5 size-5 shrink-0 text-[#2b31d8]" />
                 <div><p className="text-sm font-extrabold">Know what is still missing</p>
-                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">Distinguish results availability and unresolved questions from proven findings.</p>
+                  <p className="mt-1 text-xs leading-6 text-[var(--muted)]">Link published papers back to the actual NCT IDs, even when a trial has no posted registry results section.</p>
                 </div>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default async function IntelligencePage({
             <div className="rounded-[14px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
               <FileSearch className="size-5 text-[#2b31d8]" />
               <h3 className="mt-4 text-base font-extrabold">Open questions stay visible</h3>
-              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">No posted registry results, a different study outcome or a combination label remains a review question, not a verdict.</p>
+              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">Registry-posted results and source-linked papers are checked separately. A missing field is a follow-up question, not a verdict.</p>
             </div>
             <div className="rounded-[14px] border border-[#111214]/15 bg-[#f7f7f4] p-5">
               <LockKeyhole className="size-5 text-[#2b31d8]" />

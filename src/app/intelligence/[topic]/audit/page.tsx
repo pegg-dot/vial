@@ -9,6 +9,7 @@ import {
   getCagrilintideAuditInsights,
   type CagrilintideAuditRow,
   type CagrilintideStudy,
+  type AuditInsight,
 } from "@/server/intelligence/cagrilintide-study-audit";
 import { ResearchAuditExport } from "@/components/intelligence/research-audit-export";
 
@@ -27,6 +28,24 @@ function resultLabel(value: CagrilintideStudy["registryResults"]) {
   return value === "present" ? "Registry results section present"
     : value === "not-shown" ? "No registry results section returned"
       : "Results-section state unverified";
+}
+
+function InsightCard({ insight }: { insight: AuditInsight }) {
+  return (
+    <article className="rounded-[16px] border border-[#111214]/20 bg-white p-5 sm:p-6">
+      <h3 className="text-base font-extrabold">{insight.heading}</h3>
+      <p className="mt-3 text-sm leading-7 text-[#111214]">{insight.observation}</p>
+      <p className="mt-3 text-xs leading-6 text-[var(--muted)]">Why this needs care: {insight.interpretationLimit}</p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        {insight.sources.map(source => (
+          <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] underline">
+            {source.title} <ArrowUpRight className="size-3" />
+          </a>
+        ))}
+      </div>
+    </article>
+  );
 }
 
 function StudyCard({ row }: { row: CagrilintideAuditRow }) {
@@ -59,6 +78,60 @@ function StudyCard({ row }: { row: CagrilintideAuditRow }) {
             <div><p className="text-xs font-bold text-[var(--muted)]">Registry results</p><p className="mt-1 text-sm font-extrabold">{resultLabel(row.study.registryResults)}</p></div>
             <div><p className="text-xs font-bold text-[var(--muted)]">First recorded primary outcome</p><p className="mt-1 text-xs font-semibold leading-6">{row.study.primaryOutcomes[0]?.measure ?? "Not available"}</p></div>
           </div>
+          <section aria-label={"Publication source links for " + row.study.nctId} className="mt-5 rounded-[16px] border border-[#2b31d8]/25 bg-[#f7f7ff] p-4 sm:p-5">
+            <div className="flex items-center gap-2">
+              <BookOpenCheck className="size-5 shrink-0 text-[#2b31d8]" />
+              <h4 className="text-sm font-extrabold">Publication evidence linked to this study</h4>
+            </div>
+            <p className="mt-2 text-xs leading-6 text-[#111214]/70">
+              These are PubMed IDs explicitly cited in the ClinicalTrials.gov protocol.
+              The registry assigns the reference label; PubMed independently checks whether it indexes the exact NCT ID.
+              Neither source by itself establishes clinical findings.
+            </p>
+            {row.study.registryReferences.length ? (
+              <div className="mt-4 space-y-3">
+                {row.study.registryReferences.map(reference => {
+                  const check = row.study.pubmedChecks.find(item => item.reference.pmid === reference.pmid);
+                  return (
+                    <div key={reference.pmid} className="rounded-xl border border-[#111214]/10 bg-white p-4">
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                        <span className="rounded-full bg-[#eeecff] px-2.5 py-1 text-[#2b31d8]">Registry label: {reference.role}</span>
+                        <span className="font-mono text-[var(--muted)]">PMID {reference.pmid}</span>
+                      </div>
+                      <p className="mt-3 text-sm font-extrabold leading-6">{check?.article?.title ?? reference.citation ?? "Publication metadata not available"}</p>
+                      {check?.article && (
+                        <p className="mt-1 text-xs leading-6 text-[var(--muted)]">
+                          {check.article.journal ?? "Journal not reported"} · {check.article.publicationDate ?? "Date not reported"}
+                        </p>
+                      )}
+                      <p className="mt-2 text-xs leading-6 text-[var(--muted)]">
+                        {check?.secondaryIdMatch === "confirmed"
+                          ? "PubMed also indexes this article under the exact study ID."
+                          : check?.secondaryIdMatch === "not-corroborated"
+                            ? "The exact NCT-to-PMID link was not corroborated by PubMed indexing; review the sources."
+                            : "Independent PubMed linkage could not be checked; this is still a registry-supplied citation."}
+                      </p>
+                      {reference.role === "BACKGROUND" && (
+                        <p className="mt-2 text-xs leading-6 text-[#775119]">
+                          The registry calls this BACKGROUND, even if PubMed indexes the study ID. Read the article before classifying the findings.
+                        </p>
+                      )}
+                      <a href={"https://pubmed.ncbi.nlm.nih.gov/" + reference.pmid + "/"} target="_blank" rel="noopener noreferrer"
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-extrabold text-[#2b31d8] underline">
+                        Read PubMed record <ArrowUpRight className="size-3.5" />
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
+                No PMID is listed in the protocol reference fields of this retrieved record.
+                This is not evidence that no publications exist elsewhere.
+              </p>
+            )}
+          </section>
+
           <details className="group mt-5 overflow-hidden rounded-xl border border-[#111214]/20">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-extrabold hover:bg-[#f7f7f4] [&::-webkit-details-marker]:hidden">
               Inspect study interventions, dates and registered outcomes
@@ -97,6 +170,28 @@ function StudyCard({ row }: { row: CagrilintideAuditRow }) {
                 <p className="mt-3 text-xs">Additional primary outcomes exist; open the original registry to review all.</p>
               )}
             </section>
+            <section className="rounded-xl bg-[#f7f7f4] p-5 lg:col-span-2">
+              <h4 className="text-sm font-extrabold">Registered participants and study arms</h4>
+              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">
+                These are copied from the registry metadata to help check study context.
+                They are not an independently verified description of each person enrolled.
+              </p>
+              <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div><dt className="text-xs font-bold text-[var(--muted)]">Conditions</dt><dd className="mt-1 text-sm">{row.study.population.conditions.join(", ") || "Not reported"}</dd></div>
+                <div><dt className="text-xs font-bold text-[var(--muted)]">Age eligibility</dt><dd className="mt-1 text-sm">{row.study.population.minimumAge ?? "Not reported"} to {row.study.population.maximumAge ?? "no stated maximum"}</dd></div>
+                <div><dt className="text-xs font-bold text-[var(--muted)]">Registered sex eligibility</dt><dd className="mt-1 text-sm">{row.study.population.sex ?? "Not reported"}</dd></div>
+                <div><dt className="text-xs font-bold text-[var(--muted)]">Healthy volunteers</dt><dd className="mt-1 text-sm">{row.study.population.healthyVolunteers === true ? "Accepted by registry eligibility" : row.study.population.healthyVolunteers === false ? "Not accepted by registry eligibility" : "Not specified"}</dd></div>
+              </dl>
+              {row.study.population.armLabels.length > 0 && (
+                <div className="mt-5 border-t border-[#111214]/10 pt-4">
+                  <p className="text-xs font-bold text-[var(--muted)]">Original study arm labels (limited sample)</p>
+                  <ul className="mt-2 list-inside list-disc space-y-1 text-xs leading-6 text-[var(--muted)]">
+                    {row.study.population.armLabels.map((label, i) => <li key={i}>{label}</li>)}
+                  </ul>
+                  <p className="mt-2 text-xs text-[var(--muted)]">Trial design information, not administration instructions.</p>
+                </div>
+              )}
+            </section>
           </div>
             </div>
           </details>
@@ -112,6 +207,12 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
   const audit = await getCagrilintideAudit();
   const counts = getAuditCounts(audit);
   const insights = getCagrilintideAuditInsights(audit);
+  const topFindings = insights.filter(item => [
+    "A results publication exists outside the registry results section",
+    "A registry BACKGROUND citation is linked to the same study in PubMed",
+  ].includes(item.heading));
+  const highlighted = topFindings.length ? topFindings : insights.slice(0, 2);
+  const remainingInsights = insights.filter(item => !highlighted.includes(item));
 
   return (
     <div className="pb-20">
@@ -123,7 +224,8 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
           <p className="mt-6 max-w-3xl text-base leading-8 text-[#111214]/75">
             Instead of more search results, inspect a deliberately selected group of studies:
             which names appear in intervention fields, what each study planned to measure,
-            whether registry results are present, and which questions remain unanswered.
+            whether registry results are present, which cited papers PubMed can independently associate
+            with the same trial, and which questions remain unanswered.
           </p>
           <div className="mt-7"><ResearchAuditExport markdown={cagrilintideAuditMarkdown(audit)} /></div>
           <p className="mt-5 max-w-3xl text-xs leading-6 text-[var(--muted)]">
@@ -142,12 +244,16 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
           <div className="rounded-[16px] border border-[#111214]/20 bg-white p-5">
             <p className="text-xs font-bold text-[var(--muted)]">Direct-name examples with registry results</p>
             <p className="mt-2 text-3xl font-extrabold">{counts.directWithResultsSection}</p>
-            <p className="mt-1 text-xs text-[var(--muted)]">Presence of a results section, not proof of benefit</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">Separate from linked publications and not proof of benefit</p>
           </div>
           <div className="rounded-[16px] border border-[#111214]/20 bg-white p-5">
-            <p className="text-xs font-bold text-[var(--muted)]">Direct-name examples without a registry results section</p>
-            <p className="mt-2 text-3xl font-extrabold">{counts.directWithoutResultsSection}</p>
-            <p className="mt-1 text-xs text-[var(--muted)]">Results could be available from other sources</p>
+            <p className="text-xs font-bold text-[var(--muted)]">No registry results, but an independently linked RESULT paper</p>
+            <p className="mt-2 text-3xl font-extrabold">{counts.withoutRegistryResultsButWithResultPaper === 0 && counts.missingRegistryResultsWithUnverifiedPaper > 0 ? "Unknown" : counts.withoutRegistryResultsButWithResultPaper}</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {counts.missingRegistryResultsWithUnverifiedPaper > 0
+                ? "Some PubMed source checks were unavailable; unknown does not mean no paper exists"
+                : "An independently linked source is not a clinical or legal conclusion"}
+            </p>
           </div>
         </div>
 
@@ -160,26 +266,33 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
 
         <section aria-label="Source-audited review prompts" className="mt-12">
           <h2 className="text-2xl font-extrabold tracking-[-.04em]">What the records flag for follow-up</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--muted)]">Each observation is traced to original records. These are factual source checks, not automated clinical judgments.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--muted)]">
+            Start with the source relationships that could change an analyst's answer.
+            Registered design differences and other verification questions remain below.
+            These are factual checks, not automated clinical judgments.
+          </p>
           {insights.length ? (
-            <div className="mt-5 grid gap-3 lg:grid-cols-2">
-              {insights.map(insight => (
-                <article key={insight.heading} className="rounded-[16px] border border-[#111214]/20 bg-white p-5 sm:p-6">
-                  <h3 className="text-base font-extrabold">{insight.heading}</h3>
-                  <p className="mt-3 text-sm leading-7 text-[#111214]">{insight.observation}</p>
-                  <p className="mt-3 text-xs leading-6 text-[var(--muted)]">Why this needs care: {insight.interpretationLimit}</p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {insight.sources.map(source => (
-                      <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] underline">
-                        {source.title} <ArrowUpRight className="size-3" />
-                      </a>
-                    ))}
+            <>
+              <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                {highlighted.map(item => <InsightCard key={item.heading} insight={item} />)}
+              </div>
+              {remainingInsights.length > 0 && (
+                <details className="group mt-5 overflow-hidden rounded-[16px] border border-[#111214]/20 bg-white">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-extrabold hover:bg-[#f7f7f4] [&::-webkit-details-marker]:hidden">
+                    {"Show " + remainingInsights.length + " additional study-design checks"}
+                    <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="grid gap-3 border-t border-[#111214]/10 bg-[#f7f7f4] p-4 lg:grid-cols-2">
+                    {remainingInsights.map(item => <InsightCard key={item.heading} insight={item} />)}
                   </div>
-                </article>
-              ))}
-            </div>
-          ) : <p className="mt-5 rounded-xl border border-[#111214]/15 bg-white p-5 text-sm">The current selection does not support a source-audited finding. Check unavailable records and original sources directly.</p>}
+                </details>
+              )}
+            </>
+          ) : (
+            <p className="mt-5 rounded-xl border border-[#111214]/15 bg-white p-5 text-sm">
+              The current selection does not support a source-audited finding. Check unavailable records and original sources directly.
+            </p>
+          )}
         </section>
 
         <div className="mt-12 flex items-start gap-3">
@@ -188,6 +301,7 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
             <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--muted)]">
               A useful starting point for an analyst, not a head-to-head efficacy comparison.
               Study populations, doses, endpoints and designs can differ substantially.
+              Registry results and published papers are checked separately to avoid hiding existing citations.
             </p>
           </div>
         </div>
@@ -199,7 +313,7 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
                 <li>Are other relevant cagrilintide studies missing from this deliberately selected sample?</li>
                 <li>What primary-source evidence establishes the relationship between CagriSema and its component molecules?</li>
                 <li>Are study populations and outcome definitions comparable enough to support any cross-study conclusion?</li>
-                <li>Do publications contain evidence not visible in the official registry results sections?</li>
+                <li>For records with linked RESULT or BACKGROUND citations, do the actual full articles support the particular research question, and are any other relevant papers missing?</li>
                 <li>What changed since a prior date? No two verified historical versions have been captured for this feature.</li>
               </ol>
             </div>
@@ -210,7 +324,8 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
           <p className="text-xs leading-6 text-[var(--muted)]">
             <strong className="text-[#111214]">What this prototype proves and what it does not.</strong>{" "}
             It turns official structured records into a task-based audit with inspectable sources.
-            It does not reconcile trial results against papers, infer efficacy or establish regulatory status.
+            It now cross-checks explicit registry references against PubMed IDs and independently indexed trial associations.
+            This does not compare numerical outcomes, validate full article claims, infer efficacy or establish regulatory status.
             A repeatable change report requires dated source snapshots. No personalized research profile is created.
           </p>
         </section>

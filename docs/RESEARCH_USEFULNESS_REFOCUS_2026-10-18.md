@@ -85,6 +85,10 @@ results-posting compliance, a systematic literature review or a longitudinal cha
 report. It purposely does not auto-merge named combination products into standalone
 molecules or infer treatment effects from study registration.
 
+## Cross-source link discovery, local milestone
+
+The first evidence-gap reconciliation found that NCT05804162 has no registry results section in its checked record, but links a RESULT paper indexed in PubMed under the same exact NCT (PMID 39279639). NCT04982575 labels its cited PMID 37364590 as BACKGROUND; PubMed also indexes that paper under NCT04982575. Those two facts can co-exist and must remain separately labeled until a human checks the article. The implementation reads only official NCT/PMID relationships, makes one batched NIH bibliographic lookup, and does not synthesize clinical findings. Details: docs/RESEARCH_PUBLICATION_RECONCILIATION_2026-10-18.md.
+
 ## Next real value test
 
 Give 5+ professionals a recent real research question, not "Do you like our app?"
