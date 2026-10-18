@@ -40,6 +40,11 @@ jobs:
       - run: npm run verify:live:selftest
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      # Verify that public research mode has its own protected UI/API boundary.
+      - name: Test public research-only release
+        run: npx playwright test tests/e2e/research-release.spec.ts
+        env:
+          VIALGRADE_PUBLIC_EVIDENCE_ONLY: "true"
 
   postgres-contract:
     runs-on: ubuntu-latest
@@ -75,6 +80,10 @@ jobs:
       - name: Build against PostgreSQL contract
         run: npm run build
         env:
+          # Mirror the real production rollout, not just an unconfigured preview.
+          # The Next build runs the entire unit suite with this flag enabled;
+          # this catches mode-dependent sitemap/authorization regressions.
+          VIALGRADE_PUBLIC_EVIDENCE_ONLY: "true"
           DATABASE_URL: postgres://vialgrade:vialgrade_ci@127.0.0.1:5432/vialgrade
           NEXT_PUBLIC_SITE_URL: https://vialgrade.example
           VIALGRADE_SESSION_SECRET: ci-session-secret-at-least-32-characters

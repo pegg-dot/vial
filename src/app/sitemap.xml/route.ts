@@ -1,4 +1,6 @@
 import { siteUrl } from "@/lib/site";
+import { PUBLIC_RESEARCH_TOPICS } from "@/server/intelligence/public-trials";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { STACKS, resolveStack } from "@/lib/stacks";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { listSitemapPassportSlugs } from "@/server/evidence-network/repository";
@@ -47,6 +49,12 @@ function urlEntry(path: string, changefreq: string, priority: number, lastmod: s
 }
 
 export async function GET() {
+  if (evidenceOnlyPublicRelease()) {
+    const date = new Date().toISOString().slice(0, 10);
+    const paths = ["/intelligence", ...PUBLIC_RESEARCH_TOPICS.map((topic) => "/intelligence/" + topic.key), "/legal/privacy", "/legal/terms", "/legal/disclaimer", "/legal/us-regulations", "/legal/contact"];
+    const entries = paths.map((path) => urlEntry(path, "monthly", path === "/intelligence" ? 0.9 : 0.2, date));
+    return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, s-maxage=1800" } });
+  }
   const catalog = await getCatalogSnapshot().catch((error) => {
     reportError({ kind: "sitemap-degraded", message: "The sitemap could not read the catalog and is serving static routes only. It will NOT be cached in this state.", context: { error: String(error) } });
     return null;

@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/site";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 
-export const dynamic = "force-static";
+// The public research-only release can be enabled at runtime. Robots rules
+// must follow that gate rather than serving a legacy build-time cached policy.
+export const dynamic = "force-dynamic";
 
 // Crawlers that produce CITATIONS in AI answers, named explicitly so they match this group instead
 // of inheriting the wildcard group below.
@@ -35,6 +38,10 @@ const FREELOADERS = [
 ];
 
 export default function robots(): MetadataRoute.Robots {
+  if (evidenceOnlyPublicRelease()) return {
+    rules: [{ userAgent: "*", allow: ["/intelligence", "/legal/"], disallow: ["/api/", "/vendors", "/products", "/compounds", "/market", "/stacks", "/passports", "/account", "/admin"] }],
+    sitemap: `${siteUrl}/sitemap.xml`,
+  };
   return {
     rules: [
       // Named first and WITHOUT a crawl delay. /api/ stays open to these because it holds the

@@ -10,7 +10,7 @@ import { GoalTags } from "./goal-tags";
 // inside the dropdowns, labeled as the science, and every dropdown starts CLOSED so the panel
 // reads as one card, not a wall. No dosing, medical, or human-use guidance (research only).
 export function CompoundKnowledge({
-  name, education, depth, stacked = [], showStacks = true,
+  name, education, depth, stacked = [], showStacks = false,
 }: {
   name: string;
   education: CompoundEducation;
@@ -73,7 +73,7 @@ export function CompoundKnowledge({
         {depth?.researchStatus ? (
           <QA q="How far has the research gone?">
             <p>{depth.researchStatus}</p>
-            <p className="mt-2 text-xs text-black/45">Where the science stands — an approved <em>drug</em> is not the same as the research-grade material a vendor sells, which is unregulated regardless.</p>
+            <p className="mt-2 text-xs text-black/45">An FDA-approved finished drug is not interchangeable with an independently marketed research listing, and regulatory status must be evaluated product by product.</p>
           </QA>
         ) : null}
 
@@ -90,13 +90,13 @@ export function CompoundKnowledge({
           </QA>
         ) : null}
 
-        <QA q="What should I check before buying?">
+        <QA q="How should a laboratory report be interpreted?">
           <ul className="space-y-2.5">
-            <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Independent purity.</span> Look for a third-party COA (Janoshik or MZ) showing a <em>measured</em> purity — not just a number the vendor typed.</span></li>
-            <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Batch match.</span> The strongest evidence is a certificate for the exact batch you&rsquo;ll receive, attributed to this vendor — check the cross-verification on the listing.</span></li>
-            <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Vendor reputation.</span> See how the vendor is talked about in the community before trusting a new name.</span></li>
+            <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Scope.</span> A report describes a tested sample and specified methods; it does not verify all inventory or a future shipment.</span></li>
+            <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Provenance.</span> Lab identity, sample identifier, source document and custody records can support or weaken a match.</span></li>
+            <li className="flex gap-2.5"><Dot /><span><span className="font-semibold text-black/80">Missing evidence.</span> Purity findings are not proof of sterility, clinical effectiveness, FDA approval, or legality.</span></li>
           </ul>
-          <p className="mt-3 text-xs text-black/45">Research context only — VialGrade never gives dosing, medical, or human-use guidance.</p>
+          <p className="mt-3 text-xs text-black/45">Documentary research only. VialGrade provides no advice about purchasing, combining, dosing or using compounds.</p>
         </QA>
       </div>
     </div>

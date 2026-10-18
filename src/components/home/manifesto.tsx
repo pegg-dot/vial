@@ -8,10 +8,10 @@ const MOST = [
   "Pages that vanish when they get caught",
 ];
 const VialGrade = [
-  "The third-party COA, linked to the batch",
-  "Purity read off the actual certificate",
-  "Reputation pulled from public records",
-  "Enforcement history that never disappears",
+  "Third-party reports with the available batch references",
+  "Reported purity tied to a tested sample",
+  "Public feedback separated from verified documents",
+  "Dated regulatory actions with primary sources",
 ];
 
 export function HomeManifesto() {
@@ -27,7 +27,7 @@ export function HomeManifesto() {
             The whole market runs on <span className="text-[#2b31d8]">&ldquo;trust me.&rdquo;</span>
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg font-medium leading-8 text-[var(--muted)]">
-            Grey-market peptides are sold on a stranger&rsquo;s word and a purity number you can&rsquo;t check. VialGrade replaces the word with the receipt.
+            Grey-market peptides are sold on a stranger&rsquo;s word and a purity number you can&rsquo;t check. VialGrade documents what the available evidence does and does not establish.
           </p>
         </div>
 

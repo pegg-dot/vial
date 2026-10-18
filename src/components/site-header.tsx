@@ -8,7 +8,7 @@ import { useMarketplace } from "./marketplace-state";
 import { Wordmark } from "./wordmark";
 
 const nav = [
-  { href: "/verify", label: "Verify" },
+  { href: "/intelligence", label: "Intelligence" },
   { href: "/market", label: "Market" },
   { href: "/compounds", label: "Compounds" },
   { href: "/vendors", label: "Vendors" },
@@ -54,13 +54,13 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
             className="ink-1 group hidden h-10 min-w-[210px] items-center gap-2.5 rounded-full bg-white/80 px-3.5 text-left text-sm font-medium text-[var(--muted)] transition hover:-translate-y-0.5 hover:bg-white lg:flex"
           >
             <Search className="size-4" aria-hidden="true" />
-            <span className="flex-1">Search the market</span>
+            <span className="flex-1">Search research records</span>
             <kbd className="ink-1 rounded-md bg-black/[.035] px-1.5 py-0.5 text-[10px] font-bold">⌘K</kbd>
           </button>
           <button
             onClick={openSearch}
             className="ink-1 grid size-10 place-items-center rounded-full bg-white/80 text-black transition hover:bg-white lg:hidden"
-            aria-label="Search the market"
+            aria-label="Search research records"
           >
             <Search className="size-4" />
           </button>
@@ -78,11 +78,11 @@ export function SiteHeader({ authenticated = false }: { authenticated?: boolean 
               sign-in prompt hands off to. Below `sm` it collapses to the icon to keep the bar. */}
           <Link
             href={authenticated ? "/account" : "/login"}
-            aria-label={authenticated ? "Account" : "Sign in"}
+            aria-label={authenticated ? "Account" : "Existing account sign in"}
             className="ink hard-sm press grid size-10 place-items-center rounded-full bg-[#111214] text-sm font-bold text-white sm:block sm:size-auto sm:px-5 sm:py-2.5"
           >
             <UserRound className="size-4 sm:hidden" />
-            <span className="hidden sm:inline">{authenticated ? "Account" : "Sign in"}</span>
+            <span className="hidden sm:inline">{authenticated ? "Account" : "Existing account"}</span>
           </Link>
           <button
             onClick={() => setMobileOpen((value) => !value)}

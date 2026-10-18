@@ -9,7 +9,7 @@ import { reportError } from "@/server/observability/alerts";
 export const metadata: Metadata = {
   alternates: { canonical: "/signals" },
   title: "Market signals",
-  description: "What is moving in the peptide market right now: price swings, thin stock, and listings that lost their lab reports.",
+  description: "Dated changes in laboratory records, vendor documentation and third-party market observations.",
 };
 export const dynamic = "force-dynamic";
 

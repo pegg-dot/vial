@@ -25,8 +25,8 @@ test("home page and command search expose the market", async ({ page }) => {
   });
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /in the vial/i })).toBeVisible();
-  await page.getByRole("button", { name: /Search the market/i }).click();
+  await expect(page.getByRole("heading", { name: /records actually show/i })).toBeVisible();
+  await page.getByRole("button", { name: /Search research records/i }).click();
   await expect(page.getByRole("dialog", { name: "Search VialGrade" })).toBeVisible();
   await page.getByLabel("Search query").fill("MOTS-c");
   await expect(page.getByRole("link", { name: /MOTS-c/i }).first()).toBeVisible();
@@ -47,13 +47,12 @@ test("market filters update the listing grid", async ({ page }) => {
   await expect(page.getByRole("link", { name: /MOTS-c 10 mg/i }).first()).toBeVisible();
 });
 
-test("watchlist persists through navigation", async ({ page }) => {
+test("authenticated watchlist writes are suspended during privacy review", async ({ page }) => {
   await loginCustomer(page);
-  await page.goto("/market");
-  await page.getByRole("button", { name: "Add to watchlist" }).first().click();
-  await page.getByRole("link", { name: "Saved", exact: true }).first().click();
-  await expect(page.getByRole("heading", { name: /Your saved listings/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Remove from watchlist" })).toBeVisible();
+  const result = await page.request.put("/api/v1/watchlist", { data: { slug: "bpc-157", watched: true } });
+  expect(result.status()).toBe(410);
+  await page.goto("/intelligence");
+  await expect(page.getByRole("heading", { name: /Investigate the evidence, not the hype/i })).toBeVisible();
 });
 
 test("compare dock routes to a dimensional comparison", async ({ page }) => {
@@ -77,24 +76,14 @@ test("mobile navigation remains usable", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Trust is a chain of evidence/i })).toBeVisible();
 });
 
-test("consumer intelligence preserves decisions across the authenticated experience", async ({ page }) => {
+test("personalized account surfaces are read-only until privacy review", async ({ page }) => {
   await loginCustomer(page);
   await page.goto("/for-you");
-  await expect(page.getByRole("heading", { name: /Welcome back, Nora/i })).toBeVisible();
-  await expect(page.getByText(/Picked for you, with reasons/i)).toBeVisible();
-
-  await page.goto("/saved-searches");
-  await expect(page.getByRole("heading", { name: /Your saved searches/i })).toBeVisible();
-  await expect(page.getByText("BPC-157 with current evidence")).toBeVisible();
-
-  await page.goto("/compare");
-  await expect(page.getByText("Northstar Research")).toBeVisible();
-  await page.getByPlaceholder("Name this comparison").fill("E2E comparison");
-  await page.getByRole("button", { name: "Save snapshot" }).click();
-  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
-
-  await page.goto("/account/history");
-  await expect(page.getByRole("heading", { name: "Recently viewed" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Personalized research is paused/i })).toBeVisible();
+  const response = await page.request.post("/api/v1/saved-searches", { data: { name: "Research alerts", query: "BPC-157" } });
+  expect(response.status()).toBe(410);
+  await page.goto("/register");
+  await expect(page.getByRole("heading", { name: /New account registration is paused/i })).toBeVisible();
 });
 
 test("mobile authenticated navigation exposes the retention loop", async ({ page }) => {
@@ -102,5 +91,5 @@ test("mobile authenticated navigation exposes the retention loop", async ({ page
   await loginCustomer(page);
   await expect(page.getByRole("navigation", { name: "Mobile account navigation" })).toBeVisible();
   await page.getByRole("link", { name: "For you", exact: true }).last().click();
-  await expect(page.getByRole("heading", { name: /Welcome back, Nora/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Personalized research is paused/i })).toBeVisible();
 });

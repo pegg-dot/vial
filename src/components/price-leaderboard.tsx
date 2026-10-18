@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { ArrowUpRight, Crown, ExternalLink, TriangleAlert } from "lucide-react";
+import { ArrowUpRight, ExternalLink, TriangleAlert } from "lucide-react";
 import type { Product } from "@/lib/types";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { formatCurrency, formatMgTotal, formatPricePerMg } from "@/lib/format";
 import { independentPurityByVendor, isSuspicious, splitByRankability } from "@/lib/market-picks";
 import { ExpandableRows } from "./expandable-rows";
 
-// The single most useful surface for a non-expert buyer: every vendor selling this
-// compound, ranked by real cost-per-milligram, with the independently-tested purity
-// beside it where we have one. Cheapest-and-tested rises to the top on its own.
+// Historical price table for documented third-party listings of this
+// compound, sorted by reported cost-per-milligram, with sample-specific purity
+// noted where a documentary record is available. No purchase recommendation is made.
 // Long markets are bounded: the top rows always show, the rest sit behind one expander —
 // a 49-row wall is what made the old page feel endless.
 const PREVIEW_ROWS = 10;
@@ -50,31 +50,19 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
   // can never disagree with the picks or the product buy box for the same listing.
   const purityByVendor = independentPurityByVendor(labTests);
 
-  // Crown the cheapest listing that ISN'T suspiciously cheap — the best legit deal.
-  //
-  // Nullable on purpose. The guard above now admits a compound whose listings are ALL unrankable
-  // (every vendor sells it as "1 vial"), and `ranked[0]` is undefined there — reading `.slug` off
-  // it would throw while rendering the page. There is simply no cheapest-per-mg to crown.
-  const cheapest = ranked.find((p) => !isSuspicious(p)) ?? ranked[0] ?? null;
-
-  // Best TRUE value: lowest canonical real cost per active mg among the listings that carry one.
-  const withReal = ranked.filter((p) => p.trust?.adjustedPricePerMg != null);
-  const bestValue = withReal.length ? withReal.reduce((a, b) => (a.trust!.adjustedPricePerMg! <= b.trust!.adjustedPricePerMg! ? a : b)) : null;
-
   const renderRow = (p: Product, i: number) => {
     const purity = purityByVendor.get(p.vendorSlug);
-    const isCheapest = cheapest != null && p.slug === cheapest.slug;
     const suspicious = isSuspicious(p);
     const canRank = rankable(p);
     const avail = AVAIL[p.availability];
     return (
-      <tr key={p.slug} className={suspicious ? "bg-[#fff4e0]" : isCheapest ? "bg-[#e6fbf4]" : undefined}>
+      <tr key={p.slug} className={suspicious ? "bg-[#fff4e0]" : undefined}>
         {/* Only a ranked row carries a position. Numbering the unrankable ones 31…40 would claim
             they sit at the expensive end of a ranking they were never in. */}
         <td className="px-4 py-2.5 font-extrabold tabular-nums text-[var(--muted)]">{canRank ? i + 1 : <span className="text-[#111214]/25">&mdash;</span>}</td>
         <td className="px-4 py-2.5">
           <Link href={`/products/${p.slug}`} className="inline-flex items-center gap-1.5 font-bold hover:underline">
-            {suspicious ? <TriangleAlert className="size-3.5 text-[#b26a00]" /> : isCheapest ? <Crown className="size-3.5 text-[#0e8f80]" /> : null}{p.vendorSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+            {suspicious ? <TriangleAlert className="size-3.5 text-[#b26a00]" /> : null}{p.vendorSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
           </Link>
           {/* A price with no way to buy it is not a comparison. Five of the ten cheapest MOTS-c
               rows were out of stock and said nothing. */}
@@ -95,7 +83,7 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
         <td className="px-4 py-2.5 font-extrabold tabular-nums">{formatCurrency(p.price)}</td>
         <td className="px-4 py-2.5">
           {canRank
-            ? <span className={`ink-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums ${suspicious ? "bg-[#fff4e0] text-[#b26a00]" : isCheapest ? "bg-[#e6fbf4] text-[#0e8f80]" : "bg-[#f2f2ef] text-[#111214]/70"}`}>{formatPricePerMg(p.pricePerMg!)}{suspicious && <span className="font-bold"> · too cheap?</span>}</span>
+            ? <span className={`ink-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums ${suspicious ? "bg-[#fff4e0] text-[#b26a00]" : "bg-[#f2f2ef] text-[#111214]/70"}`}>{formatPricePerMg(p.pricePerMg!)}{suspicious && <span className="font-bold"> · too cheap?</span>}</span>
             : <span className="text-xs font-medium text-[var(--muted)]" title="The vendor lists this without a strength we can read, so there is no milligram figure to divide the price by.">no size published</span>}
         </td>
         <td className="px-4 py-2.5">
@@ -105,7 +93,7 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
         </td>
         <td className="px-4 py-2.5">
           {p.trust?.adjustedPricePerMg != null
-            ? <span className={`font-extrabold tabular-nums ${p.slug === bestValue?.slug ? "text-[#0e8f80]" : ""}`}>{formatPricePerMg(p.trust.adjustedPricePerMg)}{p.slug === bestValue?.slug && <span className="ink-1 ml-1 rounded-full bg-[#e6fbf4] px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#0e8f80]">best value</span>}</span>
+            ? <span className="font-extrabold tabular-nums">{formatPricePerMg(p.trust.adjustedPricePerMg)}</span>
             : <span className="text-xs font-medium text-[var(--muted)]">—</span>}
         </td>
         <td className="px-4 py-2.5"><Link href={`/products/${p.slug}`} className="inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">View <ExternalLink className="size-3" /></Link></td>
@@ -131,10 +119,10 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
   return (
     <section className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8">
       <div className="mb-4">
-        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">Compare by real cost</p>
-        <h2 className="mt-1.5 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">{ranked.length ? `Every ${compoundName} listing, cheapest per mg first` : `Every ${compoundName} listing we track`}</h2>
+        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">Historical price observations</p>
+        <h2 className="mt-1.5 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">{ranked.length ? `Observed ${compoundName} listings, sorted by reported price/mg` : `Every ${compoundName} listing we track`}</h2>
         <p className="mt-1.5 max-w-2xl text-[13px] font-medium leading-5 text-[var(--muted)]">
-          Sticker prices hide the size, so listings are ranked by what a milligram actually costs — with independently tested purity where it exists.
+          Listed prices are divided by reported quantities. Laboratory results, when available, describe submitted samples rather than authenticated inventory.
           {unranked.length > 0 && (ranked.length === 0
             ? <> All {all.length} are here, none of them ranked: no vendor published a strength we can read, so there is no per-mg figure to sort on.</>
             : <> All {all.length} are here: the last {unranked.length} {unranked.length === 1 ? "is a listing" : "are listings"} whose vendor never published a strength we can read, so {unranked.length === 1 ? "it has" : "they have"} no per-mg figure to sort on.</>)}
@@ -149,8 +137,8 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
               <th className="px-4 py-2.5 font-bold">Size</th>
               <th className="px-4 py-2.5 font-bold">Price</th>
               <th className="px-4 py-2.5 font-bold">Per mg</th>
-              <th className="px-4 py-2.5 font-bold">Tested purity</th>
-              <th className="px-4 py-2.5 font-bold">Real $/active mg</th>
+              <th className="px-4 py-2.5 font-bold">Reported test purity</th>
+              <th className="px-4 py-2.5 font-bold">COA-adjusted estimate</th>
               <th className="px-4 py-2.5 font-bold"></th>
             </tr>
           </thead>
@@ -173,7 +161,7 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
           </Link>
         </p>
       )}
-      <p className="mt-3 text-xs font-medium text-[var(--muted)]"><span className="font-bold text-[#0e8f80]">Real $/active mg</span> divides the price-per-mg by the measured purity — the honest cost of the actual peptide, so a 90%-pure vial isn&rsquo;t compared as if it were 99%. <span className="font-bold text-[#b26a00]">Too cheap?</span> flags a listing far below the market rate — often underdosing or a fake, not a deal. The crown marks the cheapest non-outlier; <span className="font-bold text-[#0e8f80]">best value</span> marks the lowest real cost per active mg. A vendor shown as <span className="font-bold text-[#d3372c]">Unavailable</span> or <span className="font-bold text-[#b26a00]">Low stock</span> is priced here but not currently buyable.</p>
+      <p className="mt-3 text-xs font-medium leading-5 text-[var(--muted)]">All prices are dated third-party observations, not offers or purchasing recommendations. A COA-adjusted estimate applies a reported purity measurement from one sample to a calculation; it does not prove what any future shipment contains. Price outliers do not establish fraud, adulteration, safety or lawful sale.</p>
     </section>
   );
 }

@@ -38,7 +38,7 @@ const SENTIMENT: Record<string, { word: string; spoken: string; cls: string }> =
   positive: { word: "Positive", spoken: "positive buyer reports", cls: "text-[#0e8f80]" },
   mixed: { word: "Mixed", spoken: "mixed buyer reports", cls: "text-[#b26a00]" },
   negative: { word: "Negative", spoken: "negative buyer reports", cls: "text-[#d3372c]" },
-  scam: { word: "Scam", spoken: "scam reports on file", cls: "text-[#d3372c]" },
+  scam: { word: "Adverse reports", spoken: "unverified allegations in reports", cls: "text-[#d3372c]" },
 };
 
 // The most specific known reason a vendor is flagged, from the composed verdict — so the directory
@@ -46,13 +46,13 @@ const SENTIMENT: Record<string, { word: string; spoken: string; cls: string }> =
 function redFlagLabel(entry: VendorDirectoryEntry): string | null {
   if (entry.verdict !== "avoid" && entry.verdict !== "caution") return null;
   return entry.enforcement === "severe" ? "Enforcement action"
-    : entry.defunct ? "Appears defunct"
-    : entry.reviewSentiment === "scam" ? "Scam reports"
-    : entry.reviewSentiment === "negative" ? "Negative reviews"
+    : entry.defunct ? "Storefront unavailable during checks"
+    : entry.reviewSentiment === "scam" ? "Unverified adverse reports"
+    : entry.reviewSentiment === "negative" ? "Negative reports on file"
     : entry.integrityFlagged ? "COA integrity flag"
     : entry.enforcement === "caution" ? "Regulatory record"
     : entry.reviewSentiment === "mixed" ? "Mixed reviews"
-    : entry.verdict === "avoid" ? "Flagged — see verify" : "Proceed with caution";
+    : entry.verdict === "avoid" ? "Adverse records — review sources" : "Review evidence";
 }
 
 function RedFlag({ entry }: { entry: VendorDirectoryEntry }) {
@@ -76,7 +76,7 @@ function gradeStandIn(vendor: Vendor): { word: string; note: string } {
   if (!grade) return { word: "Not rated", note: "We have not graded this vendor yet." };
   if (grade.band === "reference") {
     return vendor.kind === "manufacturer"
-      ? { word: "Not a shop", note: grade.rationale || "An upstream manufacturer, not a storefront you can buy from — there is nothing here to rate." }
+      ? { word: "Not a shop", note: grade.rationale || "An upstream manufacturer rather than a listed retailer; a storefront grade does not apply." }
       : { word: "No listings", note: grade.rationale || "A storefront whose catalog we have not captured, so there is nothing here to rate." };
   }
   return { word: "Not rated", note: grade.rationale || "Not enough independent evidence to publish a letter. That is not the same as finding something bad." };

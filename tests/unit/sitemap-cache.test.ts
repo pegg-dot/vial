@@ -13,8 +13,29 @@ const { getCatalogSnapshot } = await import("@/server/catalog/repository");
 const { GET } = await import("@/app/sitemap.xml/route");
 
 describe("sitemap caching", () => {
-  beforeEach(() => vi.clearAllMocks());
-  afterEach(() => vi.restoreAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Explicitly test the historic sitemap independently of the deployment's
+    // research-only feature flag. The production build itself runs unit tests
+    // with VIALGRADE_PUBLIC_EVIDENCE_ONLY=true, so inheriting that flag would
+    // falsely test the research-only sitemap as if it were the legacy one.
+    vi.stubEnv("VIALGRADE_PUBLIC_EVIDENCE_ONLY", "false");
+  });
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
+
+  it("indexes only source-reviewed research dossiers in public quarantine mode", async () => {
+    vi.stubEnv("VIALGRADE_PUBLIC_EVIDENCE_ONLY", "true");
+    const res = await GET();
+    const body = await res.text();
+    for (const topic of ["retatrutide", "cagrilintide", "tirzepatide"]) {
+      expect(body).toContain("/intelligence/" + topic);
+    }
+    expect(body).toContain("/intelligence<");
+    expect(body).not.toContain("/vendors/");
+    expect(body).not.toContain("/products/");
+    expect(getCatalogSnapshot).not.toHaveBeenCalled();
+    expect((body.match(/<url>/g) ?? []).length).toBe(9);
+  });
 
   it("caches a complete sitemap", async () => {
     vi.mocked(getCatalogSnapshot).mockResolvedValue({

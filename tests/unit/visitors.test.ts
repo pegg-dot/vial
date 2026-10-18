@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pageKind, referrerHost } from "@/server/analytics/visitors";
+import { analyticsSafePath, pageKind, referrerHost } from "@/server/analytics/visitors";
 
 describe("page classification", () => {
   it("labels the pages that matter to the funnel", () => {
@@ -31,5 +31,20 @@ describe("referrer handling", () => {
     expect(referrerHost(null)).toBeNull();
     expect(referrerHost("")).toBeNull();
     expect(referrerHost("not a url")).toBeNull();
+  });
+});
+
+describe("analytics data minimization", () => {
+  it("never stores specific research names", () => {
+    expect(analyticsSafePath("/products/vendor-retatrutide-10mg")).toBe("/products/[record]");
+    expect(analyticsSafePath("/compounds/bpc-157")).toBe("/compounds/[record]");
+    expect(analyticsSafePath("/compounds/bpc-157/market")).toBe("/compounds/[record]");
+    expect(analyticsSafePath("/vendors/unknown-company")).toBe("/vendors/[record]");
+  });
+  it("discards account paths, arbitrary strings and queries", () => {
+    expect(analyticsSafePath("/search?q=tirzepatide")).toBe("/search");
+    expect(analyticsSafePath("/account/orders/private-order")).toBe("/account");
+    expect(analyticsSafePath("/verify?code=private")).toBe("/verify");
+    expect(analyticsSafePath("/private/random-token")).toBe("/other");
   });
 });

@@ -25,15 +25,15 @@ export function UsLegalNotice({ slug }: { slug: string }) {
       <div className="flex flex-col gap-x-10 gap-y-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${st.chip}`}><Icon className="size-3.5" /> US legal status</span>
+            <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${st.chip}`}><Icon className="size-3.5" /> US regulatory context</span>
             {s.flags.map((f) => <span key={f} className="ink-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-black/60">{f}</span>)}
           </div>
           <p className="mt-4 max-w-[46ch] text-[16px] font-extrabold leading-6 tracking-[-.02em]">{s.headline}</p>
           <p className="mt-2 max-w-[76ch] text-[13px] font-medium leading-6 text-black/70">{s.detail}</p>
         </div>
-        <Link href="/legal/us-regulations" className="ink-1 hard-sm press shrink-0 self-start rounded-full bg-white px-4 py-2 text-xs font-bold text-[#2b31d8]">Read the full US law →</Link>
+        <Link href="/legal/us-regulations" className="ink-1 hard-sm press shrink-0 self-start rounded-full bg-white px-4 py-2 text-xs font-bold text-[#2b31d8]">Read US regulatory overview →</Link>
       </div>
-      <p className="mt-4 max-w-[96ch] text-[10px] leading-4 text-black/40">General information, not legal or medical advice. VialGrade sells nothing and encourages no human use.</p>
+      <p className="mt-4 max-w-[96ch] text-[10px] leading-4 text-black/40">Regulatory context only. This label does not establish that a vendor, sample, shipment or transaction is lawful.</p>
     </div>
   );
 }

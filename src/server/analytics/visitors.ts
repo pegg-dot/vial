@@ -19,6 +19,25 @@ export function pageKind(path: string): string {
   return "other";
 }
 
+/**
+ * Store only coarse navigation categories in page analytics. Specific drug,
+ * compound, vendor, and account paths can imply sensitive research interests.
+ */
+export function analyticsSafePath(path: string): string {
+  const normalized = path.split(/[?#]/)[0] ?? "/";
+  const segments = normalized.split("/").filter(Boolean);
+  if (segments.length === 0) return "/";
+  const root = segments[0]!;
+  if (["products", "compounds", "vendors", "stacks", "passports", "labs"].includes(root)) {
+    return segments.length > 1 ? "/" + root + "/[record]" : "/" + root;
+  }
+  if (["verify", "search", "account", "orders", "for-you", "watchlist", "saved-searches", "compare", "login", "register", "admin"].includes(root)) {
+    return "/" + root;
+  }
+  const publicSections = new Set(["market", "about", "help", "legal", "how-we-check", "methodology", "research", "news", "enforcement", "reference-standard", "coverage", "grades", "signals", "status", "testing"]);
+  return publicSections.has(root) ? "/" + root : "/other";
+}
+
 /** Bare host of a referrer, or null for direct traffic. Never stores the full URL or any query. */
 export function referrerHost(referrer: string | null | undefined, selfHost?: string): string | null {
   if (!referrer) return null;
@@ -41,7 +60,7 @@ export async function recordPageView(
      VALUES($1,$2,$3,$4,$5,$6,$7)`,
     [
       newId("pv"),
-      input.path.slice(0, 300),
+      analyticsSafePath(input.path),
       pageKind(input.path),
       referrerHost(input.referrer, input.selfHost),
       visitorHash(input.ip ?? null, input.userAgent ?? null),

@@ -28,10 +28,15 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public catalog routes open to anonymous visitors", () => {
-    for (const path of ["/", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
+    for (const path of ["/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }
+  });
+
+  it("does not expose new arbitrary child routes behind research intelligence", () => {
+    expect(accessDecision("/intelligence/admin", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/unknown", null).allowed).toBe(false);
   });
 
   it("keeps well-known + PWA paths open (crawlers, service worker, manifest, offline shell)", () => {

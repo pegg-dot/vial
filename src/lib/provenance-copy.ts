@@ -7,7 +7,7 @@
 export const PURITY_PROVENANCE =
   "Purity is read from the lab's certificate as issued — VialGrade doesn't re-run the assay or sample the vial. " +
   "It reflects one lab's result for one submitted batch, not every vial — and it says nothing about how the peptide was MADE. " +
-  "A high purity number can come from an uncontrolled facility; \"pharmaceutical grade\" is a marketing phrase unless a GMP certificate backs it.";
+  "A reported purity number does not verify manufacturing conditions or authorize use of the term \"pharmaceutical grade\". GMP-related claims require separate documented substantiation.";
 
 // Compact form for tight spots (stat captions, cards) where the full sentence won't fit.
 export const PURITY_PROVENANCE_SHORT = "Read from the certificate, not re-measured by VialGrade. Purity is not a grade.";
@@ -19,5 +19,5 @@ export const PURITY_PROVENANCE_SHORT = "Read from the certificate, not re-measur
 // is research-use-only material — which is a disclaimer about intended use, not a quality tier —
 // and "pharmaceutical grade" means nothing without a GMP certificate to point at.
 export const PURITY_IS_NOT_GRADE =
-  "Purity and grade are different questions. A lab test says what is in the vial; it cannot say the vial " +
-  "was filled in a controlled facility. Almost everything sold here is research-use-only material.";
+  "Purity and grade are different questions. A reported test describes the submitted sample; it cannot establish what a future vial contains or whether it " +
+  "was filled in a controlled facility. A research-use label does not determine the legal status of human-use marketing.";

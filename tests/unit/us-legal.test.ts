@@ -1,32 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { usLegalFor, US_REGULATION_FACTS } from "@/lib/us-legal";
 
-describe("US legal status", () => {
-  it("flags FDA-approved prescription drugs", () => {
+describe("US regulatory research context", () => {
+  it("distinguishes an approved ingredient from a listed product", () => {
     const s = usLegalFor("semaglutide");
     expect(s.category).toBe("prescription");
-    expect(s.headline).toMatch(/prescription/i);
+    expect(s.detail).toMatch(/does not extend to other vials/i);
   });
-  it("flags investigational GLP-1-class agonists", () => {
-    expect(usLegalFor("retatrutide").category).toBe("investigational");
+  it("identifies investigational research without suggesting approval", () => {
+    const s = usLegalFor("retatrutide");
+    expect(s.category).toBe("investigational");
+    expect(s.flags).toContain("FDA: cannot be used in federal drug compounding");
+    expect(s.detail).toMatch(/cannot be used in drug compounding/i);
+    expect(s.detail).toMatch(/does not constitute FDA/i);
   });
-  it("treats a typical peptide as research-use-only", () => {
-    expect(usLegalFor("tb-500").category).toBe("research-only");
+  it("does not misclassify all investigated substances as having the same compounding status", () => {
+    expect(usLegalFor("survodutide").flags).not.toContain("FDA: cannot be used in federal drug compounding");
+    expect(usLegalFor("cagrilintide").flags).toContain("FDA: cannot be used in federal drug compounding");
   });
-  it("surfaces the FDA do-not-compound flag for BPC-157", () => {
-    const s = usLegalFor("bpc-157");
-    expect(s.category).toBe("research-only");
-    expect(s.flags).toContain("FDA safety flag — no pharmacy may compound it");
-    // Guards the FACT, not the phrasing. BPC-157 sits in the FDA's "nominated but withdrawn"
-    // table, NOT category 2 — we shipped the wrong mechanism once, and this is what caught it.
-    expect(s.detail).toMatch(/not on the FDA's 503A list/i);
-    expect(s.detail).toMatch(/withdrawn/i);
-    expect(s.detail).not.toMatch(/category 2/i);
+  it("does not call the research-use label a legal exemption", () => {
+    expect(usLegalFor("tb-500").detail).toMatch(/label alone does not decide/i);
+    expect(US_REGULATION_FACTS[0].body).toMatch(/does not automatically/i);
   });
-  it("marks WADA-banned compounds", () => {
-    expect(usLegalFor("cjc-1295").flags.some((f) => /WADA/i.test(f))).toBe(true);
+  it("states compounding status is case specific", () => {
+    expect(usLegalFor("bpc-157").flags).toContain("FDA compounding status requires review");
+    expect(US_REGULATION_FACTS.find((f) => f.title.includes("compounding"))?.body).toMatch(/USP\/NF/i);
   });
-  it("has a non-empty regulation explainer", () => {
-    expect(US_REGULATION_FACTS.length).toBeGreaterThan(5);
+  it("does not falsely label GLP-1 monitoring compounds as WADA-prohibited", () => {
+    expect(usLegalFor("semaglutide").flags.some((f) => /WADA/.test(f))).toBe(false);
+    expect(usLegalFor("tirzepatide").flags.some((f) => /WADA/.test(f))).toBe(false);
   });
 });
