@@ -37,6 +37,11 @@ describe("deny-by-default access policy", () => {
   it("does not expose new arbitrary child routes behind research intelligence", () => {
     expect(accessDecision("/intelligence/admin", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/unknown", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/studies/NCT05804162", null)).toEqual({ protected: false, allowed: true });
+    expect(accessDecision("/intelligence/studies/NCT00000001", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/studies/invalid", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/studies/NCT05804162/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/admin/private", null).allowed).toBe(false);
   });
 
   it("keeps well-known + PWA paths open (crawlers, service worker, manifest, offline shell)", () => {

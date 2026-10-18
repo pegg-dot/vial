@@ -70,6 +70,10 @@ const PUBLIC_API_EXACT = new Set([
 const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", "/api/public/"];
 
 function isPublic(path: string): boolean {
+  // One read-only NIH registry lookup per strict public NCT identifier.
+  // Do not turn all /intelligence subpaths into public routes: they remain
+  // deny-by-default if a future admin or personalized feature is added.
+  if (/^\/intelligence\/studies\/NCT\d{8}$/.test(path)) return true;
   if (PUBLIC_PAGE_EXACT.has(path) || PUBLIC_API_EXACT.has(path)) return true;
   if (PUBLIC_PAGE_PREFIX.some((p) => path === p || path.startsWith(`${p}/`))) return true;
   // Exact-or-subpath match, so a retired prefix never swallows a longer live one.

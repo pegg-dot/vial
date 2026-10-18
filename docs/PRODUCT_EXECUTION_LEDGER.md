@@ -20,6 +20,18 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 
 **Release verification:** run local unit/integration, production-mode build, all research/browser commerce tests, source checks and dependency audits. Verify Vercel production setting VIALGRADE_PUBLIC_EVIDENCE_ONLY=true; then verify the actual production deployment SHA, the public pages, all original links and direct purchase endpoint denials. Do not assume success from a GitHub push alone. A failed deployed build should leave the older production release active. The admin mailbox and legal/privacy/source-rights questions remain open and must not be falsely represented as complete.
 
+## New local UX phase: trial-source workflow (October 18)
+
+**User observation:** the just-merged production prototype feels unusable, even to a curious nonresearcher, and has no verified professional demand. Manual viewport review found a canned 4-study audit requiring about 6,206px of desktop and 10,300px of mobile scrolling; its main page offers no trial-ID input. Shipping more facts, a visual rebrand, or additional sources before fixing that basic flow is a distraction.
+
+**Sequence pivot:** former sequence was ship the four-study example, then test professionals and expand. The current local phase inserts a real one-study self-serve task before further pilots: accept an exact NCT ID or official study URL; show registry results separately from PubMed citations; preserve source-role distinctions, uncertainty and direct original links; export a concise source brief. Keep canned comparison and keyword samples available but secondary. This is a core workflow correction, not a claim that clinical research teams want it.
+
+**Current:** local branch `local/vialgrade-trial-workspace-2026-10-18`, based on production main merge `d0635e35`. No push, PR or Vercel deployment authorized for every UX iteration. Full explanation and pilot conditions: `docs/RESEARCHER_TASK_WORKSPACE_2026-10-18.md`.
+
+**Next:** visual/manual review, robust data-source and public-route security tests, then five or more consenting analyst first-use tasks versus existing ClinicalTrials.gov/PubMed workflows. Candidate users must be interviewed separately (scientists vs diligence). **Parked:** general AI answers, wider keyword search, historical change intelligence, rebrand, subscriptions, marketplace reactivation. **Open decision:** whose recurring job is the first paid workflow, and does the observed task demonstrate actual time/correctness value? Revisit after the pilot.
+
+**Goal check:** making the trial task self-serve is core to showing evidence value, not a standalone onboarding feature. The live marketplace archive stays preserved; no purchase/referral paths reopen. Admin email forwarding and legal/privacy/source-rights remain open.
+
 ## Workstream ledger
 
 | Workstream | Current evidence | Next action | Release gate |
