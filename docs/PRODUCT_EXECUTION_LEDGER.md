@@ -15,6 +15,7 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 | Workstream | Current evidence | Next action | Release gate |
 | --- | --- | --- | --- |
 | Research-only production boundary | PR #22 merged. Historic seller checkout, referrals, vendor API and catalog quarantined; verify production separately | Keep 410/redirect and no-ingest tests green across every subsequent PR | Browser and exact-commit release checks; do not re-enable commerce |
+| Historical account/provider compatibility | Past client-provider errors recorded on old marketplace URLs and historic personal pages still imported legacy client UI; fix isolated in hotfix branch | Provide read-only rights-facing account views; defend legacy pages before data reads; test for client-side exceptions | Verify research-mode build/browser/auth and production logs after exact-commit deployment |
 | Discovery usability | PR #27 merged 2026-10-18: clearer product explanation and local title/ID/filter search | Check production visibility and filter/search usability on desktop/mobile | CI, browser, deployment verification |
 | Historic data reuse | PR #29 (review in progress as of ledger authoring) documents 15 tracked datasets with read-only inventory | Merge only after CI; review provenance and source-rights before any import | No production DB import; no PII or vendor grading |
 | Task-first research audit (LOCAL ONLY) | Local Cagrilintide pilot with 4 bounded official NCT lookups, results-section checks, outcomes and source-backed review prompts; no deploy/push | Run a real analyst task benchmark vs registry/Scholar and get an independent source-identity check | Quality, safety, 5 observed tasks, clear improvement and operator release approval |
@@ -28,6 +29,16 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 | Mail and rights requests | Issue #23: recipient chosen, delivery and DNS still unverified | Configure domain MX/routing, verify Gmail recipient, send outside test message | Real receipt and reply test; process owner and timeline |
 | Privacy, source rights, legal | Issue #24: historical records/backups and counsel review remain open | Inventory retained personal records separately; prepare retention/deletion and licensing register; independent counsel review | Do not claim legal clearance or republish unlicensed/harmful claims |
 | Preserved marketplace | Issue #26: archival Git tag exists at pre-PR #22 commit | Keep available for independently reviewed, product-specific lawful future | No checkout/vendor referrals on research production |
+
+## Local integration checkpoint — no deployments
+
+The current local branch incorporates the code from previously separate PR #29 (historical tracked-source audit), PR #31 (45-case study match-location benchmark and filter), and PR #32 (read-only historical account access and retired provider compatibility). This is a **local merge only**. None of these changes has been released through this local integration. The original marketplace archive remains isolated.
+
+**Commerce invariant:** old checkout/cart/affiliate/referral/API writes are explicitly 410, including nested paths and provider onboarding/sync; signed payment-remedy callbacks and prior-account requests remain separately gated. A Vercel production build now refuses to proceed if the research-only mode flag is missing, so losing an environment variable does not restore the old storefront. Staff browsing of public retired pages no longer overrides the research-mode redirect.
+
+**Navigation and usefulness:** the public Intelligence index now offers the first working task audit before incomplete research topic samples. Retired URLs give a named explanation; research navigation and legal reference links point to reachable pages. The standalone index no longer fetches six source result samples on every view. These are usability and cost controls, not a completed AI intelligence product.
+
+**No-deployment policy:** this integration stays in local Git until reviewed and explicitly approved for one batched release. Continue to test actual buyer/analyst workflows, research-source quality, privacy and mailbox setup separately.
 
 ## October 18 course correction and cost gate
 

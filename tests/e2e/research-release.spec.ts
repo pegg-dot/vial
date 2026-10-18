@@ -61,6 +61,11 @@ test.describe("research-only production release gate", () => {
     const vendor = await page.request.get("/vendors", { maxRedirects: 0 });
     expect(vendor.status()).toBe(307);
     expect(vendor.headers().location).toBe("/intelligence?notice=retired");
+    for (const oldRoute of ["/market", "/compare", "/vendors/sports-technology-labs"]) {
+      const result = await page.request.get(oldRoute, { maxRedirects: 0 });
+      expect(result.status(), oldRoute).toBe(307);
+      expect(result.headers().location).toBe("/intelligence?notice=retired");
+    }
     const catalog = await page.request.get("/api/v1/catalog");
     expect(catalog.status()).toBe(410);
   });
@@ -92,6 +97,43 @@ test.describe("legacy account rights in research-only mode", () => {
     expect(watchlistWrite.status()).toBe(410);
     const admin = await page.request.get("/admin", { maxRedirects: 0 });
     expect(admin.status()).toBe(307);
+  });
+
+  test("historical account pages are read-only and do not require the retired marketplace provider", async ({ page }) => {
+    const clientErrors: string[] = [];
+    page.on("pageerror", error => clientErrors.push(error.message));
+
+    const withoutLogin = await page.request.get("/watchlist", { maxRedirects: 0 });
+    expect(withoutLogin.status()).toBe(307);
+    const withoutLoginSearches = await page.request.get("/saved-searches", { maxRedirects: 0 });
+    expect(withoutLoginSearches.status()).toBe(307);
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill("nora@example.test");
+    await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoCustomer!2026");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/account/);
+
+    await page.goto("/watchlist");
+    await expect(page.getByRole("heading", { name: "Previously saved identifiers" })).toBeVisible();
+    await expect(page.getByText("Seller listings, prices, shopping links", { exact: false })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Account and privacy options" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Browse market" })).toHaveCount(0);
+
+    await page.goto("/market");
+    await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
+    await page.goto("/vendors/sports-technology-labs");
+    await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
+    await page.goto("/compare");
+    await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
+
+    await page.goto("/saved-searches");
+    await expect(page.getByRole("heading", { name: "Previously saved searches" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Account and privacy options" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Save search" })).toHaveCount(0);
+    await expect(page.getByText("Save a market question", { exact: false })).toHaveCount(0);
+
+    expect(clientErrors).toEqual([]);
   });
 
   test("legacy staff dashboard remains behind staff authentication", async ({ page }) => {

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { MarketExperience } from "@/components/market/market-experience";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { DataUnavailable } from "@/components/home-data-unavailable";
@@ -22,6 +24,9 @@ export const dynamic = "force-dynamic";
 // it too. Degrade rather than throw, and never to zeros: an empty market rendered as "0 listings"
 // is a claim we cannot stand behind.
 export default async function MarketPage() {
+  // Page-level fail-closed guard for client/router/RSC requests that bypass the
+  // normal proxy redirect. Never load the seller catalog in research-only mode.
+  if (evidenceOnlyPublicRelease()) redirect("/intelligence");
   const catalog = await getCatalogSnapshot().catch((error) => {
     reportError({ kind: "market-unavailable", message: "The market could not read the catalog.", context: { error: String(error) } });
     return null;
