@@ -54,9 +54,10 @@ test.describe("source-based research task prototype", () => {
     expect(content).toContain("Routine hosting/security logs may still record visits");
   });
 
-  test("keeps other unreviewed study audits behind the deny-by-default route gate", async ({ page }) => {
-    const missing = await page.request.get("/intelligence/retatrutide/audit", { maxRedirects: 0 });
-    expect(missing.status()).toBe(307);
-    expect(missing.headers().location).toMatch(/^\/login/);
+  test("shows the research 404 rather than a login prompt for unavailable study audits", async ({ page }) => {
+    const response = await page.goto("/intelligence/retatrutide/audit");
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: "There is no research page at this address." })).toBeVisible();
+    await expect(page.getByRole("link", { name: "View study audit" })).toHaveAttribute("href", "/intelligence/cagrilintide/audit");
   });
 });

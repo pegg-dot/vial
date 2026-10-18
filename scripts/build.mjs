@@ -1,6 +1,16 @@
 import { rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
+// Vercel production must never silently revert to the archived seller UI when
+// an environment variable is lost or misconfigured. This gate is independent
+// of whether build-time credentials happen to be present. Local / CI builds
+// remain available for non-public archived-source testing.
+if ((process.env.VERCEL_ENV === "production" || process.env.VERCEL_TARGET_ENV === "production") &&
+    process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true") {
+  console.error("Refusing production build: research-only mode must be explicitly enabled; commerce cannot be relaunched by an environment toggle.");
+  process.exit(1);
+}
+
 rmSync(".next", { recursive: true, force: true });
 
 const env = {

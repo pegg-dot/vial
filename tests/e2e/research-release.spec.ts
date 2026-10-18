@@ -3,11 +3,12 @@ import { expect, test } from "@playwright/test";
 test.describe("public research intelligence", () => {
   test("offers a useful evidence workspace without sign-in or buyer funnels", async ({ page }) => {
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: /Investigate the evidence/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open evidence dossier" })).toHaveCount(3);
-    await expect(page.getByText("Cross-topic source coverage")).toBeVisible();
-    await expect(page.getByText("ClinicalTrials.gov returned sample")).toBeVisible();
-    await expect(page.getByText("OpenAlex returned sample")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Understand the study. Not just the search result." })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Try a study audit" })).toHaveAttribute("href", "/intelligence/cagrilintide/audit");
+    await expect(page.getByRole("link", { name: "Review the four-study audit" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Browse source sample" })).toHaveCount(2);
+    await expect(page.getByRole("heading", { name: "What VialGrade adds, and what it does not" })).toBeVisible();
+    await expect(page.getByText("Cross-topic source coverage")).toHaveCount(0);
   });
 
   test("publishes a source-linked dossier with filters and a browser-only citation export", async ({ page }) => {
@@ -46,7 +47,7 @@ test.describe("research-only production release gate", () => {
     expect(await robots.text()).toContain("Disallow: /vendors");
     const vendor = await page.request.get("/vendors", { maxRedirects: 0 });
     expect(vendor.status()).toBe(307);
-    expect(vendor.headers().location).toBe("/intelligence");
+    expect(vendor.headers().location).toBe("/intelligence?notice=retired");
     const catalog = await page.request.get("/api/v1/catalog");
     expect(catalog.status()).toBe(410);
   });

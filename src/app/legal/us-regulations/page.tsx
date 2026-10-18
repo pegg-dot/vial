@@ -69,7 +69,7 @@ export default function Page() {
       <div className="mt-8 flex flex-wrap gap-3 text-sm font-bold text-[#2b31d8]">
         <Link href="/legal/disclaimer">Research & medical disclaimer</Link>
         <Link href="/legal/terms">Terms</Link>
-        <Link href="/how-we-check">How we check</Link>
+        <Link href="/intelligence#method">Research methodology and limits</Link>
       </div>
     </div>
   );

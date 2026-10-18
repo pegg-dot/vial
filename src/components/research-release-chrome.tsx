@@ -20,11 +20,11 @@ export function ResearchReleaseHeader() {
             <span className="text-[15px] font-black tracking-[0.12em]">VialGrade</span>
             <span className="hidden rounded-full border border-[#2b31d8]/20 bg-[#edeaff] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[.1em] text-[#2b31d8] sm:inline-flex">Intelligence</span>
           </Link>
-          <nav aria-label="Research navigation" className="flex items-center gap-2 sm:gap-4">
-            <Link href="/intelligence#workspace" className="rounded-full px-3 py-2 text-xs font-bold text-[#111214] hover:bg-[#eee] sm:text-sm">Research</Link>
-            <Link href="/legal/us-regulations" className="hidden rounded-full px-3 py-2 text-xs font-bold text-[#111214] hover:bg-[#eee] sm:inline-flex sm:text-sm">Regulatory notes</Link>
-            <Link href="/legal/privacy" className="hidden rounded-full px-3 py-2 text-xs font-bold text-[#111214] hover:bg-[#eee] md:inline-flex md:text-sm">Privacy</Link>
-            <Link href="/login" className="rounded-full border border-[#111214] bg-[#111214] px-3.5 py-2 text-xs font-bold text-white hover:bg-[#333] sm:px-4 sm:text-sm">Existing account</Link>
+          <nav aria-label="Research navigation" className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
+            <Link href="/intelligence/cagrilintide/audit" className="rounded-full bg-[#111214] px-3 py-2 text-xs font-bold text-white hover:bg-[#333] sm:px-4 sm:text-sm">Study audit</Link>
+            <Link href="/intelligence#workspace" className="rounded-full px-2.5 py-2 text-xs font-bold text-[#111214] hover:bg-[#eee] sm:px-3 sm:text-sm">Topics</Link>
+            <Link href="/intelligence#method" className="hidden rounded-full px-2.5 py-2 text-xs font-bold text-[#111214] hover:bg-[#eee] md:inline-flex md:text-sm">How it works</Link>
+            <Link href="/login" className="hidden rounded-full border border-[#111214]/20 px-3 py-2 text-xs font-bold hover:bg-[#eee] lg:inline-flex">Existing account</Link>
           </nav>
         </div>
       </header>
@@ -51,11 +51,14 @@ export function ResearchReleaseFooter() {
           </p>
         </div>
         <nav aria-label="Legal and source navigation" className="grid content-start gap-3 text-sm font-semibold text-white/75">
-          <Link href="/intelligence" className="inline-flex items-center gap-2 hover:text-[#8fffd6]"><BookOpenCheck className="size-4" /> Research workspace</Link>
+          <Link href="/intelligence/cagrilintide/audit" className="inline-flex items-center gap-2 hover:text-[#8fffd6]"><BookOpenCheck className="size-4" /> Example study audit</Link>
+          <Link href="/intelligence#workspace" className="hover:text-[#8fffd6]">Browse research topics</Link>
+          <Link href="/intelligence#method" className="hover:text-[#8fffd6]">How this research works</Link>
           <Link href="/legal/us-regulations" className="inline-flex items-center gap-2 hover:text-[#8fffd6]"><ShieldAlert className="size-4" /> Regulatory overview</Link>
           <Link href="/legal/privacy" className="hover:text-[#8fffd6]">Privacy and data requests</Link>
           <Link href="/legal/disclaimer" className="hover:text-[#8fffd6]">Research limitations</Link>
           <Link href="/legal/contact" className="hover:text-[#8fffd6]">Contact and corrections</Link>
+          <Link href="/login" className="hover:text-[#8fffd6]">Existing account access</Link>
           <a href="https://clinicaltrials.gov/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-[#8fffd6]"><FlaskConical className="size-4" /> ClinicalTrials.gov <ArrowUpRight className="size-3.5" /></a>
           <a href="https://openalex.org/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-[#8fffd6]">OpenAlex source metadata <ArrowUpRight className="size-3.5" /></a>
         </nav>

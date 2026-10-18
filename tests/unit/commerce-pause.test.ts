@@ -11,6 +11,11 @@ describe("new-sale suspension preserves customer remedies", () => {
     "/api/v1/commerce/cart",
     "/api/v1/commerce/activation",
     "/api/v1/commerce/provider/onboarding",
+    "/api/v1/commerce/provider/sync",
+    "/go/saved-vendor",
+    "/api/v1/commerce/checkout/attempt-123",
+    "/api/v1/commerce/cart/line-items",
+    "/api/v1/commerce/provider/sync/attempt",
   ])("closes the new-sale/referral path %s", (path) => {
     expect(isPausedTransactionEndpoint(path)).toBe(true);
   });
