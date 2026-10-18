@@ -13,7 +13,14 @@ const { getCatalogSnapshot } = await import("@/server/catalog/repository");
 const { GET } = await import("@/app/sitemap.xml/route");
 
 describe("sitemap caching", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Explicitly test the historic sitemap independently of the deployment's
+    // research-only feature flag. The production build itself runs unit tests
+    // with VIALGRADE_PUBLIC_EVIDENCE_ONLY=true, so inheriting that flag would
+    // falsely test the research-only sitemap as if it were the legacy one.
+    vi.stubEnv("VIALGRADE_PUBLIC_EVIDENCE_ONLY", "false");
+  });
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
   it("indexes only source-reviewed research dossiers in public quarantine mode", async () => {
