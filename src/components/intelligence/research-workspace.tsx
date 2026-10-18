@@ -39,6 +39,7 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
 }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [ordering, setOrdering] = useState<Ordering>("newest");
+  const [recordQuery, setRecordQuery] = useState("");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
 
@@ -47,9 +48,11 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
   const items = useMemo(() => {
     if (!dossier) return [];
     const all = evidenceItems(dossier);
-    const matching = all.filter(item => filter === "all" || item.kind === filter);
+    const query = recordQuery.trim().toLocaleLowerCase();
+    const matching = all.filter(item => (filter === "all" || item.kind === filter) &&
+      (!query || [item.title, item.id, item.details].some(value => value.toLocaleLowerCase().includes(query))));
     return ordering === "newest" ? matching : [...matching].reverse();
-  }, [dossier, filter, ordering]);
+  }, [dossier, filter, ordering, recordQuery]);
 
   const rawCitations = dossier ? citationPack(dossier) : "";
 
@@ -208,6 +211,13 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
         <div className="inline-flex items-center gap-2 text-xs font-bold text-[var(--muted)]"><SlidersHorizontal className="size-4" /> Filter source records</div>
       </div>
 
+      <div className="mt-5 rounded-xl border border-[#111214]/15 bg-white p-4">
+        <label htmlFor="record-search" className="block text-sm font-extrabold">Find a study, paper, identifier or registry status</label>
+        <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Search within the records returned for this topic. This is not a search of the full literature and nothing is sent to a server.</p>
+        <input id="record-search" type="search" value={recordQuery} onChange={event => setRecordQuery(event.target.value)}
+          placeholder="e.g. NCT number, phase, sponsor or title" className="mt-3 w-full rounded-lg border border-[#111214]/25 px-4 py-3 text-sm focus:outline-offset-2" />
+      </div>
+
       <div className="mt-6 flex flex-wrap items-center gap-2">
         {filterLabels.map(item => (
           <button key={item.value} type="button" aria-pressed={filter === item.value}
@@ -231,9 +241,9 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
       <div className="mt-6 divide-y divide-[#111214]/10 overflow-hidden rounded-[18px] border-2 border-[#111214] bg-white">
         {items.length === 0 ? (
           <div className="px-6 py-12">
-            <p className="font-extrabold">No accessible records in this view.</p>
+            <p className="font-extrabold">No matching records in this view.</p>
             <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-              The source may be unavailable, this search may return no records, or the active filter may have no matches.
+              Clear your search or filters to try again. The source may also be unavailable or this limited sample may contain no matches.
               This does not mean the topic lacks scientific research.
             </p>
           </div>
@@ -263,7 +273,7 @@ export function ResearchWorkspace({ dossiers, selectedTopic }: {
         ))}
       </div>
       <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
-        Showing {items.length} of {dossier.trials.studies.length + dossier.publications.works.length} returned records.
+        Showing {items.length} of {dossier.trials.studies.length + dossier.publications.works.length} returned records after local filters.
         This sample does not measure the entire literature or all registered trials.
       </p>
 

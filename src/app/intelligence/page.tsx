@@ -38,6 +38,11 @@ export default async function IntelligencePage() {
               Understand regulatory limits
             </Link>
           </div>
+          <div className="mt-9 max-w-[780px] rounded-2xl border border-[#111214]/15 bg-white/75 p-5 sm:p-6">
+            <h2 className="text-base font-extrabold">What can I actually do here?</h2>
+            <p className="mt-2 text-sm leading-7 text-[#111214]/75">Open one of the three topics below, inspect the latest returned trial and publication records, filter for specific studies, and export source identifiers for your own review. This is source discovery, not AI interpretation or a complete scientific review.</p>
+            <p className="mt-2 text-sm leading-7 text-[#111214]/75">If you need to understand whether evidence supports a particular conclusion, open the original trial or publication. VialGrade does not verify outcomes or assess study quality yet.</p>
+          </div>
           <div className="mt-12 grid max-w-[810px] gap-4 border-t border-[#111214]/20 pt-5 sm:grid-cols-3">
             <div><p className="text-xl font-extrabold">02</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Independent public source systems</p></div>
             <div><p className="text-xl font-extrabold">03</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Fixed research topics to explore</p></div>
