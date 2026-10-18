@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
@@ -73,6 +75,9 @@ function joinList(parts: Array<string | null | false>): string {
 const OG_IMAGE = [{ url: "/og-image.png", width: 1200, height: 630, alt: "VialGrade" }];
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  // Metadata requests can run separately from the page and must never
+  // retrieve retired seller data in research-only production mode.
+  if (evidenceOnlyPublicRelease()) return { robots: { index: false, follow: false } };
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) return {};
@@ -121,6 +126,7 @@ const loadVendorPublicData = unstable_cache(
 );
 
 export default async function VendorPage({ params }: { params: Promise<{ slug: string }> }) {
+  if (evidenceOnlyPublicRelease()) redirect("/intelligence");
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();

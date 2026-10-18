@@ -16,6 +16,7 @@
     "env:check": "node scripts/check-env.mjs",
     "db:backup-drill": "node scripts/backup-restore-drill.mjs",
     "audit:security": "node scripts/static-security-audit.mjs",
+    "audit:study-evidence": "node --import tsx scripts/verify-cagrilintide-publication-lineage.mjs",
     "audit:roles": "node scripts/http-role-audit.mjs",
     "audit:accessibility": "node scripts/structural-accessibility-audit.mjs",
     "verify:v1": "npm run lint && npm run typecheck && npm run test:all && npm run audit:security && npm run db:backup-drill && npm audit --audit-level=high && npm run build && npm run audit:roles && npm run audit:accessibility",

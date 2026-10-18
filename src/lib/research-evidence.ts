@@ -8,6 +8,7 @@ export type EvidenceItem = {
   url: string;
   details: string;
   retracted: boolean;
+  registryMatch?: "intervention-recorded" | "named-in-title" | "search-hit-only";
 };
 
 /** A match location, not an independent study-quality or efficacy assessment. */
@@ -18,6 +19,14 @@ export function registryMatchNote(association: "intervention-recorded" | "named-
     case "search-hit-only": return "Keyword search hit; compound's role is not confirmed";
     default: return "Registry match location not checked";
   }
+}
+
+/** Narrow registry metadata filtering, not strength-of-evidence scoring. */
+export type RegistryMatchFilter = "all" | "intervention-recorded" | "named-in-title" | "search-hit-only";
+
+export function filterByRegistryMatch(items: EvidenceItem[], match: RegistryMatchFilter): EvidenceItem[] {
+  if (match === "all") return items;
+  return items.filter(item => item.kind === "trial" && item.registryMatch === match);
 }
 
 function displayStatus(text: string): string {
@@ -36,6 +45,7 @@ export function evidenceItems(dossier: ResearchDossier): EvidenceItem[] {
       (study.resultsReported ? " | registry results section available" : " | results section not reported") +
       " | " + registryMatchNote(study.association),
     retracted: false,
+    registryMatch: study.association,
   }));
   const works: EvidenceItem[] = dossier.publications.works.map(work => ({
     id: work.id,

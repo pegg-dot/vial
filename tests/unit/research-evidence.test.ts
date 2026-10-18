@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { citationPack, evidenceCaveats, evidenceItems } from "@/lib/research-evidence";
+import { citationPack, evidenceCaveats, evidenceItems, filterByRegistryMatch } from "@/lib/research-evidence";
 import type { ResearchDossier } from "@/server/intelligence/public-dossiers";
 
 const dossier: ResearchDossier = {
@@ -43,6 +43,28 @@ describe("traceable research dossier rules", () => {
     expect(exported).toContain("RETRACTION FLAG");
     expect(exported).toContain("not a systematic review");
     expect(exported).not.toContain("medical advice to take");
+  });
+
+  it("filters by the literal registered match location without implying a clinical rank", () => {
+    const annotated: ResearchDossier = {
+      ...dossier,
+      trials: {
+        ...dossier.trials,
+        studies: [
+          { ...dossier.trials.studies[0], association: "intervention-recorded" },
+          { ...dossier.trials.studies[0], nctId: "NCT12345679", association: "named-in-title" },
+          { ...dossier.trials.studies[0], nctId: "NCT12345680", association: "search-hit-only" },
+        ],
+      },
+    };
+    const all = evidenceItems(annotated);
+    expect(all).toHaveLength(5);
+    expect(filterByRegistryMatch(all, "all")).toHaveLength(5);
+    expect(filterByRegistryMatch(all, "intervention-recorded").map(item => item.id)).toEqual(["NCT12345678"]);
+    expect(filterByRegistryMatch(all, "named-in-title").map(item => item.id)).toEqual(["NCT12345679"]);
+    expect(filterByRegistryMatch(all, "search-hit-only").map(item => item.id)).toEqual(["NCT12345680"]);
+    expect(filterByRegistryMatch(all, "intervention-recorded").every(item => item.kind === "trial")).toBe(true);
+    expect(filterByRegistryMatch(evidenceItems(dossier), "search-hit-only")).toEqual([]);
   });
 
   it("never treats provider downtime as absent evidence", () => {

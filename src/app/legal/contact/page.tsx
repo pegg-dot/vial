@@ -33,28 +33,28 @@ export default function Page() {
       <h1 className="mt-4 text-5xl font-extrabold tracking-[-.065em] sm:text-7xl">Contact and corrections</h1>
       <p className="mt-5 text-sm text-[var(--muted)]">Updated October 2026</p>
       <p className="mt-6 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">
-        VialGrade publishes grades, flags, and enforcement records about real companies. Anyone named here can challenge what we say, and a person reads every message.
+        VialGrade currently publishes selected research-source records, not a peptide marketplace.
+        You can request corrections to research information or ask about historical account records.
+        Incoming email routing is still being verified, so time-sensitive legal or privacy notices
+        should not be assumed delivered until receipt is confirmed.
       </p>
 
       <div className="ink hard mt-12 divide-y divide-[#111214]/10 rounded-[20px] bg-white px-6 sm:px-9">
         <Section title="Correct a record">
           <p>
-            If something on VialGrade about your company or your laboratory is wrong — a price, a batch, a lab result, a link, a closed business still listed as trading — email{" "}
-            <Mail address={CONTACT_EMAIL} subject="Correction" />. Include the page URL, what is wrong, and what the correct information is. Point us at the public source if there is one; it is the fastest way to get the record changed.
+            For an incorrect study identifier, sponsor, registered outcome, source link or publication date,
+            email <Mail address={CONTACT_EMAIL} subject="Research correction" /> with the exact page URL,
+            the questionable field and an original source that supports the correction.
           </p>
-          <p>
-            Corrections are made against the record itself. We keep the original snapshot, because the history of what a source said is the point of the archive — but the live page shows the corrected value.
-          </p>
+          <p>The source identity and original record must be verified before a correction can be published.</p>
         </Section>
 
         <Section title="Dispute a grade, a flag, or an enforcement entry">
           <p>
-            A grade is derived from evidence we can show you, and no accusation is published anonymously. If you think a grade, a warning flag, or an enforcement entry is wrong, email{" "}
-            <Mail address={CONTACT_EMAIL} subject="Dispute" /> with the URL, which specific claim you dispute, and anything that contradicts it — a lab report, a batch record, a resolved regulatory matter, a corrected product page.
+            Historic vendor grades, laboratory reports and commerce pages are not publicly active.
+            If a retained historical record names your organization inaccurately, email <Mail address={CONTACT_EMAIL} subject="Historical record dispute" /> with its URL and the primary documentation at issue.
           </p>
-          <p>
-            A person re-reviews it against the underlying evidence. If we got it wrong, the record is corrected and the correction is dated. If it stands, you get the reason and the evidence it rests on. A low grade is not removed for being unflattering, and a disputed claim is not left standing without an answer.
-          </p>
+          <p>Historical source rights and the corrections process remain under review. Do not assume an old marketplace score or assertion is currently endorsed.</p>
         </Section>
 
         <Section title="Ask about your data">
@@ -79,7 +79,9 @@ export default function Page() {
 
         <Section title="What to expect">
           <p>
-            We aim to reply within {RESPONSE_TARGET_DAYS} days. A correction with a verifiable source is usually faster than a dispute that needs the evidence re-examined. Every message is read by a person; nothing on this site is published or unpublished automatically.
+            Our stated target is {RESPONSE_TARGET_DAYS} days, subject to any shorter legal deadline.
+            Email receiving and forwarding remain unverified. We cannot promise delivery or response until that is tested.
+            We do not automatically publish or remove challenged scientific or historical claims.
           </p>
         </Section>
       </div>
@@ -88,7 +90,7 @@ export default function Page() {
         <Link href="/legal/privacy">Privacy</Link>
         <Link href="/legal/terms">Terms</Link>
         <Link href="/legal/disclaimer">Disclaimer</Link>
-        <Link href="/how-we-check">How we check</Link>
+        <Link href="/intelligence#method">Research methodology and limits</Link>
       </div>
     </div>
   );

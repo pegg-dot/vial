@@ -68,6 +68,22 @@ export default async function ResearchDossierPage({
         </div>
       </section>
 
+      {topic === "cagrilintide" && (
+        <section className="mx-auto max-w-[1120px] px-5 pt-10 sm:px-8">
+          <div className="flex flex-col items-start justify-between gap-5 rounded-[18px] border-2 border-[#111214] bg-white p-6 sm:flex-row sm:items-center sm:p-7">
+            <div className="max-w-2xl">
+              <p className="text-xs font-extrabold uppercase tracking-[.15em] text-[#2b31d8]">New research-task prototype</p>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">Follow the evidence from trial registrations to linked papers.</h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">Inspect four selected official trials, compare the registered outcomes and result sections, and follow protocol-linked papers whose exact trial IDs PubMed independently indexes. This is not a complete clinical review.</p>
+            </div>
+            <Link href="/intelligence/cagrilintide/audit"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111214] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#333]">
+              Open study audit <ArrowUpRight className="size-4" />
+            </Link>
+          </div>
+        </section>
+      )}
+
       <ResearchWorkspace dossiers={[dossier]} selectedTopic={dossier.key} />
 
       <section className="border-t border-[#111214]/15 bg-white">

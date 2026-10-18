@@ -18,7 +18,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
           <PasswordField name="password" required autoComplete="current-password" />
           <button className="ink hard-sm press-blue h-12 w-full rounded-full bg-[#2b31d8] text-sm font-bold text-white">Sign in</button>
         </form>
-        <p className="mt-6 text-sm font-medium text-[var(--muted)]">New to VialGrade? <Link href={`/register?next=${encodeURIComponent(p.next || "/for-you")}`} className="font-bold text-[#2b31d8] underline underline-offset-4">Create an account</Link></p>
+        <p className="mt-6 text-sm font-medium leading-7 text-[var(--muted)]">New registrations are paused during the privacy review. You can <Link href="/intelligence" className="font-bold text-[#2b31d8] underline underline-offset-4">use public research without an account</Link>, or <Link href="/register" className="font-bold text-[#2b31d8] underline underline-offset-4">read the registration notice</Link>.</p>
         {process.env.NODE_ENV !== "production" && <p className="mt-6 text-xs font-medium text-[var(--muted)]">Demo: nora@example.test / VialGradeDemoCustomer!2026</p>}
       </div>
     </section>

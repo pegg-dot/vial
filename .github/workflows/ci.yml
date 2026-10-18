@@ -42,7 +42,7 @@ jobs:
       - run: npm run test:e2e
       # Verify that public research mode has its own protected UI/API boundary.
       - name: Test public research-only release
-        run: npx playwright test tests/e2e/research-release.spec.ts
+        run: npx playwright test tests/e2e/research-release.spec.ts tests/e2e/cagrilintide-audit.spec.ts tests/e2e/research-navigation-and-commerce.spec.ts
         env:
           VIALGRADE_PUBLIC_EVIDENCE_ONLY: "true"
 
