@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, BookOpenCheck, GitCompareArrows, SearchCheck, Sparkles } from "lucide-react";
 import { ResearchDesk } from "@/components/intelligence/research-desk";
+import { researchAiAvailability, issueResearchAiPilotToken } from "@/server/intelligence/research-ai-config";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Research Desk | VialGrade Intelligence",
@@ -10,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function IntelligenceResearchDeskPage() {
+  const aiStatus = researchAiAvailability();
+  const aiPilotToken = issueResearchAiPilotToken();
   return (
     <main className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1200px] px-5 pt-8 sm:px-8">
@@ -30,7 +35,7 @@ export default function IntelligenceResearchDeskPage() {
             <p className="mt-5 max-w-2xl text-sm leading-7 text-[#507263] sm:text-base">
               Work from a real peptide evidence network, not an unsupported AI guess. Choose a question, trace the original records, and turn the verified source pointers into a briefing you can review or use with an AI model.
             </p>
-            <p className="mt-4 text-[11px] font-bold text-[#648170]">Pexiganan pilot · 6 curated observations · 10 original source records · No paid model calls</p>
+            <p className="mt-4 text-[11px] font-bold text-[#648170]">Pexiganan pilot · 6 curated observations · 10 original source records · Model calls require explicit opt-in</p>
           </div>
         </header>
 
@@ -46,7 +51,7 @@ export default function IntelligenceResearchDeskPage() {
             </div>
           ))}
         </section>
-        <ResearchDesk />
+        <ResearchDesk aiStatus={aiStatus} aiPilotToken={aiPilotToken} />
         <div className="mt-8 flex flex-wrap gap-4">
           <Link href="/intelligence" className="inline-flex items-center gap-2 text-xs font-bold text-[#347461] hover:underline"><ArrowLeft className="size-4" /> Back to Research Market</Link>
           <Link href="/intelligence/grading" className="inline-flex items-center gap-2 text-xs font-bold text-[#347461] hover:underline">What our research grades actually mean <ArrowRight className="size-4" /></Link>

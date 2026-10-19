@@ -10,6 +10,8 @@ import {
   DESK_TOPICS, buildDeskBrief, deskClaims, deskSources,
   type DeskAudience, type DeskTopicId,
 } from "@/lib/peptide-research-desk";
+import { ResearchAiPanel } from "@/components/intelligence/research-ai-panel";
+import type { ResearchAiAvailability } from "@/server/intelligence/research-ai-config";
 
 const topicIcons = {
   identity: Microscope,
@@ -30,8 +32,10 @@ const statusStyles = {
   "needs-interpretation": "border-[#efdcbe] bg-[#fff7e7] text-[#926727]",
 } as const;
 
-/** No paid model, data submission, or API calls. Only curated/source-linked editorial workpapers. */
-export function ResearchDesk() {
+/** Source-first desk: model calls only via the explicit opt-in analyst panel. */
+export function ResearchDesk({ aiStatus, aiPilotToken }: {
+  aiStatus: ResearchAiAvailability; aiPilotToken: string | null;
+}) {
   const [topicId, setTopicId] = useState<DeskTopicId>("publication-matching");
   const [audience, setAudience] = useState<DeskAudience>("researcher");
   const [question, setQuestion] = useState("");
@@ -168,6 +172,7 @@ export function ResearchDesk() {
         </section>
 
         <aside className="min-w-0 space-y-4">
+          <ResearchAiPanel key={topicId + ":" + audience + ":" + question} topicId={topicId} audience={audience} question={question} aiStatus={aiStatus} aiPilotToken={aiPilotToken} />
           <section className="rounded-[18px] border-2 border-[#17191b] bg-[#eafff1] p-5">
             <div className="flex items-center gap-2 text-[#1f7d60]"><FileQuestion className="size-5" /><h2 className="text-lg font-extrabold tracking-[-.035em]">Your research brief</h2></div>
             <p className="mt-3 text-xs leading-6 text-[#577462]">Turn this evidence network into a reusable briefing packet. The packet contains original links, gaps and AI review instructions. No model is called.</p>

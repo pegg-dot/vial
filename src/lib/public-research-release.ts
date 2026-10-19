@@ -60,6 +60,12 @@ export function publicReleaseAction(
     path === "/api/v1/health"
   ) return null;
 
+  // A single local-only, read-only, explicit model request. The endpoint
+  // independently requires preview flags, a gateway credential, consent,
+  // same-origin localhost and bounded calls. Never open all /api/research/*.
+  if (path === "/api/research/analyst" && method.toUpperCase() === "POST"
+      && process.env.VIALGRADE_LOCAL_PREVIEW === "true") return null;
+
   // Never redirect API calls to HTML; decline old catalog/search/public
   // exports and anything that would capture or expose vendor data.
   if (matches(path, "/api")) return "gone";

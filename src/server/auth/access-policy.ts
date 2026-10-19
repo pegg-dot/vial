@@ -79,6 +79,8 @@ function isPublic(path: string): boolean {
   // /intelligence prefix. Unknown slugs are handled by Next's 404.
   if (/^\/intelligence\/explore\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)) return true;
   if (/^\/intelligence\/providers\/(?:bachem|genscript)$/.test(path)) return true;
+  // Narrow localhost-only model endpoint. Production always fails closed.
+  if (path === "/api/research/analyst" && process.env.VIALGRADE_LOCAL_PREVIEW === "true") return true;
   if (PUBLIC_PAGE_EXACT.has(path) || PUBLIC_API_EXACT.has(path)) return true;
   if (PUBLIC_PAGE_PREFIX.some((p) => path === p || path.startsWith(`${p}/`))) return true;
   // Exact-or-subpath match, so a retired prefix never swallows a longer live one.
