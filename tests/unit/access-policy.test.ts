@@ -28,7 +28,7 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public catalog routes open to anonymous visitors", () => {
-    for (const path of ["/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/cagrilintide/audit", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare", "/intelligence/grading", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/intelligence/tirzepatide", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
+    for (const path of ["/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/cagrilintide/audit", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare", "/intelligence/grading", "/intelligence/verify", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/intelligence/tirzepatide", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }
@@ -46,6 +46,10 @@ describe("deny-by-default access policy", () => {
     expect(accessDecision("/intelligence/compare", null).allowed).toBe(true);
     expect(accessDecision("/intelligence/grading", null).allowed).toBe(true);
     expect(accessDecision("/intelligence/grading/internal", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/verify/internal", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/passports/pexiganan/internal", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/passports/unknown", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/organizations/private", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/cases/magainin-pexiganan", null).allowed).toBe(true);
     expect(accessDecision("/intelligence/cases/magainin-pexiganan/private", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/cases/unreviewed-claims", null).allowed).toBe(false);

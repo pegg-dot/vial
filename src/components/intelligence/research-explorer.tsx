@@ -260,6 +260,11 @@ export function ResearchExplorer() {
                     <p className="line-clamp-1 text-[10px] font-extrabold uppercase tracking-[.09em] text-[#858a90]">{subject.family}</p>
                     <h3 className="mt-1 text-xl font-extrabold tracking-[-.05em] text-[#17191b]">{subject.name}</h3>
                     <div className="mt-2"><ResearchFileGradeMark subject={subject} withCount /></div>
+                    {subject.slug === "pexiganan" && (
+                      <Link href="/intelligence/passports/pexiganan" className="mt-2 inline-flex w-fit items-center gap-1 rounded-full bg-[#e9f8ef] px-3 py-2 text-[10px] font-extrabold text-[#27735c] hover:underline">
+                        Evidence passport <ArrowUpRight className="size-3" />
+                      </Link>
+                    )}
                     <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-[#646c76]">{subject.identity}</p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {subject.sampleTrial ? (

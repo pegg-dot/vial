@@ -11,6 +11,8 @@ import { DossierPerspective } from "@/components/intelligence/dossier-perspectiv
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
+import { PexEvidenceClaimGrid, PexEvidenceWayfinder, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
+import { PexTrialNetworkLive, PexTrialNetworkLoading } from "@/components/intelligence/pexiganan-trial-network";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -73,11 +75,17 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
         <nav aria-label="Research dossier sections" className="sticky top-[68px] z-20 -mx-5 mt-4 flex gap-2 overflow-x-auto border-b border-[#e5e4ea] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold text-[#535868] backdrop-blur-md sm:mx-0 sm:px-0">
           <a href="#overview" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Overview</a>
           <a href="#file-grade" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Research file grade</a>
-          {subject.sampleTrial && <a href="#evidence-review" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Trial evidence</a>}
+          {subject.sampleTrial && <a href={subject.slug === "pexiganan" ? "#pexiganan-trials" : "#evidence-review"} className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Trial evidence</a>}
+          {subject.slug === "pexiganan" && <a href="#pexiganan-network" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Evidence network</a>}
           <a href="#sources" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Sources</a>
           <a href="#related" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Related</a>
         </nav>
 
+        {subject.slug === "pexiganan" && (
+          <div id="pexiganan-network" className="mt-5 scroll-mt-36">
+            <PexEvidenceWayfinder />
+          </div>
+        )}
         <div className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_335px]">
           <div className="min-w-0 space-y-5">
             <section id="overview" className="scroll-mt-40 rounded-2xl border border-[#dedee8] bg-white p-6 sm:p-7">
@@ -89,11 +97,16 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               <ResearchFileGradeCard subject={subject} />
             </div>
             <DossierPerspective research={subject.scientistAngle} analyst={subject.analystAngle} />
-            {subject.sampleTrial && (
+            {subject.slug === "pexiganan" && <PexEvidenceClaimGrid compact />}
+            {subject.slug === "pexiganan" ? (
+              <Suspense fallback={<PexTrialNetworkLoading />}>
+                <PexTrialNetworkLive />
+              </Suspense>
+            ) : subject.sampleTrial ? (
               <Suspense fallback={<TrialEvidenceLoading nctId={subject.sampleTrial} />}>
                 <DossierTrialEvidence subject={subject} />
               </Suspense>
-            )}
+            ) : null}
             {(subject.slug === "pexiganan" || subject.slug === "magainin-2") && (
               <section className="rounded-2xl border border-[#c5dfd2] bg-[#eef8f3] p-6">
                 <h2 className="text-base font-semibold text-[#225b55]">Guided source review · Magainin 2 vs pexiganan</h2>
@@ -106,6 +119,9 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               </section>
             )}
 
+            {subject.slug === "pexiganan" ? (
+              <div id="sources" className="scroll-mt-40"><PexSourceRegister /></div>
+            ) : (
             <section id="sources" aria-labelledby="research-sources-title" className="scroll-mt-40 overflow-hidden rounded-2xl border border-[#dedee8] bg-white">
               <div className="border-b border-[#ececf1] px-6 py-5">
                 <h2 id="research-sources-title" className="text-xl font-semibold tracking-[-.035em] text-[#28293b]">Follow the source trail</h2>
@@ -124,6 +140,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
                 <div><h3 className="text-sm font-semibold text-[#303145]">Find registered studies</h3><p className="mt-1 text-xs leading-5 text-[#777b88]">Registry keyword search. Returned trials may study another compound or a combination.</p><p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#5545a4]">Search ClinicalTrials.gov <ArrowUpRight className="size-3" /></p></div>
               </a>
             </section>
+            )}
             <section className="rounded-2xl border border-[#dedee8] bg-white p-6">
               <div className="flex items-center gap-2 text-[#796b55]"><CircleHelp className="size-4" /><h2 className="text-base font-semibold text-[#292b3c]">What still needs checking</h2></div>
               <p className="mt-3 text-sm leading-7 text-[#656a78]">{subject.identityCaveat}</p>

@@ -69,6 +69,21 @@ export default async function IntelligencePage({ searchParams }: {
 
       <section id="explore" className="mx-auto max-w-[1180px] scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16">
         <ResearchExplorer />
+        <section aria-label="Pexiganan complete source network" className="mt-10 grid items-center gap-4 rounded-[19px] border-2 border-[#17191b] bg-[#17191b] p-5 text-white sm:grid-cols-[minmax(0,1fr)_auto] sm:p-7">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[.12em] text-[#aef2d6]">Featured research file · More than search</p>
+            <h2 className="mt-2 text-xl font-extrabold tracking-[-.035em] sm:text-2xl">Pexiganan. Follow the complete source trail.</h2>
+            <p className="mt-2 max-w-2xl text-xs leading-6 text-white/70 sm:text-sm">Four selected registered studies, ten original source records, six evidence checks and sponsor attribution, with source-specific verification and honest gaps. No suppliers or purchasing.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/intelligence/explore/pexiganan" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#aef2d6] px-4 py-3 text-xs font-extrabold text-[#174334] hover:bg-[#ceffe9]">
+              Open the dossier <ArrowRight className="size-4" />
+            </Link>
+            <Link href="/intelligence/passports/pexiganan" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/30 px-4 py-3 text-xs font-extrabold text-white hover:bg-white/10">
+              Evidence passport <ArrowUpRight className="size-4" />
+            </Link>
+          </div>
+        </section>
         <div className="mt-12 flex flex-col justify-between gap-5 rounded-2xl border border-[#d3e9df] bg-[#ecf8f1] p-5 sm:flex-row sm:items-center sm:p-7">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#277b66]">New · Guided source review</p>

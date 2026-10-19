@@ -97,6 +97,12 @@ export function ResearchQuickView({
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#202125] px-4 py-2.5 text-xs font-extrabold text-[#202125] hover:bg-[#f2f1f6] disabled:cursor-not-allowed disabled:opacity-40">
                 <GitCompareArrows className="size-4" /> {selected ? "Remove from compare" : "Add to compare"}
               </button>
+              {subject.slug === "pexiganan" && (
+                <Link href="/intelligence/passports/pexiganan" onClick={onClose}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[#a8d4bb] bg-[#ecf9f2] px-3 py-2.5 text-xs font-extrabold text-[#296a53] hover:bg-[#d8f2e1]">
+                  Evidence passport <ArrowRight className="size-3.5" />
+                </Link>
+              )}
               <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-semibold text-[#5e5295] hover:underline">
                 Original identity record <ArrowUpRight className="size-4" />
               </a>

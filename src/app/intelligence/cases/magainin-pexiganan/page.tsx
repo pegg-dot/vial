@@ -9,6 +9,7 @@ import {
   type GuidedResearchSource,
 } from "@/lib/research-guided-case";
 import { ResearchWorkpaperActions } from "@/components/intelligence/research-workpaper-actions";
+import { PEXIGANAN_REVIEW_DATE } from "@/lib/pexiganan-evidence-network";
 
 export const metadata: Metadata = {
   title: "Magainin 2 vs pexiganan: trace the evidence | VialGrade",
@@ -41,6 +42,9 @@ export default function MagaininPexigananGuidedCase() {
               When related peptides are not the same evidence.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#476364]">{caseStudy.question}</p>
+            <Link href="/intelligence/passports/pexiganan" className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#b9dacc] bg-[#f1fbf5] px-3 py-2 text-xs font-bold text-[#226d56] hover:underline">
+              Expanded Pexiganan evidence passport · source check {PEXIGANAN_REVIEW_DATE} <ArrowRight className="size-3.5" />
+            </Link>
             <div className="mt-7 flex flex-wrap gap-2">
               <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan&audience=researcher"
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#205e59] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#277a70]">

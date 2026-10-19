@@ -27,6 +27,7 @@ export function ResearchReleaseHeader() {
           </Link>
           <nav aria-label="Research navigation" className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
             <Link href="/intelligence#explore" className="rounded-full bg-[#28234c] px-3 py-2 text-xs font-semibold text-white hover:bg-[#44368d] sm:px-4 sm:text-sm">Explore</Link>
+            <Link href="/intelligence/verify" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:px-3 sm:text-sm">Verify source</Link>
             <Link href="/intelligence/compare?subjects=semaglutide,tirzepatide" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] sm:px-3 sm:text-sm">Compare</Link>
             <Link href="/intelligence/grading" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] md:inline-flex md:text-sm">File grades</Link>
             <Link href="/intelligence#trial-lookup" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] md:inline-flex md:text-sm">Trial lookup</Link>
@@ -60,6 +61,9 @@ export function ResearchReleaseFooter() {
           <Link href="/intelligence#explore" className="inline-flex items-center gap-2 hover:text-[#c0baff]"><BookOpenCheck className="size-4" /> Research Explorer</Link>
           <Link href="/intelligence#trial-lookup" className="hover:text-[#c0baff]">Check a trial ID</Link>
           <Link href="/intelligence/grading" className="hover:text-[#c0baff]">Research file grades explained</Link>
+          <Link href="/intelligence/passports/pexiganan" className="hover:text-[#c0baff]">Pexiganan evidence passport</Link>
+          <Link href="/intelligence/verify" className="hover:text-[#c0baff]">Verify an original research source</Link>
+          <Link href="/intelligence/organizations" className="hover:text-[#c0baff]">Research organizations and labs</Link>
           <Link href="/intelligence#method" className="hover:text-[#c0baff]">Scope and limitations</Link>
           <Link href="/legal/us-regulations" className="inline-flex items-center gap-2 hover:text-[#8fffd6]"><ShieldAlert className="size-4" /> Regulatory overview</Link>
           <Link href="/legal/privacy" className="hover:text-[#8fffd6]">Privacy and data requests</Link>

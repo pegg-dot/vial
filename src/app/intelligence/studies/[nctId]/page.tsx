@@ -6,6 +6,7 @@ import { normalizeNctId } from "@/lib/nct-identifier";
 import { lookupStudy, studySourceBrief, summarizeStudyEvidence } from "@/server/intelligence/study-lookup";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
 import { StudyBriefActions } from "@/components/intelligence/study-brief-actions";
+import { PEXIGANAN_TRIAL_SELECTION } from "@/lib/pexiganan-evidence-network";
 
 export const metadata: Metadata = {
   title: "Check a clinical trial | VialGrade",
@@ -22,6 +23,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
   const id = normalizeNctId(raw);
   if (!id) notFound();
   const result = await lookupStudy(id);
+  const connectedToPexiganan = PEXIGANAN_TRIAL_SELECTION.some(record => record.nctId === id);
   const card = "rounded-[18px] border border-[#dedee7] bg-white";
 
   if (result.state !== "available") return (
@@ -59,6 +61,17 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
           </div>
           <div className={card + " hidden p-4 lg:block"}><StudyLookupForm compact initialId={id} /></div>
         </div>
+        {connectedToPexiganan && (
+          <section aria-label="Pexiganan evidence network link" className="mt-6 flex flex-col justify-between gap-3 rounded-xl border border-[#cee4d7] bg-[#ecf9f0] p-4 sm:flex-row sm:items-center sm:px-5">
+            <div>
+              <p className="text-xs font-extrabold text-[#286d55]">Connected to Pexiganan research</p>
+              <p className="mt-1 text-xs leading-5 text-[#647a6a]">This is one of four curated registry records. The evidence passport shows its molecular, article and sponsor relationships without assuming clinical benefit.</p>
+            </div>
+            <Link href="/intelligence/passports/pexiganan" className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-xs font-extrabold text-[#25765f] hover:underline">
+              Evidence passport <ArrowUpRight className="size-4" />
+            </Link>
+          </section>
+        )}
 
         <section aria-labelledby="source-answer" className="mt-8 overflow-hidden rounded-[18px] border border-[#d5ccef] bg-[#f1edff]">
           <div className="px-6 py-7 sm:px-8">
