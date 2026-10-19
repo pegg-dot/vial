@@ -24,6 +24,18 @@ Updated 2026-10-19. This file is a navigation and dependency map; it is not evid
 
 **Goal check:** deep identity→paper→trial→attribution links advance the actual source reconciliation task; cards, letter scores and the old market shell only enable that job. Source IDs alone do not demonstrate scientific efficacy or demand.
 
+## October 19 connected research-market entry (LOCAL, NOT DEPLOYED)
+
+**Goal anchor:** VialGrade should reuse the marketplace's navigation and deep relationships for scientists/biotech analysts who need to reconcile peptide identity, original experiments, registered studies and source organizations. The value is a verifiable source workflow, not decorative cards. No suppliers, purchasing, seller grades or clinical efficacy ratings.
+
+**Pivot:** Old: build source network and leave scattered pages for users to discover. New: expose the dossier, six-claim passport, source verifier, organizations, comparison and methods directly from the Research Market. This corrects discoverability rather than reviving commerce. Defer new suppliers and datasets. Revisit after owner click-through and real professional tasks.
+
+**Current:** local/vialgrade-connected-research-hub-2026-10-19 in the permanent Mac preview. The source-backed Pexiganan tools already existed before this change; this milestone adds a four-way task selector above browsing, a direct research comparison and source-grade explanation, and route/link/checkout browser coverage.
+
+**Next:** finish exact local build and browser gate, open permanent Safari preview, review with owner, then scientific expert and researcher/analyst task tests. **Parked:** vendor listings, COA imports, sales, unverified efficacy ranks. **Open:** source rights, substantive buyer value, scientific signoff, historical privacy and cost-approved batched production release.
+
+**Goal check:** a marketplace-style interface is an enabler. Connecting it directly to actual original sources advances the core research task.
+
 ## October 19 restored research-file grading (LOCAL, NOT DEPLOYED)
 
 **Goal anchor:** the original marketplace offered useful browse, grade, decomposed criteria, compare, and original compound education. Preserve those affordances in source-first research while never bringing back vendors, buying or unreviewed effectiveness judgments. Target first users: scientific researchers and biotech diligence analysts. A research grade must be narrowly defined and auditable.

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CheckCircle2, Compass } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckCircle2, Compass, BookOpenCheck, ScanSearch, Building2, GitCompareArrows } from "lucide-react";
 import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
 import { ArtMolecule, ArtFlask } from "@/components/vial-art";
@@ -63,6 +63,41 @@ export default async function IntelligencePage({ searchParams }: {
             <span className="absolute bottom-3 left-0 z-20 rotate-[-6deg] rounded-full border-2 border-[#17191b] bg-white px-4 py-2 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#17191b]">
               Source first, always
             </span>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="research-workflows" className="border-b-2 border-[#17191b] bg-white">
+        <div className="mx-auto max-w-[1180px] px-5 py-8 sm:px-8 sm:py-11">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#26806b]">The original marketplace depth, rebuilt for research</p>
+              <h2 id="research-workflows" className="mt-2 text-2xl font-extrabold tracking-[-.05em] text-[#17191b] sm:text-3xl">What do you want to investigate?</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#65746c]">Start with a compound or jump straight into a source check. Every tool below opens an actual research record, not a seller listing.</p>
+            </div>
+            <span className="rounded-full border border-[#d5e5da] bg-[#effaf3] px-3 py-1.5 text-[11px] font-bold text-[#447666]">Pexiganan is the fully connected pilot</span>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {([
+              { name: "Explore a compound", prompt: "Identity, experiments, studies and related analogs", href: "/intelligence/explore/pexiganan", icon: Compass, shade: "bg-[#dffff1]", action: "Open Pexiganan dossier" },
+              { name: "Audit its evidence", prompt: "Six claims, original sources and what remains uncertain", href: "/intelligence/passports/pexiganan", icon: BookOpenCheck, shade: "bg-[#edebff]", action: "See evidence passport" },
+              { name: "Verify a record", prompt: "Check a PMID or NCT against the curated source register", href: "/intelligence/verify?ref=PMID%2036781451", icon: ScanSearch, shade: "bg-[#fff1dc]", action: "Try source verifier" },
+              { name: "Trace the organizations", prompt: "Find named trial sponsors and unverified lab claims", href: "/intelligence/organizations", icon: Building2, shade: "bg-[#e6efff]", action: "Explore source organizations" },
+            ] as const).map(({name,prompt,href,icon:Icon,shade,action})=>(
+              <Link key={href} href={href} className="group flex min-h-[195px] flex-col rounded-[17px] border-2 border-[#17191b] bg-white p-4 shadow-[4px_5px_0_rgba(23,25,27,0.1)] transition-transform hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#168e7f]">
+                <span className={"grid size-11 place-items-center rounded-xl border border-[#17191b]/15 "+shade}><Icon className="size-5" /></span>
+                <h3 className="mt-3 text-base font-extrabold tracking-[-.03em] text-[#17191b]">{name}</h3>
+                <p className="mt-1 flex-1 text-xs leading-5 text-[#63716b]">{prompt}</p>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#256e5d]">{action}<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></span>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[#65746c]">
+            <GitCompareArrows className="size-4" />
+            <span>Need to compare two peptides?</span>
+            <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" className="font-extrabold text-[#226956] underline underline-offset-2">Compare Magainin 2 and Pexiganan</Link>
+            <span className="text-[#a0aaa5]">·</span>
+            <Link href="/intelligence/grading" className="font-bold text-[#226956] underline underline-offset-2">What our research file grades mean</Link>
           </div>
         </div>
       </section>
