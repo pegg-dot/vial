@@ -55,14 +55,14 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("small-screen research navigation stays usable and no page overflows horizontally", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: "Check a trial. Follow the evidence." })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Check a study" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Example" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Discover what deserves a closer look." })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Explore" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Compare" })).toBeVisible();
     const indexWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(indexWidth).toBeLessThanOrEqual(391);
-    await page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Check a study" }).click();
-    await expect(page).toHaveURL(/\/intelligence$/);
-    await expect(page.getByRole("heading", { name: "Check a trial. Follow the evidence." })).toBeVisible();
+    await page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Explore" }).click();
+    await expect(page).toHaveURL(/\/intelligence#explore$/);
+    await expect(page.getByRole("heading", { name: "Discover what deserves a closer look." })).toBeVisible();
     const auditWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(auditWidth).toBeLessThanOrEqual(391);
   });
@@ -71,7 +71,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     await page.goto("/market");
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
     await expect(page.getByRole("status").getByText("The old marketplace is inactive.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open the source check" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open example dossier" })).toBeVisible();
     await page.goto("/how-we-check");
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
   });
@@ -79,7 +79,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("every visible internal public link on research and legal pages leads somewhere real", async ({ page }) => {
     const publicPages = [
       "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide",
-      "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162",
+      "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
       "/legal/us-regulations", "/legal/privacy", "/legal/contact",
       "/legal/terms", "/legal/disclaimer", "/login", "/register",
     ];

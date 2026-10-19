@@ -4,11 +4,27 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 
 ## Goal anchor
 
-- **Final goal:** a defensible scientific R&D evidence-intelligence tool that helps researchers and biotech diligence teams find, verify and track meaningful changes in official sources.
+- **Final goal:** discovery-first scientific research explorer backed by verifiable molecular identity, trial and publication evidence, with deeper source-change auditing for validated professional use cases.
 - **First users to validate:** scientific researchers; biotech business-development and diligence teams; life-sciences investors doing fact-finding. Each needs a separate real-task test.
-- **Core job:** answer "What changed about this research asset, what sources support that claim, and what remains unknown?" faster and more reliably than checking each source manually.
+- **Core job:** discover and compare peptide research questions, verify the actual molecule and original sources, and only make program-change/claim conclusions when supporting evidence has been checked.
 - **Not the product:** a human-use peptide seller, affiliate directory, medical adviser, drug-approval predictor, personalized investment adviser, or user-behavior data brokerage.
 - **Constraints:** exact source relevance/citations, restricted content rights, scientific review, privacy, responsible drug-advertising boundaries, costs, limited engineering scope.
+
+## Discovery-first Research Explorer pivot — October 18 (local only)
+
+**Goal anchor:** VialGrade is a discovery-led scientific evidence platform, not a supplier directory. The first user job is to browse a relevant research theme, identify the exact peptide/analog (including unresolved identity ambiguity), compare scientific questions, and drill from a dossier into official sources. Two distinct audience lenses (scientists and biotech diligence analysts) share the same factual evidence infrastructure. Success requires a demonstrable improvement in real scientific/analyst tasks versus PubMed, ClinicalTrials.gov, ChatGPT/Claude and specialist tools.
+
+**Sequence pivot:** The previous next milestone was deeper registered-outcome/claim discrepancy auditing, followed by a professional pilot. The owner selected a better discovery-first entry point and expressly wants to preserve the marketplace-like experience without resuming transactions. **New sequence:** (1) locally implement a 16-subject, 4-theme Research Explorer with filter, comparison and source-backed dossiers, (2) validate source identities, links, mobile UX and commerce protections, (3) test real research and diligence tasks with independent scientific review, (4) only then build deeper claims, monitoring, and distribution features. This is a usability/product-positioning pivot, not a reversal of restrictions on selling unapproved substances.
+
+**Why / goal check:** A technical audit that requires an NCT identifier is not approachable to a new user. A curated scientific research catalog enables discovery of a meaningful question while keeping original evidence inspection as the core value. The browse grid is an ENABLER, not a proven differentiator or "best peptide" score. Source study links are clearly classified as verified registry examples versus unreviewed external searches; identity variants are not merged by name.
+
+**Current status:** local branch `local/vialgrade-research-explorer-2026-10-18`, NOT pushed/deployed. Sixteen handcurated identities, four themes, source-linked dossiers, user-role perspectives, shareable up-to-three comparisons, 5 intervention-name-checked NCT examples, existing self-service trial auditor preserved. See `docs/RESEARCH_EXPLORER_PHASE_2026-10-18.md`. Previous research workstreams and the archived marketplace remain tracked below.
+
+**Engineering checkpoint:** exact research-mode build and 30 browser checks green, default legacy-mode browser 44 applicable tests green, 1,283 unit tests green, and all 87 integration files passed. All 16 primary PubChem URLs and 5 selected registry intervention names were rechecked live. The local static screenshot gallery has eight working images for cost-free review. These are NOT human-usefulness or scientific-signoff results.
+
+**Next:** perform independent expert review and observed tasks with at least five scientists and five biotech analysts before describing the explorer as research-ready; decide whether the claim-audit use case genuinely saves time. **Parked:** supplier verification and institutional procurement only after product-by-product counsel review, paid source licenses and purchaser qualification; generic AI chat, consumer substance sales, automatic efficacy scores, and broad indexing. **Open:** what researchers will return/pay for, copyright/licensing per paper, email delivery (#23), privacy/source rights (#24), archive (#26).
+
+**Cost/release gate:** no preview branch, Vercel push, PR or production merge for this local iteration; user previously requested batched releases only. No reactivation of checkout, prices, referral routing or archived vendor data. Revisit the release decision after visual and engineering QA plus user approval.
 
 ## October 18 competitor and source-data research pivot (LOCAL RESEARCH ONLY)
 

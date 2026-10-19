@@ -28,7 +28,7 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public catalog routes open to anonymous visitors", () => {
-    for (const path of ["/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/intelligence/tirzepatide", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
+    for (const path of ["/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/cagrilintide/audit", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/intelligence/tirzepatide", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }
@@ -42,6 +42,11 @@ describe("deny-by-default access policy", () => {
     expect(accessDecision("/intelligence/studies/invalid", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/studies/NCT05804162/private", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/admin/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/explore/ll-37", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/compare", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/explore", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/explore/ziconotide/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/compare/admin", null).allowed).toBe(false);
   });
 
   it("keeps well-known + PWA paths open (crawlers, service worker, manifest, offline shell)", () => {

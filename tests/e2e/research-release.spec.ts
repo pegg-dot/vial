@@ -3,10 +3,10 @@ import { expect, test } from "@playwright/test";
 test.describe("public research intelligence", () => {
   test("offers a useful evidence workspace without sign-in or buyer funnels", async ({ page }) => {
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: "Check a trial. Follow the evidence." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Discover what deserves a closer look." })).toBeVisible();
     await expect(page.getByRole("search").getByLabel("ClinicalTrials.gov study ID or link")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open the source check" })).toHaveAttribute("href", "/intelligence/studies/NCT05804162");
-    await expect(page.getByRole("heading", { name: "Original records, with their limits visible." })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open example dossier" })).toHaveAttribute("href", "/intelligence/explore/cagrilintide");
+    await expect(page.getByRole("heading", { name: "Choose a research direction" })).toBeVisible();
     await expect(page.getByText("Cross-topic source coverage")).toHaveCount(0);
   });
 
