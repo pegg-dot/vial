@@ -8,6 +8,7 @@ import {
   researchThemeById, RESEARCH_SUBJECTS, verifiedPubmedSearchUrl,
 } from "@/lib/research-explorer";
 import { DossierPerspective } from "@/components/intelligence/dossier-perspective";
+import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -38,9 +39,10 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           <span aria-current="page" className="text-[#4d4969]">{subject.name}</span>
         </nav>
 
-        <section className="relative mt-6 overflow-hidden rounded-[24px] border border-[#dad8e7] bg-white">
-          <div className="pointer-events-none absolute -right-8 -top-24 size-72 rounded-full border border-white/70 opacity-70" style={{ background: "radial-gradient(circle, " + theme.tint + " 0%, transparent 70%)" }} aria-hidden="true" />
-          <div className="relative px-6 pb-7 pt-8 sm:px-9 sm:py-11">
+        <section className="relative mt-6 overflow-hidden rounded-[22px] border-2 border-[#17191b] bg-white">
+          <div className="relative grid lg:grid-cols-[305px_minmax(0,1fr)]">
+            <ResearchSubjectArt subject={subject} hero />
+            <div className="relative px-6 pb-7 pt-8 sm:px-9 sm:py-9">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ backgroundColor: theme.tint, color: theme.color }}>{theme.name}</span>
               <span className="text-xs text-[#8a8e99]">Curated identity source · 18 Oct 2026</span>
@@ -57,17 +59,25 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
                 <GitCompareArrows className="size-4" /> Compare with {related[0]?.name}
               </Link>
             </div>
+            </div>
           </div>
-          <div className="relative grid border-t border-[#eae9ee] bg-[#fcfbff] sm:grid-cols-3">
+          <div className="relative grid border-t-2 border-[#17191b] bg-[#f1fdf6] sm:grid-cols-3">
             <div className="border-b border-[#eae9ee] px-6 py-4 sm:border-b-0 sm:border-r"><p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8e90a0]">Research theme</p><p className="mt-1 text-sm font-semibold text-[#383849]">{theme.short}</p></div>
             <div className="border-b border-[#eae9ee] px-6 py-4 sm:border-b-0 sm:border-r"><p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8e90a0]">Mechanism</p><p className="mt-1 text-sm font-semibold text-[#383849]">{subject.mechanism}</p></div>
             <div className="px-6 py-4"><p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8e90a0]">Identity reference</p><p className="mt-1 text-sm font-semibold text-[#383849]">{subject.referenceLabel}</p></div>
           </div>
         </section>
 
-        <div className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_335px]">
+        <nav aria-label="Research dossier sections" className="sticky top-[68px] z-20 -mx-5 mt-4 flex gap-2 overflow-x-auto border-b border-[#e5e4ea] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold text-[#535868] backdrop-blur-md sm:mx-0 sm:px-0">
+          <a href="#overview" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Overview</a>
+          {subject.sampleTrial && <a href="#evidence-review" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Trial evidence</a>}
+          <a href="#sources" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Sources</a>
+          <a href="#related" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Related</a>
+        </nav>
+
+        <div className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_335px]">
           <div className="min-w-0 space-y-5">
-            <section className="rounded-2xl border border-[#dedee8] bg-white p-6 sm:p-7">
+            <section id="overview" className="scroll-mt-40 rounded-2xl border border-[#dedee8] bg-white p-6 sm:p-7">
               <div className="flex items-center gap-2 text-[#685b9a]"><Microscope className="size-4" /><p className="text-xs font-bold uppercase tracking-[.12em]">Research direction</p></div>
               <h2 className="mt-3 text-xl font-semibold tracking-[-.035em] text-[#27273a]">{subject.studyQuestion}</h2>
               <p className="mt-3 text-sm leading-7 text-[#686c7a]">Start by checking studies of {subject.mechanism.toLowerCase()}, rather than inferring clinical outcomes or experiment suitability from the molecule name.</p>
@@ -90,7 +100,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               </section>
             )}
 
-            <section aria-labelledby="research-sources-title" className="overflow-hidden rounded-2xl border border-[#dedee8] bg-white">
+            <section id="sources" aria-labelledby="research-sources-title" className="scroll-mt-40 overflow-hidden rounded-2xl border border-[#dedee8] bg-white">
               <div className="border-b border-[#ececf1] px-6 py-5">
                 <h2 id="research-sources-title" className="text-xl font-semibold tracking-[-.035em] text-[#28293b]">Follow the source trail</h2>
                 <p className="mt-2 text-sm leading-6 text-[#727684]">One reference identity record, then two independent searches. Search results have not been individually evaluated as evidence.</p>
@@ -138,7 +148,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
                 <Link href={"/intelligence/" + subject.legacyTopic} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#5845a0] hover:underline">View source sample <ArrowUpRight className="size-3.5" /></Link>
               </section>
             )}
-            <section className="rounded-2xl border border-[#dedee8] bg-white p-6">
+            <section id="related" className="scroll-mt-40 rounded-2xl border border-[#dedee8] bg-white p-6">
               <h2 className="text-sm font-semibold text-[#2c2d3e]">Related research directions</h2>
               <div className="mt-3 divide-y divide-[#ececf1]">
                 {related.map(other => <Link href={"/intelligence/explore/" + other.slug} key={other.slug} className="flex items-center justify-between gap-3 py-3 text-sm font-medium text-[#5c5791] hover:underline">{other.name} <ArrowUpRight className="size-4 shrink-0" /></Link>)}

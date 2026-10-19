@@ -10,6 +10,11 @@ import { VialGradeMark } from "./wordmark";
 export function ResearchReleaseHeader() {
   return (
     <>
+      {process.env.VIALGRADE_LOCAL_PREVIEW === "true" && (
+        <div className="border-b-2 border-[#17191b] bg-[#174e42] px-5 py-2.5 text-center text-[11px] font-extrabold uppercase tracking-[.09em] text-white">
+          LOCAL INTERACTIVE PREVIEW · These changes are not live on vialgrade.com
+        </div>
+      )}
       <div className="border-b border-[#111214]/10 bg-[#f7f7f4] px-5 py-2 text-center text-[11px] font-medium leading-5 text-[#555]">
         Scientific research discovery only · No purchases or medical recommendations.
       </div>

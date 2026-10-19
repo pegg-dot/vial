@@ -7,7 +7,7 @@ test.describe("Research Explorer discovery experience", () => {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: "Discover what deserves a closer look." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Pick a peptide/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Choose a research direction" })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Showing 8 of 16 subjects" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Open example dossier" })).toHaveAttribute("href", "/intelligence/explore/cagrilintide");

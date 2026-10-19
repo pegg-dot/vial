@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, BookOpen, CheckCircle2, Compass, GitCompareArrows, Microscope, ShieldCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckCircle2, Compass } from "lucide-react";
 import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
+import { ArtMolecule, ArtFlask } from "@/components/vial-art";
 
 export const metadata: Metadata = {
   title: "VialGrade | Discover peptide research",
@@ -24,70 +25,48 @@ export default async function IntelligencePage({ searchParams }: {
         </section>
       )}
 
-      <section className="relative isolate overflow-hidden border-b border-[#e6e5ee] bg-[#f7f5ff]">
-        <div className="pointer-events-none absolute -right-36 -top-72 size-[590px] rounded-full border border-white/80 bg-[radial-gradient(circle,#eee9ff_0%,#f7f5ff_70%)] opacity-90" aria-hidden="true" />
-        <div className="pointer-events-none absolute -left-64 bottom-0 size-[420px] rounded-full border border-white/70" aria-hidden="true" />
-        <div className="relative mx-auto grid max-w-[1180px] items-center gap-9 px-5 pb-9 pt-8 sm:px-8 sm:pb-16 sm:pt-20 lg:grid-cols-[1.12fr_.88fr]">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#dcd7f1] bg-white/75 px-3 py-1.5 text-[11px] font-bold tracking-wide text-[#5e5694]">
-              <Compass className="size-3.5" /> Research discovery · Early preview
-            </div>
-            <h1 className="mt-6 max-w-[700px] text-[clamp(2.7rem,5.5vw,5.05rem)] font-semibold leading-[1.065] tracking-[-.07em] text-[#25223d]">
-              Discover what deserves a closer look.
+      <section className="relative isolate overflow-hidden border-b-2 border-[#17191b] bg-[#eafff6]">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-36 size-[460px] rounded-full border-2 border-[#17191b]/10 opacity-70" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-48 right-[10%] size-80 rounded-full border-2 border-[#17191b]/10 opacity-70" />
+        <div className="relative mx-auto grid max-w-[1320px] items-center gap-5 px-5 py-9 sm:px-8 sm:py-12 lg:grid-cols-[1.2fr_.8fr]">
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-[#17191b] bg-white px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[.13em] text-[#1c7668]">
+              <Compass className="size-3.5" /> Scientific research directory
+            </span>
+            <h1 className="mt-5 text-[clamp(2.6rem,5.3vw,5rem)] font-extrabold leading-[.99] tracking-[-.065em] text-[#17191b]">
+              Pick a peptide.<br />{" "}<span className="text-[#168e7f]">Follow the evidence.</span>
             </h1>
-            <p className="mt-4 max-w-[610px] text-base leading-7 text-[#64657a] sm:mt-6 sm:leading-8">
-              Explore peptide biology by research area, understand what each molecule is, compare unanswered questions, and follow the original scientific sources. The evidence, not a seller pitch, comes first.
+            <p className="mt-5 max-w-[650px] text-sm font-medium leading-7 text-[#45645c] sm:text-base sm:leading-8">
+              Browse 16 curated research subjects, open the original scientific sources, and compare what different studies actually investigated. No products or sellers, just research.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3">
-              <a href="#explore" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#2d284e] px-4 py-3 text-sm font-semibold sm:px-6 text-white hover:bg-[#493b7c]">
-                Explore research <ArrowRight className="size-4" />
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <a href="#explore" className="inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#17191b] bg-[#17191b] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#343839]">
+                Browse the research <ArrowRight className="size-4" />
               </a>
-              <Link href="/intelligence/compare?subjects=semaglutide,tirzepatide&audience=researcher" className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#d6d4e7] bg-white/85 px-4 py-3 text-sm font-semibold sm:px-5 text-[#514780] hover:bg-white">
-                <GitCompareArrows className="size-4" /> See a comparison
+              <Link href="/intelligence/cases/magainin-pexiganan" className="inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#17191b] bg-white px-5 py-3 text-sm font-extrabold text-[#17191b] hover:bg-[#f3fffa]">
+                See a real example <ArrowUpRight className="size-4" />
               </Link>
             </div>
-            <p className="mt-4 text-xs leading-6 text-[#87849b]">16 curated subjects · No purchasing · Not clinical or investment advice</p>
-            <Link href="/intelligence/explore/cagrilintide" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#58489e] sm:hidden">Open example dossier <ArrowUpRight className="size-3.5" /></Link>
+            <p className="mt-4 text-xs font-semibold text-[#678177]">16 curated subjects · 4 areas · 5 selected trial examples · No purchasing</p>
+            <Link href="/intelligence/explore/cagrilintide" className="mt-3 inline-flex items-center gap-1.5 text-xs font-extrabold text-[#266b61] hover:underline">
+              Open example dossier <ArrowUpRight className="size-3.5" />
+            </Link>
           </div>
 
-          <div className="relative hidden sm:block">
-            <div className="overflow-hidden rounded-[24px] border border-[#e1dcef] bg-white shadow-[0_26px_60px_rgba(55,45,101,.09)]">
-              <div className="border-b border-[#e9e7f0] bg-[#faf9fe] px-6 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold text-[#62598d]">Inside a research dossier</p>
-                  <div className="flex gap-1.5" aria-hidden="true"><span className="size-2 rounded-full bg-[#cbc4e8]" /><span className="size-2 rounded-full bg-[#e1dbf5]" /><span className="size-2 rounded-full bg-[#efebff]" /></div>
-                </div>
-              </div>
-              <div className="px-6 pb-6 pt-6 sm:px-7">
-                <p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#8279ab]">Example · Cagrilintide</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-.04em] text-[#27253e]">A molecule is only the starting point.</h2>
-                <p className="mt-2 text-sm leading-6 text-[#77788b]">Understand the identity, investigate the mechanism and verify the study behind a claim.</p>
-                <div className="mt-6 space-y-4">
-                  <div className="flex gap-3 rounded-xl bg-[#f5f2ff] p-4">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#6357a7]"><Microscope className="size-4.5" /></span>
-                    <div><p className="text-sm font-semibold text-[#303049]">Research question</p><p className="mt-1 text-xs leading-5 text-[#79758c]">How should standalone and combination study findings be distinguished?</p></div>
-                  </div>
-                  <div className="flex gap-3 rounded-xl bg-[#f8f9fb] p-4">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#676b91]"><BookOpen className="size-4.5" /></span>
-                    <div><p className="text-sm font-semibold text-[#303049]">Evidence trail</p><p className="mt-1 text-xs leading-5 text-[#797b8c]">Molecular reference, publications and original trial records</p></div>
-                  </div>
-                  <div className="flex gap-3 rounded-xl bg-[#f8f9fb] p-4">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#676b91]"><ShieldCheck className="size-4.5" /></span>
-                    <div><p className="text-sm font-semibold text-[#303049]">Uncertainty stays visible</p><p className="mt-1 text-xs leading-5 text-[#797b8c]">Formulations, aliases and limitations are not silently merged</p></div>
-                  </div>
-                </div>
-                <Link href="/intelligence/explore/cagrilintide" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#58489e] hover:underline">
-                  Open example dossier <ArrowUpRight className="size-4" />
-                </Link>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute -bottom-6 -left-5 -z-10 size-28 rounded-[28px] bg-[#e4ddfa]" aria-hidden="true" />
+          <div className="relative hidden min-h-[255px] items-center justify-center lg:flex" aria-hidden="true">
+            <div className="absolute size-64 rounded-full border-2 border-[#17191b] bg-[#aef2d6] shadow-[12px_12px_0_#17191b]/10" />
+            <ArtMolecule className="relative z-10 w-44 rotate-[-9deg] drop-shadow-[8px_9px_0_#17191b]" a="#5248bd" b="#12b3a6" c="#fff" />
+            <ArtFlask className="absolute bottom-0 right-2 z-20 w-20 rotate-[13deg] drop-shadow-[5px_5px_0_#17191b]" fill="#a991ff" />
+            <span className="absolute bottom-3 left-0 z-20 rotate-[-6deg] rounded-full border-2 border-[#17191b] bg-white px-4 py-2 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#17191b]">
+              Source first, always
+            </span>
           </div>
         </div>
       </section>
 
       <section id="explore" className="mx-auto max-w-[1180px] scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16">
-        <div className="mb-10 flex flex-col justify-between gap-5 rounded-2xl border border-[#d3e9df] bg-[#ecf8f1] p-5 sm:flex-row sm:items-center sm:p-7">
+        <ResearchExplorer />
+        <div className="mt-12 flex flex-col justify-between gap-5 rounded-2xl border border-[#d3e9df] bg-[#ecf8f1] p-5 sm:flex-row sm:items-center sm:p-7">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#277b66]">New · Guided source review</p>
             <h2 className="mt-2 text-lg font-semibold tracking-[-.03em] text-[#2d4b45]">Can a magainin experiment tell you what happened in a pexiganan trial?</h2>
@@ -98,7 +77,6 @@ export default async function IntelligencePage({ searchParams }: {
             Open guided example <ArrowRight className="size-4" />
           </Link>
         </div>
-        <ResearchExplorer />
       </section>
 
       <section id="trial-lookup" className="scroll-mt-24 border-t border-[#e6e6ee] bg-white">

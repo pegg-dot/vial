@@ -55,14 +55,14 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("small-screen research navigation stays usable and no page overflows horizontally", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: "Discover what deserves a closer look." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Pick a peptide/ })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Explore" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Compare" })).toBeVisible();
     const indexWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(indexWidth).toBeLessThanOrEqual(391);
     await page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Explore" }).click();
     await expect(page).toHaveURL(/\/intelligence#explore$/);
-    await expect(page.getByRole("heading", { name: "Discover what deserves a closer look." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Pick a peptide/ })).toBeVisible();
     const auditWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(auditWidth).toBeLessThanOrEqual(391);
   });
