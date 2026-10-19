@@ -27,8 +27,8 @@ export function ResearchReleaseHeader() {
           </Link>
           <nav aria-label="Research navigation" className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
             <Link href="/intelligence#explore" className="rounded-full bg-[#28234c] px-3 py-2 text-xs font-semibold text-white hover:bg-[#44368d] sm:px-4 sm:text-sm">Explore</Link>
-            <Link href="/intelligence/verify" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:px-3 sm:text-sm">Verify source</Link>
-            <Link href="/intelligence/compare?subjects=semaglutide,tirzepatide" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] sm:inline-flex sm:px-3 sm:text-sm">Compare</Link>
+            <Link href="/intelligence/verify" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:inline-flex sm:px-3 sm:text-sm">Verify source</Link>
+            <Link href="/intelligence/compare?subjects=semaglutide,tirzepatide" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] sm:px-3 sm:text-sm">Compare</Link>
             <Link href="/intelligence/grading" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] md:inline-flex md:text-sm">File grades</Link>
             <Link href="/intelligence#trial-lookup" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] md:inline-flex md:text-sm">Trial lookup</Link>
             <Link href="/login" className="hidden rounded-full border border-[#111214]/20 px-3 py-2 text-xs font-bold hover:bg-[#eee] lg:inline-flex">Existing account</Link>
