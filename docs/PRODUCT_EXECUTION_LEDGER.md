@@ -1,6 +1,6 @@
 # VialGrade execution ledger
 
-Updated 2026-10-18. This file is a navigation and dependency map; it is not evidence of completed legal review, source accuracy, paying customers, or production deployment. Confirm each linked PR, issue and deployment before changing its status.
+Updated 2026-10-19. This file is a navigation and dependency map; it is not evidence of completed legal review, source accuracy, paying customers, or production deployment. Confirm each linked PR, issue and deployment before changing its status.
 
 ## Goal anchor
 
@@ -9,6 +9,20 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 - **Core job:** discover and compare peptide research questions, verify the actual molecule and original sources, and only make program-change/claim conclusions when supporting evidence has been checked.
 - **Not the product:** a human-use peptide seller, affiliate directory, medical adviser, drug-approval predictor, personalized investment adviser, or user-behavior data brokerage.
 - **Constraints:** exact source relevance/citations, restricted content rights, scientific review, privacy, responsible drug-advertising boundaries, costs, limited engineering scope.
+
+## October 19 evidence-depth milestone (LOCAL, awaiting scientific review)
+
+**Goal anchor:** enable scientists and biotech diligence analysts to answer a precise source reconciliation question starting from a peptide dossier, distinguishing molecule identity, original experiment, secondary review, clinical trial registration and bibliographic links. Prove less error/more time saved than a PubMed/registry/ChatGPT baseline with real users. Not a sales catalog, medical adviser, investment predictor or general LLM chatbot.
+
+**Sequence adjustment:** earlier plan was to begin professional first-use trials immediately after the 16-card Research Explorer. The owner asked to continue because the dossiers still contained mostly general search links. New immediate step: build a concrete, original-source guided magainin-2 vs pexiganan research workpaper and evidence panels for the five selected official NCT studies, then benchmark those workflows with professionals and independent scientific reviewers. This is an evidence-quality correction, not expanding the research index or declaring product-market fit. Revisit after five witnessed scientist tasks and five biotech-diligence tasks, with an expert-verified answer key. Source links are not independently reviewed paper outcomes.
+
+**Current:** branch local/vialgrade-evidence-workpapers-2026-10-19, based on the locally committed Explorer e6efdcd. Added a three-observation magainin/pexiganan workpaper with five original-source links (distinct PubChem CIDs, original PMID 12719236 experiment, PMID 19010301 review, NCT01594762 trial); Markdown export and source limitations. Five selected trial dossiers now use the existing cached exact NCT and PubMed check to surface registered design, results-section status and source-role labels with explicit unavailable/mismatched-identity states. Comparisons show selected registry context, never cross-study efficacy rankings. Research details and pilot gate: docs/RESEARCH_EVIDENCE_WORKPAPERS_2026-10-19.md.
+
+**Engineering QA checkpoint:** The research-only optimized build, 35/35 browser tests, 1,290 unit tests, 87 integration test files, full ESLint/TypeScript, 686-file static security, 55-route role and structural accessibility checks all passed. Legacy-mode browser tests passed 44 applicable cases with 22 research-only skips. Official source ID/type audit found 2/2 PubChem references, 1/1 NCT intervention and 2/2 PubMed article metadata records unchanged. Production-dependency audit reported zero vulnerabilities. Eleven local screenshots load in the offline Mac review gallery. This is engineering evidence only, not scientific independent verification, user demand or legal clearance.
+
+**Next:** seek independent expert adjudication and real user benchmark; batch release only after owner approves. **Parked:** paid sources, general AI synthesis, automated trial alerts, molecular effectiveness rankings, user health tracking, experimental product marketing and institutional procurement pending product-specific counsel. **Open:** scientific interpretation rights and review, evidence-demand, source licensing, old-user privacy and mailbox issues.
+
+**Goal check:** the evidence-workpaper is a core researcher task. A pretty catalog only helps the user enter that task. No Vercel, preview PR, push, production data change or shopping reactivation is part of this phase.
 
 ## Discovery-first Research Explorer pivot — October 18 (local only)
 

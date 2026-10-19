@@ -79,7 +79,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("every visible internal public link on research and legal pages leads somewhere real", async ({ page }) => {
     const publicPages = [
       "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide",
-      "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
+      "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
       "/legal/us-regulations", "/legal/privacy", "/legal/contact",
       "/legal/terms", "/legal/disclaimer", "/login", "/register",
     ];

@@ -87,6 +87,17 @@ export default async function IntelligencePage({ searchParams }: {
       </section>
 
       <section id="explore" className="mx-auto max-w-[1180px] scroll-mt-24 px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mb-10 flex flex-col justify-between gap-5 rounded-2xl border border-[#d3e9df] bg-[#ecf8f1] p-5 sm:flex-row sm:items-center sm:p-7">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#277b66]">New · Guided source review</p>
+            <h2 className="mt-2 text-lg font-semibold tracking-[-.03em] text-[#2d4b45]">Can a magainin experiment tell you what happened in a pexiganan trial?</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#668078]">Follow two distinct molecular identities, an original membrane experiment and a registered trial. See what each source actually supports.</p>
+          </div>
+          <Link href="/intelligence/cases/magainin-pexiganan"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#24665a] px-5 py-3 text-xs font-bold text-white hover:bg-[#30796b]">
+            Open guided example <ArrowRight className="size-4" />
+          </Link>
+        </div>
         <ResearchExplorer />
       </section>
 

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, ArrowRight, GitCompareArrows } from "lucide-react";
+import { CompareTrialSource } from "@/components/intelligence/compare-trial-source";
 import {
   compareExplorerHref, researchSubjectBySlug, researchThemeById,
   registryDiscoveryUrl, verifiedPubmedSearchUrl, type ExplorerAudience,
@@ -49,6 +51,15 @@ export default async function CompareResearchPage({ searchParams }: {
           </section>
         ) : (
           <>
+            {subjects.some(s => s.slug === "magainin-2") && subjects.some(s => s.slug === "pexiganan") && (
+              <section className="mt-6 flex flex-col gap-3 rounded-xl border border-[#c8e0d3] bg-[#eff9f3] p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[.1em] text-[#3b846e]">Source-backed case study</p>
+                  <p className="mt-1 text-sm font-semibold text-[#2d554c]">Why a membrane experiment and a pexiganan trial cannot be treated as the same evidence</p>
+                </div>
+                <Link href="/intelligence/cases/magainin-pexiganan" className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-[#216b60] hover:underline">Read the source trail <ArrowRight className="size-4" /></Link>
+              </section>
+            )}
             <div className={"mt-8 grid gap-4 md:grid-cols-2 " + (subjects.length === 3 ? "xl:grid-cols-3" : "xl:grid-cols-2")}>
               {subjects.map(subject => {
                 const theme = researchThemeById(subject.theme);
@@ -65,6 +76,9 @@ export default async function CompareResearchPage({ searchParams }: {
                         <div><h3 className="text-[11px] font-bold uppercase tracking-[.12em] text-[#777384]">Molecular identity</h3><p className="mt-2 text-sm leading-6 text-[#383b4b]">{subject.referenceLabel}</p></div>
                         <div className="rounded-xl bg-[#f7f6fa] p-3.5"><h3 className="text-[11px] font-bold uppercase tracking-[.12em] text-[#766884]">Important limitation</h3><p className="mt-2 text-sm leading-6 text-[#616474]">{subject.identityCaveat}</p></div>
                       </div>
+                      <Suspense fallback={<div className="mt-5 rounded-xl border border-[#dedfe9] bg-[#f9f8fc] p-4 text-xs text-[#7b7b87]">Checking official study sources…</div>}>
+                        <CompareTrialSource subject={subject} />
+                      </Suspense>
                       <div className="mt-auto space-y-3 pt-6">
                         <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between border-b border-[#ececf1] pb-2 text-xs font-semibold text-[#5c4ca4]">PubChem identity <ArrowUpRight className="size-4" /></a>
                         <a href={verifiedPubmedSearchUrl(subject)} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between border-b border-[#ececf1] pb-2 text-xs font-semibold text-[#5c4ca4]">PubMed search <ArrowUpRight className="size-4" /></a>
@@ -77,7 +91,7 @@ export default async function CompareResearchPage({ searchParams }: {
               })}
             </div>
             <p className="mt-6 rounded-xl border border-[#e0e1e8] bg-white p-4 text-xs leading-6 text-[#777986]">
-              Comparison means differences in research questions, peptide identity, and the kinds of original records worth reviewing. There is no automatic cross-study inference or numerical ranking. These search links have not been independently screened for source relevance.
+              The selected study panels contain ONE registry record per subject, not a comparative or head-to-head clinical evaluation. Comparison means differences in research questions, peptide identity, and the kinds of original records worth reviewing. There is no automatic cross-study inference or numerical ranking. These search links have not been independently screened for source relevance.
             </p>
           </>
         )}

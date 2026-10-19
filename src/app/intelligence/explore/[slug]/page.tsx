@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, CheckCircle2, CircleHelp, FileSearch, FlaskConical, GitCompareArrows, Microscope } from "lucide-react";
@@ -7,6 +8,7 @@ import {
   researchThemeById, RESEARCH_SUBJECTS, verifiedPubmedSearchUrl,
 } from "@/lib/research-explorer";
 import { DossierPerspective } from "@/components/intelligence/dossier-perspective";
+import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -71,6 +73,23 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               <p className="mt-3 text-sm leading-7 text-[#686c7a]">Start by checking studies of {subject.mechanism.toLowerCase()}, rather than inferring clinical outcomes or experiment suitability from the molecule name.</p>
             </section>
             <DossierPerspective research={subject.scientistAngle} analyst={subject.analystAngle} />
+            {subject.sampleTrial && (
+              <Suspense fallback={<TrialEvidenceLoading nctId={subject.sampleTrial} />}>
+                <DossierTrialEvidence subject={subject} />
+              </Suspense>
+            )}
+            {(subject.slug === "pexiganan" || subject.slug === "magainin-2") && (
+              <section className="rounded-2xl border border-[#c5dfd2] bg-[#eef8f3] p-6">
+                <h2 className="text-base font-semibold text-[#225b55]">Guided source review · Magainin 2 vs pexiganan</h2>
+                <p className="mt-2 text-sm leading-6 text-[#56756b]">
+                  Follow an original lipid-bilayer experiment to a separately registered clinical trial. See which observations come from which source, and why the compounds cannot be treated as interchangeable.
+                </p>
+                <Link href="/intelligence/cases/magainin-pexiganan" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#22665c] hover:underline">
+                  Open guided evidence workpaper <ArrowRight className="size-4" />
+                </Link>
+              </section>
+            )}
+
             <section aria-labelledby="research-sources-title" className="overflow-hidden rounded-2xl border border-[#dedee8] bg-white">
               <div className="border-b border-[#ececf1] px-6 py-5">
                 <h2 id="research-sources-title" className="text-xl font-semibold tracking-[-.035em] text-[#28293b]">Follow the source trail</h2>
@@ -99,13 +118,17 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           <aside className="space-y-5 lg:sticky lg:top-28">
             {subject.sampleTrial && (
               <section className="rounded-2xl border border-[#c8c2e4] bg-[#f1eeff] p-6">
-                <div className="flex items-center gap-2"><FlaskConical className="size-4 text-[#6451aa]" /><p className="text-xs font-bold uppercase tracking-[.1em] text-[#6451aa]">Verified study example</p></div>
+                <div className="flex items-center gap-2"><FlaskConical className="size-4 text-[#6451aa]" /><p className="text-xs font-bold uppercase tracking-[.1em] text-[#6451aa]">Selected source-backed study</p></div>
                 <h2 className="mt-3 text-lg font-semibold text-[#30304c]">{subject.sampleTrial}</h2>
                 <p className="mt-2 text-sm leading-6 text-[#65627b]">The official intervention field names {subject.name}. That is not proof of an outcome.</p>
-                <Link href={"/intelligence/studies/" + subject.sampleTrial}
-                  className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#332a59] px-4 py-3 text-xs font-bold text-white hover:bg-[#483b7b]">
-                  Audit this trial <ArrowRight className="size-4" />
-                </Link>
+                <div className="mt-4 flex flex-col items-start gap-3">
+                  <a href="#evidence-review" className="inline-flex items-center gap-2 rounded-lg bg-[#332a59] px-4 py-3 text-xs font-bold text-white hover:bg-[#483b7b]">
+                    See source findings <ArrowRight className="size-4" />
+                  </a>
+                  <Link href={"/intelligence/studies/" + subject.sampleTrial} className="inline-flex items-center gap-1 text-xs font-semibold text-[#6554a4] hover:underline">
+                    Audit this trial <ArrowUpRight className="size-3.5" />
+                  </Link>
+                </div>
               </section>
             )}
             {subject.legacyTopic && (

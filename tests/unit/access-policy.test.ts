@@ -44,6 +44,9 @@ describe("deny-by-default access policy", () => {
     expect(accessDecision("/intelligence/admin/private", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/explore/ll-37", null).allowed).toBe(true);
     expect(accessDecision("/intelligence/compare", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/cases/magainin-pexiganan", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/cases/magainin-pexiganan/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/cases/unreviewed-claims", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/explore", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/explore/ziconotide/private", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/compare/admin", null).allowed).toBe(false);
