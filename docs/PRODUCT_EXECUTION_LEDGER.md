@@ -10,6 +10,20 @@ Updated 2026-10-19. This file is a navigation and dependency map; it is not evid
 - **Not the product:** a human-use peptide seller, affiliate directory, medical adviser, drug-approval predictor, personalized investment adviser, or user-behavior data brokerage.
 - **Constraints:** exact source relevance/citations, restricted content rights, scientific review, privacy, responsible drug-advertising boundaries, costs, limited engineering scope.
 
+## October 19 research marketplace simplicity and production-readiness (BROWSE FIRST)
+
+**Goal anchor:** Make VialGrade the source-linked, understandable research collection users can browse intuitively, with molecule identity, study source, quick preview, comparison, lot evidence workpapers and provenance connected. Core audience is researchers and biotech diligence analysts. Commercial seller endorsements, material sales, treatment recommendations and automatic AI scientific certainty are not product goals.
+
+**Pivot callout:** Old sequence: build increasingly detailed scientific research workflows and add separate buttons/hero sections so users can find them, then eventually revisit usability and the original market. New sequence: restore the original marketplace's straightforward browse/search/category/quick-view/compare interaction FIRST; progressively reveal methods and advanced tools; verify and release only the research-only public surfaces; validate scientific usefulness with professionals thereafter. Why: owner found the growing library confusing and "AI-y"; engineering complexity was visible in the UX. This improves comprehension without restoring unsafe sales mechanics.
+
+**Current:** simplified research homepage to a short library introduction, search, all 16 cards, horizontal categories and filters with advanced controls folded away; typographic identity panels instead of repeated fake molecular artwork; three clear primary desktop nav links plus More, one mobile menu; source/method tools moved below browsing; smaller Research Desk / Material / Organizations headers; optional paid AI absent in public production; original-source and vendor-QC provenance remain separately labeled. Detailed comparison and batch/document checks are still present. Notes in docs/RESEARCH_MARKETPLACE_SIMPLIFICATION_RELEASE_2026-10-19.md.
+
+**Release and verification:** Run complete research-only and legacy-mode CI/browser gates, source/authorization security, visual and mobile inspection; merge to connected GitHub main only after green checks; verify production domain and HTTP 410 checkout denial. No default reactivation of vendors, commerce, personalized lists or AI paid calls.
+
+**Parking lot:** historical supplier price feeds, past COA import, lab ranking scores and procurement marketplaces pending authenticated source rights/legal review; AI molecule generation and automatic scientific claim ratings pending reproducible scientific ground truth. **Open:** first real researcher usability testing, professional source appraisal, independently authenticated lots, existing vendor source access limitations and private external model credential/budget.
+
+**Goal check:** A short path from search to original evidence advances user research. Decorative sophistication and AI publicity do not.
+
 ## October 19 AI-assisted research and B2B marketplace exploration (LOCAL ONLY)
 
 **Pinned goal:** An approachable, connected peptide research intelligence product for researchers and biotech diligence teams. Scientific source reconciliation is the core job; a marketplace UX and AI copilot are enablers. Physical-material QC and institutional procurement are separate and independently gated. No human-use retail, therapeutic efficacy guarantees, automatic peptide fabrication, and no data rights assumptions.

@@ -55,14 +55,17 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("small-screen research navigation stays usable and no page overflows horizontally", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: /Pick a peptide/ })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Explore" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Compare" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Explore peptides/ })).toBeVisible();
+    const mobileNav = page.getByRole("navigation", { name: "Mobile research navigation" });
+    await expect(mobileNav.getByRole("link", { name: "Explore" })).toBeVisible();
+    await mobileNav.getByText("Menu", { exact: true }).click();
+    await expect(mobileNav.getByRole("link", { name: "Compare compounds" })).toBeVisible();
+    await mobileNav.getByText("Menu", { exact: true }).click();
     const indexWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(indexWidth).toBeLessThanOrEqual(391);
-    await page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Explore" }).click();
+    await mobileNav.getByRole("link", { name: "Explore" }).click();
     await expect(page).toHaveURL(/\/intelligence#explore$/);
-    await expect(page.getByRole("heading", { name: /Pick a peptide/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Explore peptides/ })).toBeVisible();
     const auditWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(auditWidth).toBeLessThanOrEqual(391);
   });
@@ -70,8 +73,8 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("retired paths clearly explain the shutdown rather than dumping visitors onto an unexplained index", async ({ page }) => {
     await page.goto("/market");
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
-    await expect(page.getByRole("status").getByText("The old marketplace is inactive.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open example dossier" })).toBeVisible();
+    await expect(page.getByRole("status").getByText(/The previous shopping marketplace is archived/)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toBeVisible();
     await page.goto("/how-we-check");
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
   });

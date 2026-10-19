@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ArrowUpRight, ClipboardCheck, FileSearch, FlaskConical, SearchCheck, ShieldAlert, Store } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, FileSearch, Store } from "lucide-react";
 import { MaterialReviewWorkbench } from "@/components/intelligence/material-review-workbench";
 import { RESEARCH_PROVIDER_RECORDS } from "@/lib/research-materials";
 import { researchSubjectBySlug } from "@/lib/research-explorer";
@@ -24,50 +24,27 @@ export default async function ResearchMaterialsPage({ searchParams }: {
           <Link href="/intelligence" className="hover:underline">Research Market</Link><span>/</span>
           <span aria-current="page" className="text-[#216554]">Research materials</span>
         </nav>
-        <header className="relative mt-7 overflow-hidden rounded-[23px] border-2 border-[#17191b] bg-[#e9fff1] p-6 sm:p-9">
-          <div className="pointer-events-none absolute -right-16 top-0 size-72 rounded-full border-2 border-[#17191b]/10" aria-hidden="true" />
-          <div className="relative max-w-3xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#17191b] bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[.12em] text-[#287561]">
-              <ClipboardCheck className="size-4" /> The material side of the Research Market
-            </p>
-            <h1 className="mt-5 text-[clamp(2.5rem,5vw,4.4rem)] font-extrabold leading-[1.05] tracking-[-.055em] text-[#17191b]">
-              Research the molecule.<br /><span className="text-[#17816d]">Verify the material.</span>
-            </h1>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#4e705f] sm:text-base">
-              A scientific paper cannot tell you what&apos;s in a particular vial. Browse peptide identities, compare the evidence associated with a specific research lot and inspect where supplier quality claims came from.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#material-index" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17191b] px-5 py-3 text-xs font-extrabold text-white hover:bg-[#383839]">
-                Browse material files <ArrowRight className="size-4" />
-              </a>
-              <Link href="/intelligence/providers" className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#17191b] bg-white px-5 py-3 text-xs font-extrabold text-[#17191b] hover:bg-[#f3fdf6]">
-                View supplier documentation <ArrowUpRight className="size-4" />
-              </Link>
-            </div>
+        <header className="mt-7 border-b border-[#dce6de] pb-7">
+          <h1 className="text-[clamp(2rem,4.4vw,3.2rem)] font-bold leading-tight tracking-[-.055em] text-[#203529]">Research material checks</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[#607365]">
+            Match a research sample&apos;s lot number against the number on its report, then see what else needs confirming. This is a document checklist, not a physical test or a certificate of quality.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-semibold">
+            <a href="#material-index" className="inline-flex items-center gap-1 text-[#2c7152] underline underline-offset-4">Browse compounds <ArrowRight className="size-3.5" /></a>
+            <Link href="/intelligence/providers" className="inline-flex items-center gap-1 text-[#2c7152] underline underline-offset-4">Public lab documents <ArrowUpRight className="size-3.5" /></Link>
           </div>
         </header>
-        <section aria-label="Material evidence summary" className="mt-5 grid gap-3 sm:grid-cols-3">
-          {([
-            { value: "16", label: "Scientific identities to investigate", icon: FlaskConical },
-            { value: "0", label: "Physical lots independently authenticated", icon: SearchCheck },
-            { value: String(RESEARCH_PROVIDER_RECORDS.length), label: "Public manufacturer QC profiles, not endorsements", icon: Store },
-          ] as const).map(({ value, label, icon: Icon }) => (
-            <div key={label} className="flex items-center gap-4 rounded-2xl border border-[#dbe5dd] bg-white p-5">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#edf7f0]"><Icon className="size-5 text-[#227263]" /></span>
-              <div><p className="text-2xl font-black tabular-nums text-[#20332a]">{value}</p><p className="mt-0.5 text-xs leading-5 text-[#728078]">{label}</p></div>
-            </div>
-          ))}
-        </section>
-        <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-[#797b70]">
-          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-[#987c47]" />
-          Read-only research due diligence. No purchase, referral, stock, legal-use certification, quality grade or physical sample is offered. A &quot;research use only&quot; label does not by itself establish lawful drug marketing.
-        </p>
-        <div className="mt-12"><MaterialReviewWorkbench initialSlug={initialSlug} /></div>
+        <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs leading-6 text-[#697e70]">
+          <p><strong>16</strong> reference identities</p>
+          <p><strong>0</strong> independently authenticated physical lots</p>
+          <p><strong>{RESEARCH_PROVIDER_RECORDS.length}</strong> company-published documentation profiles, not endorsements</p>
+        </div>
+        <div className="mt-7"><MaterialReviewWorkbench initialSlug={initialSlug} /></div>
 
         <section id="material-providers" className="mt-14 scroll-mt-32">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#188475]">The old vendor directory, rebuilt carefully</p>
+              <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#188475]">Public laboratory documents</p>
               <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em] text-[#17191b]">Who publishes the quality information?</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[#67766d]">Two organization profiles show first-party documentation about general peptide QC practices. Neither is independently verified by VialGrade or linked to the availability of any molecule in this catalog.</p>
             </div>

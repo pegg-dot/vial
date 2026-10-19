@@ -8,7 +8,7 @@ test.describe("Source-grounded Research Desk pilot", () => {
     await page.goto("/intelligence");
     await expect(page.getByRole("link", { name: "Open Research Desk" }).first()).toHaveAttribute("href", "/intelligence/desk");
     await page.getByRole("link", { name: "Open Research Desk" }).first().click();
-    await expect(page.getByRole("heading", { level: 1, name: /Ask better questions/ })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Research Desk" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Your research brief" })).toBeVisible();
     await page.getByRole("button", { name: /Clinical program/ }).click();
     await expect(page.getByRole("heading", { name: /Which pexiganan trials have registered results/ })).toBeVisible();

@@ -26,11 +26,12 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
 
   test("makes file grades visible and filterable without hiding the limits", async ({ page }) => {
     await page.goto("/intelligence");
-    await expect(page.getByRole("link", { name: "What does a research file grade actually mean?" }))
+    await expect(page.getByRole("link", { name: "About file coverage" }))
       .toHaveAttribute("href", "/intelligence/grading");
+    await page.getByText("More filters", { exact: false }).click();
     const grade = page.getByRole("combobox", { name: "Research file grade filter" });
     await grade.selectOption("A");
-    await expect(page.getByRole("status").filter({ hasText: "Showing 1 of 16 subjects" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Showing 1 of 16 compounds" })).toBeVisible();
     await expect(page.locator('[data-testid="research-card"]')).toHaveCount(1);
     await expect(page.locator('[data-testid="research-card"]').first()).toContainText("Pexiganan");
     await expect(page.locator('[data-testid="research-card"]').first()).toContainText("File coverage A");
@@ -46,7 +47,7 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
 
     await page.getByRole("combobox", { name: "Sort research file coverage" }).selectOption("source-coverage");
     await expect(page.locator('[data-testid="research-card"]').first()).toContainText("Pexiganan");
-    await expect(page.getByText("Grades count source layers documented by VialGrade", { exact: false })).toBeVisible();
+    await expect(page.getByText("Grades describe VialGrade", { exact: false })).toBeVisible();
   });
 
   test("reuses the decomposed file grade inside quick-view and a full research dossier", async ({ page }) => {

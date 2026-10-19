@@ -7,33 +7,33 @@ test.describe("Research Explorer discovery experience", () => {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: /Pick a peptide/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Choose a research direction" })).toBeVisible();
-    await expect(page.getByRole("status").filter({ hasText: "Showing 8 of 16 subjects" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open example dossier" })).toHaveAttribute("href", "/intelligence/explore/cagrilintide");
+    await expect(page.getByRole("heading", { name: /Explore peptides/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Compounds" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Showing 16 of 16 compounds" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toHaveAttribute("href", "/intelligence/explore/pexiganan");
 
     await page.getByRole("button", { name: /Host defense & antimicrobials/ }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Showing 4 of 16 subjects" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Showing 4 of 16 compounds" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Pexiganan", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Semaglutide", exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Clear filters" }).click();
 
     const search = page.getByRole("searchbox", { name: "Search research subjects" });
     await search.fill("LY3437943");
-    await expect(page.getByRole("status").filter({ hasText: "Showing 1 of 16 subjects" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Showing 1 of 16 compounds" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Retatrutide", exact: true })).toBeVisible();
     await search.fill("nonexistent-chemical-name");
-    await expect(page.getByRole("heading", { name: "Nothing matches these filters." })).toBeVisible();
-    await page.getByRole("button", { name: "Show all research" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Showing 8 of 16 subjects" })).toBeVisible();
-    await page.getByRole("button", { name: "Browse all 16 research subjects" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Showing 16 of 16 subjects" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "No matching compounds" })).toBeVisible();
+    await page.getByRole("button", { name: "Show all records" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Showing 16 of 16 compounds" })).toBeVisible();
+    await expect(page.locator('[data-testid="research-card"]')).toHaveCount(16);
     await expect(page.getByRole("link", { name: /Buy|Checkout|Seller|Shop/i })).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 
   test("can build a real two-subject comparison from the cards in either research perspective", async ({ page }) => {
     await page.goto("/intelligence");
+    await page.getByText("More filters", { exact: false }).click();
     await page.getByRole("button", { name: "Analyst", exact: true }).click();
     await expect(page.getByRole("button", { name: "Analyst", exact: true })).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("searchbox", { name: "Search research subjects" }).fill("tirzepatide");
@@ -47,7 +47,7 @@ test.describe("Research Explorer discovery experience", () => {
     );
     await page.getByRole("link", { name: "Compare subjects" }).click();
     await expect(page).toHaveURL(/\/intelligence\/compare\?/);
-    await expect(page.getByRole("heading", { name: "Compare what matters to the research." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Compare compounds" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Tirzepatide", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Retatrutide", exact: true })).toBeVisible();
     await expect(page.getByText("PubChem reference · SID 528343961 (no CID)")).toBeVisible();

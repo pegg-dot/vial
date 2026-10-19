@@ -172,7 +172,6 @@ export function ResearchDesk({ aiStatus, aiPilotToken }: {
         </section>
 
         <aside className="min-w-0 space-y-4">
-          <ResearchAiPanel key={topicId + ":" + audience + ":" + question} topicId={topicId} audience={audience} question={question} aiStatus={aiStatus} aiPilotToken={aiPilotToken} />
           <section className="rounded-[18px] border-2 border-[#17191b] bg-[#eafff1] p-5">
             <div className="flex items-center gap-2 text-[#1f7d60]"><FileQuestion className="size-5" /><h2 className="text-lg font-extrabold tracking-[-.035em]">Your research brief</h2></div>
             <p className="mt-3 text-xs leading-6 text-[#577462]">Turn this evidence network into a reusable briefing packet. The packet contains original links, gaps and AI review instructions. No model is called.</p>
@@ -193,6 +192,11 @@ export function ResearchDesk({ aiStatus, aiPilotToken }: {
             </button>
             <p aria-live="polite" className="mt-3 text-[11px] leading-5 text-[#6a826e]">A model can help organize your findings, but scientific judgments must be checked against the underlying research.</p>
           </section>
+          {aiStatus.reason !== "not-local" && (
+            <ResearchAiPanel key={topicId + ":" + audience + ":" + question}
+              topicId={topicId} audience={audience} question={question}
+              aiStatus={aiStatus} aiPilotToken={aiPilotToken} />
+          )}
           <section className="rounded-[17px] border border-[#e7d8bb] bg-[#fff9ec] p-5">
             <div className="flex items-center gap-2 text-[#926a30]"><ShieldAlert className="size-4" /><p className="text-xs font-black uppercase tracking-[.09em]">Deliberate limitations</p></div>
             <p className="mt-3 text-xs leading-6 text-[#826e4c]">This is not an autonomous biochemist. It does not invent peptides, assess physical synthesizability, certify safety, verify patent freedom to operate, or generate manufacturer quotes.</p>

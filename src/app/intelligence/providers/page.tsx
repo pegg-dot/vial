@@ -17,11 +17,12 @@ export default function ResearchProvidersPage() {
           <Link href="/intelligence" className="hover:underline">Research Market</Link><span>/</span>
           <span aria-current="page" className="text-[#236d57]">Supplier documentation</span>
         </nav>
-        <header className="mt-7 rounded-[23px] border-2 border-[#17191b] bg-[#e9f6ff] p-6 sm:p-9">
-          <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[.12em] text-[#366c8a]"><Building2 className="size-4" /> Source-first organization directory</p>
-          <h1 className="mt-4 text-[clamp(2.4rem,5.2vw,4.2rem)] font-extrabold leading-[1.03] tracking-[-.06em] text-[#17191b]">The organizations<br />behind the documentation.</h1>
-          <p className="mt-5 max-w-3xl text-sm leading-7 text-[#526d79]">The original marketplace helped you understand vendors. We are bringing that depth back with traceable public documentation about research-material quality practices. A profile is not a vendor recommendation and does not verify any particular lot.</p>
-          <p className="mt-3 text-xs font-semibold text-[#607e8a]">{RESEARCH_PROVIDER_RECORDS.length} company-sourced starting profiles · Reviewed as of {MATERIAL_REVIEW_DATE} · No material offers</p>
+        <header className="mt-7 border-b border-[#dce5df] pb-7">
+          <h1 className="text-[clamp(2rem,4.4vw,3.2rem)] font-bold tracking-[-.055em] text-[#203629]">Research organizations</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[#617469]">
+            See what laboratories and manufacturers say about their quality processes, with links to the original company pages. VialGrade has not independently verified these organizations or any specific material lot.
+          </p>
+          <p className="mt-3 text-xs text-[#7b897e]">{RESEARCH_PROVIDER_RECORDS.length} company documentation profiles · Source notes dated {MATERIAL_REVIEW_DATE}</p>
         </header>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {RESEARCH_PROVIDER_RECORDS.map(provider => (

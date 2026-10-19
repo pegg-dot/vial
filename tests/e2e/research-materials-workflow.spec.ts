@@ -8,9 +8,9 @@ test.describe("Research materials and source provenance", () => {
     await expect(page.getByRole("link", { name: "Open material verification" }))
       .toHaveAttribute("href", "/intelligence/materials?subject=pexiganan");
     await page.getByRole("link", { name: "Open material verification" }).click();
-    await expect(page.getByRole("heading", { name: /Research the molecule/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Research material checks" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Pexiganan material file" })).toBeVisible();
-    await expect(page.getByText("0 authenticated lots")).toBeVisible();
+    await expect(page.getByText("0 independently authenticated physical lots")).toBeVisible();
     await page.getByPlaceholder("Exact ID from the label").fill("ABC-123");
     await page.getByPlaceholder("Exact ID from the report").fill("ABC-12");
     await expect(page.getByRole("status")).toContainText("Conflict");

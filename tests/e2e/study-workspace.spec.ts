@@ -6,7 +6,7 @@ test.describe("one-task clinical trial source lookup", () => {
     const errors: string[] = [];
     page.on("pageerror", e => errors.push(e.message));
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: /Pick a peptide/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Explore peptides/ })).toBeVisible();
 
     const input = page.getByRole("search").getByLabel("ClinicalTrials.gov study ID or link");
     await input.fill("retatrutide");

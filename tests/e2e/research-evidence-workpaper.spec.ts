@@ -58,7 +58,7 @@ test.describe("source-backed professional research workflows", () => {
 
   test("shows registry context on the comparison page without fabricating a clinical winner", async ({ page }) => {
     await page.goto("/intelligence/compare?subjects=retatrutide%2Ctirzepatide&audience=analyst");
-    await expect(page.getByRole("heading", { name: "Compare what matters to the research." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Compare compounds" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Retatrutide selected trial source" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Tirzepatide selected trial source" })).toBeVisible();
     await expect(page.getByText("not a comparative or head-to-head clinical evaluation", { exact: false })).toBeVisible();
