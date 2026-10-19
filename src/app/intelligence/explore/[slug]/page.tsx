@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, CheckCircle2, CircleHelp, FileSearch, FlaskConical, GitCompareArrows, Microscope } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, CheckCircle2, CircleHelp, FileSearch, FlaskConical, GitCompareArrows, Microscope, ClipboardCheck } from "lucide-react";
 import {
   compareExplorerHref, registryDiscoveryUrl, researchSubjectBySlug,
   researchThemeById, RESEARCH_SUBJECTS, verifiedPubmedSearchUrl,
@@ -75,6 +75,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
         <nav aria-label="Research dossier sections" className="sticky top-[68px] z-20 -mx-5 mt-4 flex gap-2 overflow-x-auto border-b border-[#e5e4ea] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold text-[#535868] backdrop-blur-md sm:mx-0 sm:px-0">
           <a href="#overview" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Overview</a>
           <a href="#file-grade" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Research file grade</a>
+          <a href="#material-evidence" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Material verification</a>
           {subject.sampleTrial && <a href={subject.slug === "pexiganan" ? "#pexiganan-trials" : "#evidence-review"} className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Trial evidence</a>}
           {subject.slug === "pexiganan" && <a href="#pexiganan-network" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Evidence network</a>}
           <a href="#sources" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Sources</a>
@@ -149,6 +150,15 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           </div>
 
           <aside className="space-y-5 lg:sticky lg:top-28">
+            <section id="material-evidence" className="scroll-mt-40 rounded-2xl border border-[#c4decc] bg-[#ecf9f1] p-6">
+              <div className="flex items-center gap-2 text-[#22735b]"><ClipboardCheck className="size-4" /><p className="text-xs font-extrabold uppercase tracking-[.1em]">Research material file</p></div>
+              <h2 className="mt-3 text-lg font-extrabold tracking-[-.035em] text-[#294b38]">Sample verification · Not yet authenticated</h2>
+              <p className="mt-2 text-xs leading-6 text-[#5d7966]">The molecular source record and the research-file letter do not establish the identity, authenticity or analytical quality of a physical lot.</p>
+              <Link href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)}
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#1c614b] px-4 py-3 text-xs font-extrabold text-white hover:bg-[#2e8166]">
+                Open material checks <ArrowRight className="size-4" />
+              </Link>
+            </section>
             {subject.sampleTrial && (
               <section className="rounded-2xl border border-[#c8c2e4] bg-[#f1eeff] p-6">
                 <div className="flex items-center gap-2"><FlaskConical className="size-4 text-[#6451aa]" /><p className="text-xs font-bold uppercase tracking-[.1em] text-[#6451aa]">Selected source-backed study</p></div>
@@ -181,7 +191,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           </aside>
         </div>
         <p className="mt-9 max-w-4xl text-xs leading-6 text-[#818492]">
-          Editorial starting points, not rankings of clinical effectiveness, experimental suitability or investment prospects. No prices, vendors, purchases or recommendations for human consumption.
+          Editorial research starting points, not grades of clinical effectiveness or material quality. Company-published supplier QC information is separate and unverified; no prices, purchases or recommendations for human consumption.
         </p>
       </div>
     </main>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CheckCircle2, Compass, BookOpenCheck, ScanSearch, Building2, GitCompareArrows } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckCircle2, Compass, BookOpenCheck, ScanSearch, Building2, GitCompareArrows, ClipboardCheck, Store } from "lucide-react";
 import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
 import { ArtMolecule, ArtFlask } from "@/components/vial-art";
@@ -37,7 +37,7 @@ export default async function IntelligencePage({ searchParams }: {
               Pick a peptide.<br />{" "}<span className="text-[#168e7f]">Follow the evidence.</span>
             </h1>
             <p className="mt-5 max-w-[650px] text-sm font-medium leading-7 text-[#45645c] sm:text-base sm:leading-8">
-              Browse 16 curated research subjects, open the original scientific sources, and compare what different studies actually investigated. No products or sellers, just research.
+              Browse 16 research subjects the way you explored the original marketplace. Follow the science, inspect material-verification requirements and check the public documentation behind research suppliers. No purchases or recommendations.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a href="#explore" className="inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#17191b] bg-[#17191b] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#343839]">
@@ -73,16 +73,18 @@ export default async function IntelligencePage({ searchParams }: {
             <div>
               <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#26806b]">The original marketplace depth, rebuilt for research</p>
               <h2 id="research-workflows" className="mt-2 text-2xl font-extrabold tracking-[-.05em] text-[#17191b] sm:text-3xl">What do you want to investigate?</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#65746c]">Start with a compound or jump straight into a source check. Every tool below opens an actual research record, not a seller listing.</p>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#65746c]">Start with a compound, investigate a research material or inspect supplier documentation. These are different evidence trails, all connected to the same research market.</p>
             </div>
             <span className="rounded-full border border-[#d5e5da] bg-[#effaf3] px-3 py-1.5 text-[11px] font-bold text-[#447666]">Pexiganan is the fully connected pilot</span>
           </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {([
               { name: "Explore a compound", prompt: "Identity, experiments, studies and related analogs", href: "/intelligence/explore/pexiganan", icon: Compass, shade: "bg-[#dffff1]", action: "Open Pexiganan dossier" },
               { name: "Audit its evidence", prompt: "Six claims, original sources and what remains uncertain", href: "/intelligence/passports/pexiganan", icon: BookOpenCheck, shade: "bg-[#edebff]", action: "See evidence passport" },
               { name: "Verify a record", prompt: "Check a PMID or NCT against the curated source register", href: "/intelligence/verify?ref=PMID%2036781451", icon: ScanSearch, shade: "bg-[#fff1dc]", action: "Try source verifier" },
               { name: "Trace the organizations", prompt: "Find named trial sponsors and unverified lab claims", href: "/intelligence/organizations", icon: Building2, shade: "bg-[#e6efff]", action: "Explore source organizations" },
+              { name: "Inspect a research material", prompt: "Compare a lot number to its report and see the five checks still required", href: "/intelligence/materials?subject=pexiganan", icon: ClipboardCheck, shade: "bg-[#d7f8e6]", action: "Open material verification" },
+              { name: "Review supplier documentation", prompt: "See original QC statements, source links and what's not authenticated", href: "/intelligence/providers", icon: Store, shade: "bg-[#f7f3db]", action: "Inspect supplier sources" },
             ] as const).map(({name,prompt,href,icon:Icon,shade,action})=>(
               <Link key={href} href={href} className="group flex min-h-[195px] flex-col rounded-[17px] border-2 border-[#17191b] bg-white p-4 shadow-[4px_5px_0_rgba(23,25,27,0.1)] transition-transform hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#168e7f]">
                 <span className={"grid size-11 place-items-center rounded-xl border border-[#17191b]/15 "+shade}><Icon className="size-5" /></span>
@@ -108,7 +110,7 @@ export default async function IntelligencePage({ searchParams }: {
           <div>
             <p className="text-[11px] font-black uppercase tracking-[.12em] text-[#aef2d6]">Featured research file · More than search</p>
             <h2 className="mt-2 text-xl font-extrabold tracking-[-.035em] sm:text-2xl">Pexiganan. Follow the complete source trail.</h2>
-            <p className="mt-2 max-w-2xl text-xs leading-6 text-white/70 sm:text-sm">Four selected registered studies, ten original source records, six evidence checks and sponsor attribution, with source-specific verification and honest gaps. No suppliers or purchasing.</p>
+            <p className="mt-2 max-w-2xl text-xs leading-6 text-white/70 sm:text-sm">Four selected registered studies, ten original source records, six evidence checks and sponsor attribution. Connect the science to a separate, unverified research-material workpaper. No purchasing.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href="/intelligence/explore/pexiganan" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#aef2d6] px-4 py-3 text-xs font-extrabold text-[#174334] hover:bg-[#ceffe9]">
@@ -152,8 +154,8 @@ export default async function IntelligencePage({ searchParams }: {
       <section id="method" className="scroll-mt-24 border-t border-[#e6e6ee] bg-[#faf9f7]">
         <div className="mx-auto grid max-w-[1180px] gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[1fr_1fr]">
           <div>
-            <h2 className="text-lg font-semibold text-[#2e2e42]">Research, not retail.</h2>
-            <p className="mt-3 text-sm leading-7 text-[#777a88]">The original peptide marketplace is preserved as an inactive code archive. Public purchasing, pricing, seller referrals and checkout remain disabled. No commercial rights or legal approvals are implied by this discovery catalog.</p>
+            <h2 className="text-lg font-semibold text-[#2e2e42]">Research marketplace, not a retail checkout.</h2>
+            <p className="mt-3 text-sm leading-7 text-[#777a88]">We preserve the original browsing and verification approach. Supplier QC descriptions are visible as first-party sources, not certifications. Purchasing, pricing, seller referrals and checkout remain disabled.</p>
           </div>
           <div>
             <h2 className="text-lg font-semibold text-[#2e2e42]">A starting collection, not a scientific verdict.</h2>

@@ -27,6 +27,8 @@ export function ResearchReleaseHeader() {
           </Link>
           <nav aria-label="Research navigation" className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
             <Link href="/intelligence#explore" className="rounded-full bg-[#28234c] px-3 py-2 text-xs font-semibold text-white hover:bg-[#44368d] sm:px-4 sm:text-sm">Explore</Link>
+            <Link href="/intelligence/materials" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:px-3 sm:text-sm">Materials</Link>
+            <Link href="/intelligence/providers" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] md:inline-flex md:px-3 md:text-sm">Suppliers</Link>
             <Link href="/intelligence/verify" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:inline-flex sm:px-3 sm:text-sm">Verify source</Link>
             <Link href="/intelligence/compare?subjects=semaglutide,tirzepatide" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] sm:px-3 sm:text-sm">Compare</Link>
             <Link href="/intelligence/grading" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#eee] md:inline-flex md:text-sm">File grades</Link>
@@ -59,6 +61,8 @@ export function ResearchReleaseFooter() {
         </div>
         <nav aria-label="Legal and source navigation" className="grid content-start gap-3 text-sm font-semibold text-white/75">
           <Link href="/intelligence#explore" className="inline-flex items-center gap-2 hover:text-[#c0baff]"><BookOpenCheck className="size-4" /> Research Explorer</Link>
+          <Link href="/intelligence/materials" className="hover:text-[#c0baff]">Research materials and lot evidence</Link>
+          <Link href="/intelligence/providers" className="hover:text-[#c0baff]">Supplier documentation sources</Link>
           <Link href="/intelligence#trial-lookup" className="hover:text-[#c0baff]">Check a trial ID</Link>
           <Link href="/intelligence/grading" className="hover:text-[#c0baff]">Research file grades explained</Link>
           <Link href="/intelligence/passports/pexiganan" className="hover:text-[#c0baff]">Pexiganan evidence passport</Link>

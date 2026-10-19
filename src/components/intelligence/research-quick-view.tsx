@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, GitCompareArrows, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, GitCompareArrows, X, ClipboardCheck } from "lucide-react";
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { researchThemeById, type ExplorerAudience, type ResearchSubject } from "@/lib/research-explorer";
@@ -97,6 +97,10 @@ export function ResearchQuickView({
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#202125] px-4 py-2.5 text-xs font-extrabold text-[#202125] hover:bg-[#f2f1f6] disabled:cursor-not-allowed disabled:opacity-40">
                 <GitCompareArrows className="size-4" /> {selected ? "Remove from compare" : "Add to compare"}
               </button>
+              <Link href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)} onClick={onClose}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[#bcd9c7] bg-[#f4fcf7] px-3 py-2.5 text-xs font-extrabold text-[#296a53] hover:bg-[#e3f7e8]">
+                <ClipboardCheck className="size-4" /> Material file · unverified
+              </Link>
               {subject.slug === "pexiganan" && (
                 <Link href="/intelligence/passports/pexiganan" onClick={onClose}
                   className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[#a8d4bb] bg-[#ecf9f2] px-3 py-2.5 text-xs font-extrabold text-[#296a53] hover:bg-[#d8f2e1]">
