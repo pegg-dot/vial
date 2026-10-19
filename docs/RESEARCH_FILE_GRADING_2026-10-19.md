@@ -142,6 +142,50 @@ Citable public source method:
 6. No GitHub PR, Vercel preview or deployment for this prototype.
    Open local Safari only after the exact build passes.
 
+## Completed local engineering verification, October 19
+
+Source branch: local/vialgrade-research-grading-2026-10-19.
+
+- Original branch research-only optimized Next.js build passed.
+  Persistent Mac Documents copy required removing one duplicate,
+  test-generated node_modules symlink from an older preview setup.
+  After that the standalone permanent copy passed its own TypeScript
+  check and optimized production-mode build.
+- 1,294 Vitest unit tests passed in 144 files, including grade-vs-source
+  mapping, exact identity qualifications, source-role boundaries and
+  ungraded examples across all 16 files.
+- All 87 isolated integration files passed, including the archived
+  history/account/marketplace protections.
+- 42 of 42 research-only Chromium browser checks passed, including
+  new grading methodology, filter, quick-view, dossier, mobile,
+  source links, original evidence workpaper and HTTP 410 checkout.
+- Default/historical Chromium test suite passed 44 applicable cases;
+  29 research-only tests intentionally skipped without the research flag.
+- TypeScript and full ESLint passed; static security audit across
+  691 tracked source files passed; anonymous/customer/staff HTTP role
+  check passed across 56 routes; structural accessibility check
+  passed across 56 routes. Production-only npm dependency audit
+  reported no vulnerabilities. These are code checks, not legal
+  approval or a regulatory-grade security certification.
+- Captured and visually reviewed eleven actual screenshots in 1440px
+  desktop and 390px mobile viewports with zero horizontal overflow.
+  Verified all 11 images load in a local offline gallery at:
+  ~/Documents/VialGrade/Local_Milestones/2026-10-19-research-file-grades-preview/index.html
+- Verified the independently restartable Mac app is bound to loopback
+  127.0.0.1:39571, the Research Explorer and /intelligence/grading
+  both returned HTTP 200, local-preview banner is present and a
+  direct checkout POST returned HTTP 410. Safari opened on the Mac.
+  Launcher:
+  ~/Documents/VialGrade/Research_Preview_App/scripts/open-local-research-preview.command
+- Local commit and archive saved for recovery, NOT deployed or pushed
+  to GitHub. There was no API purchase or live product database write.
+
+**Remaining:** scientific expert review of the original paper/registry
+interpretations; pilot grading rubric calibration; independent
+source rights and legal/privacy review; observed professional
+user tasks; product economics and value vs Scholar/PubMed/ChatGPT.
+Passing engineering tests does not mean scientist approval.
+
 ## Current / next / parked / open
 
 Current: three-source-layer file-grade integration on branch
