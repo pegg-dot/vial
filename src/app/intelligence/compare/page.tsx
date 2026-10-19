@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, ArrowRight, GitCompareArrows } from "lucide-react";
 import { CompareTrialSource } from "@/components/intelligence/compare-trial-source";
+import { ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import {
   compareExplorerHref, researchSubjectBySlug, researchThemeById,
   registryDiscoveryUrl, verifiedPubmedSearchUrl, type ExplorerAudience,
@@ -32,6 +33,7 @@ export default async function CompareResearchPage({ searchParams }: {
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.14em] text-[#625794]"><GitCompareArrows className="size-4" /> Scientific comparison</div>
             <h1 className="mt-4 text-[clamp(2.1rem,4vw,3.35rem)] font-semibold leading-tight tracking-[-.055em] text-[#27283d]">Compare what matters to the research.</h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[#717581]">Research context and source identity side by side. No clinical effectiveness score, safety ranking, company valuation or sourcing recommendations.</p>
+            <Link href="/intelligence/grading" className="mt-3 inline-flex text-xs font-semibold text-[#356f65] underline underline-offset-2">How our file coverage grades work</Link>
           </div>
           {subjects.length >= 2 && (
             <div className="flex shrink-0 gap-2">
@@ -70,6 +72,7 @@ export default async function CompareResearchPage({ searchParams }: {
                       <span className="text-xs font-semibold" style={{ color: theme.color }}>{theme.name}</span>
                       <h2 className="mt-2 text-2xl font-semibold tracking-[-.04em] text-[#29283a]">{subject.name}</h2>
                       <p className="mt-1 text-xs leading-6 text-[#818491]">{subject.family}</p>
+                      <div className="mt-3"><ResearchFileGradeMark subject={subject} withCount /></div>
                       <div className="mt-6 space-y-5">
                         <div><h3 className="text-[11px] font-bold uppercase tracking-[.12em] text-[#777384]">Mechanism or experimental focus</h3><p className="mt-2 text-sm leading-6 text-[#383b4b]">{subject.mechanism}</p></div>
                         <div><h3 className="text-[11px] font-bold uppercase tracking-[.12em] text-[#777384]">{audience === "analyst" ? "Diligence question" : "Research question"}</h3><p className="mt-2 text-sm leading-6 text-[#383b4b]">{audience === "analyst" ? subject.analystAngle : subject.studyQuestion}</p></div>

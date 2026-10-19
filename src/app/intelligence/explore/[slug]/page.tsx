@@ -9,6 +9,7 @@ import {
 } from "@/lib/research-explorer";
 import { DossierPerspective } from "@/components/intelligence/dossier-perspective";
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
+import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -48,6 +49,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               <span className="text-xs text-[#8a8e99]">Curated identity source · 18 Oct 2026</span>
             </div>
             <h1 className="mt-5 text-[clamp(2.45rem,5vw,4.25rem)] font-semibold leading-[1.1] tracking-[-.06em] text-[#242639]">{subject.name}</h1>
+            <div className="mt-3"><ResearchFileGradeMark subject={subject} withCount /></div>
             <p className="mt-3 max-w-3xl text-base leading-7 text-[#5d6270]">{subject.identity}</p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer"
@@ -70,6 +72,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
 
         <nav aria-label="Research dossier sections" className="sticky top-[68px] z-20 -mx-5 mt-4 flex gap-2 overflow-x-auto border-b border-[#e5e4ea] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold text-[#535868] backdrop-blur-md sm:mx-0 sm:px-0">
           <a href="#overview" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Overview</a>
+          <a href="#file-grade" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Research file grade</a>
           {subject.sampleTrial && <a href="#evidence-review" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Trial evidence</a>}
           <a href="#sources" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Sources</a>
           <a href="#related" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Related</a>
@@ -82,6 +85,9 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               <h2 className="mt-3 text-xl font-semibold tracking-[-.035em] text-[#27273a]">{subject.studyQuestion}</h2>
               <p className="mt-3 text-sm leading-7 text-[#686c7a]">Start by checking studies of {subject.mechanism.toLowerCase()}, rather than inferring clinical outcomes or experiment suitability from the molecule name.</p>
             </section>
+            <div id="file-grade" className="scroll-mt-40">
+              <ResearchFileGradeCard subject={subject} />
+            </div>
             <DossierPerspective research={subject.scientistAngle} analyst={subject.analystAngle} />
             {subject.sampleTrial && (
               <Suspense fallback={<TrialEvidenceLoading nctId={subject.sampleTrial} />}>

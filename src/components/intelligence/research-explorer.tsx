@@ -12,8 +12,12 @@ import {
 } from "@/lib/research-explorer";
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { ResearchQuickView } from "@/components/intelligence/research-quick-view";
+import { ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
+import { gradeResearchFile, sortSubjectsByFileCoverage } from "@/lib/research-file-grade";
 
 type SourceFilter = "all" | "selected-trial" | "identity-only";
+type GradeFilter = "all" | "A" | "B" | "C" | "ungraded";
+type SortMode = "editorial" | "source-coverage";
 
 const themeSymbol: Record<ResearchThemeId, string> = {
   metabolic: "◉", "host-defense": "✳", neuropeptides: "◎", constrained: "⌬",
@@ -29,6 +33,8 @@ export function ResearchExplorer() {
   const [themeId, setThemeId] = useState<ResearchThemeId | "all">("all");
   const [audience, setAudience] = useState<ExplorerAudience>("researcher");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
+  const [gradeFilter, setGradeFilter] = useState<GradeFilter>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("editorial");
   const [selected, setSelected] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [quickViewSlug, setQuickViewSlug] = useState<string | null>(null);
@@ -39,6 +45,8 @@ export function ResearchExplorer() {
       if (themeId !== "all" && subject.theme !== themeId) return false;
       if (sourceFilter === "selected-trial" && !subject.sampleTrial) return false;
       if (sourceFilter === "identity-only" && subject.sampleTrial) return false;
+      const fileLetter = gradeResearchFile(subject).letter ?? "ungraded";
+      if (gradeFilter !== "all" && gradeFilter !== fileLetter) return false;
       if (!q) return true;
       const theme = researchThemeById(subject.theme);
       return [
@@ -46,12 +54,13 @@ export function ResearchExplorer() {
         subject.identity, theme.name, ...subject.alternativeNames,
       ].some(value => value.toLowerCase().includes(q));
     });
-  }, [query, themeId, sourceFilter]);
+  }, [query, themeId, sourceFilter, gradeFilter]);
 
-  const featuredMode = themeId === "all" && !query.trim() && sourceFilter === "all" && !showAll;
+  const featuredMode = themeId === "all" && !query.trim() && sourceFilter === "all" &&
+    gradeFilter === "all" && sortMode === "editorial" && !showAll;
   const visible = featuredMode
     ? RESEARCH_THEMES.flatMap(theme => matching.filter(subject => subject.theme === theme.id).slice(0, 2))
-    : matching;
+    : sortMode === "source-coverage" ? sortSubjectsByFileCoverage(matching) : matching;
   const pinned = RESEARCH_SUBJECTS.filter(subject => subject.sampleTrial);
   const peek = RESEARCH_SUBJECTS.find(item => item.slug === quickViewSlug) ?? null;
 
@@ -65,6 +74,8 @@ export function ResearchExplorer() {
     setQuery("");
     setThemeId("all");
     setSourceFilter("all");
+    setGradeFilter("all");
+    setSortMode("editorial");
     setShowAll(false);
   }
 
@@ -107,7 +118,7 @@ export function ResearchExplorer() {
         </div>
       </section>
 
-      {themeId === "all" && !query.trim() && sourceFilter === "all" && (
+      {themeId === "all" && !query.trim() && sourceFilter === "all" && gradeFilter === "all" && (
       <section aria-label="Selected clinical study source shelf" className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -130,6 +141,7 @@ export function ResearchExplorer() {
                 <div className="p-4">
                   <h3 className="text-lg font-extrabold tracking-[-.04em] text-[#17191b]">{subject.name}</h3>
                   <p className="mt-0.5 text-xs font-semibold text-[#64716e]">Study {subject.sampleTrial}</p>
+                  <div className="mt-2"><ResearchFileGradeMark subject={subject} withCount /></div>
                   <button type="button" onClick={() => setQuickViewSlug(subject.slug)}
                     aria-label={"Quick view " + subject.name}
                     className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#17191b] px-3 py-2 text-xs font-extrabold text-white hover:bg-[#343839]">
@@ -149,6 +161,7 @@ export function ResearchExplorer() {
             <p className="text-[11px] font-extrabold uppercase tracking-[.15em] text-[#168e7f]">The research index</p>
             <h2 id="browse-title" className="mt-1 text-3xl font-extrabold tracking-[-.055em] text-[#17191b]">Explore the research</h2>
             <p className="mt-1 text-sm leading-6 text-[#757982]">Browse like a marketplace. Open original evidence instead of products.</p>
+            <Link href="/intelligence/grading" className="mt-2 inline-flex text-xs font-bold text-[#347b6d] underline underline-offset-2 hover:text-[#20564c]">What does a research file grade actually mean?</Link>
           </div>
           <div aria-label="Research perspective" className="inline-flex w-fit rounded-xl border-2 border-[#202225] bg-white p-1 text-xs font-bold">
             <button type="button" aria-pressed={audience === "researcher"} onClick={() => setAudience("researcher")}
@@ -188,12 +201,38 @@ export function ResearchExplorer() {
             </button>
           ))}
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#58676a]">
+            Research file grade
+            <select aria-label="Research file grade filter" value={gradeFilter}
+              onChange={e => setGradeFilter(e.target.value as GradeFilter)}
+              className="min-h-10 rounded-lg border border-[#cad3d1] bg-white px-3 py-2 text-xs font-bold text-[#27332f]">
+              <option value="all">All file coverage</option>
+              <option value="A">A · Three source layers linked</option>
+              <option value="B">B · Two source layers linked</option>
+              <option value="C">C · Identity source linked</option>
+              <option value="ungraded">Unscored · Identity qualified</option>
+            </select>
+          </label>
+          <label className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#58676a]">
+            Sort
+            <select aria-label="Sort research file coverage" value={sortMode}
+              onChange={e => setSortMode(e.target.value as SortMode)}
+              className="min-h-10 rounded-lg border border-[#cad3d1] bg-white px-3 py-2 text-xs font-bold text-[#27332f]">
+              <option value="editorial">Curated order</option>
+              <option value="source-coverage">Most source layers checked in VialGrade</option>
+            </select>
+          </label>
+        </div>
+        <p className="text-xs leading-5 text-[#7f898d]">
+          Grades count source layers documented by VialGrade, not peptide quality, efficacy or the complete scientific literature.
+        </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p role="status" className="text-xs font-semibold text-[#677176]">
             Showing {visible.length} of {RESEARCH_SUBJECTS.length} subjects
             {themeId === "all" ? "" : " · " + researchThemeById(themeId).name}
           </p>
-          {(themeId !== "all" || query || sourceFilter !== "all") && (
+          {(themeId !== "all" || query || sourceFilter !== "all" || gradeFilter !== "all" || sortMode !== "editorial") && (
             <button type="button" onClick={clear}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#347c73] hover:underline">
               <FilterX className="size-3.5" /> Clear filters
@@ -220,6 +259,7 @@ export function ResearchExplorer() {
                   <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
                     <p className="line-clamp-1 text-[10px] font-extrabold uppercase tracking-[.09em] text-[#858a90]">{subject.family}</p>
                     <h3 className="mt-1 text-xl font-extrabold tracking-[-.05em] text-[#17191b]">{subject.name}</h3>
+                    <div className="mt-2"><ResearchFileGradeMark subject={subject} withCount /></div>
                     <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-[#646c76]">{subject.identity}</p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {subject.sampleTrial ? (

@@ -10,6 +10,18 @@ Updated 2026-10-19. This file is a navigation and dependency map; it is not evid
 - **Not the product:** a human-use peptide seller, affiliate directory, medical adviser, drug-approval predictor, personalized investment adviser, or user-behavior data brokerage.
 - **Constraints:** exact source relevance/citations, restricted content rights, scientific review, privacy, responsible drug-advertising boundaries, costs, limited engineering scope.
 
+## October 19 restored research-file grading (LOCAL, NOT DEPLOYED)
+
+**Goal anchor:** the original marketplace offered useful browse, grade, decomposed criteria, compare, and original compound education. Preserve those affordances in source-first research while never bringing back vendors, buying or unreviewed effectiveness judgments. Target first users: scientific researchers and biotech diligence analysts. A research grade must be narrowly defined and auditable.
+
+**Owner-directed pivot:** Old sequence: lightweight research explorer -> professional pilots -> deeper feature set. New sequence: retain the marketplace-like UI -> put original-source research-file audit grades back into browsing -> independently verify science and run real first-use pilots -> one batched release when approved. Why: dropping the old trust framework discarded useful explanatory mechanics; original grade subjects were VENDORS, not peptides, so criteria cannot just be copied. Defer commercial source evaluation, old COAs and private seller data. Revisit after methods review and five real researcher + five analyst tasks.
+
+**Current:** branch local/vialgrade-research-grading-2026-10-19 on previous local marketplace research commit 0f22e86. New pilot *research FILE coverage* letter based on three narrow checks: exact molecular identity record, one explicitly intervention-matched NCT example, and one individually referenced primary experimental paper for the exact subject (not search results/reviews/other analogs). Show reasons and source URLs on catalog, quick view, dossier, comparison; publish /intelligence/grading method page; add grade filters and sorts. Withhold entity grade for qualified SID/variant identity (retatrutide and nisin A). An A means three SOURCE LAYERS in this limited VialGrade file, not evidence quality, effectiveness, safety, clinical outcomes or buying suitability. See docs/RESEARCH_FILE_GRADING_2026-10-19.md.
+
+**Next:** finish exact browser/security/integration QA, rebuild persistent localhost Safari preview so owner sees changes immediately, get qualified peer review of grading methodology and actual job-to-be-done evidence. **Parked:** revived shops/pricing/COAs, unlicensed journals, broad auto-import, personalized clinical advice and universal drug scores. **Open:** real usefulness, independent scientific appraisal, source rights/privacy, email routing and cost-approved batched release.
+
+**Goal check:** file grades are transparent navigation and a quality-of-OUR-WORK checkpoint, NOT a scientific certainty score. They advance source reconciliation only if users act on the source links and distinguish reviewed from unreviewed.
+
 ## October 19 marketplace-style research browsing recovery (LOCAL INTERACTIVE PREVIEW)
 
 **Goal anchor:** the final product is source-traceable peptide research intelligence for scientific researchers and life-sciences diligence analysts. The market *interaction model* is a discovery enabler, not a right to sell drugs or source materials. Success is real task correctness/time saved with original source records, not a broad empty directory.

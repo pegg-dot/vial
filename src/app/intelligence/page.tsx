@@ -48,6 +48,9 @@ export default async function IntelligencePage({ searchParams }: {
               </Link>
             </div>
             <p className="mt-4 text-xs font-semibold text-[#678177]">16 curated subjects · 4 areas · 5 selected trial examples · No purchasing</p>
+            <Link href="/intelligence/grading" className="mt-2 inline-flex items-center gap-1 text-xs font-extrabold text-[#266b61] hover:underline">
+              Research file grades explained <ArrowUpRight className="size-3.5" />
+            </Link>
             <Link href="/intelligence/explore/cagrilintide" className="mt-3 inline-flex items-center gap-1.5 text-xs font-extrabold text-[#266b61] hover:underline">
               Open example dossier <ArrowUpRight className="size-3.5" />
             </Link>

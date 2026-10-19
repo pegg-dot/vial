@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, GitCompareArrows, X } from "lucide-react";
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
+import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { researchThemeById, type ExplorerAudience, type ResearchSubject } from "@/lib/research-explorer";
 
 export function ResearchQuickView({
@@ -61,6 +62,7 @@ export function ResearchQuickView({
             {subject.alternativeNames.length > 0 && (
               <p className="mt-1 text-xs text-[#787c88]">Also listed as {subject.alternativeNames.slice(0, 2).join(" · ")}</p>
             )}
+            <div className="mt-3"><ResearchFileGradeMark subject={subject} withCount /></div>
             <p className="mt-4 text-sm leading-7 text-[#515866]">{subject.identity}</p>
             <div className="mt-5 rounded-xl border border-[#e3e5ea] bg-[#f8f9f9] p-4">
               <p className="text-[10px] font-extrabold uppercase tracking-[.13em] text-[#397267]">{audience === "researcher" ? "What to investigate" : "What an analyst needs to check"}</p>
@@ -76,6 +78,12 @@ export function ResearchQuickView({
               </span>
             </div>
             <p className="mt-4 text-xs leading-6 text-[#777c86]">{subject.identityCaveat}</p>
+            <details className="group mt-4">
+              <summary className="cursor-pointer text-xs font-extrabold text-[#2f776d] underline underline-offset-2">
+                Why did this research file get that grade?
+              </summary>
+              <div className="mt-3"><ResearchFileGradeCard subject={subject} compact /></div>
+            </details>
             <div className="mt-6 flex flex-wrap gap-3 border-t border-[#e4e5e9] pt-5">
               <Link
                 href={"/intelligence/explore/" + subject.slug}
