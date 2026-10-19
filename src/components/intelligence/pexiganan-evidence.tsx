@@ -55,7 +55,7 @@ export function PexEvidenceWayfinder({ condensed = false }: { condensed?: boolea
         </p>
         <div className="mt-4"><PexEvidenceScopeStrip /></div>
       </div>
-      <div className={"grid gap-0 " + (condensed ? "sm:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4")}>
+      <div className={"grid grid-cols-2 gap-0 " + (condensed ? "sm:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4")}>
         {([
           {
             icon: BookOpenCheck, title: "Evidence passport", sub: "Six claim-to-source checks, including the gaps",
@@ -74,9 +74,9 @@ export function PexEvidenceWayfinder({ condensed = false }: { condensed?: boolea
             href: "/intelligence/organizations", label: "View source organizations",
           },
         ] as const).map(({ icon: Icon, title, sub, href, label }, i) => (
-          <div key={title} className={"border-t border-[#dfe5e3] p-5 " + (i > 0 ? "sm:border-l" : "")}>
+          <div key={title} className={"border-t border-[#dfe5e3] p-3.5 sm:p-5 " + (i % 2 === 1 ? "border-l border-[#dfe5e3]" : i > 1 ? "xl:border-l xl:border-[#dfe5e3]" : "")}>
             <div className="grid size-10 place-items-center rounded-xl bg-[#f0f3f2]"><Icon className="size-5 text-[#236e63]" /></div>
-            <h3 className="mt-3 text-base font-extrabold tracking-[-.025em] text-[#202728]">{title}</h3>
+            <h3 className="mt-3 text-sm font-extrabold tracking-[-.025em] text-[#202728] sm:text-base">{title}</h3>
             <p className="mt-1 min-h-[42px] text-xs leading-5 text-[#64716e]">{sub}</p>
             <Link href={href} className="mt-3 inline-flex min-h-9 items-center gap-1.5 text-xs font-extrabold text-[#1e7261] hover:underline">
               {label} <ArrowRight className="size-3.5" />
