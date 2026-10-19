@@ -98,6 +98,44 @@ against PubMed, ClinicalTrials.gov, Google Scholar, ChatGPT/Claude
 and actual specialist tools. A prettier research catalog is only an
 ENABLER for the source-reconciliation job.
 
+## Verified engineering and user-visible preview, October 19
+
+- An optimized research-only production-mode Next.js build passed in
+  the original branch, and the independent persistent Documents clone
+  built successfully with the local preview flag.
+- All 38 Chromium research-mode browser tests passed in that persistent
+  clone. This includes four category rails, selected-trial source filters,
+  quick-view open/Escape/compare, all sixteen dossier routes, internal
+  original-source navigation, mobile overflow checks and the no-purchase
+  HTTP 410 protections.
+- The historical/default-mode suite passed 44 applicable Chromium cases;
+  25 research-only cases were intentionally skipped without the research
+  flag.
+- All 1,290 unit tests passed (143 test files); all 87 isolated
+  integration test files passed.
+- Full TypeScript and ESLint, the static security audit (688 files),
+  route access and structural accessibility audits (55 routes)
+  completed successfully. npm production-only dependency audit returned
+  zero vulnerabilities; prior development-only toolchain advisories
+  remain separate maintenance debt.
+- The Mac preview is saved independently of the temporary checkout at:
+  ~/Documents/VialGrade/Research_Preview_App
+  and can be opened again by double-clicking:
+  scripts/open-local-research-preview.command
+  The shell script enforces evidence-only mode, starts a listener on
+  127.0.0.1:39571 (no LAN/public network binding), and opens Safari.
+- Verified after launcher start: localhost research homepage returned
+  HTTP 200, included a conspicuous LOCAL INTERACTIVE PREVIEW marker,
+  and direct POST to /api/v1/commerce/checkout returned HTTP 410.
+- Eleven real screenshots, including 1440px desktop and 390px phone,
+  were visually inspected and had no horizontal overflow. All eleven
+  offline gallery images loaded from the persistent Documents file at:
+  ~/Documents/VialGrade/Local_Milestones/2026-10-19-research-marketplace-preview/index.html
+- Neither GitHub main nor vialgrade.com were changed. Original
+  marketplace archive tag was fetched and verified but no seller data
+  was imported. Scientific expert approval and professional task
+  validation have NOT happened.
+
 ## Current roadmap ledger
 
 Current: one research-only marketplace-style browsing prototype and
