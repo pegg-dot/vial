@@ -10,6 +10,14 @@ Updated 2026-10-18. This file is a navigation and dependency map; it is not evid
 - **Not the product:** a human-use peptide seller, affiliate directory, medical adviser, drug-approval predictor, personalized investment adviser, or user-behavior data brokerage.
 - **Constraints:** exact source relevance/citations, restricted content rights, scientific review, privacy, responsible drug-advertising boundaries, costs, limited engineering scope.
 
+## October 18 competitor and source-data research pivot (LOCAL RESEARCH ONLY)
+
+**Competitive correction:** field-level trial change alerting, cross-source data, AI-enabled trial search, company dossiers and clinical trial publication linking are already available from combinations of TrialRedline, Anamnesis Data, Elicit, AlphaSense, Citeline, BioCentury and academic tools. The earlier implicit assumption that change alerts or source linking would be an original moat is NOT supported. Vendor-dataset licensing also matters; compiled third-party historical data with a noncommercial license cannot simply be imported into a commercial product. The documented comparison, official API links, live three-NCT source checks and test plan are at `docs/COMPETITIVE_WEDGE_RESEARCH_2026-10-18.md`.
+
+**Pilot pivot:** Old sequence was further UX polishing and broadening a trial-ID lookup before deciding whether researchers want it. New sequence is to retain that lookup as a tested local enabler, then independently review ten registered-trial / publication / claim comparisons against users' existing research tools, testing five scientists and five biotech diligence analysts separately. Only if this shows recurring time/correctness benefit do we add monitoring and additional source integrations. Any changes to scope or deployment require a new explicit release decision.
+
+**Goal check:** the proposed core value is a human-reviewable, version-aware evidence discrepancy workpaper, not a generic chatbot, source-count dashboard, financial prediction, or automatic scientific accusation. Source feeds and LLM interfaces are enablers. No user interview or paid pilot has been completed, and the analysis is not product-market-fit evidence. No push or deployment occurred for this research note.
+
 ## October 18 owner-requested release and positioning correction
 
 **Goal anchor:** help a scientist or biotech diligence analyst avoid missing or misattributing evidence when reconciling official trials with published papers. This is a first-customer hypothesis. A general Scholar replacement, clinical interpretation, retail storefront, investor recommendation, automated trial change intelligence and comprehensive disease/compound search are not current capabilities.
