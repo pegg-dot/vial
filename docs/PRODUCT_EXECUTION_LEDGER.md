@@ -10,6 +10,20 @@ Updated 2026-10-19. This file is a navigation and dependency map; it is not evid
 - **Not the product:** a human-use peptide seller, affiliate directory, medical adviser, drug-approval predictor, personalized investment adviser, or user-behavior data brokerage.
 - **Constraints:** exact source relevance/citations, restricted content rights, scientific review, privacy, responsible drug-advertising boundaries, costs, limited engineering scope.
 
+## October 19 AI-assisted research and B2B marketplace exploration (LOCAL ONLY)
+
+**Pinned goal:** An approachable, connected peptide research intelligence product for researchers and biotech diligence teams. Scientific source reconciliation is the core job; a marketplace UX and AI copilot are enablers. Physical-material QC and institutional procurement are separate and independently gated. No human-use retail, therapeutic efficacy guarantees, automatic peptide fabrication, and no data rights assumptions.
+
+**Owner-proposed pivot:** From source dossiers plus evidence files and provider documentation to a broader "PitchBook for peptides + AI research assistant + eventual B2B synthesis ecosystem" thesis. We are accepting the intelligence and workflow direction, not accepting unsupported claims that frontier models can certify manufacturability, novel designs, toxicity or patent FTO.
+
+**Implementation now:** local Research Desk /intelligence/desk exposes four bounded Pexiganan inquiry types, two audience perspectives, exact source IDs, pinned limitations, a local Markdown briefing export and copy-for-optional-AI action. No API keys, model calls, storage, new user data, pricing, RFQs, suppliers-for-specific-compounds or transaction path. Existing marketplace discovery routes and passports link into the same workspace. Docs: AI_RESEARCH_DESK_AND_B2B_MARKETPLACE_STRATEGY_2026-10-19.md.
+
+**Sequence:** NOW validate grounded source-workpaper UX and technical QA; NEXT consider an opt-in budgeted API assistant with deterministic citation/identity checks and external-source/privacy rights review; THEN independently reviewed researcher/analyst benchmark; LATER legitimate lab issuer attestation and institution-specific RFQ feasibility research after counsel. **Parked:** autonomous lead optimizer, instant biotech quote/escrow, AI FTO guarantee, generated synthesis instructions and unapproved-drug commerce. **Open:** model pricing and license, downstream source rights, professional usefulness, partner validation, privacy, legal intended use and batched deployment decision.
+
+**Engineering checkpoint:** research-only optimized build, TypeScript, targeted ESLint, four new pure desk unit tests and four targeted Chromium end-to-end checks passed. A fresh anonymous localhost request to /intelligence/desk returns 200 and checkout POST returns 410. Safari preview reopened. These do not constitute scientific or market validation. No GitHub/Vercel deployment.
+
+**Goal check:** Source-grounded question-to-record workflow advances the actual professional research task. Adding a generative model is not itself a scientific quality claim or evidence of demand.
+
 ## October 19 Pexiganan end-to-end evidence network (LOCAL, NOT DEPLOYED)
 
 **Goal Anchor (pinned):** VialGrade helps scientific researchers and biotech diligence analysts follow an asset's molecular identity, exact original experiments, registered studies, precise publication connections and sponsor attribution, with original provenance and uncertainty always visible. Its original marketplace UX is an enabler, not an authorization for unapproved-peptide sales, human-use advice, vendor grading, COA authentication or stock recommendations. Core value to validate is fewer false record joins and faster claim-to-original-source reconciliation than existing tools.

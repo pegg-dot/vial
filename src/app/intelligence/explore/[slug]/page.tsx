@@ -159,6 +159,15 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
                 Open material checks <ArrowRight className="size-4" />
               </Link>
             </section>
+            {subject.slug === "pexiganan" && (
+              <section className="rounded-2xl border border-[#d8d2ed] bg-[#f2efff] p-6">
+                <h2 className="text-lg font-extrabold text-[#4e4386]">Build a research briefing from these records</h2>
+                <p className="mt-2 text-xs leading-6 text-[#746d8c]">Trace exact studies and source gaps in the Research Desk. AI calls and original-source interpretations are not automatic.</p>
+                <Link href="/intelligence/desk" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#342c66] px-4 py-3 text-xs font-extrabold text-white hover:bg-[#4b3d8e]">
+                  Open Research Desk <ArrowRight className="size-4" />
+                </Link>
+              </section>
+            )}
             {subject.sampleTrial && (
               <section className="rounded-2xl border border-[#c8c2e4] bg-[#f1eeff] p-6">
                 <div className="flex items-center gap-2"><FlaskConical className="size-4 text-[#6451aa]" /><p className="text-xs font-bold uppercase tracking-[.1em] text-[#6451aa]">Selected source-backed study</p></div>

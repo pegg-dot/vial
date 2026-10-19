@@ -27,6 +27,7 @@ export function ResearchReleaseHeader() {
           </Link>
           <nav aria-label="Research navigation" className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
             <Link href="/intelligence#explore" className="rounded-full bg-[#28234c] px-3 py-2 text-xs font-semibold text-white hover:bg-[#44368d] sm:px-4 sm:text-sm">Explore</Link>
+            <Link href="/intelligence/desk" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:px-3 sm:text-sm">Research Desk</Link>
             <Link href="/intelligence/materials" className="rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:px-3 sm:text-sm">Materials</Link>
             <Link href="/intelligence/providers" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] md:inline-flex md:px-3 md:text-sm">Suppliers</Link>
             <Link href="/intelligence/verify" className="hidden rounded-full px-2.5 py-2 text-xs font-semibold text-[#303247] hover:bg-[#e3f4eb] sm:inline-flex sm:px-3 sm:text-sm">Verify source</Link>
@@ -61,6 +62,7 @@ export function ResearchReleaseFooter() {
         </div>
         <nav aria-label="Legal and source navigation" className="grid content-start gap-3 text-sm font-semibold text-white/75">
           <Link href="/intelligence#explore" className="inline-flex items-center gap-2 hover:text-[#c0baff]"><BookOpenCheck className="size-4" /> Research Explorer</Link>
+          <Link href="/intelligence/desk" className="hover:text-[#c0baff]">Source-grounded Research Desk</Link>
           <Link href="/intelligence/materials" className="hover:text-[#c0baff]">Research materials and lot evidence</Link>
           <Link href="/intelligence/providers" className="hover:text-[#c0baff]">Supplier documentation sources</Link>
           <Link href="/intelligence#trial-lookup" className="hover:text-[#c0baff]">Check a trial ID</Link>

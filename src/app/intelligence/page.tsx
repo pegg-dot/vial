@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CheckCircle2, Compass, BookOpenCheck, ScanSearch, Building2, GitCompareArrows, ClipboardCheck, Store } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckCircle2, Compass, BookOpenCheck, ScanSearch, Building2, GitCompareArrows, ClipboardCheck, Store, Sparkles } from "lucide-react";
 import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
 import { ArtMolecule, ArtFlask } from "@/components/vial-art";
@@ -79,6 +79,7 @@ export default async function IntelligencePage({ searchParams }: {
           </div>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {([
+              { name: "Ask a research question", prompt: "Build a source-linked briefing for an AI-assisted review", href: "/intelligence/desk", icon: Sparkles, shade: "bg-[#f0ebff]", action: "Open Research Desk" },
               { name: "Explore a compound", prompt: "Identity, experiments, studies and related analogs", href: "/intelligence/explore/pexiganan", icon: Compass, shade: "bg-[#dffff1]", action: "Open Pexiganan dossier" },
               { name: "Audit its evidence", prompt: "Six claims, original sources and what remains uncertain", href: "/intelligence/passports/pexiganan", icon: BookOpenCheck, shade: "bg-[#edebff]", action: "See evidence passport" },
               { name: "Verify a record", prompt: "Check a PMID or NCT against the curated source register", href: "/intelligence/verify?ref=PMID%2036781451", icon: ScanSearch, shade: "bg-[#fff1dc]", action: "Try source verifier" },

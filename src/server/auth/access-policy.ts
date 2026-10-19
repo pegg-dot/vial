@@ -14,7 +14,7 @@ export interface AccessDecision {
 // Public page routes (browseable with no session). Exact matches or path prefixes.
 const PUBLIC_PAGE_EXACT = new Set([
   "/", "/intelligence", "/intelligence/compare", "/intelligence/grading",
-  "/intelligence/verify", "/intelligence/materials", "/intelligence/providers", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/cases/magainin-pexiganan", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/market", "/compare", "/search", "/verify", "/methodology", "/how-we-check", "/grades", "/about", "/help", "/coverage",
+  "/intelligence/verify", "/intelligence/desk", "/intelligence/materials", "/intelligence/providers", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/cases/magainin-pexiganan", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/market", "/compare", "/search", "/verify", "/methodology", "/how-we-check", "/grades", "/about", "/help", "/coverage",
   "/go", // outbound vendor handoff (records the click, 302s to the vendor's own page)
   "/cart", "/checkout", // quarantined commerce → these routes just redirect to /market
   "/status", "/operations", "/signals", "/research", "/updates", "/testing", "/offline", "/developers", "/enforcement", "/news", "/reference-standard",
