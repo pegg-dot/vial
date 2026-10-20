@@ -47,7 +47,7 @@ async function OrganizationAttributionList() {
                     </p>
                   </div>
                   <a href={row.sourceUrl} target="_blank" rel="noopener noreferrer"
-                    className="shrink-0 text-[#2b8069] hover:text-[#164f40]" aria-label={"Open source " + row.selected.nctId}>
+                    className="-m-2.5 grid size-11 shrink-0 place-items-center rounded-lg text-[#2b8069] hover:bg-[#e6f5e9] hover:text-[#164f40]" aria-label={"Open source " + row.selected.nctId}>
                     <ArrowUpRight className="size-4" />
                   </a>
                 </div>

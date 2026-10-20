@@ -270,3 +270,6 @@ The archived marketplace still contains source code and historical research/vend
 **Single workstream priority:** Relevance and trust first, then repeatable research change intelligence. Marketplace archive preservation, legal/privacy obligations and customer validation remain parallel tracks, not discarded phases.
 
 References: PR #22, PR #27, PR #29; issues #23, #24, #26, #28; docs/RESEARCH_INTELLIGENCE_PRODUCT.md and docs/LEGACY_RESEARCH_DATA_REUSE_2026-10-18.md (last file pending PR #29).
+
+## 2026-10-20 — Research UX coherence pass (branch ux/research-coherence-2026-10-20)
+**Implemented, engineering-verified, not usability-validated; not deployed.** Research Desk rebuilt as an investigation workbench (compact chooser, per-observation source inspector, honest question-coverage statement, distinct Sponsor history, `?topic=` URL state), dossier→Desk handoff, verifier URL state + in-place record walking, one `main` landmark per page, identifier-aware global search, 44px sponsor links. Details, measurements, test results, exceptions and remaining gaps: docs/RESEARCH_UX_COHERENCE_AUDIT_2026-10-20.md.

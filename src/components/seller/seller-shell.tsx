@@ -128,9 +128,9 @@ export function SellerShell({ children, sellerName, role, completion = 0, readin
           <Link href="/market" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-[var(--muted)] hover:bg-[#111214]/[.05] hover:text-[#111214]"><UserRoundCog className="size-4" />View marketplace</Link>
         </div>
       </aside>
-      <main className="lg:pl-[268px]">
+      <div className="lg:pl-[268px]">
         <div className="mx-auto max-w-[1440px] px-5 py-8 sm:px-8 lg:px-10 lg:py-10">{children}</div>
-      </main>
+      </div>
     </div>
   );
 }
