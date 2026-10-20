@@ -1,129 +1,126 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BookOpen, Building2, ClipboardCheck, FileSearch, NotebookPen, SearchCheck } from "lucide-react";
-import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
+import {
+  OriginalResearchHero, OriginalResearchManifesto, OriginalResearchFeatures,
+  OriginalResearchCategorySection, OriginalResearchBigNumber, OriginalResearchCompoundsShowcase,
+  OriginalResearchFinalCta,
+} from "@/components/intelligence/research-original-home";
 
 export const metadata: Metadata = {
-  title: "Explore peptide research | VialGrade",
-  description: "Browse peptide research records, inspect original source links, compare compounds and check what is documented.",
+  title: "Follow the evidence | VialGrade",
+  description: "Research compounds, studies and source records in one place. Verify precise identities and original research rather than trusting a summary.",
   alternates: { canonical: "/intelligence" },
 };
 
-const researchTools = [
-  {
-    name: "Check a source",
-    note: "Look up an original trial or publication record",
-    href: "/intelligence/verify?ref=PMID%2036781451",
-    action: "Try source verifier",
-    icon: SearchCheck,
-  },
-  {
-    name: "Research Desk",
-    note: "Investigate a question with source-linked evidence notes",
-    href: "/intelligence/desk",
-    action: "Open Research Desk",
-    icon: NotebookPen,
-  },
-  {
-    name: "Organizations & labs",
-    note: "Follow trial sponsors and public laboratory documentation",
-    href: "/intelligence/organizations",
-    action: "Explore source organizations",
-    icon: Building2,
-  },
-  {
-    name: "Material records",
-    note: "Review lot-to-report checks without claiming lab certification",
-    href: "/intelligence/materials?subject=pexiganan",
-    action: "Open material verification",
-    icon: ClipboardCheck,
-  },
+const deeper = [
+  { name: "Verify a source", note: "Inspect an original trial or publication", href: "/intelligence/verify?ref=PMID%2036781451", action: "Try source verifier", icon: SearchCheck },
+  { name: "Research Desk", note: "Explore an exact question, sources and gaps", href: "/intelligence/desk", action: "Open Research Desk", icon: NotebookPen },
+  { name: "Organizations & labs", note: "Follow sponsors and laboratory documents", href: "/intelligence/organizations", action: "Explore source organizations", icon: Building2 },
+  { name: "Material records", note: "Check report-to-lot documents without a quality claim", href: "/intelligence/materials?subject=pexiganan", action: "Open material verification", icon: ClipboardCheck },
 ] as const;
 
-export default async function IntelligencePage({ searchParams }: {
-  searchParams: Promise<{ notice?: string }>;
-}) {
+export default async function IntelligencePage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
   const { notice } = await searchParams;
   return (
-    <main className="min-h-screen bg-[#f7f8f6] pb-16">
+    <main className="min-h-screen bg-[var(--background)] text-[#111214]">
       {notice === "retired" && (
-        <div role="status" className="border-b border-[#e7dbc5] bg-[#fcf7eb] px-5 py-3 text-center text-xs leading-6 text-[#775d35]">
-          The previous shopping marketplace is archived. Purchasing and seller referrals are not available; existing accounts can still view historical records.
+        <div role="status" className="border-b-2 border-[#111214] bg-[#fff3d8] px-5 py-3 text-center text-xs font-semibold leading-6">
+          The previous shopping marketplace is archived. Purchasing and seller referrals are not available; existing accounts can still access historical records.
         </div>
       )}
+      <OriginalResearchHero />
+      <OriginalResearchManifesto />
+      <OriginalResearchFeatures />
+      <OriginalResearchCategorySection />
+      <OriginalResearchBigNumber />
+      <OriginalResearchCompoundsShowcase />
 
-      <section className="border-b border-[#e0e5e1] bg-white">
-        <div className="mx-auto max-w-[1200px] px-5 pb-5 pt-6 sm:px-8 sm:pb-9 sm:pt-12">
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div className="max-w-2xl">
-              <p className="hidden text-xs font-semibold text-[#41705e] sm:block">Research library</p>
-              <h1 className="mt-2 text-[clamp(2.2rem,4.5vw,3.6rem)] font-bold leading-[1.08] tracking-[-.055em] text-[#1b2620]">
-                Explore peptides
-              </h1>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-[#526359] sm:text-base">
-                Browse compounds, studies and original sources in one place. Open a record to see what has actually been checked.
-              </p>
-            </div>
-            <div className="hidden items-center gap-5 border-t border-[#e4e9e5] pt-3 sm:flex sm:border-0 sm:pt-0">
-              <div><p className="text-xl font-bold tabular-nums text-[#1f3529]">16</p><p className="text-xs text-[#66776d]">Compounds</p></div>
-              <div className="h-9 w-px bg-[#e0e5e1]" aria-hidden="true" />
-              <div><p className="text-xl font-bold tabular-nums text-[#1f3529]">4</p><p className="text-xs text-[#66776d]">Research areas</p></div>
-              <div className="h-9 w-px bg-[#e0e5e1]" aria-hidden="true" />
-              <div><p className="text-xl font-bold tabular-nums text-[#1f3529]">5</p><p className="text-xs text-[#66776d]">Trial examples</p></div>
-            </div>
+      <section className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">What a source trail actually looks like</p>
+            <h2 className="mt-3 max-w-2xl text-balance text-[clamp(2.4rem,5.3vw,4rem)] font-extrabold leading-[.92] tracking-[-.045em]">A record you can <span className="text-[#2b31d8]">inspect for yourself.</span></h2>
+            <p className="mt-4 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">Pexiganan is a designed analog related to Magainin 2. Its molecular identity, registered trial and original papers aren&apos;t the same evidence.</p>
           </div>
+          <Link href="/intelligence/passports/pexiganan" className="ink hard-sm press inline-flex items-center gap-1 rounded-full bg-white px-5 py-3 text-sm font-bold">Open the evidence passport <ArrowRight className="size-4" /></Link>
         </div>
+        <div className="mt-9 grid gap-5 md:grid-cols-3">
+          <Link href="/intelligence/explore/pexiganan" className="ink hard press group flex flex-col rounded-[18px] bg-white p-6">
+            <span className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#2b31d8]">01 · Exact identity</span>
+            <p className="mt-3 text-2xl font-extrabold tracking-[-.03em]">Pexiganan / MSI-78</p>
+            <p className="mt-2 flex-1 text-sm font-medium leading-6 text-[var(--muted)]">A separate PubChem molecular record, not interchangeable with natural Magainin 2.</p>
+            <span className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8]">CID 16132253 · Open dossier <ArrowUpRight className="size-4" /></span>
+          </Link>
+          <Link href="/intelligence/studies/NCT01594762" className="ink hard press group flex flex-col rounded-[18px] bg-white p-6">
+            <span className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#0e8f80]">02 · Registered study</span>
+            <p className="mt-3 text-2xl font-extrabold tracking-[-.03em]">NCT01594762</p>
+            <p className="mt-2 flex-1 text-sm font-medium leading-6 text-[var(--muted)]">Original ClinicalTrials.gov registration. An intervention name is not a demonstrated clinical result.</p>
+            <span className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8]">View official registry context <ArrowUpRight className="size-4" /></span>
+          </Link>
+          <Link href="/intelligence/cases/magainin-pexiganan" className="ink hard press group flex flex-col rounded-[18px] bg-white p-6">
+            <span className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#d04d5d]">03 · What doesn&apos;t match</span>
+            <p className="mt-3 text-2xl font-extrabold tracking-[-.03em]">A related molecule isn&apos;t identical.</p>
+            <p className="mt-2 flex-1 text-sm font-medium leading-6 text-[var(--muted)]">Inspect why experimental observations about an original peptide shouldn&apos;t automatically transfer to a designed analog.</p>
+            <span className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8]">Read the source lineage <ArrowUpRight className="size-4" /></span>
+          </Link>
+        </div>
+        <nav aria-label="Follow Pexiganan evidence" className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-extrabold text-[#2b31d8]">
+          <Link href="/intelligence/explore/pexiganan" className="inline-flex items-center gap-1 hover:underline">Open the dossier <ArrowUpRight className="size-4" /></Link>
+          <Link href="/intelligence/verify" className="inline-flex items-center gap-1 hover:underline">Verify source <ArrowUpRight className="size-4" /></Link>
+          <Link href="/intelligence/cases/magainin-pexiganan" className="inline-flex items-center gap-1 hover:underline">Open guided example <ArrowUpRight className="size-4" /></Link>
+        </nav>
+        <Link href="/intelligence/market#browse" className="mt-8 inline-flex items-center gap-1 text-sm font-extrabold text-[#2b31d8] underline underline-offset-4">Browse all 16 research records <ArrowRight className="size-4" /></Link>
       </section>
 
-      <div id="explore" className="mx-auto max-w-[1200px] scroll-mt-24 px-5 pb-12 pt-5 sm:px-8 sm:pt-10">
-        <ResearchExplorer />
-      </div>
-
-      <section id="research-tools" aria-labelledby="research-tools-heading" className="border-y border-[#e0e5e1] bg-white">
-        <div className="mx-auto max-w-[1200px] px-5 py-10 sm:px-8 sm:py-12">
+      <section className="border-y-2 border-[#111214] bg-white">
+        <div className="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 id="research-tools-heading" className="text-2xl font-bold tracking-[-.045em] text-[#1c2921]">Go deeper</h2>
-              <p className="mt-1 text-sm leading-6 text-[#67766d]">These tools help when you need to check a specific claim or research record.</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Beyond the compound card</p>
+              <h2 className="mt-3 text-[clamp(2.4rem,5vw,3.7rem)] font-extrabold leading-[.95] tracking-[-.045em]">Go deeper.</h2>
+              <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">Start with the compound, then follow the underlying experiments, reports, and organizations.</p>
             </div>
-            <Link href="/intelligence/grading" className="text-xs font-semibold text-[#2b6a50] underline underline-offset-4">How file checks work</Link>
+            <Link href="/intelligence/grading" className="text-sm font-bold text-[#2b31d8] underline underline-offset-4">How source coverage works</Link>
           </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {researchTools.map(({ name, note, href, action, icon: Icon }) => (
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {deeper.map(({ name, note, href, action, icon: Icon }, index) => (
               <Link key={href} href={href} aria-label={action}
-                className="group flex min-h-36 flex-col rounded-xl border border-[#dce5dd] bg-[#fcfdfb] px-4 py-5 hover:border-[#82b09a] hover:shadow-[0_5px_16px_rgba(35,59,40,.06)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#27765a]">
-                <Icon aria-hidden="true" className="size-5 text-[#357356]" />
-                <h3 className="mt-3 text-sm font-bold text-[#273b2e]">{name}</h3>
-                <p className="mt-1 flex-1 text-xs leading-5 text-[#6a786f]">{note}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#2c7156]">Open <ArrowRight aria-hidden="true" className="size-3.5 transition-transform group-hover:translate-x-0.5" /></span>
+                className="ink hard press group flex min-h-55 flex-col rounded-[18px] bg-white p-6">
+                <div className={"ink-1 grid size-14 place-items-center rounded-xl " + (index % 2 ? "bg-[#e6fbf6]" : "bg-[#eef0ff]")}>
+                  <Icon className="size-7 text-[#2b31d8]" />
+                </div>
+                <h3 className="mt-5 text-xl font-extrabold tracking-[-.035em]">{name}</h3>
+                <p className="mt-2 flex-1 text-sm font-medium leading-6 text-[var(--muted)]">{note}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8]">Open <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
               </Link>
             ))}
           </div>
-          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-[#356f55]">
-            <Link href="/intelligence/explore/pexiganan" className="inline-flex items-center gap-1 hover:underline" aria-label="Open Pexiganan dossier">Pexiganan dossier <ArrowUpRight className="size-3.5" /></Link>
-            <Link href="/intelligence/passports/pexiganan" className="inline-flex items-center gap-1 hover:underline" aria-label="See evidence passport">Evidence passport <ArrowUpRight className="size-3.5" /></Link>
-            <Link href="/intelligence/providers" className="inline-flex items-center gap-1 hover:underline">Public supplier documentation <ArrowUpRight className="size-3.5" /></Link>
-            <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" className="inline-flex items-center gap-1 hover:underline" aria-label="Compare Magainin 2 and Pexiganan">Compare Magainin 2 and Pexiganan <ArrowUpRight className="size-3.5" /></Link>
+          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-[#2b31d8]">
+            <Link href="/intelligence/explore/pexiganan" aria-label="Open Pexiganan dossier" className="inline-flex items-center gap-1 hover:underline">Pexiganan dossier <ArrowUpRight className="size-4" /></Link>
+            <Link href="/intelligence/passports/pexiganan" aria-label="See evidence passport" className="inline-flex items-center gap-1 hover:underline">Evidence passport <ArrowUpRight className="size-4" /></Link>
+            <Link href="/intelligence/providers" className="inline-flex items-center gap-1 hover:underline">Public supplier documentation <ArrowUpRight className="size-4" /></Link>
+            <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" aria-label="Compare Magainin 2 and Pexiganan" className="inline-flex items-center gap-1 hover:underline">Compare Magainin 2 and Pexiganan <ArrowUpRight className="size-4" /></Link>
           </div>
         </div>
       </section>
 
-      <section id="trial-lookup" className="scroll-mt-24">
-        <div className="mx-auto grid max-w-[1200px] gap-6 px-5 py-11 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-12">
+      <section id="trial-lookup" className="scroll-mt-36">
+        <div className="mx-auto grid max-w-[1320px] gap-7 px-5 py-20 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#397257]"><FileSearch className="size-4" /> Source lookup</div>
-            <h2 className="mt-2 text-2xl font-bold tracking-[-.045em] text-[#253429]">Already have a trial ID?</h2>
-            <p className="mt-2 max-w-lg text-sm leading-7 text-[#66776b]">Enter an NCT number to inspect its registered status and linked publication records. A linked paper doesn&apos;t automatically prove a trial&apos;s outcome.</p>
-            <Link href="/intelligence/studies/NCT05804162" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#2b7054] hover:underline">View a trial example <ArrowUpRight className="size-3.5" /></Link>
+            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]"><FileSearch className="size-4" /> A source worth checking</p>
+            <h2 className="mt-4 text-[clamp(2.5rem,5vw,3.9rem)] font-extrabold leading-[.95] tracking-[-.045em]">Already have <span className="text-[#2b31d8]">a trial ID?</span></h2>
+            <p className="mt-4 max-w-lg text-sm font-medium leading-7 text-[var(--muted)]">Enter an NCT number and inspect the registered study separately from any published report. A linked article alone does not prove an outcome.</p>
+            <Link href="/intelligence/studies/NCT05804162" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-[#2b31d8] hover:underline">View a real trial example <ArrowUpRight className="size-4" /></Link>
           </div>
-          <div className="rounded-xl border border-[#dbe4dd] bg-white p-5 sm:p-6"><StudyLookupForm /></div>
+          <div className="ink hard rounded-[20px] bg-white p-5 sm:p-7"><StudyLookupForm /></div>
         </div>
       </section>
-
-      <section id="method" className="mx-auto max-w-[1200px] border-t border-[#e0e6e0] px-5 pt-6 text-xs leading-6 text-[#6a756d] sm:px-8">
-        <p><strong>About this library.</strong> VialGrade links selected public research records, not a complete systematic review. File grades describe documented source coverage, not peptide effectiveness or material quality. No purchase, clinical advice, or supplier certification is offered.</p>
-        <Link href="/intelligence/grading" className="mt-2 inline-flex items-center gap-1 font-semibold text-[#286e52] hover:underline">Read the file-checking method <BookOpen className="size-3.5" /></Link>
+      <OriginalResearchFinalCta />
+      <section id="method" className="mx-auto max-w-[1320px] scroll-mt-36 border-t border-[#111214]/20 px-5 py-8 text-xs font-medium leading-6 text-[#666970] sm:px-8">
+        <p><strong className="text-[#111214]">About this library.</strong> The selected public references are not a systematic literature review. File coverage is not biological effectiveness, material purity or legal authorization to sell. No purchasing, clinical advice or laboratory certification.</p>
+        <Link href="/intelligence/grading" className="mt-3 inline-flex items-center gap-1 font-bold text-[#2b31d8] hover:underline">Read the file-checking method <BookOpen className="size-4" /></Link>
       </section>
     </main>
   );

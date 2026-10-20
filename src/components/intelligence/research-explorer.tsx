@@ -20,9 +20,11 @@ type SortMode = "editorial" | "source-coverage";
  * Restore the old market's find -> quick view -> compare -> original record
  * sequence, without loading its products, inventory, providers or tracking.
  */
-export function ResearchExplorer() {
+export function ResearchExplorer({ initialTheme = "all" }: {
+  initialTheme?: ResearchThemeId | "all";
+}) {
   const [query, setQuery] = useState("");
-  const [themeId, setThemeId] = useState<ResearchThemeId | "all">("all");
+  const [themeId, setThemeId] = useState<ResearchThemeId | "all">(initialTheme);
   const [audience, setAudience] = useState<ExplorerAudience>("researcher");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [gradeFilter, setGradeFilter] = useState<GradeFilter>("all");
@@ -48,7 +50,13 @@ export function ResearchExplorer() {
     return sortMode === "source-coverage" ? sortSubjectsByFileCoverage(result) : result;
   }, [query, themeId, sourceFilter, gradeFilter, sortMode]);
 
-  const peek = RESEARCH_SUBJECTS.find(item => item.slug === quickViewSlug) ?? null;
+  const peek = matching.find(item => item.slug === quickViewSlug) ?? null;
+  const peekIndex = matching.findIndex(item => item.slug === quickViewSlug);
+  function navigatePeek(direction: -1 | 1) {
+    if (peekIndex < 0 || !matching.length) return;
+    const next = (peekIndex + direction + matching.length) % matching.length;
+    setQuickViewSlug(matching[next].slug);
+  }
   const activeFilters = themeId !== "all" || Boolean(query) || sourceFilter !== "all" ||
     gradeFilter !== "all" || sortMode !== "editorial";
 
@@ -177,42 +185,49 @@ export function ResearchExplorer() {
           <button type="button" onClick={clear} className="mt-5 rounded-lg bg-[#244c37] px-4 py-2.5 text-sm font-semibold text-white">Show all records</button>
         </section>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {matching.map(subject => {
             const isSelected = selected.includes(subject.slug);
             const atLimit = !isSelected && selected.length >= 3;
             return (
               <article key={subject.slug} data-testid="research-card"
-                className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-[#d8e3d9] bg-white transition-colors hover:border-[#82ae8d] hover:shadow-[0_6px_18px_rgba(22,47,32,.06)]">
+                className="ink-1 hard-sm group flex min-w-0 flex-col overflow-hidden rounded-[17px] bg-white">
                 <ResearchSubjectArt subject={subject} compact />
-                <div className="flex flex-1 flex-col p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-1.5">
-                    <div className="min-w-0">
-                      <p className="line-clamp-1 text-[11px] text-[#68796d]">{subject.family}</p>
-                      <h3 className="mt-0.5 text-lg font-bold leading-tight tracking-[-.03em] text-[#203628]">{subject.name}</h3>
-                    </div>
-                    {subject.sampleTrial && <span className="rounded bg-[#ecf5ed] px-2 py-1 text-[10px] font-semibold text-[#3a7050]">Trial on file</span>}
+                <div className="flex flex-1 flex-col p-3.5">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <p className="min-w-0 truncate text-[10px] font-extrabold uppercase tracking-[.07em] text-[var(--muted)]">{subject.family}</p>
+                    <span className="shrink-0 rounded bg-[#eef0ff] px-2 py-1 text-[9px] font-bold text-[#2b31d8]">{subject.sampleTrial ? "Trial example" : "Identity source"}</span>
                   </div>
-                  <p className="mt-3 line-clamp-2 min-h-10 text-xs leading-5 text-[#647369]">{subject.identity}</p>
-                  <div className="mt-2"><ResearchFileGradeMark subject={subject} withCount /></div>
-                  <p className="mt-3 line-clamp-2 flex-1 text-xs leading-5 text-[#4e6254]">{audience === "researcher" ? subject.studyQuestion : subject.analystAngle}</p>
-                  <div className="mt-4 flex items-center gap-2 border-t border-[#e9eeea] pt-3">
+                  <h3 className="mt-2 truncate text-xl font-extrabold tracking-[-.04em]">{subject.name}</h3>
+                  <div className="mt-3 grid grid-cols-[1fr_auto] items-end gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-extrabold tabular-nums">{subject.sampleTrial ?? "No trial pinned"}</p>
+                      <p className="mt-1 truncate text-[11px] font-semibold text-[var(--muted)]">
+                        {subject.referenceLabel.match(/CID \d+/)?.[0] || subject.referenceLabel.match(/SID \d+/)?.[0] || "Reference linked"}
+                      </p>
+                    </div>
+                    <div className="text-right"><ResearchFileGradeMark subject={subject} withCount /></div>
+                  </div>
+                  <p className="mt-3 line-clamp-2 min-h-10 text-xs font-medium leading-5 text-[#555964]">
+                    {audience === "researcher" ? subject.studyQuestion : subject.analystAngle}
+                  </p>
+                  <div className="mt-auto flex items-center gap-2 border-t-2 border-[#111214]/10 pt-3">
+                    <button type="button" onClick={() => setQuickViewSlug(subject.slug)}
+                      aria-label={"Quick view " + subject.name}
+                      className="ink-1 hard-sm press inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-[10px] bg-[#111214] px-2 text-xs font-extrabold text-white">
+                      Quick view <ArrowUpRight className="size-3.5" />
+                    </button>
                     <Link href={"/intelligence/explore/" + subject.slug}
                       aria-label={"Open research dossier: " + subject.name}
-                      className="inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-lg bg-[#264e36] px-2 text-xs font-semibold text-white hover:bg-[#386847]">
-                      View details <ArrowRight className="size-3.5" />
+                      className="ink-1 grid size-10 shrink-0 place-items-center rounded-[10px] bg-white text-[#111214] hover:bg-[#eef0ff]" title="Full research dossier">
+                      <ArrowRight className="size-4" />
                     </Link>
-                    <button type="button" onClick={() => setQuickViewSlug(subject.slug)}
-                      aria-label={"Quick view " + subject.name} title="Quick view"
-                      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#c8d9cd] px-3 text-xs font-semibold text-[#315b43] hover:bg-[#f0f7f1]">
-                      Quick view
-                    </button>
-                    <button type="button" disabled={atLimit}
-                      aria-pressed={isSelected} aria-label={(isSelected ? "Remove " : "Compare ") + subject.name}
+                    <button type="button" disabled={atLimit} aria-pressed={isSelected}
+                      aria-label={(isSelected ? "Remove " : "Compare ") + subject.name}
                       title={atLimit ? "Compare up to three compounds" : isSelected ? "Remove from comparison" : "Add to comparison"}
                       onClick={() => toggleCompare(subject.slug)}
-                      className={"grid size-10 shrink-0 place-items-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-35 " +
-                        (isSelected ? "border-[#4d9066] bg-[#e5f5e8] text-[#2b6d48]" : "border-[#cbdad0] text-[#43614e] hover:border-[#80a98e] hover:bg-[#f2f7f2]")}>
+                      className={"ink-1 grid size-10 shrink-0 place-items-center rounded-[10px] disabled:cursor-not-allowed disabled:opacity-35 " +
+                        (isSelected ? "bg-[#e2eaff] text-[#2b31d8]" : "bg-white text-[#111214] hover:bg-[#eef0ff]")}>
                       {isSelected ? <Check className="size-4" /> : <GitCompareArrows className="size-4" />}
                     </button>
                   </div>
@@ -276,7 +291,8 @@ export function ResearchExplorer() {
       <ResearchQuickView subject={peek} audience={audience}
         selected={Boolean(peek && selected.includes(peek.slug))}
         compareLimitReached={selected.length >= 3}
-        onClose={() => setQuickViewSlug(null)} onCompare={toggleCompare} />
+        onClose={() => setQuickViewSlug(null)} onCompare={toggleCompare}
+        onNavigate={navigatePeek} position={peekIndex} count={matching.length} />
     </div>
   );
 }

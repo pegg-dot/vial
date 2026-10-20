@@ -1,15 +1,14 @@
 import type { ResearchSubject } from "@/lib/research-explorer";
 import { researchThemeById } from "@/lib/research-explorer";
+import { VialPlain } from "@/components/vial-art";
 
-/**
- * Identity panels, not AI-generated chemical imagery.
- * We cannot reliably infer an exact molecular drawing from a subject name.
- * Each panel instead shows an editorial category and the actual linked
- * reference label, with the source always inspectable in the dossier.
- */
-export function ResearchSubjectArt({
-  subject, compact = false, hero = false,
-}: {
+// Reuses the original marketplace's sticker-vial visual *as a decorative brand
+// motif*, not as an image of a tested or purchasable research material.
+const COLORS = ["#2b31d8", "#12b3a6", "#6d5dfc", "#e0872b", "#d8467f", "#2b8fe0"];
+function indexFor(slug: string) {
+  return [...slug].reduce((sum, char) => sum + char.charCodeAt(0), 0) % COLORS.length;
+}
+export function ResearchSubjectArt({ subject, compact = false, hero = false }: {
   subject: ResearchSubject;
   compact?: boolean;
   hero?: boolean;
@@ -17,21 +16,26 @@ export function ResearchSubjectArt({
   const theme = researchThemeById(subject.theme);
   return (
     <div aria-hidden="true"
-      className={"relative flex min-w-0 flex-col justify-between overflow-hidden border-b border-[#dce5de] px-4 py-3.5 " +
-        (hero ? "min-h-32 lg:min-h-52 lg:p-6" : compact ? "h-23" : "h-32")}
+      className={"relative flex min-w-0 flex-col overflow-hidden border-b-2 border-[#111214] px-4 py-3 " +
+        (hero ? "min-h-[190px] sm:min-h-[240px] sm:px-6" : compact ? "h-[126px]" : "h-[165px]")}
       style={{ backgroundColor: theme.tint }}>
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold text-[#3b6250]">{theme.name}</span>
-        <span className="rounded border border-[#b6cbbb]/60 bg-white/70 px-2 py-0.5 font-mono text-[10px] tracking-wide text-[#526d59]">RESEARCH</span>
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <span className="ink-1 truncate rounded-full bg-white px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.1em] text-[#16191b]">
+          {theme.short}
+        </span>
+        <span className="rounded border border-[#111214]/20 bg-white/75 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-[#50555e]">Identity reference</span>
       </div>
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <span className={"min-w-0 font-bold tracking-[-.045em] text-[#244333] " +
-          (hero ? "text-3xl leading-tight" : "text-lg leading-tight")}>
+      <div className="flex flex-1 items-center justify-between gap-4">
+        <p className="max-w-[60%] text-[14px] font-extrabold leading-tight tracking-[-.02em] text-[#111214] sm:text-base">
           {subject.name}
-        </span>
-        <span className="max-w-[42%] shrink-0 truncate text-right font-mono text-[10px] text-[#4c745a]" title={subject.referenceLabel}>
-          {subject.referenceLabel}
-        </span>
+        </p>
+        <VialPlain className={"shrink-0 drop-shadow-[3px_3px_0_#111214] " +
+          (hero ? "h-[124px] w-[82px] sm:h-[145px] sm:w-[96px]" : "h-[78px] w-[55px]")}
+          liquid={COLORS[indexFor(subject.slug)]} />
+      </div>
+      <div className="mt-auto flex justify-between gap-2 text-[9px] font-bold uppercase tracking-[.1em] text-[#4f5962]">
+        <span className="truncate">{subject.referenceLabel.match(/CID \d+/)?.[0] || subject.referenceLabel.match(/SID \d+/)?.[0] || "Public source"}</span>
+        <span>Not a product</span>
       </div>
     </div>
   );

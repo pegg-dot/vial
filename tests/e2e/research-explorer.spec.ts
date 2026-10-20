@@ -6,22 +6,22 @@ test.describe("Research Explorer discovery experience", () => {
   test("provides browsing, scientific theme filters and alias search without a sales funnel", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
-    await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: /Explore peptides/ })).toBeVisible();
+    await page.goto("/intelligence/market");
+    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Compounds" })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Showing 16 of 16 compounds" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toHaveAttribute("href", "/intelligence/explore/pexiganan");
+    await expect(page.getByRole("link", { name: "Open research dossier: Pexiganan" })).toHaveAttribute("href", "/intelligence/explore/pexiganan");
 
     await page.getByRole("button", { name: /Host defense & antimicrobials/ }).click();
     await expect(page.getByRole("status").filter({ hasText: "Showing 4 of 16 compounds" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Pexiganan", exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Semaglutide", exact: true })).toHaveCount(0);
+    await expect(page.locator('[data-testid="research-card"]').getByRole("heading", { name: "Pexiganan", exact: true })).toBeVisible();
+    await expect(page.locator('[data-testid="research-card"]').getByRole("heading", { name: "Semaglutide", exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Clear filters" }).click();
 
     const search = page.getByRole("searchbox", { name: "Search research subjects" });
     await search.fill("LY3437943");
     await expect(page.getByRole("status").filter({ hasText: "Showing 1 of 16 compounds" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Retatrutide", exact: true })).toBeVisible();
+    await expect(page.locator('[data-testid="research-card"]').getByRole("heading", { name: "Retatrutide", exact: true })).toBeVisible();
     await search.fill("nonexistent-chemical-name");
     await expect(page.getByRole("heading", { name: "No matching compounds" })).toBeVisible();
     await page.getByRole("button", { name: "Show all records" }).click();
@@ -32,7 +32,7 @@ test.describe("Research Explorer discovery experience", () => {
   });
 
   test("can build a real two-subject comparison from the cards in either research perspective", async ({ page }) => {
-    await page.goto("/intelligence");
+    await page.goto("/intelligence/market");
     await page.getByText("More filters", { exact: false }).click();
     await page.getByRole("button", { name: "Analyst", exact: true }).click();
     await expect(page.getByRole("button", { name: "Analyst", exact: true })).toHaveAttribute("aria-pressed", "true");

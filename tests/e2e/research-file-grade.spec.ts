@@ -25,7 +25,7 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
   });
 
   test("makes file grades visible and filterable without hiding the limits", async ({ page }) => {
-    await page.goto("/intelligence");
+    await page.goto("/intelligence/market");
     await expect(page.getByRole("link", { name: "About file coverage" }))
       .toHaveAttribute("href", "/intelligence/grading");
     await page.getByText("More filters", { exact: false }).click();
@@ -51,8 +51,8 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
   });
 
   test("reuses the decomposed file grade inside quick-view and a full research dossier", async ({ page }) => {
-    await page.goto("/intelligence");
-    await page.getByRole("button", { name: "Quick view Pexiganan" }).first().click();
+    await page.goto("/intelligence/market");
+    await page.locator('[data-testid="research-card"]').getByRole("button", { name: "Quick view Pexiganan" }).click();
     const quick = page.getByRole("dialog", { name: "Quick research view: Pexiganan" });
     await expect(quick).toContainText("File coverage A");
     await quick.getByText("Why did this research file get that grade?").click();

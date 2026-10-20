@@ -5,7 +5,7 @@ test.describe("Connected research market entry points", () => {
 
   test("makes the dossier, passport, verifier, organization attribution and comparison discoverable", async ({ page }) => {
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: "Go deeper" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Go deeper/ })).toBeVisible();
     const links = [
       ["Open Pexiganan dossier", "/intelligence/explore/pexiganan"],
       ["See evidence passport", "/intelligence/passports/pexiganan"],
@@ -24,7 +24,7 @@ test.describe("Connected research market entry points", () => {
   test("keeps entry point cards legible on a phone and checkout quarantined", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: "Go deeper" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Go deeper/ })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
     const forbidden = await page.request.post("/api/v1/commerce/checkout", { data: {} });
     expect(forbidden.status()).toBe(410);

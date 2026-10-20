@@ -3,10 +3,10 @@ import { expect, test } from "@playwright/test";
 test.describe("public research intelligence", () => {
   test("offers a useful evidence workspace without sign-in or buyer funnels", async ({ page }) => {
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: /Explore peptides/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Know what.s behind the claim/ })).toBeVisible();
     await expect(page.getByRole("search").getByLabel("ClinicalTrials.gov study ID or link")).toBeVisible();
     await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toHaveAttribute("href", "/intelligence/explore/pexiganan");
-    await expect(page.getByRole("heading", { name: "Compounds" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /The compounds.*in the research library/ })).toBeVisible();
     await expect(page.getByText("Cross-topic source coverage")).toHaveCount(0);
   });
 
@@ -53,7 +53,7 @@ test.describe("research-only production release gate", () => {
   test("removes old marketplace chrome and legacy vendor data from public access", async ({ page }) => {
     await page.goto("/intelligence");
     await expect(page.getByRole("navigation", { name: "Research navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Market", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Market", exact: true })).toHaveAttribute("href", "/intelligence/market");
     await expect(page.getByRole("link", { name: "Saved", exact: true })).toHaveCount(0);
     const robots = await page.request.get("/robots.txt");
     expect(await robots.text()).toContain("Disallow: /vendors");

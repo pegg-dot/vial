@@ -1,3 +1,9 @@
+# SUPERSEDED - rejected simplified redesign
+
+**Owner rejected the assumption that the original bold landing/market styling was the cause of an AI-generated feel. Do not ship or use this file as the design baseline.** PR #34 remains draft and must not be merged as-is. See [original marketplace restoration](ORIGINAL_MARKETPLACE_RESTORATION_2026-10-19.md) for the corrected goal and implementation.
+
+---
+
 # VialGrade research marketplace: simplify and release
 
 Date: October 19, 2026

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, GitCompareArrows, X, ClipboardCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, GitCompareArrows, X, ClipboardCheck } from "lucide-react";
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { researchThemeById, type ExplorerAudience, type ResearchSubject } from "@/lib/research-explorer";
@@ -14,6 +14,9 @@ export function ResearchQuickView({
   compareLimitReached,
   onClose,
   onCompare,
+  onNavigate,
+  position,
+  count,
 }: {
   subject: ResearchSubject | null;
   audience: ExplorerAudience;
@@ -21,6 +24,9 @@ export function ResearchQuickView({
   compareLimitReached: boolean;
   onClose: () => void;
   onCompare: (slug: string) => void;
+  onNavigate?: (direction: -1 | 1) => void;
+  position?: number;
+  count?: number;
 }) {
   const modal = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -29,6 +35,19 @@ export function ResearchQuickView({
     if (subject && !element.open) element.showModal();
     if (!subject && element.open) element.close();
   }, [subject]);
+
+  // The archived marketplace used Left/Right keys to step through cards in
+  // place. Preserve that behavior for research without changing the URL or
+  // replacing the original-source context.
+  useEffect(() => {
+    if (!subject || !onNavigate) return;
+    function keydown(event: KeyboardEvent) {
+      if (event.key === "ArrowRight") { event.preventDefault(); onNavigate!(1); }
+      if (event.key === "ArrowLeft") { event.preventDefault(); onNavigate!(-1); }
+    }
+    document.addEventListener("keydown", keydown);
+    return () => document.removeEventListener("keydown", keydown);
+  }, [subject, onNavigate]);
 
   return (
     <dialog
@@ -52,6 +71,15 @@ export function ResearchQuickView({
               <X className="size-4" />
             </button>
           </div>
+          {onNavigate && count && count > 1 && (
+            <div className="flex items-center justify-between gap-3 border-b-2 border-[#111214] bg-[#f7f7f4] px-5 py-2 text-xs font-bold">
+              <span>Record {(position ?? 0) + 1} of {count}</span>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => onNavigate(-1)} aria-label="Previous research record" className="ink-1 grid size-9 place-items-center rounded-full bg-white hover:bg-[#eef0ff]"><ChevronLeft className="size-4" /></button>
+                <button type="button" onClick={() => onNavigate(1)} aria-label="Next research record" className="ink-1 grid size-9 place-items-center rounded-full bg-white hover:bg-[#eef0ff]"><ChevronRight className="size-4" /></button>
+              </div>
+            </div>
+          )}
           <div className="p-6 sm:p-8">
             <p className="text-[11px] font-extrabold uppercase tracking-[.14em]" style={{ color: researchThemeById(subject.theme).color }}>
               {subject.family}
