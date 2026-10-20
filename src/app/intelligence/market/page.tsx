@@ -5,7 +5,7 @@ import { ArtDroplet, ArtTag, VialBuddy } from "@/components/vial-art";
 import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { ResearchThemeRail } from "@/components/intelligence/research-original-home";
 import { ResearchMarketShelves } from "@/components/intelligence/research-market-shelves";
-import { RESEARCH_THEMES, type ResearchThemeId } from "@/lib/research-explorer";
+import { parseExplorerState } from "@/lib/research-explorer-state";
 
 export const metadata: Metadata = {
   title: "The research market | VialGrade",
@@ -20,10 +20,10 @@ const START_PATHS = [
 ] as const;
 
 export default async function ResearchMarketPage({ searchParams }: {
-  searchParams: Promise<{ theme?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { theme } = await searchParams;
-  const selected = RESEARCH_THEMES.find(item => item.id === theme)?.id as ResearchThemeId | undefined;
+  const initial = parseExplorerState(await searchParams);
+  const selected = initial.theme === "all" ? undefined : initial.theme;
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <section className="relative overflow-hidden border-b-2 border-[#111214] bg-[#e9fff6]">
@@ -62,7 +62,7 @@ export default async function ResearchMarketPage({ searchParams }: {
             </div>
             <Link href="/intelligence/grading" className="ink hard-sm press inline-flex items-center gap-1 rounded-full bg-white px-4 py-2.5 text-xs font-bold">Our file checking method <ArrowRight className="size-4" /></Link>
           </div>
-          <ResearchExplorer key={selected || "all"} initialTheme={selected || "all"} />
+          <ResearchExplorer key={selected || "all"} initial={initial} />
         </section>
         <p className="mt-12 border-t border-[#111214]/15 pt-6 text-xs font-medium leading-6 text-[#696b71]">
           All sixteen cards are dated public research reference files. They do not establish clinical effectiveness, a tested physical lot, a scientific consensus or purchase eligibility.
