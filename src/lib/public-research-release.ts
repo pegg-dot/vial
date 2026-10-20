@@ -71,3 +71,20 @@ export function publicReleaseAction(
   if (matches(path, "/api")) return "gone";
   return ["GET", "HEAD"].includes(method.toUpperCase()) ? "redirect" : "gone";
 }
+
+/**
+ * Where a retired shop URL has a real equivalent in the research product.
+ *
+ * Only `/compounds` and `/compounds/<slug>` where the slug has a research dossier. Everything else
+ * keeps the generic "retired" notice, which says so honestly instead of guessing a destination.
+ * This is a redirect to read-only research pages; it does not reopen listings, prices or referrals.
+ */
+export function legacyResearchDestination(
+  pathname: string,
+  hasDossier: (slug: string) => boolean,
+): string | null {
+  const path = pathname.replace(/\/+$/, "");
+  if (path === "/compounds") return "/intelligence/market";
+  const match = /^\/compounds\/([a-z0-9-]+)$/.exec(path);
+  return match && hasDossier(match[1]) ? "/intelligence/explore/" + match[1] : null;
+}
