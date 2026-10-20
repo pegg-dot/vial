@@ -79,6 +79,20 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
   });
 
+  test("retired compound URLs go to a dossier when one exists and otherwise explain the shutdown", async ({ page }) => {
+    const dossier = await page.request.get("/compounds/retatrutide", { maxRedirects: 0 });
+    expect(dossier.status()).toBe(307);
+    expect(dossier.headers().location).toContain("/intelligence/explore/retatrutide");
+    const unknown = await page.request.get("/compounds/bpc-157", { maxRedirects: 0 });
+    expect(unknown.status()).toBe(307);
+    expect(unknown.headers().location).toContain("/intelligence?notice=retired");
+    const post = await page.request.post("/compounds/retatrutide", { data: {}, maxRedirects: 0 });
+    expect(post.status()).toBe(410);
+    await page.goto("/compounds/retatrutide");
+    await expect(page).toHaveURL(/\/intelligence\/explore\/retatrutide$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Retatrutide");
+  });
+
   test("every visible internal public link on research and legal pages leads somewhere real", async ({ page }) => {
     const publicPages = [
       "/intelligence", "/intelligence/market", "/intelligence/retatrutide", "/intelligence/cagrilintide",
