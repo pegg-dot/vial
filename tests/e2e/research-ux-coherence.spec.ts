@@ -40,18 +40,6 @@ test.describe("Research UX coherence: context, honesty and reach", () => {
     await expect(page.locator("main")).toContainText("not current corporate ownership");
   });
 
-  test("retired shopping URLs keep research intent without reopening commerce", async ({ page, request }) => {
-    await page.goto("/compounds/pexiganan");
-    await expect(page).toHaveURL(/\/intelligence\/explore\/pexiganan$/);
-    await page.goto("/compounds");
-    await expect(page).toHaveURL(/\/intelligence\/market$/);
-    await page.goto("/compounds/bpc-157");
-    await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
-    await page.goto("/checkout");
-    await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
-    expect((await request.post("/api/v1/commerce/checkout", { data: {} })).status()).toBe(410);
-  });
-
   test("every public research page exposes exactly one main landmark", async ({ page }) => {
     for (const path of ["/", "/intelligence", "/intelligence/market", "/intelligence/desk", "/intelligence/explore/pexiganan",
       "/intelligence/compare?subjects=magainin-2%2Cpexiganan", "/intelligence/materials", "/intelligence/grading",

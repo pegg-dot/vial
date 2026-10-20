@@ -29,6 +29,7 @@ export default async function ResearchSourceVerifyPage({
         <div className="mb-5 mt-5">
           <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#1f8573]">Exact source ID lookup · Pexiganan pilot</p>
           <h1 className="mt-1.5 text-[clamp(1.9rem,3.6vw,2.6rem)] font-extrabold tracking-[-.05em] text-[#17191b]">Verify what a source says.</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#65746c]">Look up an exact PubMed PMID, ClinicalTrials.gov NCT number or PubChem CID. This is a limited pilot, not a general claim checker.</p>
         </div>
         <PexSourceVerifier initialRef={initialRef} />
         <div className="mt-7 grid gap-4 sm:grid-cols-2">
