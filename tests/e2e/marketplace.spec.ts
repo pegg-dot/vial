@@ -52,7 +52,7 @@ test("authenticated watchlist writes are suspended during privacy review", async
   const result = await page.request.put("/api/v1/watchlist", { data: { slug: "bpc-157", watched: true } });
   expect(result.status()).toBe(410);
   await page.goto("/intelligence");
-  await expect(page.getByRole("heading", { name: /Does a trial have a paper, even if no results are posted\?/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Know what.s behind the claim/i })).toBeVisible();
 });
 
 test("compare dock routes to a dimensional comparison", async ({ page }) => {

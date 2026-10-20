@@ -47,7 +47,9 @@ test.describe("source-based research task prototype", () => {
     await expect(page.getByRole("heading", { name: "Questions the current evidence cannot answer" })).toBeVisible();
     await expect(page.getByText("No two verified historical versions", { exact: false })).toBeVisible();
     if (process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY === "true") {
-      await expect(page.getByRole("link", { name: "Market", exact: true })).toHaveCount(0);
+      await expect(page.getByRole("navigation", { name: "Research navigation" })
+        .getByRole("link", { name: "Market", exact: true }))
+        .toHaveAttribute("href", "/intelligence/market");
       await expect(page.getByRole("button", { name: /Buy|Checkout/i })).toHaveCount(0);
     } else {
       // The archived-layout regression runs without the research shell in CI.

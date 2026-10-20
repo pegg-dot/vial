@@ -28,7 +28,7 @@ describe("deny-by-default access policy", () => {
   });
 
   it("keeps public catalog routes open to anonymous visitors", () => {
-    for (const path of ["/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/intelligence/tirzepatide", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
+    for (const path of ["/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/cagrilintide/audit", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare", "/intelligence/grading", "/intelligence/verify", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/intelligence/tirzepatide", "/market", "/products/bpc-157", "/compounds", "/vendors/helix", "/stacks", "/stacks/wolverine", "/passports", "/labs", "/testing", "/methodology", "/grades", "/reference-standard", "/developers", "/legal/privacy", "/search"]) {
       const d = accessDecision(path, null);
       expect(d.allowed, `${path} should be public`).toBe(true);
     }
@@ -37,6 +37,25 @@ describe("deny-by-default access policy", () => {
   it("does not expose new arbitrary child routes behind research intelligence", () => {
     expect(accessDecision("/intelligence/admin", null).allowed).toBe(false);
     expect(accessDecision("/intelligence/unknown", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/studies/NCT05804162", null)).toEqual({ protected: false, allowed: true });
+    expect(accessDecision("/intelligence/studies/NCT00000001", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/studies/invalid", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/studies/NCT05804162/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/admin/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/explore/ll-37", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/compare", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/grading", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/grading/internal", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/verify/internal", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/passports/pexiganan/internal", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/passports/unknown", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/organizations/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/cases/magainin-pexiganan", null).allowed).toBe(true);
+    expect(accessDecision("/intelligence/cases/magainin-pexiganan/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/cases/unreviewed-claims", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/explore", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/explore/ziconotide/private", null).allowed).toBe(false);
+    expect(accessDecision("/intelligence/compare/admin", null).allowed).toBe(false);
   });
 
   it("keeps well-known + PWA paths open (crawlers, service worker, manifest, offline shell)", () => {

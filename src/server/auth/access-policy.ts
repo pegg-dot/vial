@@ -13,7 +13,8 @@ export interface AccessDecision {
 
 // Public page routes (browseable with no session). Exact matches or path prefixes.
 const PUBLIC_PAGE_EXACT = new Set([
-  "/", "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/market", "/compare", "/search", "/verify", "/methodology", "/how-we-check", "/grades", "/about", "/help", "/coverage",
+  "/", "/intelligence", "/intelligence/market", "/intelligence/compare", "/intelligence/grading",
+  "/intelligence/verify", "/intelligence/desk", "/intelligence/materials", "/intelligence/providers", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/cases/magainin-pexiganan", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/market", "/compare", "/search", "/verify", "/methodology", "/how-we-check", "/grades", "/about", "/help", "/coverage",
   "/go", // outbound vendor handoff (records the click, 302s to the vendor's own page)
   "/cart", "/checkout", // quarantined commerce → these routes just redirect to /market
   "/status", "/operations", "/signals", "/research", "/updates", "/testing", "/offline", "/developers", "/enforcement", "/news", "/reference-standard",
@@ -70,6 +71,16 @@ const PUBLIC_API_EXACT = new Set([
 const PUBLIC_API_PREFIX = ["/api/health/", "/api/v1/auth/", "/api/v1/reports/", "/api/public/"];
 
 function isPublic(path: string): boolean {
+  // One read-only NIH registry lookup per strict public NCT identifier.
+  // Do not turn all /intelligence subpaths into public routes: they remain
+  // deny-by-default if a future admin or personalized feature is added.
+  if (/^\/intelligence\/studies\/NCT\d{8}$/.test(path)) return true;
+  // Only editorial, server-validated public dossier slugs, not a broad
+  // /intelligence prefix. Unknown slugs are handled by Next's 404.
+  if (/^\/intelligence\/explore\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)) return true;
+  if (/^\/intelligence\/providers\/(?:bachem|genscript)$/.test(path)) return true;
+  // Narrow localhost-only model endpoint. Production always fails closed.
+  if (path === "/api/research/analyst" && process.env.VIALGRADE_LOCAL_PREVIEW === "true") return true;
   if (PUBLIC_PAGE_EXACT.has(path) || PUBLIC_API_EXACT.has(path)) return true;
   if (PUBLIC_PAGE_PREFIX.some((p) => path === p || path.startsWith(`${p}/`))) return true;
   // Exact-or-subpath match, so a retired prefix never swallows a longer live one.

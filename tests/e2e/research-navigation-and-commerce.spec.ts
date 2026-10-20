@@ -55,14 +55,17 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("small-screen research navigation stays usable and no page overflows horizontally", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/intelligence");
-    await expect(page.getByRole("heading", { name: "Does a trial have a paper, even if no results are posted?" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Study audit" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Topics" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Know what.s behind the claim/ })).toBeVisible();
+    const mobileNav = page.getByRole("navigation", { name: "Mobile research navigation" });
+    await mobileNav.getByRole("button", { name: "Open menu" }).click();
+    const menu = page.getByRole("navigation", { name: "Mobile research links" });
+    await expect(menu.getByRole("link", { name: "Market" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Compare" })).toBeVisible();
+    await menu.getByRole("link", { name: "Compounds" }).click();
+    await expect(page).toHaveURL(/\/intelligence\/market#browse$/);
     const indexWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(indexWidth).toBeLessThanOrEqual(391);
-    await page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Study audit" }).click();
-    await expect(page).toHaveURL(/\/intelligence\/cagrilintide\/audit$/);
-    await expect(page.getByRole("heading", { name: "Did this clinical trial publish any findings?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
     const auditWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(auditWidth).toBeLessThanOrEqual(391);
   });
@@ -70,16 +73,16 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   test("retired paths clearly explain the shutdown rather than dumping visitors onto an unexplained index", async ({ page }) => {
     await page.goto("/market");
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
-    await expect(page.getByRole("status").getByText("That page belongs to the retired marketplace.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "See the working example" })).toBeVisible();
+    await expect(page.getByRole("status").getByText(/The previous shopping marketplace is archived/)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toBeVisible();
     await page.goto("/how-we-check");
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
   });
 
   test("every visible internal public link on research and legal pages leads somewhere real", async ({ page }) => {
     const publicPages = [
-      "/intelligence", "/intelligence/retatrutide", "/intelligence/cagrilintide",
-      "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit",
+      "/intelligence", "/intelligence/market", "/intelligence/retatrutide", "/intelligence/cagrilintide",
+      "/intelligence/tirzepatide", "/intelligence/grading", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/verify", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
       "/legal/us-regulations", "/legal/privacy", "/legal/contact",
       "/legal/terms", "/legal/disclaimer", "/login", "/register",
     ];

@@ -44,6 +44,8 @@ export type RegistryPopulation = {
   armLabels: string[];
 };
 
+export type PublicRegistryStudy = Omit<CagrilintideStudy, "matchLocation">;
+
 export type CagrilintideStudy = {
   nctId: string;
   title: string;
@@ -108,7 +110,7 @@ function parseRegistryDate(raw: unknown): RegistryDate | null {
   return date ? { date, precision: registryPrecision(value.type) } : null;
 }
 
-export function parseCagrilintideStudy(input: unknown, requestedId: string): CagrilintideStudy | null {
+export function parsePublicRegistryStudy(input: unknown, requestedId: string): PublicRegistryStudy | null {
   if (!/^NCT\d{8}$/.test(requestedId)) return null;
   const root = record(input);
   const protocol = record(root.protocolSection);
@@ -165,8 +167,6 @@ export function parseCagrilintideStudy(input: unknown, requestedId: string): Cag
       ? "not-shown"
       : "uncertain";
 
-  const identity = getResearchIdentityCandidate("cagrilintide");
-  if (!identity) return null;
   return {
     nctId,
     title,
@@ -182,10 +182,17 @@ export function parseCagrilintideStudy(input: unknown, requestedId: string): Cag
     primaryOutcomeCount: outcomes.length,
     population,
     registryResults,
-    matchLocation: classifyTrialAssociation(input, identity),
     registryReferences: registryPubMedReferences(input),
     pubmedChecks: [],
   };
+}
+
+/** The existing four-study benchmark retains its scoped identity annotations. */
+export function parseCagrilintideStudy(input: unknown, requestedId: string): CagrilintideStudy | null {
+  const parsed = parsePublicRegistryStudy(input, requestedId);
+  const identity = getResearchIdentityCandidate("cagrilintide");
+  if (!parsed || !identity) return null;
+  return { ...parsed, matchLocation: classifyTrialAssociation(input, identity) };
 }
 
 export async function getCagrilintideAudit(): Promise<CagrilintideAudit> {
