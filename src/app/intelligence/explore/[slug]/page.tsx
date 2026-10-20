@@ -13,6 +13,7 @@ import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intel
 import { gradeResearchFile } from "@/lib/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
 import { PexEvidenceClaimGrid, PexEvidenceWayfinder, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
+import { PexigananResearchWorkspace } from "@/components/intelligence/pexiganan-research-workspace";
 import { PexTrialNetworkLive, PexTrialNetworkLoading } from "@/components/intelligence/pexiganan-trial-network";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -53,13 +54,16 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               <span className="text-xs text-[#8a8e99]">Curated identity source · 18 Oct 2026</span>
             </div>
             <h1 className="mt-5 text-[clamp(2.45rem,5vw,4.25rem)] font-semibold leading-[1.1] tracking-[-.06em] text-[#242639]">{subject.name}</h1>
-            <div className="mt-3"><ResearchFileGradeMark subject={subject} withCount /></div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {subject.slug === "pexiganan" && <span className="rounded-full border border-[#bfdfd0] bg-[#eafff2] px-3 py-1.5 text-xs font-extrabold text-[#23654d]">{file.linkedCount} of 3 research source types on file</span>}
+              <ResearchFileGradeMark subject={subject} withCount />
+            </div>
             <p className="mt-2 text-xs font-medium leading-5 text-[#626d70]">This letter describes linked source types in our file, not how promising or safe the compound is.</p>
             <p className="mt-3 max-w-3xl text-base leading-7 text-[#5d6270]">{subject.identity}</p>
             <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <a href="#overview"
+              <a href={subject.slug === "pexiganan" ? "#research-workspace" : "#overview"}
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#282541] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#443a7e]">
-                Start with the research question <ArrowRight className="size-4" />
+                {subject.slug === "pexiganan" ? "Investigate the evidence" : "Start with the research question"} <ArrowRight className="size-4" />
               </a>
               <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer"
                 className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#51468d] hover:underline">
@@ -88,6 +92,12 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           </div>
         </section>
 
+        {subject.slug === "pexiganan" && (
+          <div className="mt-7">
+            <PexigananResearchWorkspace />
+          </div>
+        )}
+
         <details className="mt-3 rounded-xl border border-[#d5ded7] bg-white px-5 py-3.5 text-sm">
           <summary className="cursor-pointer font-bold text-[#376c58]">Molecular and technical details</summary>
           <dl className="mt-4 grid gap-4 border-t border-[#e5ebe7] pt-4 sm:grid-cols-3">
@@ -114,11 +124,6 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           </details>
         </nav>
 
-        {subject.slug === "pexiganan" && (
-          <div id="pexiganan-network" className="mt-5 scroll-mt-36">
-            <PexEvidenceWayfinder />
-          </div>
-        )}
         <div className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_335px]">
           <div className="min-w-0 space-y-5">
             <section id="overview" className="scroll-mt-40 rounded-2xl border border-[#dedee8] bg-white p-6 sm:p-7">
@@ -231,6 +236,11 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
             </section>
           </aside>
         </div>
+        {subject.slug === "pexiganan" && (
+          <div id="pexiganan-network" className="mt-9 scroll-mt-36">
+            <PexEvidenceWayfinder />
+          </div>
+        )}
         <p className="mt-9 max-w-4xl text-xs leading-6 text-[#818492]">
           Editorial research starting points, not grades of clinical effectiveness or material quality. Company-published supplier QC information is separate and unverified; no prices, purchases or recommendations for human consumption.
         </p>

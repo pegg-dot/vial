@@ -42,7 +42,7 @@ test.describe("research UX comprehension without deleting tools", () => {
 
   test("dossier leads with answers and still exposes all technical sections", async ({ page }) => {
     await page.goto("/intelligence/explore/pexiganan");
-    await expect(page.getByRole("link", { name: "Start with the research question" })).toHaveAttribute("href", "#overview");
+    await expect(page.getByRole("link", { name: "Investigate the evidence" })).toHaveAttribute("href", "#research-workspace");
     await expect(page.getByRole("link", { name: "Inspect molecular identity" })).toHaveAttribute("href", "https://pubchem.ncbi.nlm.nih.gov/compound/16132253");
     await expect(page.getByText("This letter describes linked source types", { exact: false })).toBeVisible();
     await expect(page.getByText("What is this?")).toBeVisible();
