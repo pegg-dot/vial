@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Check, GitCompareArrows, Search, SlidersHorizontal, X } from "lucide-react";
 import {
@@ -11,26 +11,77 @@ import { ResearchSubjectArt } from "@/components/intelligence/research-subject-a
 import { ResearchQuickView } from "@/components/intelligence/research-quick-view";
 import { ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { gradeResearchFile, sortSubjectsByFileCoverage } from "@/lib/research-file-grade";
+import {
+  DEFAULT_EXPLORER_STATE, MAX_COMPARE, parseExplorerState, serializeExplorerState,
+  type ExplorerState, type GradeFilter, type SortMode, type SourceFilter,
+} from "@/lib/research-explorer-state";
 
-type SourceFilter = "all" | "selected-trial" | "identity-only";
-type GradeFilter = "all" | "A" | "B" | "C" | "ungraded";
-type SortMode = "editorial" | "source-coverage";
+const RETURN_KEY = "vialgrade:explorer-return";
+const RETURN_WINDOW_MS = 60 * 60 * 1000;
 
 /**
  * Restore the old market's find -> quick view -> compare -> original record
  * sequence, without loading its products, inventory, providers or tracking.
  */
-export function ResearchExplorer({ initialTheme = "all" }: {
-  initialTheme?: ResearchThemeId | "all";
+export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
+  initial?: ExplorerState;
 }) {
-  const [query, setQuery] = useState("");
-  const [themeId, setThemeId] = useState<ResearchThemeId | "all">(initialTheme);
-  const [audience, setAudience] = useState<ExplorerAudience>("researcher");
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
-  const [gradeFilter, setGradeFilter] = useState<GradeFilter>("all");
-  const [sortMode, setSortMode] = useState<SortMode>("editorial");
-  const [selected, setSelected] = useState<string[]>([]);
+  const [query, setQuery] = useState(initial.query);
+  const [themeId, setThemeId] = useState<ResearchThemeId | "all">(initial.theme);
+  const [audience, setAudience] = useState<ExplorerAudience>(initial.audience);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>(initial.source);
+  const [gradeFilter, setGradeFilter] = useState<GradeFilter>(initial.grade);
+  const [sortMode, setSortMode] = useState<SortMode>(initial.sort);
+  const [selected, setSelected] = useState<string[]>(initial.compare);
   const [quickViewSlug, setQuickViewSlug] = useState<string | null>(null);
+
+  // Next's router puts the entry's original URL back when Back lands on this page, so the query
+  // string alone cannot bring the controls back after a dossier visit. When the visitor leaves for
+  // a dossier the controls are parked in sessionStorage, and restored once if they return to a
+  // page with no filters in its URL. One-shot, so a later fresh visit to Market starts clean.
+  useEffect(() => {
+    if (serializeExplorerState(initial) !== "") return;
+    try {
+      const raw = window.sessionStorage.getItem(RETURN_KEY);
+      if (!raw) return;
+      window.sessionStorage.removeItem(RETURN_KEY);
+      const saved = JSON.parse(raw) as { at: number; state: unknown };
+      if (Date.now() - saved.at > RETURN_WINDOW_MS) return;
+      const restored = parseExplorerState(Object.fromEntries(new URLSearchParams(String(saved.state))));
+      // Deferred a tick: this is a one-time sync from an external store after hydration, not a
+      // render-loop cascade, and the hydrated markup has to match the server's first.
+      queueMicrotask(() => {
+        setQuery(restored.query); setThemeId(restored.theme); setAudience(restored.audience);
+        setSourceFilter(restored.source); setGradeFilter(restored.grade); setSortMode(restored.sort);
+        setSelected(restored.compare);
+      });
+    } catch { /* storage blocked or unreadable: the controls just start at their defaults */ }
+    // Mount only: `initial` is the server's reading of the URL and never changes for this instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  function parkControlsForReturn(event: React.MouseEvent) {
+    if (!(event.target as Element).closest('a[href^="/intelligence/explore/"]')) return;
+    try {
+      window.sessionStorage.setItem(RETURN_KEY, JSON.stringify({
+        at: Date.now(),
+        state: serializeExplorerState({
+          query, theme: themeId, audience, source: sourceFilter, grade: gradeFilter, sort: sortMode, compare: selected,
+        }),
+      }));
+    } catch { /* storage blocked: Back simply resets the controls */ }
+  }
+
+  // Mirror the controls into the address bar. replaceState, not push: every keystroke in the
+  // search box must not add a history entry. The hash is kept so "#browse" links still land.
+  useEffect(() => {
+    const next = serializeExplorerState({
+      query, theme: themeId, audience, source: sourceFilter, grade: gradeFilter, sort: sortMode, compare: selected,
+    });
+    const url = window.location.pathname + (next ? "?" + next : "") + window.location.hash;
+    if (url !== window.location.pathname + window.location.search + window.location.hash) {
+      window.history.replaceState(null, "", url);
+    }
+  }, [query, themeId, audience, sourceFilter, gradeFilter, sortMode, selected]);
 
   const matching = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -63,7 +114,7 @@ export function ResearchExplorer({ initialTheme = "all" }: {
   function toggleCompare(slug: string) {
     setSelected(old => old.includes(slug)
       ? old.filter(item => item !== slug)
-      : old.length < 3 ? [...old, slug] : old);
+      : old.length < MAX_COMPARE ? [...old, slug] : old);
   }
   function clear() {
     setQuery("");
@@ -74,7 +125,7 @@ export function ResearchExplorer({ initialTheme = "all" }: {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" onClickCapture={parkControlsForReturn}>
       <section aria-labelledby="browse-title" className="scroll-mt-28">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="browse-title" className="text-xl font-bold tracking-[-.045em] text-[#203328]">Compounds</h2>
@@ -188,7 +239,7 @@ export function ResearchExplorer({ initialTheme = "all" }: {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {matching.map(subject => {
             const isSelected = selected.includes(subject.slug);
-            const atLimit = !isSelected && selected.length >= 3;
+            const atLimit = !isSelected && selected.length >= MAX_COMPARE;
             return (
               <article key={subject.slug} data-testid="research-card"
                 className="ink-1 hard-sm group flex min-w-0 flex-col overflow-hidden rounded-[17px] bg-white">
