@@ -25,7 +25,7 @@ export default async function ResearchMarketPage({ searchParams }: {
   const { theme } = await searchParams;
   const selected = RESEARCH_THEMES.find(item => item.id === theme)?.id as ResearchThemeId | undefined;
   return (
-    <main className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+    <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <section className="relative overflow-hidden border-b-2 border-[#111214] bg-[#e9fff6]">
         <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
           <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]">The research market</p>
@@ -68,6 +68,6 @@ export default async function ResearchMarketPage({ searchParams }: {
           All sixteen cards are dated public research reference files. They do not establish clinical effectiveness, a tested physical lot, a scientific consensus or purchase eligibility.
         </p>
       </div>
-    </main>
+    </div>
   );
 }

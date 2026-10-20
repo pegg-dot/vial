@@ -24,7 +24,7 @@ const deeper = [
 export default async function IntelligencePage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
   const { notice } = await searchParams;
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[#111214]">
+    <div className="min-h-screen bg-[var(--background)] text-[#111214]">
       {notice === "retired" && (
         <div role="status" className="border-b-2 border-[#111214] bg-[#fff3d8] px-5 py-3 text-center text-xs font-semibold leading-6">
           The previous shopping marketplace is archived. Purchasing and seller referrals are not available; existing accounts can still access historical records.
@@ -122,6 +122,6 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
         <p><strong className="text-[#111214]">About this library.</strong> The selected public references are not a systematic literature review. File coverage is not biological effectiveness, material purity or legal authorization to sell. No purchasing, clinical advice or laboratory certification.</p>
         <Link href="/intelligence/grading" className="mt-3 inline-flex items-center gap-1 font-bold text-[#2b31d8] hover:underline">Read the file-checking method <BookOpen className="size-4" /></Link>
       </section>
-    </main>
+    </div>
   );
 }

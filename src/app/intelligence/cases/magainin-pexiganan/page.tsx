@@ -27,7 +27,7 @@ const roleNames: Record<GuidedResearchSource["type"], string> = {
 export default function MagaininPexigananGuidedCase() {
   const caseStudy = MAGAININ_PEXIGANAN_CASE;
   return (
-    <main className="bg-[#faf9f7] pb-20">
+    <div className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1110px] px-5 pt-8 sm:px-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#827f91]">
           <Link href="/intelligence#explore" className="hover:text-[#5a499e] hover:underline">Research Explorer</Link>
@@ -170,6 +170,6 @@ export default function MagaininPexigananGuidedCase() {
         </p>
         <Link href="/intelligence#explore" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#594f93] hover:underline"><ArrowLeft className="size-4" /> Return to Research Explorer</Link>
       </div>
-    </main>
+    </div>
   );
 }

@@ -21,7 +21,7 @@ export default function ResearchFileGradingMethodPage() {
   ];
 
   return (
-    <main className="bg-[#faf9f7] pb-20">
+    <div className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1100px] px-5 pt-9 sm:px-8">
         <Link href="/intelligence/market#browse" className="inline-flex items-center gap-2 text-xs font-bold text-[#2a7065] hover:underline">
           <ArrowLeft className="size-4" /> Back to research market
@@ -92,6 +92,6 @@ export default function ResearchFileGradingMethodPage() {
           </p>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

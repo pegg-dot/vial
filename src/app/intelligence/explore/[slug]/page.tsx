@@ -35,7 +35,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
   const related = RESEARCH_SUBJECTS.filter(other => other.theme === subject.theme && other.slug !== slug).slice(0, 3);
 
   return (
-    <main className="bg-[#faf9f7] pb-20">
+    <div className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1100px] px-5 pt-8 sm:px-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#807e92]">
           <Link href="/intelligence/market" className="hover:text-[#5445a4] hover:underline">Research Market</Link>
@@ -245,6 +245,6 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           Editorial research starting points, not grades of clinical effectiveness or material quality. Company-published supplier QC information is separate and unverified; no prices, purchases or recommendations for human consumption.
         </p>
       </div>
-    </main>
+    </div>
   );
 }

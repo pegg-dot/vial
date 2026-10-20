@@ -27,7 +27,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
   const card = "rounded-[18px] border border-[#dedee7] bg-white";
 
   if (result.state !== "available") return (
-    <main className="mx-auto max-w-[980px] px-5 pb-24 pt-12 sm:px-8">
+    <div className="mx-auto max-w-[980px] px-5 pb-24 pt-12 sm:px-8">
       <Link href="/intelligence" className="inline-flex items-center gap-2 text-sm font-semibold text-[#595284]"><ArrowLeft className="size-4" /> Back to study lookup</Link>
       <section className={card + " mt-9 p-7 sm:p-10"}>
         <h1 className="text-3xl font-semibold tracking-tight text-[#232333]">{result.state === "not-found" ? "Study not found" : "Registry temporarily unavailable"}</h1>
@@ -39,7 +39,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
         <div className="mt-7 max-w-2xl"><StudyLookupForm initialId={id} compact /></div>
         <div className="mt-5"><ExternalSource href={"https://clinicaltrials.gov/study/" + id}>Check ClinicalTrials.gov directly</ExternalSource></div>
       </section>
-    </main>
+    </div>
   );
 
   const study = result.study;
@@ -50,7 +50,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
     check: study.pubmedChecks.find(check => check.reference.pmid === reference.pmid),
   }));
   return (
-    <main className="bg-[#faf9f7] pb-20">
+    <div className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1080px] px-5 pt-9 sm:px-8">
         <Link href="/intelligence" className="inline-flex items-center gap-2 text-xs font-semibold text-[#595284] hover:underline"><ArrowLeft className="size-4" /> Back to study lookup</Link>
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
@@ -165,6 +165,6 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
           Checked {result.checkedAt}. NIH responses may be cached for up to six hours. No research profile is created, though normal hosting logs may record a request. VialGrade provides no purchase or medical-advice features.
         </p>
       </div>
-    </main>
+    </div>
   );
 }
