@@ -225,7 +225,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
             Showing {matching.length} of {RESEARCH_SUBJECTS.length} compounds
             {themeId === "all" ? "" : " · " + researchThemeById(themeId).name}
           </p>
-          <Link href="/intelligence/grading" className="text-xs font-medium text-[#347352] underline underline-offset-4">About file coverage</Link>
+          <Link href="/intelligence/grading" className="inline-flex min-h-6 items-center text-xs font-medium text-[#347352] underline underline-offset-4">About file coverage</Link>
         </div>
       </section>
 
@@ -296,7 +296,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
             <p className="mt-1 text-xs leading-5 text-[#6c7b70]">Five selected public trial examples. A starting point, not a ranking.</p>
           </div>
           <button type="button" onClick={() => { setSourceFilter("selected-trial"); setThemeId("all"); setQuery(""); document.getElementById("browse-title")?.scrollIntoView({ behavior: "smooth" }); }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#2f7151] hover:underline">Show trials in the library <ArrowRight className="size-3.5" /></button>
+            className="inline-flex min-h-6 items-center gap-1 text-xs font-semibold text-[#2f7151] hover:underline">Show trials in the library <ArrowRight className="size-3.5" /></button>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {RESEARCH_SUBJECTS.filter(subject => Boolean(subject.sampleTrial)).map(subject => (

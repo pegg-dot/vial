@@ -80,7 +80,7 @@ export function MaterialReviewWorkbench({ initialSlug }: { initialSlug: string }
                   index.open = true;
                   index.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
-              }} className="inline-flex items-center gap-1 text-xs font-extrabold text-[#245c4c] underline underline-offset-4">
+              }} className="inline-flex min-h-6 items-center gap-1 text-xs font-extrabold text-[#245c4c] underline underline-offset-4">
                 Choose another compound <ArrowRight className="size-3.5" />
               </button>
               <Link href={"/intelligence/explore/" + slug} className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#245c4c] underline underline-offset-4">Scientific dossier <ArrowUpRight className="size-3.5" /></Link>

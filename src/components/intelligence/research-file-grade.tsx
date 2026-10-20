@@ -50,7 +50,7 @@ export function ResearchFileGradeCard({ subject, compact = false }: {
         <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#217f72]">
           <SearchCheck className="size-4" /> VialGrade research file
         </p>
-        <Link href="/intelligence/grading" className="text-xs font-bold text-[#526474] underline-offset-2 hover:underline">
+        <Link href="/intelligence/grading" className="inline-flex min-h-6 items-center text-xs font-bold text-[#526474] underline-offset-2 hover:underline">
           How grading works
         </Link>
       </div>
