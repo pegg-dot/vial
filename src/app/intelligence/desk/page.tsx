@@ -19,7 +19,7 @@ export default async function IntelligenceResearchDeskPage({ searchParams }: { s
   const aiStatus = researchAiAvailability();
   const aiPilotToken = issueResearchAiPilotToken();
   return (
-    <main className="min-h-screen bg-[#f7f8f6] pb-20">
+    <div className="min-h-screen bg-[#f7f8f6] pb-20">
       <div className="mx-auto max-w-[1200px] px-5 pt-7 sm:px-8 sm:pt-9">
         <nav aria-label="Research desk breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[#6c8170]">
           <Link href="/intelligence/market#browse" className="hover:underline">Compounds</Link><span>/</span><span aria-current="page" className="font-semibold text-[#315d40]">Research Desk</span>
@@ -33,6 +33,6 @@ export default async function IntelligenceResearchDeskPage({ searchParams }: { s
         </header>
         <ResearchDesk aiStatus={aiStatus} aiPilotToken={aiPilotToken} initialTopic={initialTopic} />
       </div>
-    </main>
+    </div>
   );
 }

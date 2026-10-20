@@ -18,7 +18,7 @@ export default async function ResearchMaterialsPage({ searchParams }: {
   const request = typeof params.subject === "string" ? params.subject : "pexiganan";
   const initialSlug = researchSubjectBySlug(request) ? request : "pexiganan";
   return (
-    <main className="bg-[#faf9f7] pb-24">
+    <div className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1180px] px-5 pt-8 sm:px-8">
         <nav aria-label="Research materials breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#688074]">
           <Link href="/intelligence/market" className="hover:underline">Research Market</Link><span>/</span>
@@ -77,6 +77,6 @@ export default async function ResearchMaterialsPage({ searchParams }: {
         </section>
         <Link href="/intelligence/market" className="mt-8 inline-flex items-center gap-2 text-xs font-bold text-[#347460] hover:underline"><ArrowLeft className="size-4" /> Back to Research Market</Link>
       </div>
-    </main>
+    </div>
   );
 }

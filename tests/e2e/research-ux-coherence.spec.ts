@@ -51,4 +51,23 @@ test.describe("Research UX coherence: context, honesty and reach", () => {
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
     expect((await request.post("/api/v1/commerce/checkout", { data: {} })).status()).toBe(410);
   });
+
+  test("every public research page exposes exactly one main landmark", async ({ page }) => {
+    for (const path of ["/", "/intelligence", "/intelligence/market", "/intelligence/desk", "/intelligence/explore/pexiganan",
+      "/intelligence/compare?subjects=magainin-2%2Cpexiganan", "/intelligence/materials", "/intelligence/grading",
+      "/intelligence/studies/NCT01594762", "/intelligence/cases/magainin-pexiganan", "/intelligence/providers", "/legal/privacy"]) {
+      await page.goto(path);
+      expect(await page.locator("main, [role=main]").count(), path).toBe(1);
+    }
+  });
+
+  test("global search sends an exact source identifier to the verifier", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/intelligence/market");
+    await page.getByRole("button", { name: "Search VialGrade research" }).first().click();
+    await page.getByRole("searchbox", { name: /Search compound name/ }).fill("PMID 36781451");
+    await page.getByRole("link", { name: /Check PMID 36781451 in the source register/ }).click();
+    await expect(page).toHaveURL(/\/intelligence\/verify\?ref=PMID(%20|\+)36781451/);
+    await expect(page.getByRole("region", { name: "Original research source verification" })).toContainText("secondary review");
+  });
 });

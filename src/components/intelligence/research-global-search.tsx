@@ -36,6 +36,9 @@ export function ResearchGlobalSearch() {
         .some(value => value.toLowerCase().includes(term)))
       .slice(0, 8) : RESEARCH_SUBJECTS.filter(item => item.sampleTrial).slice(0, 5);
   }, [query]);
+  // An exact source identifier belongs to the verifier, not the compound index.
+  const identifier = /^(?:NCT\d{8}|(?:PMID|CID)\s?\d{1,10})$/i.test(query.trim()) ? query.trim().toUpperCase() : null;
+  const verifyHref = identifier ? "/intelligence/verify?ref=" + encodeURIComponent(identifier) : null;
   function close() { setOpen(false); setQuery(""); }
   return (
     <>
@@ -58,9 +61,9 @@ export function ResearchGlobalSearch() {
           <input ref={field} aria-label="Search compound name, alias or study ID" autoComplete="off" type="search" value={query}
             onChange={event => setQuery(event.target.value)}
             onKeyDown={event => {
-              if (event.key === "Enter" && results[0]) {
+              if (event.key === "Enter" && (results[0] || verifyHref)) {
                 event.preventDefault();
-                window.location.assign("/intelligence/explore/" + results[0].slug);
+                window.location.assign(results[0] ? "/intelligence/explore/" + results[0].slug : verifyHref!);
               }
             }}
             placeholder="Compound, alternate name, or linked NCT..."
@@ -68,6 +71,16 @@ export function ResearchGlobalSearch() {
           <button type="button" onClick={close} className="ink-1 grid size-9 shrink-0 place-items-center rounded-full" aria-label="Close search"><X className="size-4" /></button>
         </div>
         <div className="px-4 py-5">
+          {verifyHref && (
+            <Link href={verifyHref} onClick={close}
+              className="ink-1 mb-4 flex items-center gap-3 rounded-xl bg-[#eafff2] px-4 py-3 hover:bg-[#d9f7e6]">
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-extrabold">Check {identifier} in the source register</p>
+                <p className="mt-0.5 text-xs text-[#4f6a58]">Exact identifier lookup · says what the record does and does not show</p>
+              </div>
+              <ArrowUpRight className="size-5 shrink-0 text-[#1f7d60]" />
+            </Link>
+          )}
           <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#2b31d8]">{query.trim() ? "Matching research records" : "Selected trial examples"}</p>
           {results.length ? (
             <ul className="mt-3 space-y-2">

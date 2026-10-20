@@ -19,7 +19,7 @@ export default async function ResearchProviderProfile({ params }: { params: Prom
   const provider = researchProviderBySlug(slug);
   if (!provider) notFound();
   return (
-    <main className="bg-[#faf9f7] pb-24">
+    <div className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1000px] px-5 pt-8 sm:px-8">
         <nav aria-label="Provider source profile breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#6e7d76]">
           <Link href="/intelligence" className="hover:underline">Research Market</Link><span>/</span>
@@ -90,6 +90,6 @@ export default async function ResearchProviderProfile({ params }: { params: Prom
         <p className="mt-6 max-w-4xl text-xs leading-6 text-[#829088]">This is a read-only quality-source audit, not vendor certification, material availability, accreditation verification, a scientific effectiveness score, or an invitation to purchase. A company profile is not evidence that it made the molecule in any VialGrade dossier.</p>
         <Link href="/intelligence/providers" className="mt-7 inline-flex items-center gap-2 text-xs font-bold text-[#33735d] hover:underline"><ArrowLeft className="size-4" /> Back to supplier documentation</Link>
       </div>
-    </main>
+    </div>
   );
 }
