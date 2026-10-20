@@ -79,6 +79,23 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
   });
 
+  // WCAG 2.5.8: footer lists, breadcrumbs and "text + arrow" links were 16-20px tall. Links inside a
+  // sentence are exempt, so they are skipped the same way a reader would see them.
+  test("standalone links and buttons are at least 24px tall on phone width", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const path of ["/intelligence", "/intelligence/market", "/intelligence/explore/oxytocin", "/intelligence/explore/pexiganan", "/intelligence/verify", "/intelligence/materials"]) {
+      await page.goto(path);
+      const small = await page.evaluate(() => [...document.querySelectorAll("a[href], button, [role=button]")]
+        .filter(el => {
+          const r = el.getBoundingClientRect();
+          if (!(r.width > 0 && r.height > 0) || getComputedStyle(el).visibility === "hidden" || r.height >= 24) return false;
+          return !(el.closest("p, li, span") && getComputedStyle(el).display === "inline");
+        })
+        .map(el => ((el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30) + " " + Math.round(el.getBoundingClientRect().height) + "px")));
+      expect(small, path).toEqual([]);
+    }
+  });
+
   test("every visible internal public link on research and legal pages leads somewhere real", async ({ page }) => {
     const publicPages = [
       "/intelligence", "/intelligence/market", "/intelligence/retatrutide", "/intelligence/cagrilintide",

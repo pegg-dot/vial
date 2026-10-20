@@ -82,7 +82,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
               <h2 className="mt-3 text-[clamp(2.4rem,5vw,3.7rem)] font-extrabold leading-[.95] tracking-[-.045em]">Go deeper.</h2>
               <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">Start with the compound, then follow the underlying experiments, reports, and organizations.</p>
             </div>
-            <Link href="/intelligence/grading" className="text-sm font-bold text-[#2b31d8] underline underline-offset-4">How source coverage works</Link>
+            <Link href="/intelligence/grading" className="inline-flex min-h-6 items-center text-sm font-bold text-[#2b31d8] underline underline-offset-4">How source coverage works</Link>
           </div>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {deeper.map(({ name, note, href, action, icon: Icon }, index) => (

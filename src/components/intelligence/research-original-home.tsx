@@ -44,9 +44,9 @@ export function OriginalResearchHero() {
         </div>
         <div role="group" aria-label="Choose a research starting point" className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px] font-semibold">
           <span className="text-[#646c73]">Or start with</span>
-          <Link href={CATALOG + "#browse"} className="text-[#2b31d8] underline underline-offset-4 hover:text-[#17191b]">a compound</Link>
-          <Link href="/intelligence#trial-lookup" className="text-[#2b31d8] underline underline-offset-4 hover:text-[#17191b]">a trial ID</Link>
-          <Link href="/intelligence/desk" className="text-[#2b31d8] underline underline-offset-4 hover:text-[#17191b]">a research question</Link>
+          <Link href={CATALOG + "#browse"} className="inline-flex min-h-6 items-center text-[#2b31d8] underline underline-offset-4 hover:text-[#17191b]">a compound</Link>
+          <Link href="/intelligence#trial-lookup" className="inline-flex min-h-6 items-center text-[#2b31d8] underline underline-offset-4 hover:text-[#17191b]">a trial ID</Link>
+          <Link href="/intelligence/desk" className="inline-flex min-h-6 items-center text-[#2b31d8] underline underline-offset-4 hover:text-[#17191b]">a research question</Link>
         </div>
         <Link href={CATALOG} className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-[#2b31d8] underline underline-offset-4">
           Explore the research market <ArrowRight className="size-4" />

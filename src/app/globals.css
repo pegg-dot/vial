@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/*
+ * WCAG 2.5.8 (target size, minimum): a standalone link needs a 24px target. Footer lists, breadcrumb
+ * trails and the "text + arrow" links used all over the research pages rendered at 16-20px.
+ * In the base layer, so any component that sets its own display or height still wins; this only
+ * fills in where nothing was set. Links inside a sentence are deliberately left alone: they are
+ * exempt, and making them inline-flex would break line wrapping.
+ */
+@layer base {
+  :where(footer a, nav a) { display: inline-flex; align-items: center; }
+  :where(footer a, nav a, main a.inline-flex, main a.flex) { min-height: 1.5rem; }
+}
+
 :root {
   --background: #f7f7f4;
   --surface: #ffffff;
