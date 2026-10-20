@@ -211,7 +211,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
                 <h2 className="mt-3 text-lg font-semibold text-[#30304c]">{subject.sampleTrial}</h2>
                 <p className="mt-2 text-sm leading-6 text-[#65627b]">The official intervention field names {subject.name}. That is not proof of an outcome.</p>
                 <div className="mt-4 flex flex-col items-start gap-3">
-                  <a href="#evidence-review" className="inline-flex items-center gap-2 rounded-lg bg-[#332a59] px-4 py-3 text-xs font-bold text-white hover:bg-[#483b7b]">
+                  <a href={subject.slug === "pexiganan" ? "#pexiganan-trials" : "#evidence-review"} className="inline-flex items-center gap-2 rounded-lg bg-[#332a59] px-4 py-3 text-xs font-bold text-white hover:bg-[#483b7b]">
                     See source findings <ArrowRight className="size-4" />
                   </a>
                   <Link href={"/intelligence/studies/" + subject.sampleTrial} className="inline-flex items-center gap-1 text-xs font-semibold text-[#6554a4] hover:underline">

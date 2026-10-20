@@ -69,6 +69,36 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     expect(previous.headers().location).toContain("/intelligence?notice=retired");
   });
 
+  test("filters, sort and compare selection survive opening a dossier and pressing Back", async ({ page }) => {
+    await page.goto("/intelligence/market");
+    const browse = page.locator("section").filter({ has: page.locator("h2", { hasText: "Browse everything" }) }).first();
+    await page.getByRole("button", { name: "Host defense & antimicrobials" }).first().click();
+    await page.getByText("More filters").click();
+    await page.getByLabel("Sort research file coverage").selectOption("source-coverage");
+    await browse.locator('button[aria-label^="Compare "]').first().click();
+    const names = () => browse.locator('button[aria-label^="Quick view"]').evaluateAll(els => els.map(e => e.getAttribute("aria-label")));
+    const before = await names();
+    expect(before.length).toBeLessThan(16);
+    await browse.locator('a[aria-label^="Open research dossier:"]').first().click();
+    await expect(page).toHaveURL(/\/intelligence\/explore\//);
+    await page.goBack();
+    await expect(page.getByRole("button", { name: "Host defense & antimicrobials" }).first()).toHaveAttribute("aria-pressed", "true");
+    expect(await names()).toEqual(before);
+    await expect(page.getByRole("region", { name: "Comparison selection" })).toBeVisible();
+    // Hand-edited garbage falls back to the default list instead of breaking the page.
+    await page.goto("/intelligence/market?theme=%3Cx%3E&sort=zzz&compare=nope");
+    await expect(browse.locator('button[aria-label^="Quick view"]')).toHaveCount(16);
+  });
+
+  test("every in-page jump link on a dossier points at an element that exists", async ({ page }) => {
+    for (const slug of ["pexiganan", "oxytocin", "retatrutide"]) {
+      await page.goto("/intelligence/explore/" + slug);
+      const missing = await page.evaluate(() => [...document.querySelectorAll('main a[href^="#"]')]
+        .map(a => a.getAttribute("href")!).filter(h => h.length > 1 && !document.getElementById(h.slice(1))));
+      expect(missing, slug).toEqual([]);
+    }
+  });
+
   test("desktop and mobile preserve original hierarchy without overflow or inaccessible menu", async ({ page }) => {
     for (const width of [1440, 1024, 390, 360]) {
       await page.setViewportSize({ width, height: 844 });
