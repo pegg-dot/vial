@@ -47,11 +47,11 @@ export function PexEvidenceWayfinder({ condensed = false }: { condensed?: boolea
           <FileBadge className="size-4" /> Evidence network · Source-first
         </p>
         <h2 className="mt-2 text-2xl font-extrabold tracking-[-.05em] text-[#17191b] sm:text-3xl">
-          Follow a compound, not a product listing.
+          Where can you go from this record?
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-[#4f6860]">
-          Pexiganan is the starting point. Open its distinct molecular record, a specific original experiment,
-          a registered study or the organizations named in those records. Every connection has an original source.
+          Choose the next question you want answered. You can read the source checks, look up an exact citation,
+          inspect selected registered studies or find the organizations named on those records.
         </p>
         <div className="mt-4"><PexEvidenceScopeStrip /></div>
       </div>

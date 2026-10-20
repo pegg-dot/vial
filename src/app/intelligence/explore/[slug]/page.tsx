@@ -10,6 +10,7 @@ import {
 import { DossierPerspective } from "@/components/intelligence/dossier-perspective";
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
+import { gradeResearchFile } from "@/lib/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
 import { PexEvidenceClaimGrid, PexEvidenceWayfinder, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
 import { PexTrialNetworkLive, PexTrialNetworkLoading } from "@/components/intelligence/pexiganan-trial-network";
@@ -29,15 +30,16 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
   const subject = researchSubjectBySlug(slug);
   if (!subject) notFound();
   const theme = researchThemeById(subject.theme);
+  const file = gradeResearchFile(subject);
   const related = RESEARCH_SUBJECTS.filter(other => other.theme === subject.theme && other.slug !== slug).slice(0, 3);
 
   return (
     <main className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1100px] px-5 pt-8 sm:px-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#807e92]">
-          <Link href="/intelligence" className="hover:text-[#5445a4] hover:underline">Research Explorer</Link>
+          <Link href="/intelligence/market" className="hover:text-[#5445a4] hover:underline">Research Market</Link>
           <span aria-hidden="true">/</span>
-          <Link href="/intelligence#explore" className="hover:text-[#5445a4] hover:underline">{theme.name}</Link>
+          <Link href={"/intelligence/market?theme=" + subject.theme + "#browse"} className="hover:text-[#5445a4] hover:underline">{theme.name}</Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page" className="text-[#4d4969]">{subject.name}</span>
         </nav>
@@ -52,34 +54,64 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
             </div>
             <h1 className="mt-5 text-[clamp(2.45rem,5vw,4.25rem)] font-semibold leading-[1.1] tracking-[-.06em] text-[#242639]">{subject.name}</h1>
             <div className="mt-3"><ResearchFileGradeMark subject={subject} withCount /></div>
+            <p className="mt-2 text-xs font-medium leading-5 text-[#626d70]">This letter describes linked source types in our file, not how promising or safe the compound is.</p>
             <p className="mt-3 max-w-3xl text-base leading-7 text-[#5d6270]">{subject.identity}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer"
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <a href="#overview"
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#282541] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#443a7e]">
+                Start with the research question <ArrowRight className="size-4" />
+              </a>
+              <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#51468d] hover:underline">
                 Inspect molecular identity <ArrowUpRight className="size-4" />
               </a>
               <Link href={compareExplorerHref([subject.slug, related[0]?.slug].filter(Boolean), "researcher")}
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#dedde7] bg-white px-5 py-2.5 text-sm font-semibold text-[#51468d] hover:bg-[#f5f2ff]">
+                className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#51468d] hover:underline">
                 <GitCompareArrows className="size-4" /> Compare with {related[0]?.name}
               </Link>
             </div>
             </div>
           </div>
           <div className="relative grid border-t-2 border-[#17191b] bg-[#f1fdf6] sm:grid-cols-3">
-            <div className="border-b border-[#eae9ee] px-6 py-4 sm:border-b-0 sm:border-r"><p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8e90a0]">Research theme</p><p className="mt-1 text-sm font-semibold text-[#383849]">{theme.short}</p></div>
-            <div className="border-b border-[#eae9ee] px-6 py-4 sm:border-b-0 sm:border-r"><p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8e90a0]">Mechanism</p><p className="mt-1 text-sm font-semibold text-[#383849]">{subject.mechanism}</p></div>
-            <div className="px-6 py-4"><p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#8e90a0]">Identity reference</p><p className="mt-1 text-sm font-semibold text-[#383849]">{subject.referenceLabel}</p></div>
+            <div className="border-b border-[#dcece3] px-6 py-4 sm:border-b-0 sm:border-r">
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#546b5f]">What is this?</p>
+              <p className="mt-1 text-sm font-semibold text-[#303a35]">A curated identity file, not a material listing.</p>
+            </div>
+            <div className="border-b border-[#dcece3] px-6 py-4 sm:border-b-0 sm:border-r">
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#546b5f]">What is linked?</p>
+              <p className="mt-1 text-sm font-semibold text-[#303a35]">{file.linkedCount} of 3 research source types in this file.</p>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#546b5f]">What is not verified?</p>
+              <p className="mt-1 text-sm font-semibold text-[#303a35]">Clinical benefit or any physical sample.</p>
+            </div>
           </div>
         </section>
 
-        <nav aria-label="Research dossier sections" className="sticky top-[68px] z-20 -mx-5 mt-4 flex gap-2 overflow-x-auto border-b border-[#e5e4ea] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold text-[#535868] backdrop-blur-md sm:mx-0 sm:px-0">
-          <a href="#overview" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Overview</a>
-          <a href="#file-grade" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Research file grade</a>
-          <a href="#material-evidence" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Material verification</a>
-          {subject.sampleTrial && <a href={subject.slug === "pexiganan" ? "#pexiganan-trials" : "#evidence-review"} className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Trial evidence</a>}
-          {subject.slug === "pexiganan" && <a href="#pexiganan-network" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Evidence network</a>}
-          <a href="#sources" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Sources</a>
-          <a href="#related" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Related</a>
+        <details className="mt-3 rounded-xl border border-[#d5ded7] bg-white px-5 py-3.5 text-sm">
+          <summary className="cursor-pointer font-bold text-[#376c58]">Molecular and technical details</summary>
+          <dl className="mt-4 grid gap-4 border-t border-[#e5ebe7] pt-4 sm:grid-cols-3">
+            <div><dt className="text-[11px] font-bold uppercase tracking-[.09em] text-[#728277]">Research area</dt><dd className="mt-1 font-medium">{theme.short}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase tracking-[.09em] text-[#728277]">Mechanism</dt><dd className="mt-1 font-medium">{subject.mechanism}</dd></div>
+            <div><dt className="text-[11px] font-bold uppercase tracking-[.09em] text-[#728277]">Identity reference</dt><dd className="mt-1 font-medium">{subject.referenceLabel}</dd></div>
+          </dl>
+        </details>
+
+        <nav aria-label="Research dossier sections" className="sticky top-[68px] z-20 -mx-5 mt-4 flex flex-wrap items-center gap-2 border-b border-[#e5e4ea] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold text-[#535868] backdrop-blur-md sm:mx-0 sm:px-0">
+          <a href="#overview" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Research question</a>
+          {subject.sampleTrial && <a href={subject.slug === "pexiganan" ? "#pexiganan-trials" : "#evidence-review"} className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Studies</a>}
+          <a href="#sources" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Original sources</a>
+          <details className="group min-w-[135px] text-[#535868]">
+            <summary className="cursor-pointer list-none rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766] [&::-webkit-details-marker]:hidden">
+              More sections <span aria-hidden="true" className="ml-1 group-open:hidden">+</span><span aria-hidden="true" className="ml-1 hidden group-open:inline">−</span>
+            </summary>
+            <div className="ink-1 absolute right-5 top-[calc(100%-2px)] z-40 flex w-[min(320px,90vw)] flex-col gap-1 rounded-xl bg-white p-2 shadow-lg sm:right-0">
+              <a href="#file-grade" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Research file grade</a>
+              <a href="#material-evidence" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Material verification</a>
+              {subject.slug === "pexiganan" && <a href="#pexiganan-network" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Evidence network</a>}
+              <a href="#related" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Related research</a>
+            </div>
+          </details>
         </nav>
 
         {subject.slug === "pexiganan" && (
@@ -195,7 +227,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               <div className="mt-3 divide-y divide-[#ececf1]">
                 {related.map(other => <Link href={"/intelligence/explore/" + other.slug} key={other.slug} className="flex items-center justify-between gap-3 py-3 text-sm font-medium text-[#5c5791] hover:underline">{other.name} <ArrowUpRight className="size-4 shrink-0" /></Link>)}
               </div>
-              <Link href="/intelligence#explore" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#6b62a3] hover:underline"><ArrowLeft className="size-3" /> Back to discovery</Link>
+              <Link href="/intelligence/market#browse" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#6b62a3] hover:underline"><ArrowLeft className="size-3" /> Back to discovery</Link>
             </section>
           </aside>
         </div>

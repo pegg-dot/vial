@@ -27,7 +27,7 @@ export default async function CompareResearchPage({ searchParams }: {
   return (
     <main className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1180px] px-5 pt-9 sm:px-8">
-        <Link href="/intelligence#explore" className="inline-flex items-center gap-2 text-xs font-semibold text-[#625894] hover:underline"><ArrowLeft className="size-4" /> Back to Research Explorer</Link>
+        <Link href="/intelligence/market#browse" className="inline-flex items-center gap-2 text-xs font-semibold text-[#625894] hover:underline"><ArrowLeft className="size-4" /> Back to Research Explorer</Link>
         <div className="mt-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.14em] text-[#625794]"><GitCompareArrows className="size-4" /> Scientific comparison</div>
@@ -49,7 +49,7 @@ export default async function CompareResearchPage({ searchParams }: {
           <section className="mt-8 rounded-2xl border border-[#e0dee9] bg-white p-9">
             <h2 className="text-xl font-semibold text-[#2b2c3e]">Select two or three research subjects.</h2>
             <p className="mt-3 text-sm leading-7 text-[#777b88]">The comparison uses only curated, source-linked identities. Please choose subjects using the catalog.</p>
-            <Link href="/intelligence#explore" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#282441] px-5 py-3 text-sm font-semibold text-white">Browse catalog <ArrowRight className="size-4" /></Link>
+            <Link href="/intelligence/market#browse" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#282441] px-5 py-3 text-sm font-semibold text-white">Browse catalog <ArrowRight className="size-4" /></Link>
           </section>
         ) : (
           <>

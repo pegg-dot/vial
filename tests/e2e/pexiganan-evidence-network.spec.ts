@@ -22,7 +22,7 @@ test.describe("Pexiganan source-first research network", () => {
       .toHaveAttribute("href", "/intelligence/verify?ref=PMID%2036781451");
     await expect(wayfinder.getByRole("link", { name: "View source organizations" }))
       .toHaveAttribute("href", "/intelligence/organizations");
-    await expect(page.getByRole("navigation", { name: "Research dossier sections" }).getByRole("link", { name: "Trial evidence" }))
+    await expect(page.getByRole("navigation", { name: "Research dossier sections" }).getByRole("link", { name: "Studies", exact: true }))
       .toHaveAttribute("href", "#pexiganan-trials");
     await wayfinder.getByRole("link", { name: "Read passport" }).click();
     await expect(page.getByRole("heading", { name: "Pexiganan, with the receipts." })).toBeVisible();
@@ -92,7 +92,7 @@ test.describe("Pexiganan source-first research network", () => {
 
   test("organization directory reports named sponsors and explicitly refuses lab/vendor certification", async ({ page }) => {
     await page.goto("/intelligence/organizations");
-    await expect(page.getByRole("heading", { level: 1, name: "Who is behind these records?" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Who sponsored the selected studies?" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Dipexium Pharmaceuticals, Inc." })).toBeVisible({ timeout: 30000 });
     await expect(page.getByRole("heading", { name: "Abeona Therapeutics, Inc" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Open source NCT00563394" }))

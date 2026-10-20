@@ -65,60 +65,24 @@ export function MaterialReviewWorkbench({ initialSlug }: { initialSlug: string }
 
   return (
     <div className="space-y-9">
-      <section id="material-index" aria-label="Research material identity index">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#198779]">Research material index</p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#17191b]">Start with the exact molecule</h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-[#68776c]">
-              These are scientific identity references, not listings of available material. No indexed identity has an independently authenticated physical lot on file yet.
-            </p>
-          </div>
-          <span className="rounded-full border border-[#e4d9bb] bg-[#fff7df] px-3 py-2 text-xs font-extrabold text-[#8b6a35]">0 authenticated lots</span>
-        </div>
-        <label className="relative mt-5 block max-w-lg">
-          <span className="sr-only">Search material identities</span>
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#718076]" />
-          <input type="search" value={query} onChange={event => setQuery(event.target.value)}
-            placeholder="Search compound, research family or alias…"
-            className="h-12 w-full rounded-xl border-2 border-[#d0dcd5] bg-white pl-11 pr-4 text-sm focus:border-[#1c8875] focus:outline-none" />
-        </label>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {filtered.map(record => {
-            const theme = researchThemeById(record.theme);
-            return (
-              <article key={record.slug} className={"min-w-0 overflow-hidden rounded-[17px] border-2 bg-white shadow-[3px_4px_0_rgba(23,25,27,0.09)] " +
-                (slug === record.slug ? "border-[#148675]" : "border-[#17191b]")}>
-                <div className="relative h-24 overflow-hidden">
-                  <ResearchSubjectArt subject={record} compact />
-                </div>
-                <div className="p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[.08em]" style={{ color: theme.color }}>{theme.name}</p>
-                  <h3 className="mt-1 text-lg font-extrabold tracking-[-.04em] text-[#17191b]">{record.name}</h3>
-                  <p className="mt-1 text-xs leading-5 text-[#63746b]">Material evidence not verified</p>
-                  <button type="button" aria-pressed={slug === record.slug} onClick={() => selectSubject(record.slug)}
-                    aria-label={"Review " + record.name + " material evidence"}
-                    className={"mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold " +
-                      (slug === record.slug ? "bg-[#c6f3dc] text-[#1a5644]" : "bg-[#17191b] text-white hover:bg-[#343839]")}>
-                    {slug === record.slug ? "Selected for review" : "Review material file"} <ArrowRight className="size-3.5" />
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-          {filtered.length === 0 && <p role="status" className="col-span-full rounded-xl border bg-white p-6 text-sm">No matched research identities. Try another name or alias.</p>}
-        </div>
-      </section>
-
       <section id="material-workpaper" aria-labelledby="material-workpaper-title" className="scroll-mt-36 overflow-hidden rounded-[22px] border-2 border-[#17191b] bg-white">
         <div className="grid border-b-2 border-[#17191b] bg-[#dcfae9] lg:grid-cols-[minmax(0,1fr)_245px]">
           <div className="p-6 sm:p-8">
-            <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[.12em] text-[#237761]"><FileSearch className="size-4" /> Material verification workbench</p>
+            <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[.12em] text-[#237761]"><FileSearch className="size-4" /> Sample and report checklist</p>
             <h2 id="material-workpaper-title" className="mt-3 text-2xl font-extrabold tracking-[-.05em] text-[#17191b] sm:text-3xl">{subject.name} material file</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#537061]">
-              Investigate a lot and its evidence without claiming the sample has been tested by VialGrade. Your entries stay in this browser tab; nothing is uploaded or saved.
+              Compare IDs from a sample label and a report you already have. This checks only what you type, not whether the report or sample is authentic. Nothing is uploaded or saved.
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <button type="button" onClick={() => {
+                const index = document.getElementById("material-index");
+                if (index instanceof HTMLDetailsElement) {
+                  index.open = true;
+                  index.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }} className="inline-flex items-center gap-1 text-xs font-extrabold text-[#245c4c] underline underline-offset-4">
+                Choose another compound <ArrowRight className="size-3.5" />
+              </button>
               <Link href={"/intelligence/explore/" + slug} className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#245c4c] underline underline-offset-4">Scientific dossier <ArrowUpRight className="size-3.5" /></Link>
               <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#245c4c] underline underline-offset-4">Original identity source <ArrowUpRight className="size-3.5" /></a>
             </div>
@@ -194,6 +158,58 @@ export function MaterialReviewWorkbench({ initialSlug }: { initialSlug: string }
           </aside>
         </div>
       </section>
+
+      <details id="material-index" className="scroll-mt-36 overflow-hidden rounded-[20px] border-2 border-[#17191b] bg-white">
+        <summary className="cursor-pointer bg-[#eefaf3] px-5 py-5 text-sm font-extrabold text-[#205b49] hover:bg-[#e2f8ed] sm:px-7">
+          Choose another compound <span className="ml-2 font-medium text-[#5f776b]">· All 16 identities</span>
+        </summary>
+        <div className="border-t border-[#dbe7df] p-5 sm:p-7">
+      <section aria-label="Research material identity index">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#198779]">Research material index</p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-[-.045em] text-[#17191b]">Choose a different compound</h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-[#68776c]">
+              These are scientific identity references, not listings of available material. No indexed identity has an independently authenticated physical lot on file yet.
+            </p>
+          </div>
+          <span className="rounded-full border border-[#e4d9bb] bg-[#fff7df] px-3 py-2 text-xs font-extrabold text-[#8b6a35]">0 authenticated lots</span>
+        </div>
+        <label className="relative mt-5 block max-w-lg">
+          <span className="sr-only">Search material identities</span>
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#718076]" />
+          <input type="search" value={query} onChange={event => setQuery(event.target.value)}
+            placeholder="Search compound, research family or alias…"
+            className="h-12 w-full rounded-xl border-2 border-[#d0dcd5] bg-white pl-11 pr-4 text-sm focus:border-[#1c8875] focus:outline-none" />
+        </label>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {filtered.map(record => {
+            const theme = researchThemeById(record.theme);
+            return (
+              <article key={record.slug} className={"min-w-0 overflow-hidden rounded-[17px] border-2 bg-white shadow-[3px_4px_0_rgba(23,25,27,0.09)] " +
+                (slug === record.slug ? "border-[#148675]" : "border-[#17191b]")}>
+                <div className="relative h-24 overflow-hidden">
+                  <ResearchSubjectArt subject={record} compact />
+                </div>
+                <div className="p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[.08em]" style={{ color: theme.color }}>{theme.name}</p>
+                  <h3 className="mt-1 text-lg font-extrabold tracking-[-.04em] text-[#17191b]">{record.name}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#63746b]">Material evidence not verified</p>
+                  <button type="button" aria-pressed={slug === record.slug} onClick={() => selectSubject(record.slug)}
+                    aria-label={"Review " + record.name + " material evidence"}
+                    className={"mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold " +
+                      (slug === record.slug ? "bg-[#c6f3dc] text-[#1a5644]" : "bg-[#17191b] text-white hover:bg-[#343839]")}>
+                    {slug === record.slug ? "Selected for review" : "Review material file"} <ArrowRight className="size-3.5" />
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+          {filtered.length === 0 && <p role="status" className="col-span-full rounded-xl border bg-white p-6 text-sm">No matched research identities. Try another name or alias.</p>}
+        </div>
+      </section>
+        </div>
+      </details>
     </div>
   );
 }

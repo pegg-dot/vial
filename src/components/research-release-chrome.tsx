@@ -1,23 +1,25 @@
 import Link from "next/link";
-import { ArrowUpRight, FlaskConical, ScanLine, ShieldCheck, LibraryBig, Link2, ExternalLink } from "lucide-react";
+import { ArrowUpRight, ExternalLink, ChevronDown } from "lucide-react";
 import { VialGradeMark } from "./wordmark";
 import { ResearchGlobalSearch, ResearchMobileMenu } from "@/components/intelligence/research-global-search";
+import { ResearchBrandTicker } from "@/components/intelligence/research-brand-ticker";
 
+// Keep the original visible brand and the main research tasks; everything
+// else stays available in a single clearly labeled source/tools menu.
 const NAV = [
-  { href: "/intelligence/verify", label: "Verify" },
   { href: "/intelligence/market", label: "Market" },
-  { href: "/intelligence/market#browse", label: "Compounds" },
-  { href: "/intelligence/providers", label: "Organizations" },
+  { href: "/intelligence/verify", label: "Check a source" },
   { href: "/intelligence/desk", label: "Research Desk" },
   { href: "/intelligence/grading", label: "How we check" },
 ] as const;
 
-const ticker = [
-  { icon: LibraryBig, label: "16 research identities on file" },
-  { icon: FlaskConical, label: "Original studies, not just summaries" },
-  { icon: ScanLine, label: "5 selected trial examples" },
-  { icon: Link2, label: "Every source belongs to a named record" },
-  { icon: ShieldCheck, label: "Source coverage isn't an efficacy grade" },
+const OTHER_RESEARCH_AREAS = [
+  { href: "/intelligence/market#browse", label: "All compounds", description: "Search and filter the 16-record library" },
+  { href: "/intelligence#trial-lookup", label: "Open a trial ID", description: "Look up a ClinicalTrials.gov registration" },
+  { href: "/intelligence/organizations", label: "Study sponsors", description: "Names recorded on selected trial registrations" },
+  { href: "/intelligence/providers", label: "Supplier documentation", description: "Unverified company-published laboratory methods" },
+  { href: "/intelligence/materials", label: "Sample report checks", description: "Compare the lot IDs you already have" },
+  { href: "/intelligence/compare?subjects=magainin-2%2Cpexiganan", label: "Compare compounds", description: "Compare two source files side by side" },
 ] as const;
 
 export function ResearchReleaseHeader() {
@@ -44,6 +46,22 @@ export function ResearchReleaseHeader() {
                 {item.label}
               </Link>
             ))}
+            <details className="group relative">
+              <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full px-3 py-2 text-[13px] font-bold text-[#55575f] hover:bg-black/[.06] hover:text-[#111214] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b31d8] [&::-webkit-details-marker]:hidden">
+                More research <ChevronDown className="size-3.5 transition group-open:rotate-180" />
+              </summary>
+              <div className="ink hard-sm absolute left-0 top-[calc(100%+13px)] z-50 w-[345px] rounded-[16px] bg-white p-2 shadow-lg">
+                <p className="px-3 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Other research tools</p>
+                <nav aria-label="More research areas" className="grid">
+                  {OTHER_RESEARCH_AREAS.map(item => (
+                    <Link href={item.href} key={item.href} className="rounded-xl px-3 py-2.5 hover:bg-[#eef0ff]">
+                      <span className="block text-[13px] font-extrabold text-[#17191b]">{item.label}</span>
+                      <span className="mt-0.5 block text-[11px] leading-5 text-[#656b70]">{item.description}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            </details>
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <ResearchGlobalSearch />
@@ -61,16 +79,7 @@ export function ResearchReleaseHeader() {
           </div>
         </div>
       </header>
-      <div aria-label="Research library facts" className="overflow-hidden bg-[#2b31d8] text-white">
-        <div className="market-ticker flex w-max items-center gap-10 py-2.5 pr-10 text-[13px] font-semibold">
-          {[...ticker, ...ticker].map((item, index) => (
-            <span key={index} className="flex shrink-0 items-center gap-2 whitespace-nowrap">
-              <item.icon className="size-4 opacity-90" aria-hidden />{item.label}
-              <span className="ml-9 size-1.5 rounded-full bg-white/40" />
-            </span>
-          ))}
-        </div>
-      </div>
+      <ResearchBrandTicker />
     </>
   );
 }
@@ -91,15 +100,16 @@ export function ResearchReleaseFooter() {
         <nav aria-label="Explore research" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Explore</p>
           <Link href="/intelligence/market" className="hover:text-white">Market</Link>
-          <Link href="/intelligence#explore" className="hover:text-white">Compounds</Link>
-          <Link href="/intelligence/providers" className="hover:text-white">Organizations</Link>
+          <Link href="/intelligence/market#browse" className="hover:text-white">Compounds</Link>
+          <Link href="/intelligence/organizations" className="hover:text-white">Study sponsors</Link>
+          <Link href="/intelligence/providers" className="hover:text-white">Supplier documents</Link>
           <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" className="hover:text-white">Compare</Link>
           <Link href="/intelligence/desk" className="hover:text-white">Research Desk</Link>
         </nav>
         <nav aria-label="Verify research" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">How we check</p>
           <Link href="/intelligence/grading" className="hover:text-white">File coverage method</Link>
-          <Link href="/intelligence/verify" className="hover:text-white">Check a study or claim</Link>
+          <Link href="/intelligence/verify" className="hover:text-white">Check a source ID (pilot)</Link>
           <Link href="/intelligence/materials" className="hover:text-white">Material documents</Link>
           <Link href="/intelligence/passports/pexiganan" className="hover:text-white">Evidence passport</Link>
           <Link href="/intelligence/organizations" className="hover:text-white">Study organizations</Link>

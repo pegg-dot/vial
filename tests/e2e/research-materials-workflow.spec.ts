@@ -22,7 +22,7 @@ test.describe("Research materials and source provenance", () => {
     ]);
     expect(file.suggestedFilename()).toContain("unverified");
     await page.getByRole("link", { name: "Full source directory" }).click();
-    await expect(page.getByRole("heading", { name: /organizations/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Supplier quality documents" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Open source profile" })).toHaveCount(2);
     expect((await request.post("/api/v1/commerce/checkout", { data: {} })).status()).toBe(410);
   });

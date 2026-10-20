@@ -23,8 +23,8 @@ export default function ResearchFileGradingMethodPage() {
   return (
     <main className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1100px] px-5 pt-9 sm:px-8">
-        <Link href="/intelligence#explore" className="inline-flex items-center gap-2 text-xs font-bold text-[#2a7065] hover:underline">
-          <ArrowLeft className="size-4" /> Back to Research Explorer
+        <Link href="/intelligence/market#browse" className="inline-flex items-center gap-2 text-xs font-bold text-[#2a7065] hover:underline">
+          <ArrowLeft className="size-4" /> Back to research market
         </Link>
 
         <header className="mt-8 rounded-[24px] border-2 border-[#17191b] bg-[#eafff6] px-6 py-9 sm:px-11 sm:py-12">

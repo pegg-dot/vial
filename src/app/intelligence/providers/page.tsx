@@ -14,13 +14,13 @@ export default function ResearchProvidersPage() {
     <main className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1100px] px-5 pt-8 sm:px-8">
         <nav aria-label="Supplier documentation breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#718276]">
-          <Link href="/intelligence" className="hover:underline">Research Market</Link><span>/</span>
+          <Link href="/intelligence/market" className="hover:underline">Research Market</Link><span>/</span>
           <span aria-current="page" className="text-[#236d57]">Supplier documentation</span>
         </nav>
         <header className="mt-7 border-b border-[#dce5df] pb-7">
-          <h1 className="text-[clamp(2rem,4.4vw,3.2rem)] font-bold tracking-[-.055em] text-[#203629]">Research organizations</h1>
+          <h1 className="text-[clamp(2rem,4.4vw,3.2rem)] font-bold tracking-[-.055em] text-[#203629]">Supplier quality documents</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[#617469]">
-            See what laboratories and manufacturers say about their quality processes, with links to the original company pages. VialGrade has not independently verified these organizations or any specific material lot.
+            Read the quality-control methods these companies describe on their own websites. These are company statements, not independent lab audits or evidence about a particular sample.
           </p>
           <p className="mt-3 text-xs text-[#7b897e]">{RESEARCH_PROVIDER_RECORDS.length} company documentation profiles · Source notes dated {MATERIAL_REVIEW_DATE}</p>
         </header>
@@ -59,7 +59,7 @@ export default function ResearchProvidersPage() {
             <p className="mt-2 text-xs leading-6 text-[#708075]">Sponsors shown in clinical registries are not necessarily manufacturers or material suppliers.</p>
           </Link>
         </nav>
-        <Link href="/intelligence" className="mt-8 inline-flex items-center gap-2 text-xs font-bold text-[#377563] hover:underline"><ArrowLeft className="size-4" /> Back to Research Market</Link>
+        <Link href="/intelligence/market" className="mt-8 inline-flex items-center gap-2 text-xs font-bold text-[#377563] hover:underline"><ArrowLeft className="size-4" /> Back to Research Market</Link>
       </div>
     </main>
   );

@@ -69,19 +69,18 @@ export default function ResearchOrganizationsPage() {
     <div className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1130px] px-5 pt-8 sm:px-8">
         <nav aria-label="Organization directory breadcrumbs" className="flex flex-wrap gap-2 text-xs font-bold text-[#7e8e83]">
-          <Link href="/intelligence" className="hover:underline">Research Market</Link>
+          <Link href="/intelligence/market" className="hover:underline">Research Market</Link>
           <span>/</span>
           <Link href="/intelligence/explore/pexiganan" className="hover:underline">Pexiganan</Link>
           <span>/</span>
           <span aria-current="page" className="text-[#326e5c]">Source organizations</span>
         </nav>
         <header className="mt-7 rounded-[22px] border-2 border-[#17191b] bg-[#eafff2] px-6 py-9 sm:px-9 sm:py-11">
-          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.13em] text-[#207867]"><Building2 className="size-4" /> Research organization directory · Pilot</p>
-          <h1 className="mt-3 text-[clamp(2.4rem,5vw,4rem)] font-extrabold tracking-[-.06em] text-[#17191b]">Who is behind these records?</h1>
+          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.13em] text-[#207867]"><Building2 className="size-4" /> Historical study sponsors · Pexiganan pilot</p>
+          <h1 className="mt-3 text-[clamp(2.4rem,5vw,4rem)] font-extrabold tracking-[-.06em] text-[#17191b]">Who sponsored the selected studies?</h1>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-[#506b5f] sm:text-base">
-            The old VialGrade connected compounds to vendors and labs. In this research product, the first useful connection
-            is to the organizations explicitly named in official study registries. These are historical study attributions, not
-            supplier rankings or directories for buying material.
+            These are the organization names recorded in the lead-sponsor fields of four selected trial registrations.
+            A sponsor name is a historical source fact, not proof of current ownership, scientific performance or supplier quality.
           </p>
           <p className="mt-3 text-xs font-bold text-[#698878]">Two lead-sponsor names · Four curated registry records · Editorial check {PEXIGANAN_REVIEW_DATE}</p>
         </header>

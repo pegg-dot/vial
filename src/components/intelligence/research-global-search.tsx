@@ -63,7 +63,7 @@ export function ResearchGlobalSearch() {
                 window.location.assign("/intelligence/explore/" + results[0].slug);
               }
             }}
-            placeholder="Name, alias, mechanism, NCT number..."
+            placeholder="Compound, alternate name, or linked NCT..."
             className="min-w-0 flex-1 rounded-md px-2 py-1.5 text-base outline-none placeholder:text-[#737780]" />
           <button type="button" onClick={close} className="ink-1 grid size-9 shrink-0 place-items-center rounded-full" aria-label="Close search"><X className="size-4" /></button>
         </div>
@@ -89,22 +89,27 @@ export function ResearchGlobalSearch() {
             className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-[#2b31d8] hover:underline">
             Browse the complete research market <ArrowUpRight className="size-4" />
           </Link>
-          <p className="mt-3 text-xs text-[#666971]">Searches run in this browser against the public starter index. No vendor or sales search.</p>
+          <p className="mt-3 text-xs text-[#666971]">Searches cover the 16-compound starter index, not the full scientific literature or trial registry.</p>
         </div>
       </dialog>
     </>
   );
 }
 
-const NAV_LINKS = [
-  { href: "/intelligence/verify", label: "Verify" },
-  { href: "/intelligence/market", label: "Market" },
-  { href: "/intelligence/market#browse", label: "Compounds" },
-  { href: "/intelligence/compare?subjects=magainin-2%2Cpexiganan", label: "Compare" },
-  { href: "/intelligence/providers", label: "Organizations" },
-  { href: "/intelligence/desk", label: "Research Desk" },
-  { href: "/intelligence/grading", label: "How we check" },
-];
+const PRIMARY_MOBILE = [
+  { href: "/intelligence/market", label: "Market", note: "Find compounds and research records" },
+  { href: "/intelligence/market#browse", label: "Compounds", note: "Search the entire library" },
+  { href: "/intelligence/verify", label: "Verify", note: "Check an exact ID in the Pexiganan pilot" },
+  { href: "/intelligence/desk", label: "Research Desk", note: "Examine a source-backed question" },
+] as const;
+const MORE_MOBILE = [
+  { href: "/intelligence/compare?subjects=magainin-2%2Cpexiganan", label: "Compare", note: "See two source files together" },
+  { href: "/intelligence/grading", label: "How we check", note: "Understand A/B/C research-file coverage" },
+  { href: "/intelligence#trial-lookup", label: "Open a trial", note: "Look up an NCT registration" },
+  { href: "/intelligence/organizations", label: "Study sponsors", note: "Names found in selected trial records" },
+  { href: "/intelligence/providers", label: "Supplier documents", note: "Read company-published QC claims" },
+  { href: "/intelligence/materials", label: "Sample report checks", note: "Compare the lot IDs on two documents" },
+] as const;
 export function ResearchMobileMenu() {
   const [open, setOpen] = useState(false);
   return (
@@ -115,15 +120,28 @@ export function ResearchMobileMenu() {
         {open ? <X className="size-4" /> : <span className="text-[11px] font-extrabold">Menu</span>}
       </button>
       {open && (
-        <nav aria-label="Mobile research links" className="absolute left-0 right-0 top-full z-50 border-b-2 border-[#111214] bg-[var(--background)] px-5 py-4 shadow-lg xl:hidden">
+        <nav aria-label="Mobile research links" className="absolute left-0 right-0 top-full z-50 max-h-[calc(100dvh-90px)] overflow-y-auto border-b-2 border-[#111214] bg-[var(--background)] px-5 py-4 shadow-lg xl:hidden">
           <div className="mx-auto grid max-w-[1320px] gap-1">
-            <Link onClick={() => setOpen(false)} href="/intelligence" className="rounded-xl px-4 py-3 text-base font-bold hover:bg-black/[.06]">Home</Link>
-            {NAV_LINKS.map(item => (
-              <Link key={item.href} onClick={() => setOpen(false)} href={item.href}
-                className="rounded-xl px-4 py-3 text-base font-bold hover:bg-black/[.06]">{item.label}</Link>
+            <Link onClick={() => setOpen(false)} href="/intelligence"
+              className="rounded-xl px-4 py-3 text-sm font-extrabold hover:bg-black/[.06]">Home</Link>
+            <p className="px-4 pt-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Start with</p>
+            {PRIMARY_MOBILE.map(item => (
+              <Link key={item.href} onClick={() => setOpen(false)} href={item.href} aria-label={item.label}
+                className="rounded-xl px-4 py-2.5 hover:bg-black/[.06]">
+                <span className="block text-sm font-extrabold">{item.label}</span>
+                <span className="block text-xs text-[#64676e]">{item.note}</span>
+              </Link>
             ))}
-            <Link onClick={() => setOpen(false)} href="/intelligence/materials" className="rounded-xl px-4 py-3 text-base font-bold hover:bg-black/[.06]">Material documentation</Link>
-            <Link onClick={() => setOpen(false)} href="/login" className="rounded-xl px-4 py-3 text-base font-bold hover:bg-black/[.06]">Existing account</Link>
+            <p className="px-4 pt-3 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Dig deeper</p>
+            {MORE_MOBILE.map(item => (
+              <Link key={item.href} onClick={() => setOpen(false)} href={item.href} aria-label={item.label}
+                className="rounded-xl px-4 py-2.5 hover:bg-black/[.06]">
+                <span className="block text-sm font-extrabold">{item.label}</span>
+                <span className="block text-xs text-[#64676e]">{item.note}</span>
+              </Link>
+            ))}
+            <Link onClick={() => setOpen(false)} href="/login"
+              className="mt-2 border-t border-black/10 px-4 py-3 text-sm font-bold">Existing account</Link>
           </div>
         </nav>
       )}

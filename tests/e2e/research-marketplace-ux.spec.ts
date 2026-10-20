@@ -75,7 +75,7 @@ test.describe("marketplace-like browsing with research-only sources", () => {
 
     await page.goto("/intelligence/explore/cagrilintide");
     await expect(page.getByRole("navigation", { name: "Research dossier sections" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Trial evidence", exact: true })).toHaveAttribute("href", "#evidence-review");
+    await expect(page.getByRole("link", { name: "Studies", exact: true })).toHaveAttribute("href", "#evidence-review");
     await expect(page.getByRole("heading", { name: "Cagrilintide", level: 1 })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
     for (const route of ["/api/v1/commerce/checkout", "/api/v1/commerce/cart", "/api/partner/conversion"]) {

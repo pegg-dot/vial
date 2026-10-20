@@ -22,7 +22,7 @@ export default function PexigananEvidencePassportPage() {
     <div className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1170px] px-5 pt-8 sm:px-8">
         <nav aria-label="Evidence passport breadcrumbs" className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#72817a]">
-          <Link href="/intelligence" className="hover:underline">Research Market</Link>
+          <Link href="/intelligence/market" className="hover:underline">Research Market</Link>
           <span aria-hidden="true">/</span>
           <Link href="/intelligence/explore/pexiganan" className="hover:underline">Pexiganan</Link>
           <span aria-hidden="true">/</span>
@@ -58,6 +58,17 @@ export default function PexigananEvidencePassportPage() {
           </div>
         </section>
 
+        <section aria-label="Passport summary in plain language" className="mt-5 rounded-[18px] border-2 border-[#17191b] bg-white p-5 sm:p-6">
+          <p className="text-[11px] font-extrabold uppercase tracking-[.14em] text-[#187b6a]">The answer before the paperwork</p>
+          <h2 className="mt-2 text-xl font-extrabold tracking-[-.035em]">What can we actually say?</h2>
+          <p className="mt-2 max-w-4xl text-sm font-medium leading-7 text-[#4f6258]">
+            Pexiganan and Magainin 2 have separate molecular identities. Selected study registrations and papers can
+            be traced back to their source records. That does not establish a clinical benefit, an exact trial-to-paper
+            outcome match, or the authenticity of any physical sample.
+          </p>
+          <p className="mt-3 text-xs font-semibold text-[#6b7b70]">Read the six individual evidence checks below to see which link is supported and where questions remain.</p>
+        </section>
+
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#d8e2dc] bg-white p-4 sm:px-6">
           <div>
             <p className="text-sm font-extrabold">Save the source trail</p>
@@ -67,10 +78,10 @@ export default function PexigananEvidencePassportPage() {
         </div>
 
         <nav aria-label="Passport sections" className="sticky top-[68px] z-20 -mx-5 mt-5 flex gap-2 overflow-x-auto border-b border-[#e6e8e6] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold backdrop-blur sm:mx-0 sm:px-0">
-          <a href="#passport-claims" className="shrink-0 rounded-full border border-[#d8e2db] bg-white px-4 py-2.5 hover:text-[#167f69]">Six claims</a>
-          <a href="#pexiganan-trials" className="shrink-0 rounded-full border border-[#d8e2db] bg-white px-4 py-2.5 hover:text-[#167f69]">Four studies</a>
+          <a href="#passport-claims" className="shrink-0 rounded-full border border-[#d8e2db] bg-white px-4 py-2.5 hover:text-[#167f69]">Six evidence checks</a>
+          <a href="#pexiganan-trials" className="shrink-0 rounded-full border border-[#d8e2db] bg-white px-4 py-2.5 hover:text-[#167f69]">Selected studies</a>
           <Link href="/intelligence/verify?ref=PMID%2036781451" className="shrink-0 rounded-full border border-[#d8e2db] bg-white px-4 py-2.5 hover:text-[#167f69]">Verify a source</Link>
-          <Link href="/intelligence/organizations" className="shrink-0 rounded-full border border-[#d8e2db] bg-white px-4 py-2.5 hover:text-[#167f69]">Sponsors & labs</Link>
+          <Link href="/intelligence/organizations" className="shrink-0 rounded-full border border-[#d8e2db] bg-white px-4 py-2.5 hover:text-[#167f69]">Study sponsors</Link>
         </nav>
 
         <div id="passport-claims" className="mt-9 scroll-mt-36"><PexEvidenceClaimGrid /></div>

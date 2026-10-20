@@ -18,7 +18,7 @@ export default function IntelligenceResearchDeskPage() {
     <main className="min-h-screen bg-[#f7f8f6] pb-20">
       <div className="mx-auto max-w-[1200px] px-5 pt-7 sm:px-8 sm:pt-9">
         <nav aria-label="Research desk breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[#6c8170]">
-          <Link href="/intelligence#explore" className="hover:underline">Compounds</Link><span>/</span><span aria-current="page" className="font-semibold text-[#315d40]">Research Desk</span>
+          <Link href="/intelligence/market#browse" className="hover:underline">Compounds</Link><span>/</span><span aria-current="page" className="font-semibold text-[#315d40]">Research Desk</span>
         </nav>
         <header className="mb-8 border-b border-[#dbe5dc] pb-7">
           <h1 className="mt-3 text-[clamp(2rem,4.5vw,3.1rem)] font-bold tracking-[-.055em] text-[#20382a]">Research Desk</h1>

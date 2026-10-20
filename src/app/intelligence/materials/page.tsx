@@ -21,16 +21,16 @@ export default async function ResearchMaterialsPage({ searchParams }: {
     <main className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1180px] px-5 pt-8 sm:px-8">
         <nav aria-label="Research materials breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#688074]">
-          <Link href="/intelligence" className="hover:underline">Research Market</Link><span>/</span>
+          <Link href="/intelligence/market" className="hover:underline">Research Market</Link><span>/</span>
           <span aria-current="page" className="text-[#216554]">Research materials</span>
         </nav>
         <header className="mt-7 border-b border-[#dce6de] pb-7">
           <h1 className="text-[clamp(2rem,4.4vw,3.2rem)] font-bold leading-tight tracking-[-.055em] text-[#203529]">Research material checks</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[#607365]">
-            Match a research sample&apos;s lot number against the number on its report, then see what else needs confirming. This is a document checklist, not a physical test or a certificate of quality.
+            Have a sample label and a report? Start by comparing their lot IDs. A matching number is not proof of authenticity or quality. This is a local note-taking checklist, not a laboratory test.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-semibold">
-            <a href="#material-index" className="inline-flex items-center gap-1 text-[#2c7152] underline underline-offset-4">Browse compounds <ArrowRight className="size-3.5" /></a>
+            <a href="#material-index" className="inline-flex items-center gap-1 text-[#2c7152] underline underline-offset-4">Choose another compound <ArrowRight className="size-3.5" /></a>
             <Link href="/intelligence/providers" className="inline-flex items-center gap-1 text-[#2c7152] underline underline-offset-4">Public lab documents <ArrowUpRight className="size-3.5" /></Link>
           </div>
         </header>
@@ -75,7 +75,7 @@ export default async function ResearchMaterialsPage({ searchParams }: {
           </div>
           <Link href="/intelligence/grading" className="inline-flex min-h-11 items-center gap-2 text-xs font-extrabold text-[#25765d] hover:underline"><FileSearch className="size-4" /> See research grading</Link>
         </section>
-        <Link href="/intelligence" className="mt-8 inline-flex items-center gap-2 text-xs font-bold text-[#347460] hover:underline"><ArrowLeft className="size-4" /> Back to Research Market</Link>
+        <Link href="/intelligence/market" className="mt-8 inline-flex items-center gap-2 text-xs font-bold text-[#347460] hover:underline"><ArrowLeft className="size-4" /> Back to Research Market</Link>
       </div>
     </main>
   );

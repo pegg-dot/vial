@@ -59,6 +59,8 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
     await expect(quick.getByRole("region", { name: "Research file grade for Pexiganan" })).toContainText("Specific original experiment");
     await quick.getByRole("link", { name: /Open research dossier/ }).click();
     await expect(page).toHaveURL(/\/intelligence\/explore\/pexiganan$/);
+    await page.getByRole("navigation", { name: "Research dossier sections" })
+      .getByText("More sections", { exact: false }).click();
     await expect(page.getByRole("navigation", { name: "Research dossier sections" })
       .getByRole("link", { name: "Research file grade" })).toHaveAttribute("href", "#file-grade");
     const full = page.getByRole("region", { name: "Research file grade for Pexiganan" });

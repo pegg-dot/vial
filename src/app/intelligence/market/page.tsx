@@ -13,10 +13,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/intelligence/market" },
 };
 
-const CHECKS = [
-  { icon: Layers3, title: "Compounds in context", note: "Exact identities, family relationships, and research questions" },
-  { icon: ShieldCheck, title: "Research file coverage", note: "What source layers are on file, not an efficacy or quality score" },
-  { icon: FileSearch, title: "Original sources", note: "Open each registered study or publication reference" },
+const START_PATHS = [
+  { icon: Layers3, title: "Find a compound", note: "Start with a name, alias or research area", href: "#browse" },
+  { icon: FileSearch, title: "Check a source ID", note: "Selected Pexiganan registry and publication IDs", href: "/intelligence/verify" },
+  { icon: ShieldCheck, title: "Understand the file grade", note: "A, B and C describe linked sources, not effectiveness", href: "/intelligence/grading" },
 ] as const;
 
 export default async function ResearchMarketPage({ searchParams }: {
@@ -44,11 +44,11 @@ export default async function ResearchMarketPage({ searchParams }: {
       </section>
       <div className="mx-auto max-w-[1320px] px-5 pt-8 sm:px-8">
         <div className="grid gap-4 md:grid-cols-3">
-          {CHECKS.map(({icon:Icon,title,note}) => (
-            <div key={title} className="ink hard-sm flex items-start gap-3 rounded-[14px] bg-white p-4">
+          {START_PATHS.map(({icon:Icon,title,note,href}) => (
+            <Link href={href} key={title} className="ink hard-sm press group flex items-start gap-3 rounded-[14px] bg-white p-4">
               <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-[#12b3a6] text-white"><Icon className="size-5" /></div>
-              <div><p className="text-xs font-extrabold">{title}</p><p className="mt-1 text-xs leading-5 text-[#656872]">{note}</p></div>
-            </div>
+              <div className="min-w-0 flex-1"><p className="text-sm font-extrabold">{title} <ArrowRight className="inline size-3.5 transition-transform group-hover:translate-x-1" /></p><p className="mt-1 text-xs leading-5 text-[#656872]">{note}</p></div>
+            </Link>
           ))}
         </div>
         <div className="mt-8"><ResearchThemeRail /></div>

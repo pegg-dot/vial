@@ -6,7 +6,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
   test("retains the original authored landing, narrative and first action without old claims", async ({ page }) => {
     await page.goto("/intelligence");
     await expect(page.getByRole("heading", { level: 1, name: /Know what's behind the claim/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Check a study, claim or compound source" }))
+    await expect(page.getByRole("link", { name: "Check an exact source ID in the Pexiganan pilot" }))
       .toHaveAttribute("href", "/intelligence/verify");
     await expect(page.getByRole("heading", { name: /A claim isn't the evidence/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Everything you'd check/ })).toBeVisible();
