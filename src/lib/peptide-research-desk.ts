@@ -5,9 +5,10 @@
  * clinical conclusions are made by this module.
  */
 import {
-  PEXIGANAN_CLAIMS, PEXIGANAN_REVIEW_DATE, pexSourceById,
+  PEXIGANAN_CLAIMS, PEXIGANAN_RECORDED_ORGANIZATIONS, PEXIGANAN_REVIEW_DATE, pexSourceById,
   type PexEvidenceClaim, type PexEvidenceSource,
 } from "@/lib/pexiganan-evidence-network";
+import { RESEARCH_SUBJECTS } from "@/lib/research-explorer";
 
 export type DeskAudience = "researcher" | "analyst";
 export type DeskTopicId = "identity" | "clinical-trials" | "publication-matching" | "organizations";
@@ -92,6 +93,44 @@ export function deskSources(topicId: DeskTopicId): PexEvidenceSource[] {
   return [...found.values()];
 }
 
+/** Sponsor attributions are the one thing the Sponsor-history question adds to the clinical program. */
+export function deskSponsors(topicId: DeskTopicId): typeof PEXIGANAN_RECORDED_ORGANIZATIONS | readonly [] {
+  return topicId === "organizations" ? PEXIGANAN_RECORDED_ORGANIZATIONS : [];
+}
+
+export type QuestionCoverage =
+  | { state: "pinned" }
+  | { state: "own-wording" }
+  | { state: "other-compound"; names: string[] };
+
+const COVERED_SLUGS = new Set(["pexiganan"]);
+const COVERED_TERMS = ["pexiganan", "msi-78", "msi78", "magainin"];
+
+/**
+ * The Desk cannot retrieve evidence for new wording. This reports, deterministically,
+ * whether typed text is just the pinned question or a different one, and whether it
+ * names a compound whose evidence is not connected here. It never scores relevance.
+ */
+export function questionCoverage(topicId: DeskTopicId, question: string): QuestionCoverage {
+  const text = question.trim().toLowerCase();
+  const topic = deskTopicById(topicId);
+  if (!text || (topic && text === topic.question.toLowerCase())) return { state: "pinned" };
+  const mentions = (term: string) => new RegExp("(^|[^a-z0-9])" + term.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^a-z0-9]|$)").test(text);
+  const others = RESEARCH_SUBJECTS
+    .filter(subject => !COVERED_SLUGS.has(subject.slug) && [subject.name, ...subject.alternativeNames].some(mentions))
+    .map(subject => subject.name);
+  if (others.length > 0 && !COVERED_TERMS.some(mentions)) return { state: "other-compound", names: others };
+  return { state: "own-wording" };
+}
+
+export function coverageNote(coverage: QuestionCoverage): string {
+  switch (coverage.state) {
+    case "pinned": return "The question is the pinned one; the observations below were written for it.";
+    case "own-wording": return "Your wording is carried into the brief as written. VialGrade did not search for new evidence for it; the observations below are the fixed set for the selected question.";
+    case "other-compound": return "Your wording names " + coverage.names.join(", ") + ", which has no connected evidence on the Research Desk. The observations below are about Pexiganan only and do not answer it.";
+  }
+}
+
 export type DeskBriefRequest = {
   topicId: DeskTopicId;
   audience: DeskAudience;
@@ -111,6 +150,7 @@ export function buildDeskBrief(request: DeskBriefRequest): string {
     "Subject: Pexiganan (MSI-78); Magainin 2 is a separate compound.",
     "Perspective: " + request.audience,
     "Research question: " + question.replace(/\r?\n/g, " "),
+    "Question coverage: " + coverageNote(questionCoverage(topic.id, request.question ?? "")),
     "Scope: Limited pinned primary identifiers, registry fields and bibliographic metadata. NOT a systematic review, efficacy judgment, verified synthesis plan, vendor recommendation or patent/FTO opinion.",
     "AI status: No model analysis was executed. The following records are fixed editorial source observations, not an AI-authenticated conclusion.",
     "Sources may have changed since the editorial snapshot. Reopen the original records.",
@@ -127,6 +167,12 @@ export function buildDeskBrief(request: DeskBriefRequest): string {
       "Does NOT establish: " + claim.whatItDoesNotShow,
       "Next original-source check: " + claim.reviewTask,
       "Source IDs: " + claim.sourceIds.map(id => pexSourceById(id)?.identifier ?? "UNKNOWN").join(", "),
+    ]),
+    "",
+    ...(deskSponsors(topic.id).length === 0 ? [] : [
+      "",
+      "## Sponsors named in the registry records (historical attribution, not current ownership)",
+      ...deskSponsors(topic.id).map(org => "- " + org.name + " | " + org.recordRole + " | " + org.nctIds.join(", ")),
     ]),
     "",
     "## Exact original-source register",

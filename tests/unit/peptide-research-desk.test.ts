@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDeskBrief, deskClaims, deskSources, DESK_TOPICS, deskTopicById } from "@/lib/peptide-research-desk";
+import { buildDeskBrief, coverageNote, deskClaims, deskSources, deskSponsors, DESK_TOPICS, deskTopicById, questionCoverage } from "@/lib/peptide-research-desk";
 import { PEXIGANAN_CLAIMS, PEXIGANAN_SOURCES } from "@/lib/pexiganan-evidence-network";
 
 describe("question-specific, source-bound research desk", () => {
@@ -52,5 +52,40 @@ describe("question-specific, source-bound research desk", () => {
     expect(clinical).toContain("No outcome statistic has been adjudicated for clinical efficacy");
     expect(clinical).toContain("NCT01594762");
     expect(clinical).toContain("NCT01590758");
+  });
+});
+
+describe("question coverage is stated, never simulated", () => {
+  it("treats empty text and the pinned question as fixed evidence", () => {
+    expect(questionCoverage("identity", "").state).toBe("pinned");
+    expect(questionCoverage("identity", DESK_TOPICS[0].question).state).toBe("pinned");
+  });
+
+  it("carries custom wording through without claiming retrieval", () => {
+    const coverage = questionCoverage("clinical-trials", "Which sponsors ran these trials?");
+    expect(coverage.state).toBe("own-wording");
+    expect(coverageNote(coverage)).toContain("did not search");
+  });
+
+  it("flags a different compound as not covered, but not when pexiganan is also named", () => {
+    const other = questionCoverage("identity", "What do the semaglutide trials show?");
+    expect(other).toEqual({ state: "other-compound", names: ["Semaglutide"] });
+    expect(coverageNote(other)).toContain("do not answer it");
+    expect(questionCoverage("identity", "Compare pexiganan with semaglutide").state).toBe("own-wording");
+    // word boundary: a longer word must not trigger a compound
+    expect(questionCoverage("identity", "is semaglutides plural a typo").state).toBe("own-wording");
+  });
+
+  it("writes the coverage verdict and the sponsor attributions into the brief", () => {
+    const brief = buildDeskBrief({ topicId: "organizations", audience: "analyst", question: "Who funded semaglutide?" });
+    expect(brief).toContain("Question coverage: Your wording names Semaglutide");
+    expect(brief).toContain("Dipexium Pharmaceuticals, Inc.");
+    expect(brief).toContain("not current ownership");
+    expect(buildDeskBrief({ topicId: "clinical-trials", audience: "analyst" })).not.toContain("Dipexium Pharmaceuticals");
+  });
+
+  it("gives Sponsor history content the clinical program does not have", () => {
+    expect(deskSponsors("organizations").length).toBe(2);
+    expect(deskSponsors("clinical-trials")).toEqual([]);
   });
 });
