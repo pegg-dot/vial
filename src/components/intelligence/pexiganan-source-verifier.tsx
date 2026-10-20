@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CheckCircle2, CircleAlert, Search, ShieldAlert } from "lucide-react";
 import { PEXIGANAN_CLAIMS, PEXIGANAN_SOURCES, pexSourceByIdentifier } from "@/lib/pexiganan-evidence-network";
@@ -16,6 +16,22 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
     ? PEXIGANAN_CLAIMS.filter(claim => claim.sourceIds.includes(source.id))
     : [];
   const isEmpty = checked.trim().length === 0;
+  const wellFormed = /^(?:NCT\d{8}|(?:PMID|CID)\s?\d{1,10}|\d{5,10})$/i.test(checked.trim());
+  // Records that share an observation with this one, so the relationship can be walked in place.
+  const neighbours = source
+    ? [...new Set(related.flatMap(claim => claim.sourceIds))]
+        .filter(id => id !== source.id)
+        .flatMap(id => PEXIGANAN_SOURCES.filter(item => item.id === id))
+    : [];
+
+  // A checked identifier lives in the address so the result can be shared, reloaded and reached with Back.
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (checked) url.searchParams.set("ref", checked); else url.searchParams.delete("ref");
+      window.history.replaceState(null, "", url.pathname + url.search);
+    } catch { /* ignore */ }
+  }, [checked]);
   return (
     <section aria-label="Original research source verification" className="overflow-hidden rounded-[20px] border-2 border-[#17191b] bg-white">
       <div className="border-b-2 border-[#17191b] bg-[#eafff2] p-5 sm:p-7">
@@ -58,10 +74,11 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
           </div>
         ) : !source ? (
           <div className="rounded-xl border border-[#ead9ba] bg-[#fffbf2] p-5">
-            <div className="flex items-center gap-2 text-[#886834]"><CircleAlert className="size-5" /><h3 className="text-base font-bold">Not checked in this evidence file</h3></div>
+            <div className="flex items-center gap-2 text-[#886834]"><CircleAlert className="size-5" /><h3 className="text-base font-bold">{wellFormed ? "Not checked in this evidence file" : "Not a recognised identifier format"}</h3></div>
             <p className="mt-2 text-sm leading-6 text-[#807261]">
-              We have no individually selected record for this exact identifier in the Pexiganan pilot.
-              This does not mean the record is false, invalid, irrelevant or absent from the source database.
+              {wellFormed
+                ? "We have no individually selected record for this exact identifier in the Pexiganan pilot. This does not mean the record is false, invalid, irrelevant or absent from the source database."
+                : "This is not an NCT number, PMID or PubChem CID, so nothing was looked up. VialGrade cannot check names, claims, vendors or free text here."}
             </p>
             <p className="mt-3 text-xs text-[#8f846f]">Supported here: exact NCT12345678, PMID 12345678 or CID 12345678 formats. Please check unfamiliar identifiers at the original NIH source.</p>
           </div>
@@ -86,6 +103,20 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
                 Research evidence passport <ArrowRight className="size-3.5" />
               </Link>
             </div>
+            {neighbours.length > 0 && (
+              <div className="mt-5 border-t border-[#dfe5e1] pt-4">
+                <p className="text-xs font-extrabold text-[#4c6158]">Other records cited in the same observation</p>
+                <p className="mt-1 text-xs leading-5 text-[#6c7d73]">Being cited together is a bibliographic link, not proof that one reports the other&apos;s results.</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {neighbours.map(item => (
+                    <button key={item.id} type="button" onClick={() => { setQuery(item.identifier); setChecked(item.identifier); }}
+                      className="min-h-10 rounded-lg border-2 border-[#cfd9d3] bg-white px-3 py-2 text-xs font-extrabold text-[#2b31d8] hover:border-[#2b31d8]">
+                      Check {item.identifier}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {related.length > 0 && (
               <div className="mt-5 border-t border-[#dfe5e1] pt-4">
                 <p className="text-xs font-extrabold text-[#4c6158]">Connected evidence question{related.length === 1 ? "" : "s"}</p>

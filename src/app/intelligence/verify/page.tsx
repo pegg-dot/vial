@@ -26,13 +26,9 @@ export default async function ResearchSourceVerifyPage({
           <span>/</span>
           <span aria-current="page" className="text-[#356f61]">Verify source</span>
         </nav>
-        <div className="mb-6 mt-8">
+        <div className="mb-5 mt-5">
           <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#1f8573]">Exact source ID lookup · Pexiganan pilot</p>
-          <h1 className="mt-2 text-[clamp(2.4rem,5vw,4rem)] font-extrabold tracking-[-.06em] text-[#17191b]">Verify what a source says.</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-[#65746c]">
-            Enter a PubMed PMID, ClinicalTrials.gov NCT number or PubChem CID. VialGrade checks whether the exact identifier is
-            in the selected Pexiganan source file and explains what that record does and does not show. This is a limited pilot, not a general claim checker.
-          </p>
+          <h1 className="mt-1.5 text-[clamp(1.9rem,3.6vw,2.6rem)] font-extrabold tracking-[-.05em] text-[#17191b]">Verify what a source says.</h1>
         </div>
         <PexSourceVerifier initialRef={initialRef} />
         <div className="mt-7 grid gap-4 sm:grid-cols-2">

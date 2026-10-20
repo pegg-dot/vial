@@ -71,3 +71,20 @@ export function publicReleaseAction(
   if (matches(path, "/api")) return "gone";
   return ["GET", "HEAD"].includes(method.toUpperCase()) ? "redirect" : "gone";
 }
+
+/**
+ * Retired shopping URLs that have a genuine research equivalent keep the visitor's
+ * intent: a compound page becomes that compound's dossier, the old market becomes
+ * the research market. Everything else keeps the generic notice. Never maps a
+ * transactional path, and never invents a destination for a slug we do not hold.
+ */
+export function legacyResearchDestination(
+  pathname: string,
+  hasSubject: (slug: string) => boolean,
+): string | null {
+  const path = pathname.replace(/\/+$/, "");
+  if (path === "/compounds" || path === "/market") return "/intelligence/market";
+  const compound = path.match(/^\/compounds\/([a-z0-9-]+)(?:\/market)?$/);
+  if (compound && hasSubject(compound[1])) return "/intelligence/explore/" + compound[1];
+  return null;
+}

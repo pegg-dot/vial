@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { publicReleaseAction } from "@/lib/public-research-release";
+import { legacyResearchDestination, publicReleaseAction } from "@/lib/public-research-release";
 
 describe("public research-only deployment quarantine", () => {
   it.each(["/", "/market", "/vendors", "/vendors/store", "/compounds/retatrutide",
@@ -37,5 +37,19 @@ describe("public research-only deployment quarantine", () => {
   it("has no effect unless the deployment explicitly opts into the quarantine", () => {
     expect(publicReleaseAction("/vendors/a", "GET", false)).toBeNull();
     expect(publicReleaseAction("/api/v1/catalog", "GET", false)).toBeNull();
+  });
+});
+
+describe("retired shopping URLs keep research intent only where an equivalent exists", () => {
+  const known = (slug: string) => ["pexiganan", "magainin-2"].includes(slug);
+  it("maps compounds and the market, not arbitrary or transactional paths", () => {
+    expect(legacyResearchDestination("/compounds/pexiganan", known)).toBe("/intelligence/explore/pexiganan");
+    expect(legacyResearchDestination("/compounds/pexiganan/market", known)).toBe("/intelligence/explore/pexiganan");
+    expect(legacyResearchDestination("/compounds/", known)).toBe("/intelligence/market");
+    expect(legacyResearchDestination("/market", known)).toBe("/intelligence/market");
+    expect(legacyResearchDestination("/compounds/bpc-157", known)).toBeNull();
+    expect(legacyResearchDestination("/checkout", known)).toBeNull();
+    expect(legacyResearchDestination("/products/pexiganan", known)).toBeNull();
+    expect(legacyResearchDestination("/compounds/../admin", known)).toBeNull();
   });
 });
