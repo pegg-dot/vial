@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { publicReleaseAction } from "@/lib/public-research-release";
+import { researchSubjectBySlug } from "@/lib/research-explorer";
+import { publicReleaseAction, legacyResearchDestination } from "@/lib/public-research-release";
 
 describe("public research-only deployment quarantine", () => {
   it.each(["/", "/market", "/vendors", "/vendors/store", "/compounds/retatrutide",
@@ -38,4 +39,23 @@ describe("public research-only deployment quarantine", () => {
     expect(publicReleaseAction("/vendors/a", "GET", false)).toBeNull();
     expect(publicReleaseAction("/api/v1/catalog", "GET", false)).toBeNull();
   });
+});
+
+describe("retired shop URLs with a research equivalent", () => {
+  const dest = (path: string) => legacyResearchDestination(path, slug => !!researchSubjectBySlug(slug));
+
+  it.each(["retatrutide", "tirzepatide", "semaglutide", "cagrilintide", "ll-37", "oxytocin"])(
+    "sends /compounds/%s to its dossier", slug => {
+      expect(dest("/compounds/" + slug)).toBe("/intelligence/explore/" + slug);
+      expect(dest("/compounds/" + slug + "/")).toBe("/intelligence/explore/" + slug);
+    });
+
+  it("sends the compounds index to the research market", () => {
+    expect(dest("/compounds")).toBe("/intelligence/market");
+  });
+
+  it.each(["/compounds/bpc-157", "/compounds/not-a-compound", "/compounds/retatrutide/market", "/market", "/vendors/x", "/compounds/..%2Fadmin"])(
+    "leaves %s on the generic retired notice", path => {
+      expect(dest(path)).toBeNull();
+    });
 });
