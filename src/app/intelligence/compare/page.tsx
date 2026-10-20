@@ -25,7 +25,7 @@ export default async function CompareResearchPage({ searchParams }: {
   const audience: ExplorerAudience = query.audience === "analyst" ? "analyst" : "researcher";
 
   return (
-    <main className="bg-[#faf9f7] pb-20">
+    <div className="bg-[#faf9f7] pb-20">
       <div className="mx-auto max-w-[1180px] px-5 pt-9 sm:px-8">
         <Link href="/intelligence/market#browse" className="inline-flex items-center gap-2 text-xs font-semibold text-[#625894] hover:underline"><ArrowLeft className="size-4" /> Back to Research Explorer</Link>
         <div className="mt-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -99,6 +99,6 @@ export default async function CompareResearchPage({ searchParams }: {
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }

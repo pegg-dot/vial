@@ -28,6 +28,7 @@ const LENSES = [
     icon: BookOpen,
     contextLink: "/intelligence/compare?subjects=magainin-2%2Cpexiganan",
     contextLabel: "Compare the related molecules",
+    deskTopic: "identity",
   },
   {
     key: "experiment",
@@ -43,6 +44,7 @@ const LENSES = [
     icon: Microscope,
     contextLink: "/intelligence/cases/magainin-pexiganan",
     contextLabel: "Walk through experiment vs trial",
+    deskTopic: "identity",
   },
   {
     key: "trials",
@@ -58,6 +60,7 @@ const LENSES = [
     icon: FlaskConical,
     contextLink: "/intelligence/studies/NCT01594762",
     contextLabel: "Audit one selected trial",
+    deskTopic: "clinical-trials",
   },
   {
     key: "material",
@@ -73,6 +76,7 @@ const LENSES = [
     icon: ClipboardCheck,
     contextLink: "/intelligence/materials?subject=pexiganan",
     contextLabel: "Open the sample/report checklist",
+    deskTopic: null,
   },
 ] as const satisfies ReadonlyArray<{
   key: ResearchLens;
@@ -88,6 +92,7 @@ const LENSES = [
   icon: typeof BookOpen;
   contextLink: string;
   contextLabel: string;
+  deskTopic: "identity" | "clinical-trials" | null;
 }>;
 
 function kindLabel(source: PexEvidenceSource): string {
@@ -259,6 +264,12 @@ export function PexigananResearchWorkspace() {
             className="mt-auto inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border-2 border-[#111214] bg-white px-4 py-3 text-xs font-extrabold text-[#1f2b26] hover:bg-[#eafff2]">
             {active.contextLabel} <ArrowRight className="size-4 shrink-0" />
           </Link>
+          {active.deskTopic && (
+            <Link href={"/intelligence/desk?topic=" + active.deskTopic}
+              className="inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border-2 border-[#111214] bg-[#111214] px-4 py-3 text-xs font-extrabold text-white hover:bg-[#2b31d8]">
+              Build a source brief from this <ArrowRight className="size-4 shrink-0" />
+            </Link>
+          )}
           <div className="border-t border-[#daddd7] pt-4 text-[11px] leading-5 text-[#68736c]">
             <p><CheckCircle2 className="mr-1 inline size-3.5 text-[#28775f]" /> Source relationships are editorially selected, not systematically reviewed.</p>
             <p className="mt-1.5">No efficacy rating, human-use guidance, seller endorsement or independently checked physical sample.</p>

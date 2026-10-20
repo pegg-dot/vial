@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function ResearchProvidersPage() {
   return (
-    <main className="bg-[#faf9f7] pb-24">
+    <div className="bg-[#faf9f7] pb-24">
       <div className="mx-auto max-w-[1100px] px-5 pt-8 sm:px-8">
         <nav aria-label="Supplier documentation breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#718276]">
           <Link href="/intelligence/market" className="hover:underline">Research Market</Link><span>/</span>
@@ -61,6 +61,6 @@ export default function ResearchProvidersPage() {
         </nav>
         <Link href="/intelligence/market" className="mt-8 inline-flex items-center gap-2 text-xs font-bold text-[#377563] hover:underline"><ArrowLeft className="size-4" /> Back to Research Market</Link>
       </div>
-    </main>
+    </div>
   );
 }
