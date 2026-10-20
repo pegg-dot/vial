@@ -1,5 +1,5 @@
 // Per-day traffic numbers. Two things here can lie quietly, so both are pinned.
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getDatabase, resetDatabaseForTests, type SqlConnection } from "@/server/db/client";
 import { getDailySeries, getVendorClickBreakdown } from "@/server/analytics/daily";
 import { countingDay } from "@/server/analytics/counting-day";
@@ -10,8 +10,19 @@ process.env.VIALGRADE_SESSION_SECRET = "daily-analytics-secret-at-least-32-chara
 process.env.VIALGRADE_PRIVACY_HASH_SECRET = "daily-analytics-privacy-at-least-32-characters!!";
 
 let db: SqlConnection;
-beforeAll(async () => { await resetDatabaseForTests(); db = await getDatabase(); });
-afterAll(async () => { await resetDatabaseForTests(); });
+// The fixtures place rows "1-3 hours ago" and then read the current counting day. The counting day
+// rolls over at 04:00 Eastern, so in the hours after that boundary those rows landed in YESTERDAY's
+// bucket and the suite failed on wall-clock time alone (CI at 04:42 ET). The clock is pinned to a
+// fixed mid-day instant, 12:00 EDT, so every fixture offset below stays inside the current day.
+// Date only: PGlite's NOW() follows it, which the mutation check in the PR description relies on.
+const PINNED_NOW = process.env.DAILY_ANALYTICS_TEST_NOW ?? "2026-10-20T16:00:00Z";
+
+beforeAll(async () => {
+  vi.useFakeTimers({ toFake: ["Date"], now: new Date(PINNED_NOW) });
+  await resetDatabaseForTests();
+  db = await getDatabase();
+});
+afterAll(async () => { await resetDatabaseForTests(); vi.useRealTimers(); });
 
 const view = (visitor: string, hoursAgo: number, isBot = false) =>
   db.query(
