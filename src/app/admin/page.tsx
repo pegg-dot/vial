@@ -170,57 +170,62 @@ export default async function AdminPage() {
       </section>
 
       <p className="mt-10 text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Admin</p>
-      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Traffic you can prove you sent</h1>
+      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Reader traffic</h1>
       <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Last 30 days. Read it in order: readers <strong>arrive</strong>, some <strong>click through</strong> to a
-        vendor, and a few of those <strong>buy</strong>. Automated traffic — search crawlers, link previews, our own
-        checks — is excluded, and so is our own signed-in browsing. Readers are counted{" "}
-        <strong>once a day</strong>: with no cookies and no accounts we cannot tell that today&rsquo;s reader is
-        yesterday&rsquo;s, so someone returning on another day counts again. Treat these as visits by readers, not as
-        a headcount of distinct people. Every link carries{" "}
-        <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[12px]">utm_source=vialgrade</code>, so a
-        vendor can confirm the numbers in their own analytics without taking our word for it.
+        Last 30 days. Automated traffic — search crawlers, link previews, our own checks — is excluded, and so is our
+        own signed-in browsing. Readers are counted <strong>once a day</strong>: with no cookies and no accounts we
+        cannot tell that today&rsquo;s reader is yesterday&rsquo;s, so someone returning on another day counts again.
+        Treat these as visits by readers, not as a headcount of distinct people.
       </p>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Stat
           icon={Users}
           value={visitors.readerDays.toLocaleString()}
-          label="1. Readers, counted once a day"
+          label="Readers, counted once a day"
           sub={
             visitors.busiestDay
               ? `${visitors.visits.toLocaleString()} pages read · busiest day ${visitors.busiestDay.people}`
               : `${visitors.visits.toLocaleString()} pages read`
           }
         />
-        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="2. Clicks to a vendor" sub={`from ${totals.clickers.toLocaleString()} ${totals.clickers === 1 ? "reader" : "readers"}`} />
-        <Stat icon={Link2} value={String(totals.vendors)} label="3. Vendors receiving them" />
-        <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="4. Confirmed orders" sub={totals.conversions === 0 ? "zero until a vendor sends orders back" : "reported back by a partner"} />
-        <Stat icon={Database} value={money(totals.revenueCents)} label="5. Revenue we drove" sub={totals.revenueCents === 0 ? "zero until a deal is live" : undefined} />
-      </div>
-
-      {/* Inbound. Outbound alone cannot tell you whether traffic is growing or whether a source
-          converts — and the arrivals-to-buyers ratio is the strongest line in the vendor pitch. */}
-      <div className="ink hard mt-4 rounded-[18px] bg-[#e6fbf4] p-5">
-        <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#0e8f80]">The number that sells a deal</p>
-        <p className="mt-2 text-3xl font-extrabold tracking-[-.03em]">
-          {Math.round(clickThroughRate * 100)}% of readers clicked through to a vendor
-        </p>
-        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#0e8f80]">
-          {visitors.readerDays === 0
-            ? "No reader traffic yet, so there is nothing to rate. This fills in as real visitors arrive."
-            : `${totals.clickers.toLocaleString()} of ${visitors.readerDays.toLocaleString()} readers went on to a seller. Both sides are counted the same way — a hash that resets daily, no cookies and no accounts — so a reader returning on another day counts again in both.`}
-          {unmatchedClickers > 0 &&
-            ` We could tie ${visitors.matchedClickers} of those clicks back to a recorded page view; the other ${unmatchedClickers} came from readers whose view-tracking was blocked, which is normal and means arrivals are undercounted.`}
-        </p>
       </div>
 
       <div className="mt-10 flex flex-wrap items-center gap-3">
         <Link href="/admin/analytics" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#2b31d8] px-5 py-2.5 text-sm font-bold text-white">
           Traffic, day by day <ArrowUpRight className="size-4" />
         </Link>
-        <span className="text-xs font-medium text-[var(--muted)]">Per-day readers, views, same-day repeats and vendor click-through.</span>
+        <span className="text-xs font-medium text-[var(--muted)]">Per-day readers, views and same-day repeats.</span>
       </div>
+
+      {/* Kept, not deleted: these are real recorded figures. They are labelled historical because
+          purchase referrals are switched off (the endpoints answer HTTP 410), so nothing here can grow. */}
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Historical referral figures</h2>
+      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+        VialGrade no longer sends readers to sellers or takes orders, so these numbers cannot change. They are what was
+        recorded before referrals were switched off, kept for the record.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="Clicks to a vendor" sub={`from ${totals.clickers.toLocaleString()} ${totals.clickers === 1 ? "reader" : "readers"}`} />
+        <Stat icon={Link2} value={String(totals.vendors)} label="Vendors that received them" />
+        <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="Confirmed orders" sub={totals.conversions === 0 ? "none reported back" : "reported back by a partner"} />
+        <Stat icon={Database} value={money(totals.revenueCents)} label="Revenue recorded" sub={totals.revenueCents === 0 ? "none recorded" : undefined} />
+      </div>
+
+      <div className="ink hard mt-4 rounded-[18px] bg-[#e6fbf4] p-5">
+        <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#0e8f80]">Historical click-through</p>
+        <p className="mt-2 text-3xl font-extrabold tracking-[-.03em]">
+          {Math.round(clickThroughRate * 100)}% of recorded readers clicked through to a vendor
+        </p>
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#0e8f80]">
+          {visitors.readerDays === 0
+            ? "No reader traffic in this window, so there is nothing to rate."
+            : `${totals.clickers.toLocaleString()} of ${visitors.readerDays.toLocaleString()} readers went on to a seller. Both sides are counted the same way — a hash that resets daily, no cookies and no accounts — so a reader returning on another day counts again in both.`}
+          {unmatchedClickers > 0 &&
+            ` We could tie ${visitors.matchedClickers} of those clicks back to a recorded page view; the other ${unmatchedClickers} came from readers whose view-tracking was blocked, which is normal and means arrivals are undercounted.`}
+        </p>
+      </div>
+
 
       <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Where they came from</h2>
 
@@ -300,9 +305,9 @@ export default async function AdminPage() {
       })()}
 
       {/* The pipeline: who we already send buyers to, ranked — i.e. who to approach first. */}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Who to approach first</h2>
+      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Vendors that received traffic (historical)</h2>
       <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Ranked by traffic we are already sending them for free. Open a vendor to get the one-page report to send them.
+        Ranked by the traffic recorded for each vendor before referrals were switched off. Open a vendor for its one-page report.
       </p>
       <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
         <table className="w-full min-w-[720px] text-left text-sm">
@@ -316,7 +321,7 @@ export default async function AdminPage() {
           <tbody className="divide-y divide-[#111214]/10">
             {vendors.length === 0 && (
               <tr><td colSpan={7} className="px-5 py-8 text-center text-sm font-medium text-[var(--muted)]">
-                No outbound clicks yet. They start the moment a buyer uses a &ldquo;Buy at vendor&rdquo; button.
+                No outbound clicks were recorded.
               </td></tr>
             )}
             {vendors.map(v => (

@@ -6,8 +6,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
   test("retains the original authored landing, narrative and first action without old claims", async ({ page }) => {
     await page.goto("/intelligence");
     await expect(page.getByRole("heading", { level: 1, name: /Know what's behind the claim/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Check an exact source ID in the Pexiganan pilot" }))
-      .toHaveAttribute("href", "/intelligence/verify");
+    await expect(page.getByRole("search", { name: "Check an exact source ID" })).toBeVisible();
     await expect(page.getByRole("heading", { name: /A claim isn't the evidence/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Everything you'd check/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /What are you researching/ })).toBeVisible();
@@ -67,6 +66,30 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     const previous = await request.get("/market", { maxRedirects: 0 });
     expect(previous.status()).toBe(307);
     expect(previous.headers().location).toContain("/intelligence?notice=retired");
+  });
+
+  test("the home source check is a real field that sends each kind of ID to the door that can answer it", async ({ page }) => {
+    await page.goto("/intelligence");
+    const field = page.getByRole("textbox", { name: /Study ID, study link/ });
+    await field.fill("https://clinicaltrials.gov/study/NCT05804162");
+    await field.press("Enter");
+    await expect(page).toHaveURL(/\/intelligence\/studies\/NCT05804162$/);
+    await page.goto("/intelligence");
+    await page.getByRole("textbox", { name: /Study ID, study link/ }).fill("PMID 36781451");
+    await page.getByRole("button", { name: "Check it" }).click();
+    await expect(page).toHaveURL(/\/intelligence\/verify\?ref=PMID(\+|%20)36781451$/);
+    await expect(page.getByText("secondary review")).toBeVisible();
+  });
+
+  test("the verifier accepts a pasted study link and offers a live lookup instead of a dead end", async ({ page }) => {
+    await page.goto("/intelligence/verify?ref=" + encodeURIComponent("https://clinicaltrials.gov/study/NCT01594762"));
+    await expect(page.getByText("Selected record found in file")).toBeVisible();
+    await page.goto("/intelligence/verify?ref=NCT00000001");
+    await expect(page.getByText("Not checked in this evidence file")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Look up NCT00000001 live/ })).toHaveAttribute("href", "/intelligence/studies/NCT00000001");
+    await page.goto("/intelligence/verify?ref=semaglutide");
+    await expect(page.getByText("Not a recognised identifier format")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Look up .* live/ })).toHaveCount(0);
   });
 
   test("filters, sort and compare selection survive opening a dossier and pressing Back", async ({ page }) => {

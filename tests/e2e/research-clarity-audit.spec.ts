@@ -6,9 +6,8 @@ test.describe("research UX comprehension without deleting tools", () => {
   test("home distinguishes three starting inputs and scopes the limited verifier", async ({ page }) => {
     await page.goto("/intelligence");
     await expect(page.getByRole("heading", { level: 1, name: /Know what.s behind the claim/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Check an exact source ID in the Pexiganan pilot" }))
-      .toHaveAttribute("href", "/intelligence/verify");
-    await expect(page.getByText(/Source ID checking currently covers selected Pexiganan records/)).toBeVisible();
+    await expect(page.getByRole("search", { name: "Check an exact source ID" })).toBeVisible();
+    await expect(page.getByText(/looked up live\. PubMed and PubChem IDs are checked against the selected Pexiganan records only/)).toBeVisible();
     const startingPoints = page.getByRole("group", { name: "Choose a research starting point" });
     await expect(startingPoints.getByRole("link", { name: "a compound" }))
       .toHaveAttribute("href", "/intelligence/market#browse");

@@ -90,6 +90,12 @@ test.describe("legacy account rights in research-only mode", () => {
     await expect(page).toHaveURL(/\/account/);
     await page.goto("/account/security");
     await expect(page.getByRole("heading", { name: "Security" })).toBeVisible();
+    // A signed-in customer is not shown the sign-in form again, and order history explains itself.
+    await page.goto("/login");
+    await expect(page).toHaveURL(/\/account$/);
+    await page.goto("/orders");
+    await expect(page.getByRole("heading", { name: "Order history is no longer online" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Contact us about your records" })).toHaveAttribute("href", "/legal/contact");
     const watchlistWrite = await page.request.put("/api/v1/watchlist", {
       data: { slug: "bpc-157", watched: true },
     });
@@ -148,7 +154,13 @@ test.describe("legacy account rights in research-only mode", () => {
     expect(login.status()).toBe(200);
     const response = await page.goto("/admin");
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole("heading", { name: /Traffic you can prove/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Reader traffic/i })).toBeVisible();
+    // Referral figures are kept but labelled historical, and the public menu is not stacked on top
+    // of the staff bar.
+    await expect(page.getByRole("heading", { name: "Historical referral figures" })).toBeVisible();
+    await expect(page.getByText(/cannot change/)).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Research navigation" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Existing account" })).toHaveCount(0);
     // A dedicated privacy admin UI is NOT presently implemented. Data requests
     // remain a documented manual process; don't mistake the generic 404 page
     // for an operational privacy console.

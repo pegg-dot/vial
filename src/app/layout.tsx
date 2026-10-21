@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 
 import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { ResearchReleaseHeader, ResearchReleaseFooter } from "@/components/research-release-chrome";
+import { HideOnAdmin } from "@/components/hide-on-admin";
 import { ResearchWorkerRetirement } from "@/components/research-worker-retirement";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 import { JsonLd } from "@/components/json-ld";
@@ -85,9 +86,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     return (
       <html lang="en">
         <body className="min-h-screen bg-[var(--background)] text-[var(--foreground)] antialiased">
-          <ResearchReleaseHeader />
+          <HideOnAdmin><ResearchReleaseHeader /></HideOnAdmin>
           <main id="main-content">{children}</main>
-          <ResearchReleaseFooter />
+          <HideOnAdmin><ResearchReleaseFooter /></HideOnAdmin>
           <ResearchWorkerRetirement />
         </body>
       </html>
