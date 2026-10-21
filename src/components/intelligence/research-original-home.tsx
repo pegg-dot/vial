@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Check, Layers3, SearchCheck, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Layers3, ShieldCheck, X } from "lucide-react";
 import { ArtCoa, ArtFlask, ArtMagnifierVial, ArtMolecule, ArtShieldCheck, VialBuddy, VialPlain } from "@/components/vial-art";
 import { RESEARCH_SUBJECTS, RESEARCH_THEMES } from "@/lib/research-explorer";
 import { HeroSourceCheck } from "@/components/intelligence/hero-source-check";
