@@ -97,15 +97,15 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat icon={Eye} value={series.totals.views.toLocaleString()} label="Page views" sub={`${series.pagesPerReader.toFixed(1)} pages per reader`} />
         <Stat icon={Users} value={series.totals.readerDays.toLocaleString()} label="Reader-days" sub="Not people — see the note below" />
-        <Stat icon={MousePointerClick} value={series.totals.clicks.toLocaleString()} label="Clicks to vendors" sub={`${(series.clickThroughRate * 100).toFixed(1)}% of readers clicked through`} />
-        <Stat icon={Repeat} value={series.totals.conversions.toLocaleString()} label="Confirmed orders" sub={series.totals.revenueCents > 0 ? `${money(series.totals.revenueCents)} reported` : "No vendor has reported revenue yet"} />
+        <Stat icon={MousePointerClick} value={series.totals.clicks.toLocaleString()} label="Clicks to vendors (historical)" sub={`${(series.clickThroughRate * 100).toFixed(1)}% of readers clicked through · referrals are off`} />
+        <Stat icon={Repeat} value={series.totals.conversions.toLocaleString()} label="Confirmed orders (historical)" sub={series.totals.revenueCents > 0 ? `${money(series.totals.revenueCents)} reported` : "No vendor has reported revenue yet"} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <DailyBars heading="Readers" note="Distinct people each day. Bots excluded." points={pick("readers")} accent={VIOLET} />
+        <DailyBars heading="Readers" note="Reader-days, not distinct people. Bots excluded." points={pick("readers")} accent={VIOLET} />
         <DailyBars heading="Page views" note="Every page a reader opened." points={pick("views")} accent={VIOLET} />
         <DailyBars heading="Readers who came back the same day" note="More than one page view in the day — the only repeat this data can see." points={pick("returningWithinDay")} accent={VIOLET} />
-        <DailyBars heading="Clicks to vendors" note="Every “Buy at vendor” handoff." points={pick("clicks")} accent={TEAL} />
+        <DailyBars heading="Clicks to vendors (historical)" note="Recorded before referrals were switched off; this cannot grow." points={pick("clicks")} accent={TEAL} />
       </div>
 
       {/* The limit is stated where the numbers are, not in a doc nobody opens. */}

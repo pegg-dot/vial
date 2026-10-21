@@ -74,7 +74,7 @@ test("staff can ingest, review, publish, and observe a catalog update", async ({
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
   await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
-  await expect(page.getByRole("heading", { name: "Traffic you can prove you sent" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reader traffic" })).toBeVisible();
 
   await page.goto("/admin/ingest");
   await page.getByLabel("Target listing").selectOption("northstar-bpc-157-10mg");
@@ -104,7 +104,7 @@ test("a controlled fixture change creates one visible cascade", async ({ page })
   await page.getByLabel("Staff email").fill("jon@vialgrade.test");
   await page.getByLabel("Password", { exact: true }).fill("VialGradeDemoAdmin!2026");
   await page.getByRole("button", { name: "Continue securely" }).click();
-  await expect(page.getByRole("heading", { name: "Traffic you can prove you sent" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reader traffic" })).toBeVisible();
   await page.goto("/admin/sources");
   await expect(page.getByRole("heading", { name: "Refresh without losing lineage." })).toBeVisible();
 

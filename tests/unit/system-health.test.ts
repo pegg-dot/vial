@@ -125,7 +125,7 @@ describe("both pages read the same verdict", () => {
   it("puts the health band above the fold on /admin", () => {
     // The owner asked for this precisely because they would otherwise forget to look.
     const bandAt = admin.indexOf('data-testid="admin-system-health"');
-    const trafficAt = admin.indexOf("Traffic you can prove you sent");
+    const trafficAt = admin.indexOf(">Reader traffic</h1>");
     expect(bandAt).toBeGreaterThan(-1);
     expect(bandAt, "the health band must come before the traffic report, not after it").toBeLessThan(trafficAt);
   });

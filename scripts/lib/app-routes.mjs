@@ -36,7 +36,7 @@ export async function discoverRoutes(dir = APP, prefix = "") {
 /** Routes a signed-in customer reaches, and a stranger is redirected away from. */
 // /compare is deliberately PUBLIC — the read-only side-by-side tool a stranger can use before
 // they have an account.
-const CUSTOMER_ROUTES = new Set(["/account", "/for-you", "/saved-searches", "/watchlist"]);
+const CUSTOMER_ROUTES = new Set(["/account", "/for-you", "/orders", "/saved-searches", "/watchlist"]);
 
 /**
  * Pages that exist and deliberately redirect, so "returns 200" is the WRONG assertion for them.

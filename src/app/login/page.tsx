@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import { PasswordField } from "@/components/password-field";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { redirect } from "next/navigation";
 import { loginAction } from "@/server/auth/actions";
+import { getCurrentPrincipal } from "@/server/auth/principal";
 export const metadata: Metadata = { title: "Sign in", description: "Sign in to your VialGrade account." };
 export default async function Page({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const p = await searchParams;
+  // Already signed in: show the account, not the form. `next` is ignored on purpose: a customer sent
+  // here from /seller or /lab would otherwise bounce between the perimeter and this page forever.
+  const principal = await getCurrentPrincipal();
+  if (principal) redirect(principal.accountType === "staff" ? "/admin" : "/account");
   return (
     <section className="mx-auto max-w-[520px] px-5 py-20 sm:px-8">
       <div className="ink hard-lg rounded-[24px] bg-white p-8">

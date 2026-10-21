@@ -22,7 +22,7 @@ export default async function IntelligenceResearchDeskPage({ searchParams }: { s
     <div className="min-h-screen bg-[#f7f8f6] pb-20">
       <div className="mx-auto max-w-[1200px] px-5 pt-7 sm:px-8 sm:pt-9">
         <nav aria-label="Research desk breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[#6c8170]">
-          <Link href="/intelligence/market#browse" className="hover:underline">Compounds</Link><span>/</span><span aria-current="page" className="font-semibold text-[#315d40]">Research Desk</span>
+          <Link href="/intelligence/market" className="hover:underline">Research Market</Link><span>/</span><span aria-current="page" className="font-semibold text-[#315d40]">Research Desk</span>
         </nav>
         <header className="mb-5 mt-4 border-b border-[#dbe5dc] pb-4">
           <h1 className="text-[clamp(1.75rem,3.4vw,2.25rem)] font-bold tracking-[-.05em] text-[#20382a]">Research Desk</h1>

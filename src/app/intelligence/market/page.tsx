@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, FileSearch, Layers3, ShieldCheck } from "lucide-react";
-import { ArtDroplet, ArtTag, VialBuddy } from "@/components/vial-art";
+import { ArtDroplet, ArtMagnifierVial, VialBuddy } from "@/components/vial-art";
 import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { ResearchThemeRail } from "@/components/intelligence/research-original-home";
 import { ResearchMarketShelves } from "@/components/intelligence/research-market-shelves";
@@ -37,7 +37,7 @@ export default async function ResearchMarketPage({ searchParams }: {
           </p>
           <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 hidden w-[35%] md:block">
             <ArtDroplet className="gum-float absolute right-[54%] top-[29%] w-13" fill="#12b3a6" />
-            <ArtTag className="gum-float-slow absolute right-[14%] top-[18%] w-24" />
+            <ArtMagnifierVial className="gum-float-slow absolute right-[14%] top-[18%] w-24" />
             <VialBuddy className="gum-float-rev absolute bottom-[14%] right-[29%] w-17" liquid="#12b3a6" />
           </div>
         </div>

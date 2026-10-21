@@ -70,7 +70,7 @@ export function ResearchReleaseHeader() {
               Compare
             </Link>
             <Link href="/login" aria-label="Existing account"
-              className="ink hard-sm press hidden rounded-full bg-[#111214] px-4 py-2.5 text-xs font-bold text-white sm:inline-flex">
+              className="ink-1 hidden whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#f3f3f1] sm:inline-flex">
               Existing account
             </Link>
             <nav aria-label="Mobile research navigation" className="xl:hidden">

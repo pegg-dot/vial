@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CheckCircle2, CircleAlert, Search, ShieldAlert } from "lucide-react";
+import { normalizeNctId } from "@/lib/nct-identifier";
 import { PEXIGANAN_CLAIMS, PEXIGANAN_SOURCES, pexSourceByIdentifier } from "@/lib/pexiganan-evidence-network";
 
 /** An allowlisted source-identifier check. No arbitrary vendor names,
@@ -11,12 +12,16 @@ import { PEXIGANAN_CLAIMS, PEXIGANAN_SOURCES, pexSourceByIdentifier } from "@/li
 export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) {
   const [query, setQuery] = useState(initialRef);
   const [checked, setChecked] = useState(initialRef.trim());
-  const source = pexSourceByIdentifier(checked);
+  // A pasted ClinicalTrials.gov study link means its NCT number; everything else is matched as typed.
+  const linkedNct = normalizeNctId(checked);
+  const identifier = linkedNct && linkedNct !== checked.trim().toUpperCase() ? linkedNct : checked;
+  const source = pexSourceByIdentifier(identifier);
   const related = source
     ? PEXIGANAN_CLAIMS.filter(claim => claim.sourceIds.includes(source.id))
     : [];
   const isEmpty = checked.trim().length === 0;
-  const wellFormed = /^(?:NCT\d{8}|(?:PMID|CID)\s?\d{1,10}|\d{5,10})$/i.test(checked.trim());
+  const wellFormed = /^(?:NCT\d{8}|(?:PMID|CID)\s?\d{1,10}|\d{5,10})$/i.test(identifier.trim());
+  const liveNct = normalizeNctId(identifier);
   // Records that share an observation with this one, so the relationship can be walked in place.
   const neighbours = source
     ? [...new Set(related.flatMap(claim => claim.sourceIds))]
@@ -80,6 +85,12 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
                 ? "We have no individually selected record for this exact identifier in the Pexiganan pilot. This does not mean the record is false, invalid, irrelevant or absent from the source database."
                 : "This is not an NCT number, PMID or PubChem CID, so nothing was looked up. VialGrade cannot check names, claims, vendors or free text here."}
             </p>
+            {liveNct && (
+              <Link href={"/intelligence/studies/" + liveNct}
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#17191b] px-4 py-2.5 text-xs font-extrabold text-white hover:bg-[#304a3f]">
+                Look up {liveNct} live on ClinicalTrials.gov <ArrowRight className="size-4" />
+              </Link>
+            )}
             <p className="mt-3 text-xs text-[#8f846f]">Supported here: exact NCT12345678, PMID 12345678 or CID 12345678 formats. Please check unfamiliar identifiers at the original NIH source.</p>
           </div>
         ) : (

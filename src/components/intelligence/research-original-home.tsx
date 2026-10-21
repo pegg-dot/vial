@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Check, Layers3, SearchCheck, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Layers3, ShieldCheck, X } from "lucide-react";
 import { ArtCoa, ArtFlask, ArtMagnifierVial, ArtMolecule, ArtShieldCheck, VialBuddy, VialPlain } from "@/components/vial-art";
 import { RESEARCH_SUBJECTS, RESEARCH_THEMES } from "@/lib/research-explorer";
+import { HeroSourceCheck } from "@/components/intelligence/hero-source-check";
 
 const CATALOG = "/intelligence/market";
 
@@ -26,15 +27,9 @@ export function OriginalResearchHero() {
           Compounds, original studies, and source records in one place. See what the research actually documents, and what it doesn&apos;t.
         </p>
         <div className="mx-auto mt-10 max-w-2xl">
-          <Link href="/intelligence/verify"
-            className="ink hard press group flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-4 text-left sm:px-5"
-            aria-label="Check an exact source ID in the Pexiganan pilot">
-            <SearchCheck className="size-5 shrink-0 text-[#2b31d8]" />
-            <span className="flex-1 text-sm font-medium text-[#111214]/70 sm:text-base">Check an exact source ID</span>
-            <span className="shrink-0 rounded-xl bg-[#2b31d8] px-4 py-2 text-xs font-bold text-white group-hover:bg-[#201bb5]">Check it</span>
-          </Link>
+          <HeroSourceCheck />
           <p className="mt-3 text-xs font-medium text-[#687078]">
-            Source ID checking currently covers selected Pexiganan records, not every paper or claim.
+            A ClinicalTrials.gov study ID or link is looked up live. PubMed and PubChem IDs are checked against the selected Pexiganan records only.
           </p>
         </div>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold text-[#111214]/70">
