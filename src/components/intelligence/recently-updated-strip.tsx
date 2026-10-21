@@ -17,7 +17,7 @@ export function RecentlyUpdatedStrip() {
             <li key={item.id}>
               <Link href={item.href} className="group inline-flex min-h-6 flex-col text-left">
                 <time dateTime={item.date} className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#0e8f80]">{formatUpdateDate(item.date)}</time>
-                <span className="mt-1 inline-flex items-start gap-1 text-sm font-extrabold text-[#2b31d8] group-hover:underline">{item.title}<ArrowUpRight className="mt-0.5 size-4 shrink-0" aria-hidden="true" /></span>
+                <span className="mt-1 inline-flex items-start gap-1 self-start text-sm font-extrabold text-[#2b31d8] group-hover:underline">{item.title}<ArrowUpRight className="mt-0.5 size-4 shrink-0" aria-hidden="true" /></span>
                 <span className="mt-1 text-xs font-medium leading-5 text-[#666970]">{item.note}</span>
               </Link>
             </li>
