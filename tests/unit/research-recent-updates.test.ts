@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { existsSync } from "node:fs";
 import {
   RECENT_UPDATE_ENTRIES, formatUpdateDate, isIsoCalendarDay, recentlyUpdated, type RecentUpdate,
@@ -68,5 +68,29 @@ describe("recently updated strip", () => {
 
   it("shows entries with the shipped data today", () => {
     expect(recentlyUpdated(RECENT_UPDATE_ENTRIES, { today: "2026-10-21" }).length).toBe(RECENT_UPDATE_ENTRIES.length);
+  });
+
+  it("follows the source constants when they change (a copied date would not)", async () => {
+    vi.resetModules();
+    vi.doMock("@/lib/pexiganan-evidence-network", () => ({ PEXIGANAN_REVIEW_DATE: "2031-03-04" }));
+    vi.doMock("@/lib/research-file-grade", () => ({ FILE_GRADE_CURATION_DATE: "2031-03-05" }));
+    vi.doMock("@/lib/research-materials", () => ({ MATERIAL_REVIEW_DATE: "2031-03-06" }));
+    vi.doMock("@/lib/research-guided-case", () => ({ MAGAININ_PEXIGANAN_CASE: { updatedAt: "2031-03-07" } }));
+    try {
+      const mod = await import("@/lib/research-recent-updates");
+      const byId = Object.fromEntries(mod.RECENT_UPDATE_ENTRIES.map(e => [e.id, e.date]));
+      expect(byId).toEqual({
+        "pexiganan-passport": "2031-03-04",
+        "source-file-coverage": "2031-03-05",
+        "material-records": "2031-03-06",
+        "magainin-pexiganan-case": "2031-03-07",
+      });
+    } finally {
+      vi.doUnmock("@/lib/pexiganan-evidence-network");
+      vi.doUnmock("@/lib/research-file-grade");
+      vi.doUnmock("@/lib/research-materials");
+      vi.doUnmock("@/lib/research-guided-case");
+      vi.resetModules();
+    }
   });
 });
