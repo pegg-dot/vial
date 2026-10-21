@@ -31,7 +31,7 @@ export async function DossierOrganizations({ subject }: { subject: ResearchSubje
       {view.rows.length > 0 && (
         <ul className="divide-y divide-[#ececf1]">
           {view.rows.map(row => (
-            <li key={row.key} className="flex items-start justify-between gap-4 px-6 py-4">
+            <li key={row.key} className="flex flex-col gap-2 px-6 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#303145]">{row.organization}</p>
                 <p className="mt-1 text-xs leading-5 text-[#777b88]">{row.role} · {row.studyId}</p>
