@@ -12,6 +12,7 @@ import { ResearchSubjectArt } from "@/components/intelligence/research-subject-a
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { gradeResearchFile } from "@/lib/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
+import { DossierOrganizations, OrganizationsLoading } from "@/components/intelligence/dossier-organizations";
 import { PexEvidenceClaimGrid, PexEvidenceWayfinder, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
 import { PexigananResearchWorkspace } from "@/components/intelligence/pexiganan-research-workspace";
 import { PexTrialNetworkLive, PexTrialNetworkLoading } from "@/components/intelligence/pexiganan-trial-network";
@@ -179,6 +180,9 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               </a>
             </section>
             )}
+            <Suspense fallback={<OrganizationsLoading />}>
+              <DossierOrganizations subject={subject} />
+            </Suspense>
             <section className="rounded-2xl border border-[#dedee8] bg-white p-6">
               <div className="flex items-center gap-2 text-[#796b55]"><CircleHelp className="size-4" /><h2 className="text-base font-semibold text-[#292b3c]">What still needs checking</h2></div>
               <p className="mt-3 text-sm leading-7 text-[#656a78]">{subject.identityCaveat}</p>
