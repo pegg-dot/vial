@@ -48,6 +48,8 @@ All kept: four Desk questions, all claims/sources/limitations, Markdown download
 ## Usability protocol (not run)
 5 researchers + 5 biotech analysts, uncoached, think-aloud. Tasks: find the original experiment for Pexiganan; say why PMID 36781451 is not a trial result; compare Pexiganan/Magainin 2 without crediting findings to the wrong molecule; given a label and report with matching lots, state what is established; build and export a brief; name who sponsored NCT00563394 and where that comes from. Record success, time and clicks to the source, errors, wrong scientific inferences. Success bar: ≥8/10 reach the right source unaided; 0 inferences that a matching lot or a DERIVED link proves authenticity/results.
 
+After the tasks, ask one closing question, once, neutrally, and record the answer verbatim: "Would you buy through this site? If yes, what for, and from whom: a manufacturer, a vendor or a distributor? If no, why not?" Added 2026-10-21 at the owner's request. It is measurement only: it does not decide the vendor click-through question (see `HANDOFF_2026-10-21_UX_ARC_AND_NEXT.md` section 4), and the answers are not a substitute for legal review. Ask it after, never before, the task work so it does not prime how participants read the sponsor and source tasks.
+
 ## Release recommendation
 Mergeable to `main` behind the existing gates after review. Do not release to production until: PR review and a Vercel preview check, the `npm audit` highs are addressed, and the `daily-analytics` baseline failure is triaged. Owner approval required; production was not modified.
 
