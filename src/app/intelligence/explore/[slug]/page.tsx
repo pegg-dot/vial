@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, CheckCircle2, CircleHelp, FileSearch, FlaskConical, GitCompareArrows, Microscope, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, CheckCircle2, FileSearch, GitCompareArrows, ClipboardCheck } from "lucide-react";
 import {
   compareExplorerHref, registryDiscoveryUrl, researchSubjectBySlug,
   researchThemeById, RESEARCH_SUBJECTS, verifiedPubmedSearchUrl,
@@ -61,7 +61,9 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
 
         <section aria-label={subject.name + " summary"} className="ink hard mt-5 overflow-hidden rounded-[22px] bg-white">
           <div className="grid lg:grid-cols-[300px_minmax(0,1fr)]">
-            <ResearchSubjectArt subject={subject} hero />
+            <div className="border-b-2 border-[#111214] lg:border-b-0 lg:border-r-2 [&>div]:border-b-0 lg:[&>div]:h-full" style={{ backgroundColor: theme.tint }}>
+              <ResearchSubjectArt subject={subject} hero />
+            </div>
             <div className="px-6 pb-7 pt-7 sm:px-9 sm:pb-8 sm:pt-8">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="ink-1 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-[.1em]" style={{ backgroundColor: theme.tint, color: theme.color }}>{theme.name}</span>
@@ -106,7 +108,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
 
         {isPex && <div className="mt-7"><PexigananResearchWorkspace /></div>}
 
-        <div className="mt-6 grid items-start gap-x-8 gap-y-5 lg:grid-cols-[210px_minmax(0,1fr)]">
+        <div className="mt-6 grid grid-cols-1 items-start gap-x-8 gap-y-5 lg:grid-cols-[210px_minmax(0,1fr)]">
           <DossierToc items={toc} />
           <div className="min-w-0 space-y-7">
             <DossierSection id="overview" number={1} eyebrow="Overview" title={subject.studyQuestion}
@@ -136,7 +138,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               )}
               {subject.sampleTrial && (
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-[#2b31d8]">
-                  <Link href={"/intelligence/studies/" + subject.sampleTrial} className="inline-flex min-h-6 items-center gap-1 hover:underline">Audit {subject.sampleTrial} <ArrowUpRight className="size-4" /></Link>
+                  <Link href={"/intelligence/studies/" + subject.sampleTrial} className="inline-flex min-h-6 items-center gap-1 hover:underline">Audit this trial <ArrowUpRight className="size-4" /></Link>
                   {subject.legacyTopic && <Link href={"/intelligence/" + subject.legacyTopic} className="inline-flex min-h-6 items-center gap-1 hover:underline">Additional source samples <ArrowUpRight className="size-4" /></Link>}
                 </div>
               )}
@@ -156,14 +158,14 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               {isPex ? <PexSourceRegister /> : (
                 <ul className="divide-y divide-[#111214]/10 rounded-[14px] border border-[#111214]/15">
                   {[
-                    { href: subject.referenceUrl, icon: CheckCircle2, title: "Molecular identity", note: subject.referenceLabel + " · Checked 18 Oct 2026" },
-                    { href: verifiedPubmedSearchUrl(subject), icon: BookOpen, title: "Find original publications", note: "PubMed search. Mentions and reviews are not necessarily direct experiments." },
-                    { href: registryDiscoveryUrl(subject), icon: FileSearch, title: "Find registered studies", note: "Registry keyword search. Returned trials may study another compound." },
-                  ].map(({ href, icon: Icon, title, note }) => (
+                    { href: subject.referenceUrl, icon: CheckCircle2, title: "Molecular identity", note: subject.referenceLabel + " · Checked 18 Oct 2026", action: "Open PubChem" },
+                    { href: verifiedPubmedSearchUrl(subject), icon: BookOpen, title: "Find original publications", note: "PubMed search. Mentions and reviews are not necessarily direct trial results.", action: "Search PubMed" },
+                    { href: registryDiscoveryUrl(subject), icon: FileSearch, title: "Find registered studies", note: "Registry keyword search. Returned trials may study another compound or a combination.", action: "Search ClinicalTrials.gov" },
+                  ].map(({ href, icon: Icon, title, note, action }) => (
                     <li key={title}>
                       <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 px-5 py-4 hover:bg-[#eef0ff]">
                         <Icon className="mt-0.5 size-5 shrink-0 text-[#2b31d8]" aria-hidden="true" />
-                        <span className="min-w-0"><span className="block text-sm font-extrabold">{title} <ArrowUpRight className="inline size-3.5" aria-hidden="true" /></span><span className="mt-0.5 block text-xs font-medium leading-5 text-[#4a4d56]">{note}</span></span>
+                        <span className="min-w-0"><span className="block text-sm font-extrabold">{title}</span><span className="mt-0.5 block text-xs font-medium leading-5 text-[#4a4d56]">{note}</span><span className="mt-1.5 inline-flex items-center gap-1 text-xs font-extrabold text-[#2b31d8]">{action} <ArrowUpRight className="size-3.5" aria-hidden="true" /></span></span>
                       </a>
                     </li>
                   ))}

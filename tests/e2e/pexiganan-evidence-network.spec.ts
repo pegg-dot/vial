@@ -23,7 +23,7 @@ test.describe("Pexiganan source-first research network", () => {
     await expect(wayfinder.getByRole("link", { name: "View source organizations" }))
       .toHaveAttribute("href", "/intelligence/organizations");
     await expect(page.getByRole("navigation", { name: "Research dossier sections" }).getByRole("link", { name: "Studies", exact: true }))
-      .toHaveAttribute("href", "#pexiganan-trials");
+      .toHaveAttribute("href", "#studies");
     await wayfinder.getByRole("link", { name: "Read passport" }).click();
     await expect(page.getByRole("heading", { name: "Pexiganan, with the receipts." })).toBeVisible();
     expect(errors).toEqual([]);

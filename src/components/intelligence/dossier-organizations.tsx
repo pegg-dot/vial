@@ -11,8 +11,8 @@ const REASON_TEXT = {
 
 export function OrganizationsLoading() {
   return (
-    <section aria-label="Organizations on record" className="rounded-2xl border border-[#dedee8] bg-white p-6">
-      <h2 className="text-base font-semibold text-[#292b3c]">Organizations on record</h2>
+    <section aria-label="Organizations on record" className="rounded-[14px] border border-[#111214]/15 bg-white p-6">
+      <h3 className="text-base font-extrabold text-[#111214]">Organizations on record</h3>
       <p className="mt-3 text-sm leading-7 text-[#656a78]">Reading the registry record.</p>
     </section>
   );
@@ -22,10 +22,10 @@ export async function DossierOrganizations({ subject }: { subject: ResearchSubje
   const lookup = subject.slug !== "pexiganan" && subject.sampleTrial ? await lookupStudy(subject.sampleTrial) : null;
   const view = organizationsForSubject(subject, lookup);
   return (
-    <section id="organizations" aria-labelledby="dossier-organizations-title" className="scroll-mt-40 overflow-hidden rounded-2xl border border-[#dedee8] bg-white">
+    <section id="organizations" aria-labelledby="dossier-organizations-title" className="scroll-mt-40 overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
       <div className="border-b border-[#ececf1] px-6 py-5">
-        <div className="flex items-center gap-2 text-[#685b9a]"><Building2 className="size-4" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-[.12em]">Who is on record</p></div>
-        <h2 id="dossier-organizations-title" className="mt-2 text-xl font-semibold tracking-[-.035em] text-[#28293b]">Organizations on record</h2>
+        <div className="flex items-center gap-2 text-[#2b31d8]"><Building2 className="size-4" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-[.12em]">Who is on record</p></div>
+        <h3 id="dossier-organizations-title" className="mt-2 text-xl font-extrabold tracking-[-.03em] text-[#111214]">Organizations on record</h3>
         <p className="mt-2 text-sm leading-6 text-[#727684]">Each row names an organization a public registry record lists as lead sponsor, with the record it came from.</p>
       </div>
       {view.rows.length > 0 && (
