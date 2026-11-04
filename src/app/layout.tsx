@@ -4,6 +4,7 @@ import { MarketplaceProvider } from "@/components/marketplace-state";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
+import { UpdatesPromptHost } from "@/components/intelligence/updates-prompt-host";
 import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { ResearchReleaseHeader, ResearchReleaseFooter } from "@/components/research-release-chrome";
 import { HideOnAdmin } from "@/components/hide-on-admin";
@@ -90,6 +91,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <main id="main-content">{children}</main>
           <HideOnAdmin><ResearchReleaseFooter /></HideOnAdmin>
           <ResearchWorkerRetirement />
+          <UpdatesPromptHost />
         </body>
       </html>
     );

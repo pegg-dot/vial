@@ -12,6 +12,7 @@ import { ResearchSubjectArt } from "@/components/intelligence/research-subject-a
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { gradeResearchFile } from "@/lib/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
+import { DossierOrganizations, OrganizationsLoading } from "@/components/intelligence/dossier-organizations";
 import { DossierSection, DossierToc } from "@/components/intelligence/dossier-layout";
 import { PexEvidenceClaimGrid, PexEvidenceWayfinder, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
 import { PexigananResearchWorkspace } from "@/components/intelligence/pexiganan-research-workspace";
