@@ -19,20 +19,20 @@ function remember() {
  */
 export function UpdatesPrompt() {
   const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
+  const [shown, setShown] = useState(false);
   const allowed = updatesPromptAllowedOn(pathname);
 
   useEffect(() => {
-    if (!allowed || remembered()) { setVisible(false); return; }
-    const show = () => setVisible(true);
+    if (!allowed || remembered()) return;
+    const show = () => setShown(true);
     const timer = window.setTimeout(show, UPDATES_PROMPT_DELAY_MS);
     const onScroll = () => { if (window.scrollY > UPDATES_PROMPT_SCROLL_PX) show(); };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => { window.clearTimeout(timer); window.removeEventListener("scroll", onScroll); };
   }, [allowed, pathname]);
 
-  if (!allowed || !visible) return null;
-  const dismiss = () => { remember(); setVisible(false); };
+  if (!allowed || !shown) return null;
+  const dismiss = () => { remember(); setShown(false); };
   return (
     <aside aria-label="Weekly update email" className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-[#111214] bg-white px-4 py-3 sm:px-8">
       <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-x-6 gap-y-2">
