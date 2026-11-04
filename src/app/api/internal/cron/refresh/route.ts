@@ -5,6 +5,7 @@ import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import { getDatabase } from "@/server/db/client";
 import { pruneProbeCache } from "@/server/verify/probe-cache";
 import { applyRetention } from "@/server/db/retention";
+import { purgeStalePending } from "@/server/digest/subscribers";
 import { reviewCostSignals } from "@/server/observability/cost-signals";
 
 export const dynamic = "force-dynamic";
@@ -41,9 +42,11 @@ export async function GET(request: NextRequest) {
   // The verify probe cache expires its own rows logically; this is what stops the table growing
   // forever with them. Never throws — a prune that fails costs disk, not a cron run.
   const prunedProbes = await pruneProbeCache();
+  // Unconfirmed email-list signups are deleted here, so an address nobody confirmed does not wait for the monthly digest.
+  const prunedSignups = await purgeStalePending(db).catch(() => 0);
   // Checks whether the expensive paths ran more often than caching should allow. This is the
   // early warning the last quota blowout did not have: the cache breaking is silent, and the only
   // symptom before was the database dying two weeks later.
   const cost = await reviewCostSignals(db).catch(() => []);
-  return NextResponse.json({ intelligence, retention, prunedProbes, cost, completedAt: new Date().toISOString() });
+  return NextResponse.json({ intelligence, retention, prunedProbes, prunedSignups, cost, completedAt: new Date().toISOString() });
 }

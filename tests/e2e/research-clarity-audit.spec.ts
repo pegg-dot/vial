@@ -47,19 +47,16 @@ test.describe("research UX comprehension without deleting tools", () => {
     await expect(page.getByText("What is this?")).toBeVisible();
     await expect(page.getByText("What is linked?")).toBeVisible();
     await expect(page.getByText("What is not verified?")).toBeVisible();
-    const technical = page.locator("details").filter({ has: page.getByText("Molecular and technical details") });
-    await expect(technical).not.toHaveAttribute("open", "");
-    await technical.locator("summary").click();
-    await expect(technical.getByText("Membrane-associated antimicrobial peptide activity")).toBeVisible();
+    // Technical details are part of the Overview now, not hidden behind a disclosure.
+    await expect(page.locator("#overview").getByText("Membrane-associated antimicrobial peptide activity").first()).toBeVisible();
     const nav = page.getByRole("navigation", { name: "Research dossier sections" });
-    await expect(nav.getByRole("link", { name: "Original sources" })).toHaveAttribute("href", "#sources");
-    await nav.getByText("More sections", { exact: false }).click();
     for (const [label, hash] of [
-      ["Research file grade", "#file-grade"], ["Material verification", "#material-evidence"],
-      ["Evidence network", "#pexiganan-network"], ["Related research", "#related"],
+      ["Overview", "#overview"], ["Source file", "#file-grade"], ["Studies", "#studies"],
+      ["Sources", "#sources"], ["Materials", "#material-evidence"], ["Limits and related", "#related"],
     ]) {
-      await expect(nav.getByRole("link", { name: label })).toHaveAttribute("href", hash);
+      await expect(nav.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", hash);
     }
+    await expect(page.locator("#pexiganan-network")).toHaveCount(1);
     await expect(page.getByRole("region", { name: "Research file grade for Pexiganan" })).toContainText("3 of 3 source layers");
     await expect(page.getByRole("link", { name: "Open guided evidence workpaper" }))
       .toHaveAttribute("href", "/intelligence/cases/magainin-pexiganan");

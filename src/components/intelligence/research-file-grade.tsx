@@ -45,7 +45,7 @@ export function ResearchFileGradeCard({ subject, compact = false }: {
   const file = gradeResearchFile(subject);
   return (
     <section aria-label={"Research file grade for " + subject.name}
-      className={"overflow-hidden rounded-2xl border-2 border-[#17191b] bg-white " + (compact ? "p-4" : "p-5 sm:p-6")}>
+      className={"overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white " + (compact ? "p-4" : "p-5 sm:p-6")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#217f72]">
           <SearchCheck className="size-4" /> VialGrade research file
@@ -57,9 +57,9 @@ export function ResearchFileGradeCard({ subject, compact = false }: {
       <div className="mt-4 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-[clamp(1.7rem,3vw,2.4rem)] font-black leading-none tracking-[-.06em] text-[#17191b]">{file.linkedCount}<span className="text-xl text-[#7f8b87]">/3</span></p>
-          <h2 className="mt-2 text-sm font-extrabold text-[#17191b]">
+          <h3 className="mt-2 text-sm font-extrabold text-[#17191b]">
             {file.linkedCount === 1 ? "Research source type linked" : "Research source types linked"}
-          </h2>
+          </h3>
           <p className="mt-1 text-sm leading-6 text-[#4e5961]">{file.headline}</p>
           <p className="mt-2 text-xs font-semibold text-[#787f85]">
             {file.letter ? "File coverage " + file.letter : "No file grade yet"} · {file.linkedCount} of 3 source layers individually linked in this starter file

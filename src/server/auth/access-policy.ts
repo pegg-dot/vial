@@ -14,7 +14,7 @@ export interface AccessDecision {
 // Public page routes (browseable with no session). Exact matches or path prefixes.
 const PUBLIC_PAGE_EXACT = new Set([
   "/", "/intelligence", "/intelligence/market", "/intelligence/compare", "/intelligence/grading",
-  "/intelligence/verify", "/intelligence/desk", "/intelligence/materials", "/intelligence/providers", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/cases/magainin-pexiganan", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/market", "/compare", "/search", "/verify", "/methodology", "/how-we-check", "/grades", "/about", "/help", "/coverage",
+  "/intelligence/verify", "/intelligence/desk", "/intelligence/materials", "/intelligence/providers", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/updates", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", "/intelligence/cases/magainin-pexiganan", "/intelligence/retatrutide", "/intelligence/cagrilintide", "/intelligence/tirzepatide", "/intelligence/cagrilintide/audit", "/intelligence/retatrutide/audit", "/intelligence/tirzepatide/audit", "/market", "/compare", "/search", "/verify", "/methodology", "/how-we-check", "/grades", "/about", "/help", "/coverage",
   "/go", // outbound vendor handoff (records the click, 302s to the vendor's own page)
   "/cart", "/checkout", // quarantined commerce → these routes just redirect to /market
   "/status", "/operations", "/signals", "/research", "/updates", "/testing", "/offline", "/developers", "/enforcement", "/news", "/reference-standard",
@@ -59,6 +59,8 @@ const PUBLIC_API_EXACT = new Set([
   // handler runs, and every reader silently stops being told anything — the same failure as the
   // two above, on the one route whose whole purpose is to reach people who are not looking.
   "/api/internal/cron/notifications",
+  // Weekly email-only update list; guarded by CRON_SECRET inside the handler.
+  "/api/internal/cron/digest",
   // Partner postbacks authenticate with a per-vendor HMAC inside the handler.
   "/api/partner/conversion",
   // Anonymous page-view beacon. No auth by design; it stores no identity.
