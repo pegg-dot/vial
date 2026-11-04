@@ -14,7 +14,7 @@ export type DigestRunResult =
   | { state: "ok"; purged: number; changes: number; sent: number; failed: number; remaining: number };
 
 /**
- * Weekly run. The date marker moves forward only when every registry topic answered AND everyone
+ * Monthly run. The date marker moves forward only when every registry topic answered AND everyone
  * due was mailed (or there was nothing to say), so a registry fault or a failed send never
  * silently swallows a week of changes.
  */
@@ -26,7 +26,7 @@ export async function runDigest(
   const now = deps.now ?? new Date();
   const purged = await purgeStalePending(db);
   const stored = (await db.query<{ value: string }>(`SELECT value FROM digest_state WHERE key=$1`, [WATERMARK])).rows[0]?.value;
-  const since = stored ?? day(new Date(now.getTime() - 7 * 86_400_000));
+  const since = stored ?? day(new Date(now.getTime() - 31 * 86_400_000));
 
   const topics = await deps.topics();
   if (!allTopicsAnswered(topics)) return { state: "skipped", reason: "registry-unavailable" };

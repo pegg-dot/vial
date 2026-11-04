@@ -8,7 +8,7 @@ import { fetchPublicTrialIndex } from "@/server/intelligence/public-trials";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-/** Weekly email-only update list. Same CRON_SECRET guard as the other cron routes. */
+/** Monthly email-only update list. Same CRON_SECRET guard as the other cron routes. */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET?.trim();
   if (!secret) {

@@ -115,7 +115,7 @@ describe("email-only update list", () => {
     expect(await idOf("new@example.org")).toBe("new");
   });
 
-  describe("weekly run", () => {
+  describe("monthly run", () => {
     const marker = async () => (await (await getDatabase()).query<{ value: string }>(`SELECT value FROM digest_state WHERE key='last_digest_date'`)).rows[0]?.value;
 
     it("does nothing without mail configuration or while the registry is down, and keeps the marker", async () => {

@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/internal/cron/refresh",
-      "schedule": "30 6 * * *"
+      "schedule": "30 6 * * 1"
     },
     {
       "path": "/api/internal/cron/notifications",
@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/internal/cron/digest",
-      "schedule": "0 14 * * 1"
+      "schedule": "0 14 2 * *"
     }
   ]
 }

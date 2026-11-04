@@ -112,7 +112,7 @@ describe("first-visit bar rule and perimeter", () => {
     for (const ok of ["/intelligence", "/intelligence/", "/intelligence/market", "/intelligence/explore/pexiganan"]) expect(updatesPromptAllowedOn(ok)).toBe(true);
     for (const no of ["/intelligence/updates", "/intelligence/updates/", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", "/legal/privacy", "/login", "/register", "/admin", "/admin/login", "/account", "/", "/intelligence-x"]) expect(updatesPromptAllowedOn(no)).toBe(false);
   });
-  it("keeps the signup pages and weekly cron reachable without a session, and nothing wider", () => {
+  it("keeps the signup pages and monthly cron reachable without a session, and nothing wider", () => {
     for (const p of ["/intelligence/updates", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", "/api/internal/cron/digest"]) expect(accessDecision(p, null).allowed).toBe(true);
     for (const p of ["/intelligence/updates/other", "/api/v1/updates", "/api/internal/cron/other"]) expect(accessDecision(p, null).allowed).toBe(false);
   });

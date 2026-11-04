@@ -18,7 +18,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
         <form action={unsubscribeAction} className="mt-5">
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="t" value={t} />
-          <p className="text-base font-medium leading-7">Press the button to stop the weekly update and delete your email address from our list.</p>
+          <p className="text-base font-medium leading-7">Press the button to stop the monthly update and delete your email address from our list.</p>
           <button type="submit" className="ink hard-sm press mt-5 inline-flex min-h-11 items-center rounded-full bg-white px-6 text-sm font-extrabold">Unsubscribe and delete my address</button>
         </form>
       ) : (

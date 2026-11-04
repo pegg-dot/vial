@@ -1,5 +1,5 @@
 /**
- * Weekly "what changed" email. Pure: given registry rows it returns the message, or null when there
+ * Monthly "what changed" email. Pure: given registry rows it returns the message, or null when there
  * is nothing to say (an empty digest is never sent). Registry facts only: no result, safety,
  * quality or availability claim, and nothing about any individual reader.
  */
@@ -50,7 +50,7 @@ export function buildDigest(input: { changes: readonly DigestChange[]; siteUrl: 
 }
 
 export function confirmationEmail(confirmUrl: string) {
-  const text = "Someone, hopefully you, asked for the VialGrade update email: a weekly note when a ClinicalTrials.gov record we track changes. It holds only your email address.\n\nConfirm here: " + confirmUrl + "\n\nIf this was not you, ignore this message. The request is deleted automatically after 3 days and nothing is sent.";
-  const html = "<p>" + esc("Someone, hopefully you, asked for the VialGrade update email: a weekly note when a ClinicalTrials.gov record we track changes. It holds only your email address.") + '</p><p><a href="' + esc(confirmUrl) + '">Confirm my email address</a></p><p style="color:#666;font-size:12px">' + esc("If this was not you, ignore this message. The request is deleted automatically after 3 days and nothing is sent.") + "</p>";
+  const text = "Someone, hopefully you, asked for the VialGrade update email: a monthly note when a ClinicalTrials.gov record we track changes. It holds only your email address.\n\nConfirm here: " + confirmUrl + "\n\nIf this was not you, ignore this message. The link stops working after 3 days, the request is then deleted, and nothing is sent.";
+  const html = "<p>" + esc("Someone, hopefully you, asked for the VialGrade update email: a monthly note when a ClinicalTrials.gov record we track changes. It holds only your email address.") + '</p><p><a href="' + esc(confirmUrl) + '">Confirm my email address</a></p><p style="color:#666;font-size:12px">' + esc("If this was not you, ignore this message. The link stops working after 3 days, the request is then deleted, and nothing is sent.") + "</p>";
   return { subject: "Confirm your VialGrade update email", text, html };
 }

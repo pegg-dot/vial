@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 // RESEND_API_KEY / DIGEST_FROM_EMAIL set (any dummy values) and set them here too.
 const configured = Boolean(process.env.RESEND_API_KEY && process.env.DIGEST_FROM_EMAIL);
 
-test.describe("Weekly update email", () => {
+test.describe("Monthly update email", () => {
   test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Research-only preview");
 
   test("signup page says plainly what is stored; without mail configured it collects nothing", async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe("Weekly update email", () => {
     await page.goto("/intelligence");
     await page.clock.fastForward(12_000);
     await page.mouse.wheel(0, 900);
-    await expect(page.getByRole("complementary", { name: "Weekly update email" })).toHaveCount(0);
+    await expect(page.getByRole("complementary", { name: "Monthly update email" })).toHaveCount(0);
   });
 
   test.describe("with mail configured", () => {
@@ -68,7 +68,7 @@ test.describe("Weekly update email", () => {
     test("bar appears after 10 seconds, is dismissible and stays dismissed", async ({ page }) => {
       await page.clock.install();
       await page.goto("/intelligence/market");
-      const bar = page.getByRole("complementary", { name: "Weekly update email" });
+      const bar = page.getByRole("complementary", { name: "Monthly update email" });
       await expect(bar).toHaveCount(0);
       await page.clock.fastForward(9_000);
       await expect(bar).toHaveCount(0);
@@ -81,20 +81,20 @@ test.describe("Weekly update email", () => {
       await expect(bar).toHaveCount(0);
       await page.reload();
       await page.clock.fastForward(12_000);
-      await expect(page.getByRole("complementary", { name: "Weekly update email" })).toHaveCount(0);
+      await expect(page.getByRole("complementary", { name: "Monthly update email" })).toHaveCount(0);
     });
 
     test("bar also appears on first scroll, and never on legal, login or signup pages", async ({ page }) => {
       await page.goto("/intelligence");
       await page.mouse.wheel(0, 900);
-      await expect(page.getByRole("complementary", { name: "Weekly update email" })).toBeVisible();
+      await expect(page.getByRole("complementary", { name: "Monthly update email" })).toBeVisible();
       for (const path of ["/legal/privacy", "/intelligence/updates", "/login"]) {
         await page.evaluate(() => window.localStorage.clear());
         await page.clock.install();
         await page.goto(path);
         await page.clock.fastForward(12_000);
         await page.mouse.wheel(0, 900);
-        await expect(page.getByRole("complementary", { name: "Weekly update email" })).toHaveCount(0);
+        await expect(page.getByRole("complementary", { name: "Monthly update email" })).toHaveCount(0);
       }
     });
   });

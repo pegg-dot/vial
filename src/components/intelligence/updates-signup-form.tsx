@@ -37,7 +37,7 @@ export function UpdatesSignupForm() {
       <div className="flex items-start gap-3">
         <input id="digest-consent" name="consent" type="checkbox" value="yes" className="mt-1 size-5 shrink-0" />
         <label htmlFor="digest-consent" className="text-sm leading-6">
-          I agree VialGrade may store this email to send the weekly update. See the{" "}
+          I agree VialGrade may store this email to send the monthly update. See the{" "}
           <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-4">privacy notice</Link>.
           I can unsubscribe or ask for deletion any time.
         </label>

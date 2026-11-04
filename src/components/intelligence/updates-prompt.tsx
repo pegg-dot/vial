@@ -34,10 +34,10 @@ export function UpdatesPrompt() {
   if (!allowed || !shown) return null;
   const dismiss = () => { remember(); setShown(false); };
   return (
-    <aside aria-label="Weekly update email" className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-[#111214] bg-white px-4 py-3 sm:px-8">
+    <aside aria-label="Monthly update email" className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-[#111214] bg-white px-4 py-3 sm:px-8">
       <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <p className="max-w-3xl text-sm font-medium leading-6">
-          <strong className="font-extrabold">Get a weekly note when a source record changes.</strong>{" "}
+          <strong className="font-extrabold">Get a monthly note when a source record changes.</strong>{" "}
           Email only, no account, no compound interests saved. Unsubscribe any time.
         </p>
         <div className="flex items-center gap-3">
