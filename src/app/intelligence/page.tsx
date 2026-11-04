@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BookOpen, Building2, ClipboardCheck, FileSearch, NotebookPen, SearchCheck } from "lucide-react";
+import { RecentlyUpdatedStrip } from "@/components/intelligence/recently-updated-strip";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
 import {
   OriginalResearchHero, OriginalResearchManifesto, OriginalResearchFeatures,
@@ -31,6 +32,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
         </div>
       )}
       <OriginalResearchHero />
+      <RecentlyUpdatedStrip />
       <OriginalResearchManifesto />
       <OriginalResearchFeatures />
       <OriginalResearchCategorySection />
