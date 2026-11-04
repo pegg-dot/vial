@@ -12,6 +12,7 @@ import { ResearchSubjectArt } from "@/components/intelligence/research-subject-a
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { gradeResearchFile } from "@/lib/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
+import { DossierSection, DossierToc } from "@/components/intelligence/dossier-layout";
 import { PexEvidenceClaimGrid, PexEvidenceWayfinder, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
 import { PexigananResearchWorkspace } from "@/components/intelligence/pexiganan-research-workspace";
 import { PexTrialNetworkLive, PexTrialNetworkLoading } from "@/components/intelligence/pexiganan-trial-network";
@@ -33,217 +34,175 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
   const theme = researchThemeById(subject.theme);
   const file = gradeResearchFile(subject);
   const related = RESEARCH_SUBJECTS.filter(other => other.theme === subject.theme && other.slug !== slug).slice(0, 3);
+  const isPex = subject.slug === "pexiganan";
+
+  // The same six sections, in the same order, on every dossier.
+  const toc = [
+    { id: "overview", label: "Overview" },
+    { id: "file-grade", label: "Source file" },
+    { id: "studies", label: "Studies" },
+    { id: "sources", label: "Sources" },
+    { id: "material-evidence", label: "Materials" },
+    { id: "related", label: "Limits and related" },
+  ] as const;
+  const quiet = "rounded-[14px] border border-[#111214]/15 bg-[#fbfbf8] p-5";
 
   return (
-    <div className="bg-[#faf9f7] pb-20">
-      <div className="mx-auto max-w-[1100px] px-5 pt-8 sm:px-8">
-        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#807e92]">
-          <Link href="/intelligence/market" className="hover:text-[#5445a4] hover:underline">Research Market</Link>
+    <div className="pb-24">
+      <div className="mx-auto max-w-[1320px] px-5 pt-8 sm:px-8">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-bold text-[#4a4d56]">
+          <Link href="/intelligence/market" className="hover:text-[#2b31d8] hover:underline">Research Market</Link>
           <span aria-hidden="true">/</span>
-          <Link href={"/intelligence/market?theme=" + subject.theme + "#browse"} className="hover:text-[#5445a4] hover:underline">{theme.name}</Link>
+          <Link href={"/intelligence/market?theme=" + subject.theme + "#browse"} className="hover:text-[#2b31d8] hover:underline">{theme.name}</Link>
           <span aria-hidden="true">/</span>
-          <span aria-current="page" className="text-[#4d4969]">{subject.name}</span>
+          <span aria-current="page" className="text-[#111214]">{subject.name}</span>
         </nav>
 
-        <section className="relative mt-6 overflow-hidden rounded-[22px] border-2 border-[#17191b] bg-white">
-          <div className="relative grid lg:grid-cols-[305px_minmax(0,1fr)]">
+        <section aria-label={subject.name + " summary"} className="ink hard mt-5 overflow-hidden rounded-[22px] bg-white">
+          <div className="grid lg:grid-cols-[300px_minmax(0,1fr)]">
             <ResearchSubjectArt subject={subject} hero />
-            <div className="relative px-6 pb-7 pt-8 sm:px-9 sm:py-9">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ backgroundColor: theme.tint, color: theme.color }}>{theme.name}</span>
-              <span className="text-xs text-[#8a8e99]">Curated identity source · 18 Oct 2026</span>
-            </div>
-            <h1 className="mt-5 text-[clamp(2.45rem,5vw,4.25rem)] font-semibold leading-[1.1] tracking-[-.06em] text-[#242639]">{subject.name}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {subject.slug === "pexiganan" && <span className="rounded-full border border-[#bfdfd0] bg-[#eafff2] px-3 py-1.5 text-xs font-extrabold text-[#23654d]">{file.linkedCount} of 3 research source types on file</span>}
-              <ResearchFileGradeMark subject={subject} withCount />
-            </div>
-            <p className="mt-2 text-xs font-medium leading-5 text-[#626d70]">This letter describes linked source types in our file, not how promising or safe the compound is.</p>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-[#5d6270]">{subject.identity}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <a href={subject.slug === "pexiganan" ? "#research-workspace" : "#overview"}
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#282541] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#443a7e]">
-                {subject.slug === "pexiganan" ? "Investigate the evidence" : "Start with the research question"} <ArrowRight className="size-4" />
-              </a>
-              <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#51468d] hover:underline">
-                Inspect molecular identity <ArrowUpRight className="size-4" />
-              </a>
-              <Link href={compareExplorerHref([subject.slug, related[0]?.slug].filter(Boolean), "researcher")}
-                className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#51468d] hover:underline">
-                <GitCompareArrows className="size-4" /> Compare with {related[0]?.name}
-              </Link>
-            </div>
-            </div>
-          </div>
-          <div className="relative grid border-t-2 border-[#17191b] bg-[#f1fdf6] sm:grid-cols-3">
-            <div className="border-b border-[#dcece3] px-6 py-4 sm:border-b-0 sm:border-r">
-              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#546b5f]">What is this?</p>
-              <p className="mt-1 text-sm font-semibold text-[#303a35]">A curated identity file, not a material listing.</p>
-            </div>
-            <div className="border-b border-[#dcece3] px-6 py-4 sm:border-b-0 sm:border-r">
-              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#546b5f]">What is linked?</p>
-              <p className="mt-1 text-sm font-semibold text-[#303a35]">{file.linkedCount} of 3 research source types in this file.</p>
-            </div>
-            <div className="px-6 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#546b5f]">What is not verified?</p>
-              <p className="mt-1 text-sm font-semibold text-[#303a35]">Clinical benefit or any physical sample.</p>
+            <div className="px-6 pb-7 pt-7 sm:px-9 sm:pb-8 sm:pt-8">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="ink-1 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-[.1em]" style={{ backgroundColor: theme.tint, color: theme.color }}>{theme.name}</span>
+                <span className="text-xs font-semibold text-[#4a4d56]">Curated identity source · 18 Oct 2026</span>
+              </div>
+              <h1 className="mt-4 text-balance text-[clamp(2.6rem,6vw,4.75rem)] font-extrabold leading-[.92] tracking-[-.055em] text-[#111214]">{subject.name}</h1>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {isPex && <span className="ink-1 rounded-full bg-[#e6fbf6] px-3 py-1.5 text-xs font-extrabold text-[#0b6b60]">{file.linkedCount} of 3 research source types on file</span>}
+                <ResearchFileGradeMark subject={subject} withCount />
+              </div>
+              <p className="mt-2 max-w-2xl text-xs font-medium leading-5 text-[#4a4d56]">This letter describes linked source types in our file, not how promising or safe the compound is.</p>
+              <p className="mt-4 max-w-3xl text-base font-medium leading-7 text-[#3a3d46]">{subject.identity}</p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <a href={isPex ? "#research-workspace" : "#overview"}
+                  className="ink hard-sm press inline-flex min-h-11 items-center gap-2 rounded-full bg-[#2b31d8] px-5 text-sm font-extrabold text-white">
+                  {isPex ? "Investigate the evidence" : "Start with the research question"} <ArrowRight className="size-4" />
+                </a>
+                <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer"
+                  className="ink hard-sm press inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-5 text-sm font-extrabold">
+                  Inspect molecular identity <ArrowUpRight className="size-4" />
+                </a>
+                <Link href={compareExplorerHref([subject.slug, related[0]?.slug].filter(Boolean), "researcher")}
+                  className="ink hard-sm press inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-5 text-sm font-extrabold">
+                  <GitCompareArrows className="size-4" /> Compare with {related[0]?.name}
+                </Link>
+              </div>
             </div>
           </div>
+          <dl className="grid border-t-2 border-[#111214] bg-[#e6fbf6] sm:grid-cols-3">
+            {[
+              ["What is this?", "A curated identity file, not a material listing."],
+              ["What is linked?", file.linkedCount + " of 3 research source types in this file."],
+              ["What is not verified?", "Clinical benefit or any physical sample."],
+            ].map(([term, text], index) => (
+              <div key={term} className={"px-6 py-4 " + (index < 2 ? "border-b border-[#111214]/15 sm:border-b-0 sm:border-r" : "")}>
+                <dt className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#0b6b60]">{term}</dt>
+                <dd className="mt-1 text-sm font-bold text-[#111214]">{text}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
-        {subject.slug === "pexiganan" && (
-          <div className="mt-7">
-            <PexigananResearchWorkspace />
-          </div>
-        )}
+        {isPex && <div className="mt-7"><PexigananResearchWorkspace /></div>}
 
-        <details className="mt-3 rounded-xl border border-[#d5ded7] bg-white px-5 py-3.5 text-sm">
-          <summary className="cursor-pointer font-bold text-[#376c58]">Molecular and technical details</summary>
-          <dl className="mt-4 grid gap-4 border-t border-[#e5ebe7] pt-4 sm:grid-cols-3">
-            <div><dt className="text-[11px] font-bold uppercase tracking-[.09em] text-[#728277]">Research area</dt><dd className="mt-1 font-medium">{theme.short}</dd></div>
-            <div><dt className="text-[11px] font-bold uppercase tracking-[.09em] text-[#728277]">Mechanism</dt><dd className="mt-1 font-medium">{subject.mechanism}</dd></div>
-            <div><dt className="text-[11px] font-bold uppercase tracking-[.09em] text-[#728277]">Identity reference</dt><dd className="mt-1 font-medium">{subject.referenceLabel}</dd></div>
-          </dl>
-        </details>
+        <div className="mt-6 grid items-start gap-x-8 gap-y-5 lg:grid-cols-[210px_minmax(0,1fr)]">
+          <DossierToc items={toc} />
+          <div className="min-w-0 space-y-7">
+            <DossierSection id="overview" number={1} eyebrow="Overview" title={subject.studyQuestion}
+              intro={"Start by checking studies of " + subject.mechanism.toLowerCase() + ", rather than inferring clinical outcomes or experiment suitability from the molecule name."}>
+              <DossierPerspective research={subject.scientistAngle} analyst={subject.analystAngle} />
+              <dl className="grid gap-4 sm:grid-cols-3">
+                <div><dt className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#4a4d56]">Research area</dt><dd className="mt-1 text-sm font-bold">{theme.short}</dd></div>
+                <div><dt className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#4a4d56]">Mechanism</dt><dd className="mt-1 text-sm font-bold">{subject.mechanism}</dd></div>
+                <div><dt className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#4a4d56]">Identity reference</dt><dd className="mt-1 text-sm font-bold">{subject.referenceLabel}</dd></div>
+              </dl>
+            </DossierSection>
 
-        <nav aria-label="Research dossier sections" className="sticky top-[68px] z-20 -mx-5 mt-4 flex flex-wrap items-center gap-2 border-b border-[#e5e4ea] bg-[#faf9f7]/95 px-5 py-3 text-xs font-bold text-[#535868] backdrop-blur-md sm:mx-0 sm:px-0">
-          <a href="#overview" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Research question</a>
-          {subject.sampleTrial && <a href={subject.slug === "pexiganan" ? "#pexiganan-trials" : "#evidence-review"} className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Studies</a>}
-          <a href="#sources" className="shrink-0 rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766]">Original sources</a>
-          <details className="group min-w-[135px] text-[#535868]">
-            <summary className="cursor-pointer list-none rounded-full border border-[#d8dce0] bg-white px-3.5 py-2.5 hover:border-[#2a7766] hover:text-[#2a7766] [&::-webkit-details-marker]:hidden">
-              More sections <span aria-hidden="true" className="ml-1 group-open:hidden">+</span><span aria-hidden="true" className="ml-1 hidden group-open:inline">−</span>
-            </summary>
-            <div className="ink-1 absolute right-5 top-[calc(100%-2px)] z-40 flex w-[min(320px,90vw)] flex-col gap-1 rounded-xl bg-white p-2 shadow-lg sm:right-0">
-              <a href="#file-grade" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Research file grade</a>
-              <a href="#material-evidence" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Material verification</a>
-              {subject.slug === "pexiganan" && <a href="#pexiganan-network" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Evidence network</a>}
-              <a href="#related" className="rounded-lg px-3 py-2.5 hover:bg-[#eef0ff]">Related research</a>
-            </div>
-          </details>
-        </nav>
-
-        <div className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_335px]">
-          <div className="min-w-0 space-y-5">
-            <section id="overview" className="scroll-mt-40 rounded-2xl border border-[#dedee8] bg-white p-6 sm:p-7">
-              <div className="flex items-center gap-2 text-[#685b9a]"><Microscope className="size-4" /><p className="text-xs font-bold uppercase tracking-[.12em]">Research direction</p></div>
-              <h2 className="mt-3 text-xl font-semibold tracking-[-.035em] text-[#27273a]">{subject.studyQuestion}</h2>
-              <p className="mt-3 text-sm leading-7 text-[#686c7a]">Start by checking studies of {subject.mechanism.toLowerCase()}, rather than inferring clinical outcomes or experiment suitability from the molecule name.</p>
-            </section>
-            <div id="file-grade" className="scroll-mt-40">
+            <DossierSection id="file-grade" number={2} eyebrow="Source file" title="Which source types are linked"
+              intro="A letter for how many kinds of original source sit in our file. It is about coverage, not about the compound.">
               <ResearchFileGradeCard subject={subject} />
-            </div>
-            <DossierPerspective research={subject.scientistAngle} analyst={subject.analystAngle} />
-            {subject.slug === "pexiganan" && <PexEvidenceClaimGrid compact />}
-            {subject.slug === "pexiganan" ? (
-              <Suspense fallback={<PexTrialNetworkLoading />}>
-                <PexTrialNetworkLive />
-              </Suspense>
-            ) : subject.sampleTrial ? (
-              <Suspense fallback={<TrialEvidenceLoading nctId={subject.sampleTrial} />}>
-                <DossierTrialEvidence subject={subject} />
-              </Suspense>
-            ) : null}
-            {(subject.slug === "pexiganan" || subject.slug === "magainin-2") && (
-              <section className="rounded-2xl border border-[#c5dfd2] bg-[#eef8f3] p-6">
-                <h2 className="text-base font-semibold text-[#225b55]">Guided source review · Magainin 2 vs pexiganan</h2>
-                <p className="mt-2 text-sm leading-6 text-[#56756b]">
-                  Follow an original lipid-bilayer experiment to a separately registered clinical trial. See which observations come from which source, and why the compounds cannot be treated as interchangeable.
-                </p>
-                <Link href="/intelligence/cases/magainin-pexiganan" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#22665c] hover:underline">
-                  Open guided evidence workpaper <ArrowRight className="size-4" />
-                </Link>
-              </section>
-            )}
+            </DossierSection>
 
-            {subject.slug === "pexiganan" ? (
-              <div id="sources" className="scroll-mt-40"><PexSourceRegister /></div>
-            ) : (
-            <section id="sources" aria-labelledby="research-sources-title" className="scroll-mt-40 overflow-hidden rounded-2xl border border-[#dedee8] bg-white">
-              <div className="border-b border-[#ececf1] px-6 py-5">
-                <h2 id="research-sources-title" className="text-xl font-semibold tracking-[-.035em] text-[#28293b]">Follow the source trail</h2>
-                <p className="mt-2 text-sm leading-6 text-[#727684]">One reference identity record, then two independent searches. Search results have not been individually evaluated as evidence.</p>
-              </div>
-              <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 border-b border-[#ececf1] px-6 py-5 hover:bg-[#fbfaff]">
-                <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[#5f53a8]" />
-                <div><h3 className="text-sm font-semibold text-[#303145]">Molecular identity</h3><p className="mt-1 text-xs leading-5 text-[#777b88]">{subject.referenceLabel} · Checked 18 Oct 2026</p><p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#5545a4]">Open PubChem <ArrowUpRight className="size-3" /></p></div>
-              </a>
-              <a href={verifiedPubmedSearchUrl(subject)} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 border-b border-[#ececf1] px-6 py-5 hover:bg-[#fbfaff]">
-                <BookOpen className="mt-0.5 size-5 shrink-0 text-[#7b83a0]" />
-                <div><h3 className="text-sm font-semibold text-[#303145]">Find original publications</h3><p className="mt-1 text-xs leading-5 text-[#777b88]">PubMed search. Mentions and reviews are not necessarily direct trial results.</p><p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#5545a4]">Search PubMed <ArrowUpRight className="size-3" /></p></div>
-              </a>
-              <a href={registryDiscoveryUrl(subject)} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 px-6 py-5 hover:bg-[#fbfaff]">
-                <FileSearch className="mt-0.5 size-5 shrink-0 text-[#7b83a0]" />
-                <div><h3 className="text-sm font-semibold text-[#303145]">Find registered studies</h3><p className="mt-1 text-xs leading-5 text-[#777b88]">Registry keyword search. Returned trials may study another compound or a combination.</p><p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#5545a4]">Search ClinicalTrials.gov <ArrowUpRight className="size-3" /></p></div>
-              </a>
-            </section>
-            )}
-            <section className="rounded-2xl border border-[#dedee8] bg-white p-6">
-              <div className="flex items-center gap-2 text-[#796b55]"><CircleHelp className="size-4" /><h2 className="text-base font-semibold text-[#292b3c]">What still needs checking</h2></div>
-              <p className="mt-3 text-sm leading-7 text-[#656a78]">{subject.identityCaveat}</p>
-              <p className="mt-3 text-sm leading-7 text-[#656a78]">{subject.nextReview}</p>
-            </section>
-          </div>
-
-          <aside className="space-y-5 lg:sticky lg:top-28">
-            <section id="material-evidence" className="scroll-mt-40 rounded-2xl border border-[#c4decc] bg-[#ecf9f1] p-6">
-              <div className="flex items-center gap-2 text-[#22735b]"><ClipboardCheck className="size-4" /><p className="text-xs font-extrabold uppercase tracking-[.1em]">Research material file</p></div>
-              <h2 className="mt-3 text-lg font-extrabold tracking-[-.035em] text-[#294b38]">Sample verification · Not yet authenticated</h2>
-              <p className="mt-2 text-xs leading-6 text-[#5d7966]">The molecular source record and the research-file letter do not establish the identity, authenticity or analytical quality of a physical lot.</p>
-              <Link href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)}
-                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#1c614b] px-4 py-3 text-xs font-extrabold text-white hover:bg-[#2e8166]">
-                Open material checks <ArrowRight className="size-4" />
-              </Link>
-            </section>
-            {subject.slug === "pexiganan" && (
-              <section className="rounded-2xl border border-[#d8d2ed] bg-[#f2efff] p-6">
-                <h2 className="text-lg font-extrabold text-[#4e4386]">Build a research briefing from these records</h2>
-                <p className="mt-2 text-xs leading-6 text-[#746d8c]">Trace exact studies and source gaps in the Research Desk. AI calls and original-source interpretations are not automatic.</p>
-                <Link href="/intelligence/desk" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#342c66] px-4 py-3 text-xs font-extrabold text-white hover:bg-[#4b3d8e]">
-                  Open Research Desk <ArrowRight className="size-4" />
-                </Link>
-              </section>
-            )}
-            {subject.sampleTrial && (
-              <section className="rounded-2xl border border-[#c8c2e4] bg-[#f1eeff] p-6">
-                <div className="flex items-center gap-2"><FlaskConical className="size-4 text-[#6451aa]" /><p className="text-xs font-bold uppercase tracking-[.1em] text-[#6451aa]">Selected source-backed study</p></div>
-                <h2 className="mt-3 text-lg font-semibold text-[#30304c]">{subject.sampleTrial}</h2>
-                <p className="mt-2 text-sm leading-6 text-[#65627b]">The official intervention field names {subject.name}. That is not proof of an outcome.</p>
-                <div className="mt-4 flex flex-col items-start gap-3">
-                  <a href={subject.slug === "pexiganan" ? "#pexiganan-trials" : "#evidence-review"} className="inline-flex items-center gap-2 rounded-lg bg-[#332a59] px-4 py-3 text-xs font-bold text-white hover:bg-[#483b7b]">
-                    See source findings <ArrowRight className="size-4" />
-                  </a>
-                  <Link href={"/intelligence/studies/" + subject.sampleTrial} className="inline-flex items-center gap-1 text-xs font-semibold text-[#6554a4] hover:underline">
-                    Audit this trial <ArrowUpRight className="size-3.5" />
+            <DossierSection id="studies" number={3} eyebrow="Studies" title="What the registered studies record"
+              intro="Original registry facts and exact citation links. A registered study is not a result.">
+              {isPex && <PexEvidenceClaimGrid compact />}
+              {isPex ? (
+                <Suspense fallback={<PexTrialNetworkLoading />}><PexTrialNetworkLive /></Suspense>
+              ) : subject.sampleTrial ? (
+                <Suspense fallback={<TrialEvidenceLoading nctId={subject.sampleTrial} />}><DossierTrialEvidence subject={subject} /></Suspense>
+              ) : (
+                <p className={quiet + " text-sm font-medium leading-7 text-[#3a3d46]"}>No registered study is pinned to {subject.name} in this file yet. Use the registry search under Sources to look for one.</p>
+              )}
+              {subject.sampleTrial && (
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-[#2b31d8]">
+                  <Link href={"/intelligence/studies/" + subject.sampleTrial} className="inline-flex min-h-6 items-center gap-1 hover:underline">Audit {subject.sampleTrial} <ArrowUpRight className="size-4" /></Link>
+                  {subject.legacyTopic && <Link href={"/intelligence/" + subject.legacyTopic} className="inline-flex min-h-6 items-center gap-1 hover:underline">Additional source samples <ArrowUpRight className="size-4" /></Link>}
+                </div>
+              )}
+              {(isPex || subject.slug === "magainin-2") && (
+                <div className={quiet}>
+                  <h3 className="text-base font-extrabold tracking-[-.02em]">Guided source review · Magainin 2 vs pexiganan</h3>
+                  <p className="mt-2 text-sm font-medium leading-6 text-[#3a3d46]">Follow an original lipid-bilayer experiment to a separately registered clinical trial. See which observations come from which source, and why the compounds cannot be treated as interchangeable.</p>
+                  <Link href="/intelligence/cases/magainin-pexiganan" className="mt-3 inline-flex min-h-6 items-center gap-2 text-sm font-extrabold text-[#2b31d8] hover:underline">
+                    Open guided evidence workpaper <ArrowRight className="size-4" />
                   </Link>
                 </div>
-              </section>
-            )}
-            {subject.legacyTopic && (
-              <section className="rounded-2xl border border-[#dedee8] bg-white p-6">
-                <h2 className="text-sm font-semibold text-[#2e3041]">Additional source samples</h2>
-                <p className="mt-2 text-sm leading-6 text-[#777a88]">The earlier Intelligence dossier contains a small trial/publication sample, not a complete review.</p>
-                <Link href={"/intelligence/" + subject.legacyTopic} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#5845a0] hover:underline">View source sample <ArrowUpRight className="size-3.5" /></Link>
-              </section>
-            )}
-            <section id="related" className="scroll-mt-40 rounded-2xl border border-[#dedee8] bg-white p-6">
-              <h2 className="text-sm font-semibold text-[#2c2d3e]">Related research directions</h2>
-              <div className="mt-3 divide-y divide-[#ececf1]">
-                {related.map(other => <Link href={"/intelligence/explore/" + other.slug} key={other.slug} className="flex items-center justify-between gap-3 py-3 text-sm font-medium text-[#5c5791] hover:underline">{other.name} <ArrowUpRight className="size-4 shrink-0" /></Link>)}
+              )}
+            </DossierSection>
+
+            <DossierSection id="sources" number={4} eyebrow="Sources" title="Follow the source trail"
+              intro="Every row links to the original record. Search results have not been individually evaluated as evidence.">
+              {isPex ? <PexSourceRegister /> : (
+                <ul className="divide-y divide-[#111214]/10 rounded-[14px] border border-[#111214]/15">
+                  {[
+                    { href: subject.referenceUrl, icon: CheckCircle2, title: "Molecular identity", note: subject.referenceLabel + " · Checked 18 Oct 2026" },
+                    { href: verifiedPubmedSearchUrl(subject), icon: BookOpen, title: "Find original publications", note: "PubMed search. Mentions and reviews are not necessarily direct experiments." },
+                    { href: registryDiscoveryUrl(subject), icon: FileSearch, title: "Find registered studies", note: "Registry keyword search. Returned trials may study another compound." },
+                  ].map(({ href, icon: Icon, title, note }) => (
+                    <li key={title}>
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 px-5 py-4 hover:bg-[#eef0ff]">
+                        <Icon className="mt-0.5 size-5 shrink-0 text-[#2b31d8]" aria-hidden="true" />
+                        <span className="min-w-0"><span className="block text-sm font-extrabold">{title} <ArrowUpRight className="inline size-3.5" aria-hidden="true" /></span><span className="mt-0.5 block text-xs font-medium leading-5 text-[#4a4d56]">{note}</span></span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Suspense fallback={<OrganizationsLoading />}><DossierOrganizations subject={subject} /></Suspense>
+            </DossierSection>
+
+            <DossierSection id="material-evidence" number={5} eyebrow="Materials" title="Sample verification: not yet authenticated"
+              intro="The molecular record and the file letter do not establish the identity, authenticity or analytical quality of a physical lot.">
+              <div className="flex flex-wrap items-center gap-3">
+                <Link href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)}
+                  className="ink hard-sm press inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-extrabold">
+                  <ClipboardCheck className="size-4" aria-hidden="true" /> Open material checks <ArrowRight className="size-4" />
+                </Link>
+                <Link href="/intelligence/providers" className="inline-flex min-h-11 items-center gap-1 text-sm font-extrabold text-[#2b31d8] hover:underline">Company-published QC documentation <ArrowUpRight className="size-4" /></Link>
+                {isPex && <Link href="/intelligence/desk" className="inline-flex min-h-11 items-center gap-1 text-sm font-extrabold text-[#2b31d8] hover:underline">Build a briefing in the Research Desk <ArrowUpRight className="size-4" /></Link>}
               </div>
-              <Link href="/intelligence/market#browse" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#6b62a3] hover:underline"><ArrowLeft className="size-3" /> Back to discovery</Link>
-            </section>
-          </aside>
-        </div>
-        {subject.slug === "pexiganan" && (
-          <div id="pexiganan-network" className="mt-9 scroll-mt-36">
-            <PexEvidenceWayfinder />
+            </DossierSection>
+
+            <DossierSection id="related" number={6} eyebrow="Limits and related" title="What still needs checking">
+              <p className="text-sm font-medium leading-7 text-[#3a3d46]">{subject.identityCaveat}</p>
+              <p className="text-sm font-medium leading-7 text-[#3a3d46]">{subject.nextReview}</p>
+              <div>
+                <h3 className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#4a4d56]">Related research directions</h3>
+                <ul className="mt-2 divide-y divide-[#111214]/10 rounded-[14px] border border-[#111214]/15">
+                  {related.map(other => (
+                    <li key={other.slug}><Link href={"/intelligence/explore/" + other.slug} className="flex min-h-11 items-center justify-between gap-3 px-5 py-3 text-sm font-extrabold hover:bg-[#eef0ff]">{other.name} <ArrowRight className="size-4 text-[#2b31d8]" aria-hidden="true" /></Link></li>
+                  ))}
+                </ul>
+                <Link href="/intelligence/market#browse" className="mt-3 inline-flex min-h-6 items-center gap-1 text-xs font-extrabold text-[#2b31d8] hover:underline"><ArrowLeft className="size-3" aria-hidden="true" /> Back to discovery</Link>
+              </div>
+            </DossierSection>
+
+            {isPex && <div id="pexiganan-network" className="scroll-mt-36"><PexEvidenceWayfinder /></div>}
+            <p className="max-w-4xl text-xs font-medium leading-6 text-[#4a4d56]">
+              Editorial research starting points, not grades of clinical effectiveness or material quality. Company-published supplier QC information is separate and unverified; no prices, purchases or recommendations for human consumption.
+            </p>
           </div>
-        )}
-        <p className="mt-9 max-w-4xl text-xs leading-6 text-[#818492]">
-          Editorial research starting points, not grades of clinical effectiveness or material quality. Company-published supplier QC information is separate and unverified; no prices, purchases or recommendations for human consumption.
-        </p>
+        </div>
       </div>
     </div>
   );

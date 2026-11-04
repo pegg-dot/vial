@@ -30,7 +30,7 @@ export function StudyBriefActions({ markdown, nctId }: { markdown: string; nctId
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
         {copied ? "Copied" : "Copy brief"}
       </button>
-      <button type="button" onClick={download} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#28234c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#44368d]">
+      <button type="button" onClick={download} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#111214] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2b31d8]">
         <Download className="size-4" /> Download brief
       </button>
       {error && <span role="alert" className="text-sm text-[#a33926]">Copy unavailable. Download the brief instead.</span>}

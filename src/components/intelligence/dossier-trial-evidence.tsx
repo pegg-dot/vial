@@ -7,8 +7,8 @@ import { StudyBriefActions } from "@/components/intelligence/study-brief-actions
 
 export function TrialEvidenceLoading({ nctId }: { nctId: string }) {
   return (
-    <section aria-label="Selected official trial evidence" className="rounded-2xl border border-[#dedee8] bg-white p-6 sm:p-7">
-      <h2 className="text-base font-semibold text-[#28293b]">Checking the selected trial · {nctId}</h2>
+    <section aria-label="Selected official trial evidence" className="rounded-[14px] border border-[#111214]/15 bg-white p-6">
+      <h3 className="text-base font-semibold text-[#28293b]">Checking the selected trial · {nctId}</h3>
       <p className="mt-3 text-sm leading-7 text-[#777b8b]">Loading its registered outcomes and publication relationships from official NIH sources. These links may be temporarily unavailable.</p>
     </section>
   );
@@ -31,27 +31,27 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
   const card = dossierTrialEvidence(subject, lookup);
 
   if (card.state !== "verified") return (
-    <section id="evidence-review" aria-label="Selected official trial evidence" className="rounded-2xl border border-[#e4d5bf] bg-[#fffaf0] p-6 sm:p-7">
+    <section id="evidence-review" aria-label="Selected official trial evidence" className="rounded-[14px] border-2 border-[#111214] bg-[#fff3d8] p-6">
       <div className="flex items-center gap-2 text-[#9b6b22]"><ShieldAlert className="size-4" /><span className="text-xs font-bold uppercase tracking-[.1em]">Source status · Needs verification</span></div>
-      <h2 className="mt-3 text-lg font-semibold text-[#3b3544]">The selected trial could not be verified.</h2>
+      <h3 className="mt-3 text-lg font-semibold text-[#3b3544]">The selected trial could not be verified.</h3>
       <p className="mt-3 text-sm leading-7 text-[#706a6a]">
         {card.state === "identity-not-verified"
           ? "The fetched study did not reliably match this subject in its intervention fields. We are not treating it as supporting evidence."
           : "The registry record was unavailable or incomplete during this check. This does not mean the trial or its publications do not exist."}
       </p>
-      <a href={card.registryUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#6d4b9d] underline">
+      <a href={card.registryUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#2b31d8] underline">
         Open {card.nctId} at ClinicalTrials.gov <ArrowUpRight className="size-4" />
       </a>
     </section>
   );
 
   return (
-    <section id="evidence-review" aria-label="Selected official trial evidence" className="overflow-hidden rounded-2xl border border-[#d8d3ec] bg-white">
-      <div className="border-b border-[#e7e3f1] bg-[#f4f1fe] px-6 py-6 sm:px-7">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[.1em] text-[#67549e]">
+    <section id="evidence-review" aria-label="Selected official trial evidence" className="overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
+      <div className="border-b border-[#111214/15] bg-[#eef0ff] px-6 py-6 sm:px-7">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[.1em] text-[#2b31d8]">
           <CheckCircle2 className="size-4" /> Official source check · {card.nctId}
         </div>
-        <h2 className="mt-3 text-xl font-semibold tracking-[-.035em] text-[#2a2942]">What the selected trial actually records</h2>
+        <h3 className="mt-3 text-xl font-semibold tracking-[-.035em] text-[#111214]">What the selected trial actually records</h3>
         <p className="mt-2 text-sm leading-6 text-[#626079]">
           This is one verified intervention-name match, not every study of {subject.name}. It gives you original registry facts and exact PubMed citation relationships, not a conclusion about clinical benefit.
         </p>
