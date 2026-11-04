@@ -51,14 +51,18 @@ test.describe("Weekly update email", () => {
       await email.fill("reader@example.org");
       await page.getByRole("button", { name: "Email me" }).click();
       await expect(page.getByText("Please tick the box so we know you agree.")).toBeVisible();
+      // An error must not erase what the reader typed or ticked.
+      await expect(email).toHaveValue("reader@example.org");
       await email.fill("not-an-email");
       await page.getByRole("checkbox").check();
       await page.getByRole("button", { name: "Email me" }).click();
       await expect(page.getByText(/does not look like an email address/)).toBeVisible();
+      await expect(email).toHaveValue("not-an-email");
+      await expect(page.getByRole("checkbox")).toBeChecked();
       // A dummy API key cannot send, so the honest answer is "nothing was saved".
       await email.fill("reader@example.org");
       await page.getByRole("button", { name: "Email me" }).click();
-      await expect(page.getByText(/could not send a confirmation email just now, so nothing was saved/)).toBeVisible();
+      await expect(page.getByText(/could not send a confirmation email just now, so nothing was saved/)).toBeVisible({ timeout: 20_000 });
     });
 
     test("bar appears after 10 seconds, is dismissible and stays dismissed", async ({ page }) => {

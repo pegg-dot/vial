@@ -28,7 +28,7 @@ export default function UpdatesPage() {
         <p role="status" className="mt-6 rounded-xl border-2 border-[#111214] bg-[#fff3d8] p-4 text-sm font-semibold leading-6">The update email is not switched on yet, so we are not collecting addresses. Please check back later.</p>
       )}
       <p className="mt-8 text-xs font-medium leading-6 text-[#666970]">
-        Questions or deletion requests: see the <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-4">privacy notice</Link>. This is a research-evidence service; the email contains no sales, price or availability information.
+        Questions or deletion requests: see the <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-4">privacy notice</Link>. This is a research-evidence service; the email contains registry updates only.
       </p>
     </div>
   );

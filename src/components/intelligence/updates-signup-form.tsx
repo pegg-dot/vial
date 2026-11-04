@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { subscribeAction, type SubscribeState } from "@/app/intelligence/updates/actions";
 
@@ -14,9 +14,17 @@ const MESSAGE: Record<SubscribeState["status"], string> = {
 };
 
 export function UpdatesSignupForm() {
-  const [state, action, pending] = useActionState(subscribeAction, { status: "idle" } as SubscribeState);
+  const [state, setState] = useState<SubscribeState>({ status: "idle" });
+  const [pending, startTransition] = useTransition();
+  // Submitted by hand rather than through a form `action`, because React resets an action form
+  // afterwards and would erase the reader's address and ticked box after every error.
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    startTransition(async () => { setState(await subscribeAction(state, data)); });
+  };
   return (
-    <form action={action} className="mt-6 space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
       <div>
         <label htmlFor="digest-email" className="block text-sm font-bold">Email address</label>
         <input id="digest-email" name="email" type="email" autoComplete="email" required maxLength={254}
