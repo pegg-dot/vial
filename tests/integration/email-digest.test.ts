@@ -69,6 +69,8 @@ describe("email-only update list", () => {
   it("does not reveal or re-mail an address that is already active, and throttles confirm re-sends", async () => {
     const db = await getDatabase();
     await addActive("on@example.org");
+    // Past the re-send throttle, so only the "already active" rule can stop a second email.
+    await db.query(`UPDATE digest_subscribers SET confirm_sent_at = NOW() - INTERVAL '2 hours' WHERE email='on@example.org'`);
     expect(await requestSubscription(db, "ON@example.org", mail)).toBe("sent");
     expect(outbox).toHaveLength(0);
     expect(await requestSubscription(db, "p@example.org", mail)).toBe("sent");
