@@ -38,14 +38,16 @@ export function ResearchFileGradeMark({ subject, withCount = false }: {
 
 /** Reuses original VialGrade's decomposed grade pattern but deliberately
  * removes the vendor trust, purity and product scores. */
-export function ResearchFileGradeCard({ subject, compact = false }: {
+export function ResearchFileGradeCard({ subject, compact = false, bare = false }: {
   subject: ResearchSubject;
   compact?: boolean;
+  /** Drop the card's own frame when it already sits inside a framed section. */
+  bare?: boolean;
 }) {
   const file = gradeResearchFile(subject);
   return (
     <section aria-label={"Research file grade for " + subject.name}
-      className={"overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white " + (compact ? "p-4" : "p-5 sm:p-6")}>
+      className={bare ? "bg-white" : "overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white " + (compact ? "p-4" : "p-5 sm:p-6")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#217f72]">
           <SearchCheck className="size-4" /> VialGrade research file

@@ -104,20 +104,33 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
             The registry assigns each paper a role such as RESULT, BACKGROUND or DERIVED. PubMed may independently list the same trial ID. Neither verifies the article&apos;s conclusions.
           </p>
           {card.citations.length > 0 ? (
-            <ul className="mt-3 space-y-3">
-              {card.citations.map(ref => (
-                <li key={ref.pmid} className="rounded-xl border border-[#e8e7ee] bg-[#fcfbfe] p-4">
-                  <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-[#696782]">
-                    <span className="rounded-md bg-[#eeebfa] px-2 py-1">Registry: {ref.registryRole}</span>
+            (() => {
+              const head = card.citations.slice(0, 4);
+              const rest = card.citations.slice(4);
+              const row = (ref: (typeof card.citations)[number]) => (
+                <li key={ref.pmid} className="rounded-xl border border-[#111214]/15 bg-[#fbfbf8] p-3.5">
+                  <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-[#4a4d56]">
+                    <span className="rounded-md bg-[#eef0ff] px-2 py-1">Registry: {ref.registryRole}</span>
                     <span className="rounded-md bg-[#f0f1f5] px-2 py-1">{crosscheckText(ref.exactNct)}</span>
                   </div>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-[#313248]">{ref.pubmedTitle ?? "Article metadata not independently available"}</p>
-                  <a href={ref.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#594b9b] hover:underline">
+                  <p className="mt-1.5 text-[13px] font-semibold leading-5 text-[#111214]">{ref.pubmedTitle ?? "Article metadata not independently available"}</p>
+                  <a href={ref.url} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">
                     PMID {ref.pmid} · Open original PubMed record <ArrowUpRight className="size-3" />
                   </a>
                 </li>
-              ))}
-            </ul>
+              );
+              return (
+                <>
+                  <ul className="mt-3 grid gap-2.5 md:grid-cols-2">{head.map(row)}</ul>
+                  {rest.length > 0 && (
+                    <details className="mt-2.5">
+                      <summary className="inline-flex min-h-6 cursor-pointer items-center text-xs font-extrabold text-[#2b31d8]">Show {rest.length} more cited papers</summary>
+                      <ul className="mt-2.5 grid gap-2.5 md:grid-cols-2">{rest.map(row)}</ul>
+                    </details>
+                  )}
+                </>
+              );
+            })()
           ) : <p className="mt-3 text-sm leading-6 text-[#6e7280]">No PMID is in the inspected registry reference fields. This does not mean no paper exists.</p>}
         </div>
         <div className="rounded-xl bg-[#f7f7fa] p-4">

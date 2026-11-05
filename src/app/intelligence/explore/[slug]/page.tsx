@@ -60,23 +60,23 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
         </nav>
 
         <section aria-label={subject.name + " summary"} className="ink hard mt-5 overflow-hidden rounded-[22px] bg-white">
-          <div className="grid lg:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="grid lg:grid-cols-[210px_minmax(0,1fr)]">
             <div className="border-b-2 border-[#111214] lg:border-b-0 lg:border-r-2 [&>div]:border-b-0 lg:[&>div]:h-full" style={{ backgroundColor: theme.tint }}>
               <ResearchSubjectArt subject={subject} hero />
             </div>
-            <div className="px-6 pb-7 pt-7 sm:px-9 sm:pb-8 sm:pt-8">
+            <div className="px-6 pb-5 pt-5 sm:px-8">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="ink-1 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-[.1em]" style={{ backgroundColor: theme.tint, color: theme.color }}>{theme.name}</span>
                 <span className="text-xs font-semibold text-[#4a4d56]">Curated identity source · 18 Oct 2026</span>
               </div>
-              <h1 className="mt-4 text-balance text-[clamp(2.6rem,6vw,4.75rem)] font-extrabold leading-[.92] tracking-[-.055em] text-[#111214]">{subject.name}</h1>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
+              <h1 className="mt-2 text-balance text-[clamp(2rem,4vw,3.25rem)] font-extrabold leading-[.95] tracking-[-.05em] text-[#111214]">{subject.name}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 {isPex && <span className="ink-1 rounded-full bg-[#e6fbf6] px-3 py-1.5 text-xs font-extrabold text-[#0b6b60]">{file.linkedCount} of 3 research source types on file</span>}
                 <ResearchFileGradeMark subject={subject} withCount />
               </div>
               <p className="mt-2 max-w-2xl text-xs font-medium leading-5 text-[#4a4d56]">This letter describes linked source types in our file, not how promising or safe the compound is.</p>
-              <p className="mt-4 max-w-3xl text-base font-medium leading-7 text-[#3a3d46]">{subject.identity}</p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <p className="mt-3 max-w-3xl text-[15px] font-medium leading-6 text-[#3a3d46]">{subject.identity}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2.5">
                 <a href={isPex ? "#research-workspace" : "#overview"}
                   className="ink hard-sm press inline-flex min-h-11 items-center gap-2 rounded-full bg-[#2b31d8] px-5 text-sm font-extrabold text-white">
                   {isPex ? "Investigate the evidence" : "Start with the research question"} <ArrowRight className="size-4" />
@@ -98,7 +98,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               ["What is linked?", file.linkedCount + " of 3 research source types in this file."],
               ["What is not verified?", "Clinical benefit or any physical sample."],
             ].map(([term, text], index) => (
-              <div key={term} className={"px-6 py-4 " + (index < 2 ? "border-b border-[#111214]/15 sm:border-b-0 sm:border-r" : "")}>
+              <div key={term} className={"px-5 py-3 " + (index < 2 ? "border-b border-[#111214]/15 sm:border-b-0 sm:border-r" : "")}>
                 <dt className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#0b6b60]">{term}</dt>
                 <dd className="mt-1 text-sm font-bold text-[#111214]">{text}</dd>
               </div>
@@ -106,11 +106,11 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
           </dl>
         </section>
 
-        {isPex && <div className="mt-7"><PexigananResearchWorkspace /></div>}
+        {isPex && <div className="mt-5"><PexigananResearchWorkspace /></div>}
 
-        <div className="mt-6 grid grid-cols-1 items-start gap-x-8 gap-y-5 lg:grid-cols-[210px_minmax(0,1fr)]">
+        <div className="mt-5 grid grid-cols-1 items-start gap-x-6 gap-y-4 lg:grid-cols-[180px_minmax(0,1fr)]">
           <DossierToc items={toc} />
-          <div className="min-w-0 space-y-7">
+          <div className="min-w-0 grid items-start gap-4 xl:grid-cols-2">
             <DossierSection id="overview" number={1} eyebrow="Overview" title={subject.studyQuestion}
               intro={"Start by checking studies of " + subject.mechanism.toLowerCase() + ", rather than inferring clinical outcomes or experiment suitability from the molecule name."}>
               <DossierPerspective research={subject.scientistAngle} analyst={subject.analystAngle} />
@@ -123,10 +123,10 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
 
             <DossierSection id="file-grade" number={2} eyebrow="Source file" title="Which source types are linked"
               intro="A letter for how many kinds of original source sit in our file. It is about coverage, not about the compound.">
-              <ResearchFileGradeCard subject={subject} />
+              <ResearchFileGradeCard subject={subject} compact bare />
             </DossierSection>
 
-            <DossierSection id="studies" number={3} eyebrow="Studies" title="What the registered studies record"
+            <DossierSection className="xl:col-span-2" id="studies" number={3} eyebrow="Studies" title="What the registered studies record"
               intro="Original registry facts and exact citation links. A registered study is not a result.">
               {isPex && <PexEvidenceClaimGrid compact />}
               {isPex ? (
@@ -153,7 +153,7 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               )}
             </DossierSection>
 
-            <DossierSection id="sources" number={4} eyebrow="Sources" title="Follow the source trail"
+            <DossierSection className="xl:row-span-2" id="sources" number={4} eyebrow="Sources" title="Follow the source trail"
               intro="Every row links to the original record. Search results have not been individually evaluated as evidence.">
               {isPex ? <PexSourceRegister /> : (
                 <ul className="divide-y divide-[#111214]/10 rounded-[14px] border border-[#111214]/15">
@@ -200,8 +200,8 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
               </div>
             </DossierSection>
 
-            {isPex && <div id="pexiganan-network" className="scroll-mt-36"><PexEvidenceWayfinder /></div>}
-            <p className="max-w-4xl text-xs font-medium leading-6 text-[#4a4d56]">
+            {isPex && <div id="pexiganan-network" className="scroll-mt-36 xl:col-span-2"><PexEvidenceWayfinder /></div>}
+            <p className="max-w-4xl text-xs xl:col-span-2 font-medium leading-6 text-[#4a4d56]">
               Editorial research starting points, not grades of clinical effectiveness or material quality. Company-published supplier QC information is separate and unverified; no prices, purchases or recommendations for human consumption.
             </p>
           </div>
