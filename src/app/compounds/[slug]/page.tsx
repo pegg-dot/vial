@@ -15,6 +15,7 @@ import { GoalTags } from "@/components/goal-tags";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { UsLegalNotice } from "@/components/us-legal-notice";
 import { PriceSeries } from "@/components/price-series";
+import { hidesCommerce } from "@/lib/public-research-release";
 import { describeCompoundBasis, formatPct } from "@/lib/price-trend";
 import { getCompoundDailyMedianSeries } from "@/server/ingest/price-history";
 import { FollowButton } from "@/components/follow-button";
@@ -69,6 +70,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const [publicData, principal] = await Promise.all([loadCompoundPublicData(slug), getCurrentPrincipal()]);
   const { listings, labTests, research, regulatory, allPassports, medianSeries } = publicData;
   const passports = allPassports as unknown as PassportRow[];
+  // Under the evidence-only release this page is for looking into a compound: lab evidence, passports,
+  // research. No prices, listings, market table or follow button.
+  const noCommerce = hidesCommerce();
   const edu = educationFor(slug);
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
   // (so we only ever link to compounds we actually track) and carry its cheapest listing price.
@@ -90,7 +94,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   // navigable page instead of twelve unbounded stacked sections.
   const navItems = [
     ...(edu ? [{ id: "understand", label: "Understand" }] : []),
-    ...(listings.length ? [{ id: "market", label: "The market" }] : []),
+    ...(listings.length && !noCommerce ? [{ id: "market", label: "The market" }] : []),
     ...(labTests.length ? [{ id: "lab-tests", label: "Lab tests" }] : []),
     ...(research.length || regulatory ? [{ id: "research", label: "Research" }] : []),
     ...(stacked.length || inStacks.length ? [{ id: "stacked", label: "Stacked with" }] : []),
@@ -129,29 +133,40 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
               <div className="mt-6 flex flex-wrap gap-2">
                 {compound.aliases.map((alias) => <span key={alias} className="ink-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#111214]/70">{alias}</span>)}
               </div>
-              <div className="mt-6"><FollowButton entityType="compound" entitySlug={slug} entityName={compound.name} initialFollowed={followed} /></div>
+              {noCommerce ? null : <div className="mt-6"><FollowButton entityType="compound" entitySlug={slug} entityName={compound.name} initialFollowed={followed} /></div>}
             </div>
-            <div className="ink hard-lg rounded-[22px] bg-white p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Observed median price</p>
-                  {/* A compound with no listings has no observed price. Rendering the stored 0.00
-                      unguarded published "$0.00" as though it were a real market observation on
-                      liraglutide and pentadeca-arginate — a missing value dressed as a number,
-                      which is the exact failure this site exists to catch. The market table and the
-                      sidebar in this same file already guard it; the hero did not. */}
-                  <p className="mt-1.5 text-5xl font-extrabold tracking-[-.055em]">
-                    {compound.medianPrice > 0 ? formatCurrency(compound.medianPrice) : "—"}
-                  </p>
-                  {compound.medianPrice > 0 ? null : (
-                    <p className="mt-1 text-xs font-semibold text-[var(--muted)]">No listings on record, so there is no observed price.</p>
-                  )}
-                </div>
-                <span className={`ink-1 rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums ${earned ? "bg-white text-[#111214]" : "bg-white text-[var(--muted)]"}`} title={basisCopy}>{earned ? `${formatPct(compound.priceChangeBasis!.medianPct!)} · 30d` : "Δ —"}</span>
+            {noCommerce ? (
+              <div className="ink hard-lg rounded-[22px] bg-white p-6">
+                <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Independent lab evidence on record</p>
+                <p className="mt-1.5 text-5xl font-extrabold tracking-[-.055em]">{compound.coaCount}</p>
+                <p className="mt-1 text-xs font-semibold text-[var(--muted)]">
+                  {compound.coaCount === 1 ? "certificate" : "certificates"}{compound.medianPurity != null ? " · median reported purity " + compound.medianPurity.toFixed(1) + "%" : ""} · {passports.length} batch {passports.length === 1 ? "passport" : "passports"}
+                </p>
+                <p className="mt-4 text-[11px] leading-4 text-black/60">{PURITY_PROVENANCE_SHORT} Purity is a lab&rsquo;s figure for one sample, not a grade of the compound or of any seller. <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">How grades work</Link></p>
               </div>
-              <div className="mt-5 h-28"><PriceSeries points={medianPoints} description={basisCopy} accent={compound.accent[0]} height={94} compact /></div>
-              <p className="mt-3 text-[11px] leading-4 text-black/60">{basisCopy}</p>
-            </div>
+            ) : (
+  <div className="ink hard-lg rounded-[22px] bg-white p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Observed median price</p>
+                    {/* A compound with no listings has no observed price. Rendering the stored 0.00
+                        unguarded published "$0.00" as though it were a real market observation on
+                        liraglutide and pentadeca-arginate — a missing value dressed as a number,
+                        which is the exact failure this site exists to catch. The market table and the
+                        sidebar in this same file already guard it; the hero did not. */}
+                    <p className="mt-1.5 text-5xl font-extrabold tracking-[-.055em]">
+                      {compound.medianPrice > 0 ? formatCurrency(compound.medianPrice) : "—"}
+                    </p>
+                    {compound.medianPrice > 0 ? null : (
+                      <p className="mt-1 text-xs font-semibold text-[var(--muted)]">No listings on record, so there is no observed price.</p>
+                    )}
+                  </div>
+                  <span className={`ink-1 rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums ${earned ? "bg-white text-[#111214]" : "bg-white text-[var(--muted)]"}`} title={basisCopy}>{earned ? `${formatPct(compound.priceChangeBasis!.medianPct!)} · 30d` : "Δ —"}</span>
+                </div>
+                <div className="mt-5 h-28"><PriceSeries points={medianPoints} description={basisCopy} accent={compound.accent[0]} height={94} compact /></div>
+                <p className="mt-3 text-[11px] leading-4 text-black/60">{basisCopy}</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -160,9 +175,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
       <section className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat icon={Layers3} label="Active listings" value={String(compound.listings)} />
+          {noCommerce ? <Stat icon={Layers3} label="Batch passports" value={String(passports.length)} /> : <Stat icon={Layers3} label="Active listings" value={String(compound.listings)} />}
           <Stat icon={FileSearch} label="Independent lab tests" value={compound.medianPurity != null ? `${compound.coaCount} · ${compound.medianPurity.toFixed(1)}%` : String(compound.coaCount)} />
-          <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />
+          {noCommerce ? <Stat icon={ChartNoAxesCombined} label="Research findings on file" value={String(research.length)} /> : <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />}
           <Stat icon={BookOpen} label="Known aliases" value={String(compound.aliases.length + 1)} />
         </div>
         {compound.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link></p>}
@@ -177,7 +192,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       {/* THE market surface — marketplace first, science after. Top picks answer "which one?"
           four ways; the leaderboard below ranks everything by real cost. The old page rendered
           the same ~48 listings TWICE (a 49-row table AND a 48-card grid) — one surface now. */}
-      {listings.length ? (
+      {listings.length && !noCommerce ? (
         <div id="market" className="scroll-mt-[140px]">
           <section className="mx-auto max-w-[1320px] px-5 pt-6 sm:px-8">
             <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#5a4be0]">Current market</p>
@@ -234,7 +249,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                       <p className="truncate text-lg font-extrabold tracking-[-.03em]">{c.name}</p>
                       <p className="mt-0.5 text-xs font-semibold text-[var(--muted)]">{c.category}</p>
                     </div>
-                    <span className="shrink-0 text-right text-sm font-extrabold tabular-nums">{c.listings > 0 ? formatCurrency(c.medianPrice) : "—"}<span className="mt-0.5 block text-[10px] font-semibold text-[var(--muted)]">{c.listings > 0 ? "median" : "no listings"}</span></span>
+                    {noCommerce ? null : <span className="shrink-0 text-right text-sm font-extrabold tabular-nums">{c.listings > 0 ? formatCurrency(c.medianPrice) : "—"}<span className="mt-0.5 block text-[10px] font-semibold text-[var(--muted)]">{c.listings > 0 ? "median" : "no listings"}</span></span>}
                   </div>
                   {cEdu?.goals?.length ? <GoalTags goals={cEdu.goals} limit={2} /> : null}
                   {cEdu?.summary ? <p className="line-clamp-2 text-xs font-medium leading-5 text-black/60">{cEdu.summary}</p> : null}

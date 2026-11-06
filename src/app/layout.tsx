@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 import { UpdatesPromptHost } from "@/components/intelligence/updates-prompt-host";
-import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
+import { evidenceOnlyPublicRelease, publicBrowseRelease } from "@/lib/public-research-release";
 import { ResearchReleaseHeader, ResearchReleaseFooter } from "@/components/research-release-chrome";
 import { HideOnAdmin } from "@/components/hide-on-admin";
 import { ResearchWorkerRetirement } from "@/components/research-worker-retirement";
@@ -88,7 +88,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <html lang="en">
         <body className="min-h-screen bg-[var(--background)] text-[var(--foreground)] antialiased">
           <HideOnAdmin><ResearchReleaseHeader /></HideOnAdmin>
-          <main id="main-content">{children}</main>
+          {/* Browse release: the old pages' save/compare controls read the marketplace state. It is
+              mounted with an EMPTY catalog, so nothing reads the vendor database for chrome. */}
+          <main id="main-content">{publicBrowseRelease()
+            ? <MarketplaceProvider catalog={emptyCatalogLite(new Date().toISOString())} authenticated={false}>{children}</MarketplaceProvider>
+            : children}</main>
           <HideOnAdmin><ResearchReleaseFooter /></HideOnAdmin>
           <ResearchWorkerRetirement />
           <UpdatesPromptHost />

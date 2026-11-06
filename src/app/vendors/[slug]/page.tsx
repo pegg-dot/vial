@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
+import { evidenceOnlyPublicRelease, hidesCommerce, publicBrowseRelease } from "@/lib/public-research-release";
 import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
@@ -126,7 +126,10 @@ const loadVendorPublicData = unstable_cache(
 );
 
 export default async function VendorPage({ params }: { params: Promise<{ slug: string }> }) {
-  if (evidenceOnlyPublicRelease()) redirect("/intelligence");
+  if (evidenceOnlyPublicRelease() && !publicBrowseRelease()) redirect("/intelligence");
+  // Browsing a vendor under the evidence-only release shows its grade, lab evidence, regulatory records
+  // and history. No catalog, prices, offers, buyer reviews, community posts or follow button.
+  const noCommerce = hidesCommerce();
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
@@ -248,7 +251,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
     { id: "network", label: "Who owns it" },
     { id: "catalog", label: "Catalog" },
     { id: "history", label: "History" },
-  ].filter((x): x is { id: string; label: string } => Boolean(x));
+  ].filter((x): x is { id: string; label: string } => Boolean(x) && !(noCommerce && ["offers", "trackers", "reviews", "catalog"].includes(x!.id)));
 
   return (
     <>
@@ -281,7 +284,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                   {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> Founded {vendor.founded}</span>}
                   {vendor.lastObserved && <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>}
                 </div>
-                <div className="mt-5"><FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} /></div>
+                {noCommerce ? null : <div className="mt-5"><FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} /></div>}
               </div>
             </div>
 
@@ -295,6 +298,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             <HeroStat icon={FlaskConical} value={String(vendor.coaCount)} label="Independent lab tests" />
             <HeroStat icon={ShieldCheck} value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median tested purity" />
             <HeroStat icon={PackageSearch} value={String(secondaryValue)} label={secondaryLabel} />
+            {noCommerce ? null : <>
             <HeroStat
               icon={priceIndex.medianPctVsMarket ? (priceIndex.medianPctVsMarket > 0 ? TrendingUp : TrendingDown) : Tag}
               value={priceIndex.medianPctVsMarket != null ? `${priceIndex.medianPctVsMarket > 0 ? "+" : ""}${priceIndex.medianPctVsMarket}%` : "—"}
@@ -302,6 +306,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
               accent={!priceIndex.medianPctVsMarket ? undefined : priceIndex.medianPctVsMarket < 0 ? "#0e8f80" : "#d3372c"}
             />
             <HeroStat icon={Star} value={vendor.reviewCount > 0 ? String(vendor.reviewCount) : "—"} label="Buyer reviews on file" />
+            </>}
           </div>
           {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link></p>}
         </div>
@@ -408,6 +413,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         )}
       </div>
 
+      {noCommerce ? null : <>
       <div id="trackers" className="scroll-mt-[140px]">
         {aggregatorRatings.length > 0 ? (
           <AggregatorRatingsPanel ratings={aggregatorRatings} vendorName={vendor.name} />
@@ -436,6 +442,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         )}
       </div>
 
+      </>}
+      {noCommerce ? null : (
       <div id="reviews" className="scroll-mt-[140px]">
         {vendorReview ? (
           <VendorReviewsPanel review={vendorReview} vendorName={vendor.name} />
@@ -460,6 +468,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </section>
         )}
       </div>
+      )}
 
       {/* Regulators get their own section even when the answer is "nothing on file" — that is the
           answer most readers came for, and the jump-nav chip used to land on an empty div. When
@@ -481,11 +490,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       </section>
 
       <VendorNewsPanel items={vendorNews} vendorName={vendor.name} vendorSlug={vendor.slug} />
-      {vendorOffers.length > 0 && <div id="offers" className="scroll-mt-[140px]"><VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} /></div>}
+      {vendorOffers.length > 0 && !noCommerce && <div id="offers" className="scroll-mt-[140px]"><VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} /></div>}
       <div id="network" className="scroll-mt-[140px]"><VendorLinksPanel links={vendorLinks} vendorName={vendor.name} /></div>
 
       {/* ── Catalog + history ───────────────────────────────────────────────────────── */}
-      {catalogStale && (
+      {catalogStale && !noCommerce && (
         <div className="mx-auto mt-8 max-w-[1320px] px-5 sm:px-8"><div className="ink-1 hard-sm flex items-start gap-3 rounded-[16px] bg-[#fff4e0] p-4 text-sm font-medium leading-6 text-[#b26a00]">
           <CircleDashed className="mt-0.5 size-4 shrink-0" />
           <span>
@@ -496,8 +505,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         </div></div>
       )}
       <section id="catalog" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-8 sm:px-8 sm:py-10">
-        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-          <div>
+        <div className={noCommerce ? "grid gap-8" : "grid gap-8 lg:grid-cols-[1fr_340px]"}>
+          {noCommerce ? null : <div>
             {listings.length > 0 ? (
               <>
                 <SectionHead eyebrow="Catalog" title={`What does ${vendor.name} sell, and at what price?`} note={priceIndex.medianPctVsMarket == null ? undefined : priceIndex.medianPctVsMarket < 0 ? "typically below market" : priceIndex.medianPctVsMarket > 0 ? "typically above market" : "around market rate"} />
@@ -515,7 +524,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
                 />
               </>
             )}
-          </div>
+          </div>}
 
           <aside id="history" className="scroll-mt-[140px]">
             <VendorHistoryRail history={vendor.history} vendorName={vendor.name} />
