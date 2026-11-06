@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ResearchScopeNotice } from "@/components/research-scope-notice";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
@@ -16,6 +16,7 @@ import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { UsLegalNotice } from "@/components/us-legal-notice";
 import { PriceSeries } from "@/components/price-series";
 import { hidesCommerce } from "@/lib/public-research-release";
+import { researchSubjectBySlug } from "@/lib/research-explorer";
 import { describeCompoundBasis, formatPct } from "@/lib/price-trend";
 import { getCompoundDailyMedianSeries } from "@/server/ingest/price-history";
 import { FollowButton } from "@/components/follow-button";
@@ -66,7 +67,11 @@ const loadCompoundPublicData = unstable_cache(
 export default async function CompoundPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const compound = await getCompoundBySlug(slug);
-  if (!compound) notFound();
+  if (!compound) {
+    // A compound with a research dossier but no catalog row still has somewhere to go.
+    if (hidesCommerce() && researchSubjectBySlug(slug)) redirect("/intelligence/explore/" + slug);
+    notFound();
+  }
   const [publicData, principal] = await Promise.all([loadCompoundPublicData(slug), getCurrentPrincipal()]);
   const { listings, labTests, research, regulatory, allPassports, medianSeries } = publicData;
   const passports = allPassports as unknown as PassportRow[];

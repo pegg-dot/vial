@@ -36,6 +36,12 @@ test.describe("Browse release (read-only original pages)", () => {
     await expect(page.getByRole("button", { name: /follow/i })).toHaveCount(0);
   });
 
+  test("a compound with a research dossier but no catalog row goes to the dossier", async ({ page }) => {
+    await page.goto("/compounds/oxytocin");
+    await expect(page).toHaveURL(/\/(compounds\/oxytocin|intelligence\/explore\/oxytocin)$/);
+    await expect(page.locator("main h1").first()).toBeVisible();
+  });
+
   test("a vendor page shows its grade and lab tests, not a catalog or offers", async ({ page }) => {
     await page.goto("/vendors/arcwell-analytics");
     await expect(page.locator("#lab-tests")).toBeVisible();

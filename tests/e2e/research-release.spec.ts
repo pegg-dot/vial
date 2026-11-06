@@ -51,6 +51,7 @@ test.describe("research-only production release gate", () => {
   test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Only applicable to the research-only deployment mode");
 
   test("removes old marketplace chrome and legacy vendor data from public access", async ({ page }) => {
+    test.skip(process.env.VIALGRADE_PUBLIC_BROWSE === "true", "Browse release deliberately opens these pages; see research-browse.spec.ts");
     await page.goto("/intelligence");
     await expect(page.getByRole("navigation", { name: "Research navigation" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Market", exact: true })).toHaveAttribute("href", "/intelligence/market");
@@ -105,6 +106,7 @@ test.describe("legacy account rights in research-only mode", () => {
   });
 
   test("historical account pages are read-only and do not require the retired marketplace provider", async ({ page }) => {
+    test.skip(process.env.VIALGRADE_PUBLIC_BROWSE === "true", "Browse release deliberately opens these pages; see research-browse.spec.ts");
     const clientErrors: string[] = [];
     page.on("pageerror", error => clientErrors.push(error.message));
 
