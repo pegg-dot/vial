@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { supplierConfidence, supplierGradesReleased, supplierRows, TENTATIVE_BELOW_CERTIFICATES } from "@/lib/supplier-grades";
 import type { VendorDirectoryEntry } from "@/lib/vendor-ranking";
 
@@ -15,10 +15,20 @@ function entry(over: Record<string, unknown> = {}, enforcement: "severe" | "caut
 }
 
 describe("supplier lens", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it("is off unless the flag is exactly true", () => {
-    expect(supplierGradesReleased(undefined)).toBe(false);
+    expect(supplierGradesReleased("")).toBe(false);
     expect(supplierGradesReleased("1")).toBe(false);
+    expect(supplierGradesReleased("TRUE")).toBe(false);
     expect(supplierGradesReleased("true")).toBe(true);
+  });
+
+  it("reads the deployment environment by default, whatever the machine running the tests has set", () => {
+    vi.stubEnv("VIALGRADE_SUPPLIER_GRADES", "true");
+    expect(supplierGradesReleased()).toBe(true);
+    vi.stubEnv("VIALGRADE_SUPPLIER_GRADES", "");
+    expect(supplierGradesReleased()).toBe(false);
   });
 
   it("marks thin evidence tentative and no evidence unrated", () => {
