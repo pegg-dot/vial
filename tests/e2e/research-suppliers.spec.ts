@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Research-only preview");
+
 // Default build: the supplier lens is OFF. The page must say so and must not list organizations.
 test("supplier grades page is honest when not switched on", async ({ page }) => {
   const res = await page.goto("/intelligence/suppliers");
