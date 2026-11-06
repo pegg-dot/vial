@@ -47,26 +47,26 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
 
   return (
     <section id="evidence-review" aria-label="Selected official trial evidence" className="overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
-      <div className="border-b border-[#111214/15] bg-[#eef0ff] px-6 py-6 sm:px-7">
+      <div className="border-b border-[#111214]/15 bg-[#eef0ff] px-5 py-4">
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[.1em] text-[#2b31d8]">
           <CheckCircle2 className="size-4" /> Official source check · {card.nctId}
         </div>
-        <h3 className="mt-3 text-xl font-semibold tracking-[-.035em] text-[#111214]">What the selected trial actually records</h3>
+        <h3 className="mt-2 text-lg font-extrabold tracking-[-.03em] text-[#111214]">What the selected trial actually records</h3>
         <p className="mt-2 text-sm leading-6 text-[#626079]">
           This is one verified intervention-name match, not every study of {subject.name}. It gives you original registry facts and exact PubMed citation relationships, not a conclusion about clinical benefit.
         </p>
       </div>
 
       <dl className="grid gap-0 border-b border-[#eae8ef] sm:grid-cols-3">
-        <div className="border-b border-[#eae8ef] px-6 py-4 sm:border-b-0 sm:border-r">
+        <div className="border-b border-[#eae8ef] px-5 py-3 sm:border-b-0 sm:border-r">
           <dt className="text-xs text-[#80808b]">Official study status</dt>
           <dd className="mt-1 text-sm font-semibold capitalize text-[#323147]">{card.status?.toLowerCase().replaceAll("_", " ") ?? "Not reported"}</dd>
         </div>
-        <div className="border-b border-[#eae8ef] px-6 py-4 sm:border-b-0 sm:border-r">
+        <div className="border-b border-[#eae8ef] px-5 py-3 sm:border-b-0 sm:border-r">
           <dt className="text-xs text-[#80808b]">Registry result reporting</dt>
           <dd className="mt-1 text-sm font-semibold text-[#323147]">{resultText(card.hasRegistryResults)}</dd>
         </div>
-        <div className="px-6 py-4">
+        <div className="px-5 py-3">
           <dt className="text-xs text-[#80808b]">Exact PubMed NCT links</dt>
           <dd className="mt-1 text-sm font-semibold text-[#323147]">
             {card.confirmedPubmedLinks} / {card.citations.length} cited PubMed IDs
@@ -74,7 +74,8 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
         </div>
       </dl>
 
-      <div className="space-y-5 px-6 py-6 sm:px-7">
+      <div className="grid gap-5 px-5 py-5 lg:grid-cols-2">
+        <div className="min-w-0 space-y-4">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#898394]">The trial&apos;s registered question</p>
           <h3 className="mt-1.5 text-base font-semibold leading-6 text-[#2e3043]">{card.studyTitle}</h3>
@@ -95,31 +96,8 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
           {card.enrollment && <span>Enrollment: {card.enrollment.count.toLocaleString("en-US")} ({card.enrollment.kind.toLowerCase()})</span>}
         </div>
 
-        <div className="border-t border-[#edeaf0] pt-4">
-          <div className="flex items-center gap-2">
-            <BookOpenCheck className="size-4 text-[#6c5d9e]" />
-            <h3 className="text-sm font-semibold text-[#323148]">Papers specifically cited by this registry</h3>
-          </div>
-          <p className="mt-1.5 text-xs leading-5 text-[#797d89]">
-            The registry assigns each paper a role such as RESULT, BACKGROUND or DERIVED. PubMed may independently list the same trial ID. Neither verifies the article&apos;s conclusions.
-          </p>
-          {card.citations.length > 0 ? (
-            <ul className="mt-3 space-y-3">
-              {card.citations.map(ref => (
-                <li key={ref.pmid} className="rounded-xl border border-[#e8e7ee] bg-[#fcfbfe] p-4">
-                  <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-[#696782]">
-                    <span className="rounded-md bg-[#eeebfa] px-2 py-1">Registry: {ref.registryRole}</span>
-                    <span className="rounded-md bg-[#f0f1f5] px-2 py-1">{crosscheckText(ref.exactNct)}</span>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-[#313248]">{ref.pubmedTitle ?? "Article metadata not independently available"}</p>
-                  <a href={ref.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#594b9b] hover:underline">
-                    PMID {ref.pmid} · Open original PubMed record <ArrowUpRight className="size-3" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : <p className="mt-3 text-sm leading-6 text-[#6e7280]">No PMID is in the inspected registry reference fields. This does not mean no paper exists.</p>}
         </div>
+        <div className="min-w-0 space-y-4">
         <div className="rounded-xl bg-[#f7f7fa] p-4">
           <div className="flex gap-2"><CircleHelp className="mt-0.5 size-4 shrink-0 text-[#786f9e]" /><p className="text-sm font-semibold text-[#3f3a58]">What this cannot establish</p></div>
           <p className="mt-2 text-xs leading-6 text-[#676b7a]">
@@ -145,6 +123,45 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
         <p className="text-[11px] leading-5 text-[#8c8e99]">
           Retrieved {card.checkedAt.slice(0, 16).replace("T", " ")} UTC. Source API responses may be cached for up to six hours. No individual research-history profile is created.
         </p>
+        </div>
+        <div className="border-t border-[#111214]/15 pt-4 lg:col-span-2">
+          <div className="flex items-center gap-2">
+            <BookOpenCheck className="size-4 text-[#6c5d9e]" />
+            <h3 className="text-sm font-semibold text-[#323148]">Papers specifically cited by this registry</h3>
+          </div>
+          <p className="mt-1.5 text-xs leading-5 text-[#797d89]">
+            The registry assigns each paper a role such as RESULT, BACKGROUND or DERIVED. PubMed may independently list the same trial ID. Neither verifies the article&apos;s conclusions.
+          </p>
+          {card.citations.length > 0 ? (
+            (() => {
+              const head = card.citations.slice(0, 4);
+              const rest = card.citations.slice(4);
+              const row = (ref: (typeof card.citations)[number]) => (
+                <li key={ref.pmid} className="rounded-xl border border-[#111214]/15 bg-[#fbfbf8] p-3.5">
+                  <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-[#4a4d56]">
+                    <span className="rounded-md bg-[#eef0ff] px-2 py-1">Registry: {ref.registryRole}</span>
+                    <span className="rounded-md bg-[#f0f1f5] px-2 py-1">{crosscheckText(ref.exactNct)}</span>
+                  </div>
+                  <p className="mt-1.5 text-[13px] font-semibold leading-5 text-[#111214]">{ref.pubmedTitle ?? "Article metadata not independently available"}</p>
+                  <a href={ref.url} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">
+                    PMID {ref.pmid} · Open original PubMed record <ArrowUpRight className="size-3" />
+                  </a>
+                </li>
+              );
+              return (
+                <>
+                  <ul className="mt-3 grid gap-2.5 md:grid-cols-2">{head.map(row)}</ul>
+                  {rest.length > 0 && (
+                    <details className="mt-2.5">
+                      <summary className="inline-flex min-h-6 cursor-pointer items-center text-xs font-extrabold text-[#2b31d8]">Show {rest.length} more cited papers</summary>
+                      <ul className="mt-2.5 grid gap-2.5 md:grid-cols-2">{rest.map(row)}</ul>
+                    </details>
+                  )}
+                </>
+              );
+            })()
+          ) : <p className="mt-3 text-sm leading-6 text-[#6e7280]">No PMID is in the inspected registry reference fields. This does not mean no paper exists.</p>}
+        </div>
       </div>
     </section>
   );

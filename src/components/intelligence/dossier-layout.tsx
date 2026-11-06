@@ -26,19 +26,19 @@ export function DossierToc({ items }: { items: readonly DossierTocItem[] }) {
 }
 
 /** The single frame every dossier section uses, so cards stop competing with each other. */
-export function DossierSection({ id, number, eyebrow, title, intro, children }: {
-  id: string; number: number; eyebrow: string; title: string; intro?: string; children: ReactNode;
+export function DossierSection({ id, number, eyebrow, title, intro, className = "", children }: {
+  id: string; number: number; eyebrow: string; title: string; intro?: string; className?: string; children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={id + "-title"} className="ink hard scroll-mt-36 rounded-[20px] bg-white">
-      <header className="border-b-2 border-[#111214] px-6 py-5 sm:px-8">
-        <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">
+    <section id={id} aria-labelledby={id + "-title"} className={"ink hard-sm scroll-mt-36 rounded-[16px] bg-white " + className}>
+      <header className="border-b-2 border-[#111214] px-5 py-3.5">
+        <p className="text-[10.5px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">
           <span className="font-mono">{String(number).padStart(2, "0")}</span> · {eyebrow}
         </p>
-        <h2 id={id + "-title"} className="mt-2 text-balance text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold leading-[1.05] tracking-[-.04em] text-[#111214]">{title}</h2>
-        {intro && <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#4a4d56]">{intro}</p>}
+        <h2 id={id + "-title"} className="mt-1 text-balance text-[clamp(1.125rem,1.6vw,1.375rem)] font-extrabold leading-[1.15] tracking-[-.03em] text-[#111214]">{title}</h2>
+        {intro && <p className="mt-1 max-w-3xl text-[13px] font-medium leading-5 text-[#4a4d56]">{intro}</p>}
       </header>
-      <div className="space-y-5 px-6 py-6 sm:px-8">{children}</div>
+      <div className="space-y-4 px-5 py-4">{children}</div>
     </section>
   );
 }
