@@ -7,6 +7,7 @@ import { SHELVES } from "@/lib/market-taxonomy";
 import { CompoundsExperience } from "@/components/market/compounds-experience";
 import { DataUnavailable } from "@/components/home-data-unavailable";
 import { hidesCommerce } from "@/lib/public-research-release";
+import { projectCatalog } from "@/lib/evidence-projection";
 import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = { title: "Compound directory", description: "Browse canonical compound records, market coverage, and evidence context.", alternates: { canonical: "/compounds" } };
@@ -52,7 +53,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
     </section>
 
     <div className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
-      <CompoundsExperience catalog={catalog} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
+      <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
     </div>
   </>;
 }

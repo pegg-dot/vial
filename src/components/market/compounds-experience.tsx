@@ -185,7 +185,7 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
         </div>
       )}
 
-      {stacks.length > 0 && (
+      {stacks.length > 0 && !hidePrices && (
         <CollectionRow eyebrow="Commonly discussed" title="Popular stacks" blurb="Combinations the research community talks about — not a protocol.">
           {stacks.map((r) => <StackCard key={r.stack.slug} resolved={r} />)}
         </CollectionRow>
