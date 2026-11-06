@@ -527,7 +527,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           </div>}
 
           <aside id="history" className="scroll-mt-[140px]">
-            <VendorHistoryRail history={vendor.history} vendorName={vendor.name} />
+            <VendorHistoryRail history={noCommerce ? vendor.history.filter((h) => h.type !== "catalog") : vendor.history} vendorName={vendor.name} />
           </aside>
         </div>
       </section>

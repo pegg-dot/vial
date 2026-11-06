@@ -27,16 +27,23 @@ export function hidesCommerce(enabled = evidenceOnlyPublicRelease()): boolean {
   return enabled;
 }
 
-const BROWSE_ROOTS = [
-  "/compounds", "/vendors", "/labs", "/passports", "/grades", "/compare", "/search", "/verify",
-  "/methodology", "/how-we-check", "/coverage", "/testing", "/news", "/about", "/help",
-] as const;
+// Exact page shapes only, never a whole root. Every page listed here drops prices, listings and
+// outbound seller links while the evidence-only release is on (compounds and vendors via
+// hidesCommerce, the rest carry none), and a new page does not become public by living under a root.
+const BROWSE_PAGES: readonly RegExp[] = [
+  /^\/compounds$/, /^\/compounds\/[a-z0-9-]+$/,
+  /^\/vendors$/, /^\/vendors\/[a-z0-9-]+$/,
+  /^\/labs$/, /^\/labs\/[a-z0-9-]+$/,
+  /^\/passports$/, /^\/passports\/[a-z0-9-]+$/,
+  /^\/grades$/, /^\/methodology$/, /^\/how-we-check$/,
+];
 
 export function isBrowsePage(pathname: string, method = "GET"): boolean {
   if (!["GET", "HEAD"].includes(method.toUpperCase())) return false;
+  // Match the literal path the router will see: no encodings, separators or dot segments.
+  if (/[%;\\]|\/\/|\.\./.test(pathname)) return false;
   const path = pathname.replace(/\/+$/, "") || "/";
-  if (path.endsWith("/market")) return false;
-  return BROWSE_ROOTS.some(root => matches(path, root));
+  return BROWSE_PAGES.some(pattern => pattern.test(path));
 }
 
 export type PublicReleaseAction = "redirect" | "gone" | null;

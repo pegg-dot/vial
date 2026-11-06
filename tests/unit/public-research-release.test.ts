@@ -78,14 +78,14 @@ describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
   });
 
   it.each(["/compounds", "/compounds/retatrutide", "/vendors", "/vendors/acme", "/labs", "/labs/janoshik",
-    "/passports/abc", "/grades", "/compare", "/search", "/verify", "/methodology", "/how-we-check",
+    "/passports", "/passports/abc", "/grades", "/methodology", "/how-we-check",
   ])("opens the read-only page when on: %s", path => {
     expect(publicReleaseAction(path, "GET", true, true)).toBeNull();
     expect(publicReleaseAction(path, "HEAD", true, true)).toBeNull();
   });
 
   it.each(["/products/legacy", "/compounds/retatrutide/market", "/go/anything", "/cart", "/checkout",
-    "/market", "/stacks", "/api/v1/catalog", "/api/search", "/api/v1/verify",
+    "/market", "/stacks", "/search", "/verify", "/compare", "/news", "/about", "/help", "/coverage", "/testing", "/api/v1/catalog", "/api/search", "/api/v1/verify",
   ])("keeps shop, market tables and every API closed even when on: %s", path => {
     expect(publicReleaseAction(path, "GET", true, true)).not.toBeNull();
   });
@@ -94,6 +94,19 @@ describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
     for (const path of ["/go/acme", "/api/v1/commerce/checkout", "/api/v1/commerce/cart", "/api/partner/conversion"]) {
       expect(isPausedTransactionEndpoint(path)).toBe(true);
     }
+  });
+
+  it.each(["/compounds/%6Darket", "/compounds/x%2Fmarket", "/compounds/x/market", "/compounds/x/market/", "/compounds//x",
+    "/vendors/../products/x", "/vendors/a;b", "/vendors/A", "/compounds/bpc_157", "/labs/a/b", "/grades/x", "/vendors\\a",
+  ])("refuses odd, encoded or deeper paths that a router could read differently: %s", path => {
+    expect(isBrowsePage(path)).toBe(false);
+    expect(publicReleaseAction(path, "GET", true, true)).not.toBeNull();
+  });
+
+  it("opens only exact page shapes, with or without one trailing slash", () => {
+    expect(isBrowsePage("/compounds/bpc-157/")).toBe(true);
+    expect(isBrowsePage("/vendors")).toBe(true);
+    expect(isBrowsePage("/vendors/arcwell-analytics")).toBe(true);
   });
 
   it("never opens writes", () => {
