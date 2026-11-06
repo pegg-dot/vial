@@ -14,6 +14,7 @@ test("supplier grades page is honest when not switched on", async ({ page }) => 
 test("old shop routes stay retired", async ({ page, request }) => {
   const res = await request.post("/api/v1/commerce/checkout", { data: {} });
   expect(res.status()).toBe(410);
-  await page.goto("/vendors");
-  await expect(page).not.toHaveURL(/\/vendors$/);
+  await page.goto("/products/anything");
+  await expect(page).toHaveURL(/\/intelligence/);
+  expect((await request.get("/go/anything", { maxRedirects: 0 })).status()).toBe(410);
 });

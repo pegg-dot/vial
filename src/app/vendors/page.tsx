@@ -5,6 +5,8 @@ import { getCertificatesOnRecord } from "@/server/public-repository";
 import { VendorsDirectory } from "@/components/vendors-directory";
 import { DataUnavailable } from "@/components/home-data-unavailable";
 import { ArtMagnifierVial, ArtShieldCheck, ArtDroplet } from "@/components/vial-art";
+import { hidesCommerce } from "@/lib/public-research-release";
+import { projectDirectoryEntry } from "@/lib/evidence-projection";
 import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = { title: "Vendor directory", description: "Browse historical vendor records, laboratory reports, regulatory source links and the limits of available evidence; not a purchasing recommendation.", alternates: { canonical: "/vendors" } };
@@ -44,7 +46,7 @@ export default async function VendorsPage() {
     </section>
 
     <div className="mx-auto max-w-[1320px] px-5 py-8 sm:px-8 sm:py-10">
-      <VendorsDirectory entries={entries} />
+      <VendorsDirectory entries={hidesCommerce() ? entries.map(projectDirectoryEntry) : entries} hidePrices={hidesCommerce()} />
     </div>
   </>;
 }
