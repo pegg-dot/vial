@@ -32,6 +32,7 @@ describe("vendor source link", () => {
     expect(vendorLinkAllowed({ verdict: "avoid", status: null })).toBe(false);
     expect(vendorLinkAllowed({ verdict: "high-risk", status: null })).toBe(false);
     expect(vendorLinkAllowed({ verdict: "unproven", status: null })).toBe(true);
-    for (const status of ["offline", "parked", "closed"]) expect(vendorLinkAllowed({ verdict: "trusted", status })).toBe(false);
+    expect(vendorLinkAllowed({ verdict: "caution", status: "blocked" })).toBe(true);
+    for (const status of ["offline", "parked", "closed", "redirected", "some-new-status"]) expect(vendorLinkAllowed({ verdict: "trusted", status })).toBe(false);
   });
 });

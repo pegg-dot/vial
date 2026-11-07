@@ -10,10 +10,13 @@ export function vendorLinksReleased(enabled = process.env.VIALGRADE_VENDOR_LINKS
 export const VENDOR_LINK_LABEL = "Company's own website";
 export const VENDOR_LINK_NOTE = "External site, not verified or endorsed by VialGrade. Nothing here is a recommendation to buy.";
 
-/** The verdicts and statuses for which a link is never offered. */
+/** Statuses that mean the storefront is alive where we stored it. `blocked` is bot protection, not death. */
+const LIVE_STATUSES = new Set(["operating", "blocked"]);
+
+/** A link is offered only for a non-avoid verdict and a known-live (or never-probed) storefront. */
 export function vendorLinkAllowed(input: { verdict: string; status: string | null }): boolean {
   if (input.verdict === "avoid" || input.verdict === "high-risk") return false;
-  return !(input.status && ["offline", "parked", "closed"].includes(input.status));
+  return input.status == null || LIVE_STATUSES.has(input.status);
 }
 
 /**
