@@ -32,6 +32,9 @@ import { listFollows } from "@/server/consumer-intelligence/repository";
 import { CommunitySignalCard } from "@/components/community-signal-card";
 import { getStoredCommunitySignal } from "@/server/ingest/reddit";
 import { getDatabase } from "@/server/db/client";
+import { getVendorDomain } from "@/server/vendors/domain";
+import { vendorLinkAllowed, vendorLinksReleased, vendorSourceUrl } from "@/lib/vendor-source-link";
+import { VendorSourceLink } from "@/components/vendor-source-link";
 import { LabTestsPanel } from "@/components/lab-tests-panel";
 import { getLabTestsForVendor } from "@/server/ingest/lab-tests";
 import { VendorFlagsBanner } from "@/components/vendor-flags-banner";
@@ -192,6 +195,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const secondaryValue = vendor.kind === "storefront" ? vendor.productCount : vendor.passportCount;
 
   const maker = vendor.kind === "manufacturer";
+  // A plain, labeled link to the company's own site. Off by default; never for avoid/high-risk
+  // verdicts or dead storefronts; not tracked and not routed through /go.
+  const sourceUrl = vendorLinksReleased() && vendorLinkAllowed({ verdict: composed.verdict, status: vendorStatus?.status ?? null })
+    ? vendorSourceUrl(await getVendorDomain(await getDatabase(), slug).catch(() => null))
+    : null;
   const strongLinks = vendorLinks.filter((l) => l.strength === "strong");
   const blindTests = vendorLabTests.filter((t) => t.is_blind).length;
 
@@ -311,6 +319,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link></p>}
         </div>
       </section>
+
+      {sourceUrl ? <VendorSourceLink url={sourceUrl} /> : null}
 
       {/* ── Upstream-manufacturer context ───────────────────────────────────────────────
           This used to render only when a vendor happened to also have an alert, so the single most
