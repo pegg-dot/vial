@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, ExternalLink, ChevronDown } from "lucide-react";
 import { VialGradeMark } from "./wordmark";
 import { ResearchGlobalSearch, ResearchMobileMenu } from "@/components/intelligence/research-global-search";
+import { publicBrowseRelease } from "@/lib/public-research-release";
 import { ResearchBrandTicker } from "@/components/intelligence/research-brand-ticker";
 
 // Keep the original visible brand and the main research tasks; everything
@@ -11,6 +12,13 @@ const NAV = [
   { href: "/intelligence/verify", label: "Check a source" },
   { href: "/intelligence/desk", label: "Research Desk" },
   { href: "/intelligence/grading", label: "How we check" },
+] as const;
+
+const BROWSE_AREAS = [
+  { href: "/compounds", label: "Compound pages", description: "Lab evidence, passports and research for each compound" },
+  { href: "/vendors", label: "Vendors and storefronts", description: "VialGrade letters with the evidence behind them" },
+  { href: "/labs", label: "Testing laboratories", description: "Who tests, and what they have published" },
+  { href: "/grades", label: "How grades work", description: "What a letter does and does not mean" },
 ] as const;
 
 const OTHER_RESEARCH_AREAS = [
@@ -53,7 +61,7 @@ export function ResearchReleaseHeader() {
               <div className="ink hard-sm absolute left-0 top-[calc(100%+13px)] z-50 w-[345px] rounded-[16px] bg-white p-2 shadow-lg">
                 <p className="px-3 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Other research tools</p>
                 <nav aria-label="More research areas" className="grid">
-                  {OTHER_RESEARCH_AREAS.map(item => (
+                  {[...(publicBrowseRelease() ? BROWSE_AREAS : []), ...OTHER_RESEARCH_AREAS].map(item => (
                     <Link href={item.href} key={item.href} className="rounded-xl px-3 py-2.5 hover:bg-[#eef0ff]">
                       <span className="block text-[13px] font-extrabold text-[#17191b]">{item.label}</span>
                       <span className="mt-0.5 block text-[11px] leading-5 text-[#656b70]">{item.description}</span>
@@ -100,7 +108,9 @@ export function ResearchReleaseFooter() {
         <nav aria-label="Explore research" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Explore</p>
           <Link href="/intelligence/market" className="hover:text-white">Market</Link>
-          <Link href="/intelligence/market#browse" className="hover:text-white">Compounds</Link>
+          <Link href={publicBrowseRelease() ? "/compounds" : "/intelligence/market#browse"} className="hover:text-white">Compounds</Link>
+          {publicBrowseRelease() && <Link href="/vendors" className="hover:text-white">Vendors and labs</Link>}
+          {publicBrowseRelease() && <Link href="/grades" className="hover:text-white">Grades</Link>}
           <Link href="/intelligence/organizations" className="hover:text-white">Study sponsors</Link>
           <Link href="/intelligence/providers" className="hover:text-white">Supplier documents</Link>
           <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" className="hover:text-white">Compare</Link>

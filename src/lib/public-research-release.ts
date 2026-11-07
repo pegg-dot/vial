@@ -11,6 +11,41 @@ export function evidenceOnlyPublicRelease(enabled = process.env.VIALGRADE_PUBLIC
   return enabled === "true";
 }
 
+/**
+ * Read-only browsing of the original VialGrade pages (compounds, grades, compare, labs, vendors,
+ * batch passports, verify, search). Needs VIALGRADE_PUBLIC_BROWSE=true on top of the evidence-only
+ * release. It only ever opens GET/HEAD pages: carts, checkout, /go click-throughs, product pages,
+ * per-compound market tables and every API stay closed, and the pages themselves drop prices,
+ * listings and outbound seller links while the evidence-only release is on (see hidesCommerce).
+ */
+export function publicBrowseRelease(enabled = process.env.VIALGRADE_PUBLIC_BROWSE): boolean {
+  return enabled === "true";
+}
+
+/** Pages that still carry price or listing blocks must drop them whenever the quarantine is on. */
+export function hidesCommerce(enabled = evidenceOnlyPublicRelease()): boolean {
+  return enabled;
+}
+
+// Exact page shapes only, never a whole root. Every page listed here drops prices, listings and
+// outbound seller links while the evidence-only release is on (compounds and vendors via
+// hidesCommerce, the rest carry none), and a new page does not become public by living under a root.
+const BROWSE_PAGES: readonly RegExp[] = [
+  /^\/compounds$/, /^\/compounds\/[a-z0-9-]+$/,
+  /^\/vendors$/, /^\/vendors\/[a-z0-9-]+$/,
+  /^\/labs$/, /^\/labs\/[a-z0-9-]+$/,
+  /^\/passports$/, /^\/passports\/[a-z0-9-]+$/,
+  /^\/grades$/, /^\/methodology$/, /^\/how-we-check$/,
+];
+
+export function isBrowsePage(pathname: string, method = "GET"): boolean {
+  if (!["GET", "HEAD"].includes(method.toUpperCase())) return false;
+  // Match the literal path the router will see: no encodings, separators or dot segments.
+  if (/[%;\\]|\/\/|\.\./.test(pathname)) return false;
+  const path = pathname.replace(/\/+$/, "") || "/";
+  return BROWSE_PAGES.some(pattern => pattern.test(path));
+}
+
 export type PublicReleaseAction = "redirect" | "gone" | null;
 
 function matches(path: string, root: string): boolean {
@@ -21,8 +56,10 @@ export function publicReleaseAction(
   pathname: string,
   method = "GET",
   enabled = evidenceOnlyPublicRelease(),
+  browse = publicBrowseRelease(),
 ): PublicReleaseAction {
   if (!enabled) return null;
+  if (browse && isBrowsePage(pathname, method)) return null;
   const path = pathname.replace(/\/+$/, "") || "/";
 
   // Only the source-linked public research preview, legal notices, and

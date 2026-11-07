@@ -36,11 +36,14 @@ export function CompoundTickerCard({
   products,
   metric,
   onQuickView,
+  hidePrice = false,
 }: {
   compound: Compound;
   products: Product[];
   metric?: { label: string; value: string };
   onQuickView?: () => void;
+  /** Evidence-only release: show lab evidence instead of the lowest price and median. */
+  hidePrice?: boolean;
 }) {
   const shelf = shelfForCompound(compound);
   const range = compoundPriceRange(compound.slug, products);
@@ -61,21 +64,29 @@ export function CompoundTickerCard({
 
       <h3 className="mt-2.5 truncate text-[17px] font-extrabold leading-tight tracking-[-.03em]">{compound.name}</h3>
 
-      <div className="mt-2.5 flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em]" title="Lowest priced listing on the market">{range.from != null ? formatCurrency(range.from) : "—"}</p>
-          <p className="mt-1 truncate text-[11px] font-semibold text-[var(--muted)]">
-            {range.from != null ? `${range.vendors} vendor${range.vendors === 1 ? "" : "s"}` : "no priced listing"}
-            {compound.medianPrice > 0 ? ` · median ${formatCurrency(compound.medianPrice)}` : ""}
-          </p>
+      {hidePrice ? (
+        <div className="mt-2.5">
+          <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em]">{compound.coaCount}</p>
+          <p className="mt-1 truncate text-[11px] font-semibold text-[var(--muted)]">independent lab {compound.coaCount === 1 ? "test" : "tests"} on record</p>
         </div>
-        {metric && (
-          <div className="shrink-0 text-right">
-            <p className="text-[20px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]/70">{metric.value}</p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
+      ) : (
+      <div className="mt-2.5 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em]" title="Lowest priced listing on the market">{range.from != null ? formatCurrency(range.from) : "—"}</p>
+            <p className="mt-1 truncate text-[11px] font-semibold text-[var(--muted)]">
+              {range.from != null ? `${range.vendors} vendor${range.vendors === 1 ? "" : "s"}` : "no priced listing"}
+              {compound.medianPrice > 0 ? ` · median ${formatCurrency(compound.medianPrice)}` : ""}
+            </p>
           </div>
-        )}
-      </div>
+          {metric && (
+            <div className="shrink-0 text-right">
+              <p className="text-[20px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]/70">{metric.value}</p>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
+            </div>
+          )}
+        </div>
+  
+      )}
 
       <p className={`mt-3 flex items-center gap-1.5 border-t-2 border-[#111214]/10 pt-2.5 text-[11px] font-bold ${cls}`} title={tier.reasons.join(" · ")}>
         <Icon className="size-3.5 shrink-0" aria-hidden />

@@ -205,8 +205,8 @@ export function gradeFromVerdict(composed: ComposedVerdict, input: { coaCount: n
         headline: "Not enough evidence to grade",
         // "Not rated" must not read as an accusation — it sits in the same slot an F would.
         rationale: tested
-          ? "This is not a warning. We track this vendor but have not found enough independent evidence to rate them yet. No news is not the same as good news — check the specific listing before you buy."
-          : "This is not a warning — it means we have not found independent lab tests for them yet. That is different from finding something bad. It also is not a clean bill of health: check the specific listing before you buy.",
+          ? "This is not a warning. We track this vendor but have not found enough independent evidence to rate them yet. No news is not the same as good news — read the source documents yourself before relying on this."
+          : "This is not a warning — it means we have not found independent lab tests for them yet. That is different from finding something bad. It also is not a clean bill of health: read the source documents yourself before relying on this.",
       };
     }
 

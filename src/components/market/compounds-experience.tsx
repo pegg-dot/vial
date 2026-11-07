@@ -30,7 +30,7 @@ const SHELF_PAGE = 8;
 // The catalog arrives as a prop from the /compounds server component rather than from
 // useMarketplace(): the market table and quick-view read whole records (price histories, purity,
 // research notes), and the provider carries only the lite projection the site chrome needs.
-export function CompoundsExperience({ catalog, initialShelf = null }: { catalog: CatalogSnapshot; initialShelf?: string | null }) {
+export function CompoundsExperience({ catalog, initialShelf = null, hidePrices = false }: { catalog: CatalogSnapshot; initialShelf?: string | null; hidePrices?: boolean }) {
   const { compounds, products } = catalog;
   const [view, setView] = useState<"terminal" | "shelves">("shelves");
   // The rail's filter. A ?shelf= deep-link lands filtered rather than scrolled — the section it used
@@ -82,10 +82,10 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
   return (
     <div>
       {trend.length > 0 && (
-        <CollectionRow eyebrow="Most looked-up" title="Trending compounds" blurb="The compounds buyers are researching most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
+        <CollectionRow eyebrow="Most looked-up" title="Trending compounds" blurb="The compounds readers look up most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[248px] shrink-0 snap-start">
-              <CompoundTickerCard compound={c} products={products} metric={{ label: "vendors", value: vendorCount(c.slug) }} onQuickView={() => openRow(trend, i)} />
+              <CompoundTickerCard compound={c} products={products} hidePrice={hidePrices} metric={hidePrices ? undefined : { label: "vendors", value: vendorCount(c.slug) }} onQuickView={hidePrices ? undefined : () => openRow(trend, i)} />
             </div>
           ))}
         </CollectionRow>
@@ -93,14 +93,14 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
 
       <div className="flex items-center justify-between gap-4 pt-6">
         <h2 className="text-3xl font-extrabold tracking-[-.045em]">Every compound</h2>
-        <div className="ink-1 inline-flex gap-1 rounded-full bg-white p-1">
+        {hidePrices ? null : <div className="ink-1 inline-flex gap-1 rounded-full bg-white p-1">
           <button type="button" onClick={() => setView("shelves")} aria-pressed={view === "shelves"} className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${view === "shelves" ? "bg-[#111214] text-white" : "text-[var(--muted)]"}`}>
             <LayoutGrid className="size-3.5" /> Shelves
           </button>
           <button type="button" onClick={() => setView("terminal")} aria-pressed={view === "terminal"} className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${view === "terminal" ? "bg-[#111214] text-white" : "text-[var(--muted)]"}`}>
             <Table2 className="size-3.5" /> Terminal
           </button>
-        </div>
+        </div>}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -169,7 +169,7 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {shown.map((c, i) => (
-                    <CompoundTickerCard key={c.slug} compound={c} products={products} onQuickView={() => openRow(shown, i)} />
+                    <CompoundTickerCard key={c.slug} compound={c} products={products} hidePrice={hidePrices} onQuickView={hidePrices ? undefined : () => openRow(shown, i)} />
                   ))}
                 </div>
                 {hidden > 0 && (
@@ -185,7 +185,7 @@ export function CompoundsExperience({ catalog, initialShelf = null }: { catalog:
         </div>
       )}
 
-      {stacks.length > 0 && (
+      {stacks.length > 0 && !hidePrices && (
         <CollectionRow eyebrow="Commonly discussed" title="Popular stacks" blurb="Combinations the research community talks about — not a protocol.">
           {stacks.map((r) => <StackCard key={r.stack.slug} resolved={r} />)}
         </CollectionRow>

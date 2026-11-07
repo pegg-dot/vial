@@ -96,7 +96,7 @@ function Cell({ col, active, children }: { col: (typeof COLS)[number]; active: b
   );
 }
 
-function VendorRow({ entry, rank, activeCol }: { entry: VendorDirectoryEntry; rank: number; activeCol: ColKey | null }) {
+function VendorRow({ entry, rank, activeCol, cols }: { entry: VendorDirectoryEntry; rank: number; activeCol: ColKey | null; cols: readonly (typeof COLS)[number][] }) {
   const v = entry.vendor;
   const flagLabel = redFlagLabel(entry);
   const flagged = entry.verdict === "avoid" || entry.verdict === "caution";
@@ -166,7 +166,7 @@ function VendorRow({ entry, rank, activeCol }: { entry: VendorDirectoryEntry; ra
         </div>
         <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--muted)]">{vendorClaimLabelShort(v.profileStatus)}{v.location ? ` · ${v.location}` : ""}</p>
       </div>
-      {COLS.map((col) => <Cell key={col.key} col={col} active={activeCol === col.key}><span aria-hidden="true">{stat[col.key]}</span></Cell>)}
+      {cols.map((col) => <Cell key={col.key} col={col} active={activeCol === col.key}><span aria-hidden="true">{stat[col.key]}</span></Cell>)}
       <ArrowUpRight aria-hidden="true" className="hidden size-4 shrink-0 text-[#111214]/25 transition group-hover:translate-x-0.5 group-hover:text-[#111214] sm:block" />
       {/* Below lg the columns collapse into this one line, indented under the vendor's name. It is
           a row-width child rather than part of the name block, which is only ~170px on a phone. */}
@@ -186,12 +186,15 @@ function VendorRow({ entry, rank, activeCol }: { entry: VendorDirectoryEntry; ra
   );
 }
 
-export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] }) {
+export function VendorsDirectory({ entries, hidePrices = false }: { entries: VendorDirectoryEntry[]; hidePrices?: boolean }) {
+  // Evidence-only release: no price, listing-count or buyer-sentiment columns, and no ranking on them.
+  const cols = hidePrices ? COLS.filter((c) => !["listings", "price", "buyers"].includes(c.key)) : COLS;
+  const priorities = hidePrices ? PRIORITIES.filter((p) => !["price", "reputation"].includes(p.key)) : PRIORITIES;
   const [priority, setPriority] = useState("reliable");
   const [kind, setKind] = useState<string>("all");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(PAGE);
-  const active = PRIORITIES.find((p) => p.key === priority)!;
+  const active = priorities.find((p) => p.key === priority)!;
   const activeCol = ACTIVE_COL[priority] ?? null;
 
   const filters = useMemo(() => ({ query, kind }), [query, kind]);
@@ -234,7 +237,7 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
       <div>
         <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">What matters most to you?</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {PRIORITIES.map((p) => (
+          {priorities.map((p) => (
             <button key={p.key} type="button" onClick={() => applyPriority(p.key)} aria-pressed={priority === p.key}
               className={`ink-1 press rounded-full px-3.5 py-2 text-[13px] font-bold transition ${priority === p.key ? "bg-[#111214] text-white" : "bg-white text-[#111214]"}`}>
               {p.label}
@@ -253,7 +256,7 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
       {priority === "reliable" && (
         <p className="mt-2.5 max-w-4xl text-[11px] font-semibold leading-5 text-[var(--muted)]">
           <span className="font-bold uppercase tracking-[.1em] text-[#2b31d8]">New to this?</span> A real vendor shows a batch-matched third-party certificate
-          <span className="mx-1.5 text-[#111214]/30">·</span>a price far below everyone else is a warning, not a deal
+          {hidePrices ? null : <><span className="mx-1.5 text-[#111214]/30">·</span>a price far below everyone else is a warning, not a deal</>}
           <span className="mx-1.5 text-[#111214]/30">·</span>everything here is research-use-only.
         </p>
       )}
@@ -324,7 +327,7 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
               <span className="w-7 shrink-0 text-right text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">#</span>
               <span className="w-10 shrink-0" />
               <span className="min-w-0 flex-1 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">Vendor</span>
-              {COLS.map((col) => {
+              {cols.map((col) => {
                 const on = activeCol === col.key;
                 const align = "align" in col && col.align === "center" ? "justify-center" : "justify-end";
                 return (
@@ -336,7 +339,7 @@ export function VendorsDirectory({ entries }: { entries: VendorDirectoryEntry[] 
               <span className="hidden w-4 shrink-0 sm:block" />
             </div>
             <div className="divide-y divide-[#111214]/10">
-              {shown.map((entry, i) => <VendorRow key={entry.vendor.slug} entry={entry} rank={i + 1} activeCol={activeCol} />)}
+              {shown.map((entry, i) => <VendorRow key={entry.vendor.slug} entry={entry} rank={i + 1} activeCol={activeCol} cols={cols} />)}
             </div>
           </div>
 

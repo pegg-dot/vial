@@ -26,7 +26,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     }
     const catalog = await page.request.get("/api/v1/catalog");
     expect(catalog.status()).toBe(410);
-    for (const path of ["/cart", "/checkout", "/market", "/vendors", "/products/example"]) {
+    for (const path of ["/cart", "/checkout", "/market", ...(process.env.VIALGRADE_PUBLIC_BROWSE === "true" ? [] : ["/vendors"]), "/products/example"]) {
       const result = await page.request.get(path, { maxRedirects: 0 });
       expect(result.status(), path).toBe(307);
       const location = new URL(result.headers().location!, "http://localhost");
@@ -75,8 +75,10 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
     await expect(page.getByRole("status").getByText(/The previous shopping marketplace is archived/)).toBeVisible();
     await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toBeVisible();
-    await page.goto("/how-we-check");
-    await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
+    if (process.env.VIALGRADE_PUBLIC_BROWSE !== "true") {
+      await page.goto("/how-we-check");
+      await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
+    }
   });
 
   // WCAG 2.5.8: footer lists, breadcrumbs and "text + arrow" links were 16-20px tall. Links inside a
@@ -97,6 +99,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   });
 
   test("retired compound URLs go to a dossier when one exists and otherwise explain the shutdown", async ({ page }) => {
+    test.skip(process.env.VIALGRADE_PUBLIC_BROWSE === "true", "Browse release opens /compounds pages; see research-browse.spec.ts");
     const dossier = await page.request.get("/compounds/retatrutide", { maxRedirects: 0 });
     expect(dossier.status()).toBe(307);
     expect(dossier.headers().location).toContain("/intelligence/explore/retatrutide");
@@ -118,8 +121,10 @@ test.describe("research-only navigation and permanent purchase suspension", () =
       "/legal/terms", "/legal/disclaimer", "/login", "/register",
     ];
     const targets = new Map<string, Set<string>>();
+    // The browse release deliberately opens the read-only original pages (see research-browse.spec.ts).
+    const browse = process.env.VIALGRADE_PUBLIC_BROWSE === "true";
     const disallowedPaths = new Set([
-      "/market", "/checkout", "/cart", "/go", "/vendors", "/how-we-check", "/products",
+      "/market", "/checkout", "/cart", "/go", "/products", ...(browse ? [] : ["/vendors", "/how-we-check"]),
     ]);
     for (const path of publicPages) {
       const response = await page.goto(path);

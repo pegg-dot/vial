@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
 import Link from "next/link";
 import { ArrowLeft, FlaskConical, Layers3, Tag } from "lucide-react";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
@@ -26,6 +27,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 // cheapest-first table; this answers "show me everything, my way" — the room you open when the
 // summary is not enough. Deliberately its own route so it can be linked, shared and bookmarked.
 export default async function CompoundMarketPage({ params }: { params: Promise<{ slug: string }> }) {
+  // Listing and price tables are never part of the evidence-only release, whatever the proxy lets through.
+  if (evidenceOnlyPublicRelease()) notFound();
   const { slug } = await params;
   const compound = await getCompoundBySlug(slug);
   if (!compound) notFound();
