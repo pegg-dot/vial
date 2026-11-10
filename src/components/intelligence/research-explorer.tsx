@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Check, GitCompareArrows, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, GitCompareArrows, Search, SlidersHorizontal, X } from "lucide-react";
 import {
   compareExplorerHref, RESEARCH_SUBJECTS, RESEARCH_THEMES, researchThemeById,
   type ExplorerAudience, type ResearchThemeId,
@@ -10,6 +10,7 @@ import {
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { ResearchQuickView } from "@/components/intelligence/research-quick-view";
 import { ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
+import { Frame, Pill, UI } from "@/components/intelligence/research-ui";
 import { gradeResearchFile, sortSubjectsByFileCoverage } from "@/lib/research-file-grade";
 import {
   DEFAULT_EXPLORER_STATE, MAX_COMPARE, parseExplorerState, serializeExplorerState,
@@ -18,6 +19,17 @@ import {
 
 const RETURN_KEY = "vialgrade:explorer-return";
 const RETURN_WINDOW_MS = 60 * 60 * 1000;
+
+/** One pressed/unpressed pill for the theme rail, the record filters and the perspective toggle. */
+function pill(active: boolean, size: "md" | "sm" = "md") {
+  return "ink-1 inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-extrabold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b31d8] " +
+    (size === "sm" ? "min-h-9 px-3.5 text-xs " : "min-h-10 px-4 text-sm ") +
+    (active ? "bg-[#111214] text-white" : "bg-white text-[#111214] hover:bg-[#eef0ff]");
+}
+
+/** The field with a leading icon: the landing hero's source-check pattern, thin frame. */
+const FIELD_SHELL = "ink-1 flex items-center gap-3 rounded-2xl bg-white px-4 transition-shadow focus-within:shadow-[3px_3px_0_0_#2b31d8]";
+const SELECT = "ink-1 min-h-10 rounded-[10px] bg-white px-3 text-xs font-bold text-[#111214]";
 
 /**
  * Restore the old market's find -> quick view -> compare -> original record
@@ -127,32 +139,31 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
   return (
     <div className="space-y-5" onClickCapture={parkControlsForReturn}>
       <section aria-labelledby="browse-title" className="scroll-mt-28">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="browse-title" className="text-xl font-bold tracking-[-.045em] text-[#203328]">Compounds</h2>
-          <span className="text-xs text-[#738178]">16 curated research records · No products for sale</span>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="browse-title" className={UI.h3}>Compounds</h2>
+          </div>
+          <span className={UI.small}>16 curated research records · No products for sale</span>
         </div>
-        <label className="relative mt-4 block">
+        <label className={FIELD_SHELL + " mt-5"}>
           <span className="sr-only">Search research subjects</span>
-          <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#66776a]" />
+          <Search aria-hidden="true" className="size-5 shrink-0 text-[#2b31d8]" />
           <input type="search" value={query} onChange={event => setQuery(event.target.value)}
             placeholder="Search a peptide, mechanism or other name"
-            className="h-13 w-full rounded-xl border border-[#c6d2c9] bg-white pl-12 pr-4 text-base text-[#263a2b] outline-none placeholder:text-[#89948d] focus:border-[#377959] focus:ring-2 focus:ring-[#377959]/15" />
+            className="min-h-12 min-w-0 flex-1 bg-transparent text-base font-medium text-[#111214] outline-none placeholder:text-[#111214]/50" />
         </label>
       </section>
 
-      <section aria-label="Research theme categories" className="border-b border-[#e0e6df] pb-4">
+      <section aria-label="Research theme categories" className="border-b border-[#111214]/15 pb-4">
         <div className="-mx-5 overflow-x-auto px-5 sm:-mx-8 sm:px-8">
           <div className="flex w-max items-center gap-2">
-            <button type="button" aria-pressed={themeId === "all"} onClick={() => setThemeId("all")}
-              className={"min-h-10 shrink-0 rounded-lg border px-4 py-2 text-sm font-semibold " +
-                (themeId === "all" ? "border-[#244c37] bg-[#244c37] text-white" : "border-[#d5e0d7] bg-white text-[#44584b] hover:border-[#799b82]")}>
+            <button type="button" aria-pressed={themeId === "all"} onClick={() => setThemeId("all")} className={pill(themeId === "all")}>
               All areas
             </button>
             {RESEARCH_THEMES.map(theme => (
               <button type="button" key={theme.id} aria-pressed={themeId === theme.id}
                 onClick={() => setThemeId(old => old === theme.id ? "all" : theme.id)}
-                className={"min-h-10 shrink-0 rounded-lg border px-4 py-2 text-sm font-semibold " +
-                  (themeId === theme.id ? "border-[#244c37] bg-[#244c37] text-white" : "border-[#d5e0d7] bg-white text-[#44584b] hover:border-[#799b82]")}>
+                className={pill(themeId === theme.id)}>
                 {theme.name}
               </button>
             ))}
@@ -169,27 +180,24 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
               ["identity-only", "Identity record only"],
             ] as const).map(([value, label]) => (
               <button type="button" key={value} aria-pressed={sourceFilter === value}
-                onClick={() => setSourceFilter(value)}
-                className={"min-h-9 shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold " +
-                  (sourceFilter === value ? "border-[#3a6c4e] bg-[#e8f3e8] text-[#25563a]" : "border-[#d8e2d9] bg-white text-[#617268] hover:border-[#8ca895]")}>
+                onClick={() => setSourceFilter(value)} className={pill(sourceFilter === value, "sm")}>
                 {label}
               </button>
             ))}
           </div>
           {activeFilters && (
-            <button type="button" onClick={clear} className="text-xs font-semibold text-[#2f7051] hover:underline">Clear filters</button>
+            <button type="button" onClick={clear} className={UI.linkSmall}>Clear filters</button>
           )}
         </div>
-        <details className="group rounded-lg border border-[#e0e5df] bg-white">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-semibold text-[#47624f] [&::-webkit-details-marker]:hidden">
-            <SlidersHorizontal className="size-4" /> More filters <span className="ml-auto text-[#85998a] group-open:rotate-180">⌄</span>
+        <details className="group ink-1 rounded-[14px] bg-white">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3.5 py-2 text-xs font-extrabold text-[#111214] [&::-webkit-details-marker]:hidden">
+            <SlidersHorizontal className="size-4 text-[#2b31d8]" aria-hidden="true" /> More filters <ChevronDown className="ml-auto size-4 text-[var(--muted)] transition group-open:rotate-180" aria-hidden="true" />
           </summary>
-          <div className="flex flex-wrap items-end gap-4 border-t border-[#e3e9e3] px-3 py-4">
-            <label className="grid gap-1.5 text-xs font-semibold text-[#53685a]">
+          <div className="flex flex-wrap items-end gap-4 border-t border-[#111214]/15 px-3.5 py-4">
+            <label className="grid gap-1.5 text-xs font-extrabold text-[#111214]">
               File coverage
               <select aria-label="Research file grade filter" value={gradeFilter}
-                onChange={event => setGradeFilter(event.target.value as GradeFilter)}
-                className="min-h-10 rounded-md border border-[#ccd8ce] bg-white px-3 text-xs text-[#283a2d]">
+                onChange={event => setGradeFilter(event.target.value as GradeFilter)} className={SELECT}>
                 <option value="all">All source files</option>
                 <option value="A">A · 3 source layers linked</option>
                 <option value="B">B · 2 source layers linked</option>
@@ -197,44 +205,41 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
                 <option value="ungraded">Not graded</option>
               </select>
             </label>
-            <label className="grid gap-1.5 text-xs font-semibold text-[#53685a]">
+            <label className="grid gap-1.5 text-xs font-extrabold text-[#111214]">
               Sort
               <select aria-label="Sort research file coverage" value={sortMode}
-                onChange={event => setSortMode(event.target.value as SortMode)}
-                className="min-h-10 rounded-md border border-[#ccd8ce] bg-white px-3 text-xs text-[#283a2d]">
+                onChange={event => setSortMode(event.target.value as SortMode)} className={SELECT}>
                 <option value="editorial">Curated order</option>
                 <option value="source-coverage">Most sources linked</option>
               </select>
             </label>
             <fieldset className="flex flex-wrap gap-2">
-              <legend className="mb-1.5 text-xs font-semibold text-[#53685a]">Perspective</legend>
+              <legend className="mb-1.5 text-xs font-extrabold text-[#111214]">Perspective</legend>
               {(["researcher", "analyst"] as const).map(value => (
                 <button type="button" key={value} aria-pressed={audience === value}
-                  onClick={() => setAudience(value)}
-                  className={"min-h-10 rounded-md border px-3 py-2 text-xs font-semibold " +
-                    (audience === value ? "border-[#244c37] bg-[#244c37] text-white" : "border-[#ccd8ce] bg-white text-[#48604e]")}>
+                  onClick={() => setAudience(value)} className={pill(audience === value, "sm")}>
                   {value === "researcher" ? "Researcher" : "Analyst"}
                 </button>
               ))}
             </fieldset>
-            <p className="w-full text-xs text-[#718076]">Grades describe VialGrade&apos;s source documentation, not peptide quality or effectiveness.</p>
+            <p className={UI.small + " w-full"}>Grades describe VialGrade&apos;s source documentation, not peptide quality or effectiveness.</p>
           </div>
         </details>
         <div className="flex items-center justify-between gap-3">
-          <p role="status" className="text-xs font-medium text-[#637268]">
+          <p role="status" className={UI.small}>
             Showing {matching.length} of {RESEARCH_SUBJECTS.length} compounds
             {themeId === "all" ? "" : " · " + researchThemeById(themeId).name}
           </p>
-          <Link href="/intelligence/grading" className="inline-flex min-h-6 items-center text-xs font-medium text-[#347352] underline underline-offset-4">About file coverage</Link>
+          <Link href="/intelligence/grading" className={UI.linkSmall}>About file coverage</Link>
         </div>
       </section>
 
       {matching.length === 0 ? (
-        <section className="rounded-xl border border-[#d8e2d9] bg-white px-6 py-12 text-center">
-          <h3 className="text-lg font-bold text-[#253829]">No matching compounds</h3>
-          <p className="mt-2 text-sm text-[#6a786c]">Try a different name or clear the filters. This is a curated research library, not a complete catalog.</p>
-          <button type="button" onClick={clear} className="mt-5 rounded-lg bg-[#244c37] px-4 py-2.5 text-sm font-semibold text-white">Show all records</button>
-        </section>
+        <Frame as="section" thin shadow="none" pad="none" radius="rounded-[16px]" className="px-6 py-12 text-center">
+          <h3 className={UI.h3}>No matching compounds</h3>
+          <p className={UI.body + " mx-auto mt-2 max-w-md"}>Try a different name or clear the filters. This is a curated research library, not a complete catalog.</p>
+          <Pill variant="ink" onClick={clear} className="mt-5">Show all records</Pill>
+        </Frame>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {matching.map(subject => {
@@ -259,7 +264,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
                     </div>
                     <div className="text-right"><ResearchFileGradeMark subject={subject} withCount /></div>
                   </div>
-                  <p className="mt-3 line-clamp-2 min-h-10 text-xs font-medium leading-5 text-[#555964]">
+                  <p className="mt-3 line-clamp-2 min-h-10 text-xs font-medium leading-5 text-[var(--muted)]">
                     {audience === "researcher" ? subject.studyQuestion : subject.analystAngle}
                   </p>
                   <div className="mt-auto flex items-center gap-2 border-t-2 border-[#111214]/10 pt-3">
@@ -278,7 +283,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
                       title={atLimit ? "Compare up to three compounds" : isSelected ? "Remove from comparison" : "Add to comparison"}
                       onClick={() => toggleCompare(subject.slug)}
                       className={"ink-1 grid size-10 shrink-0 place-items-center rounded-[10px] disabled:cursor-not-allowed disabled:opacity-35 " +
-                        (isSelected ? "bg-[#e2eaff] text-[#2b31d8]" : "bg-white text-[#111214] hover:bg-[#eef0ff]")}>
+                        (isSelected ? "bg-[#eef0ff] text-[#2b31d8]" : "bg-white text-[#111214] hover:bg-[#eef0ff]")}>
                       {isSelected ? <Check className="size-4" /> : <GitCompareArrows className="size-4" />}
                     </button>
                   </div>
@@ -289,53 +294,54 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
         </div>
       )}
 
-      <section aria-labelledby="research-studies-title" className="border-t border-[#e0e6df] pt-6">
+      <section aria-labelledby="research-studies-title" className="border-t-2 border-[#111214]/10 pt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 id="research-studies-title" className="text-lg font-bold tracking-[-.03em] text-[#24382c]">Start with an actual study</h2>
-            <p className="mt-1 text-xs leading-5 text-[#6c7b70]">Five selected public trial examples. A starting point, not a ranking.</p>
+            <h2 id="research-studies-title" className={UI.h3}>Start with an actual study</h2>
+            <p className={UI.small + " mt-1"}>Five selected public trial examples. A starting point, not a ranking.</p>
           </div>
           <button type="button" onClick={() => { setSourceFilter("selected-trial"); setThemeId("all"); setQuery(""); document.getElementById("browse-title")?.scrollIntoView({ behavior: "smooth" }); }}
-            className="inline-flex min-h-6 items-center gap-1 text-xs font-semibold text-[#2f7151] hover:underline">Show trials in the library <ArrowRight className="size-3.5" /></button>
+            className={UI.linkSmall}>Show trials in the library <ArrowRight className="size-3.5" aria-hidden="true" /></button>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {RESEARCH_SUBJECTS.filter(subject => Boolean(subject.sampleTrial)).map(subject => (
-            <Link key={subject.slug} href={"/intelligence/explore/" + subject.slug} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#d8e3db] bg-white px-3 py-2 text-xs font-semibold text-[#35563f] hover:border-[#87af8f]">
-              {subject.name}<span className="font-normal text-[#758779]">{subject.sampleTrial}</span><ArrowUpRight className="size-3.5" />
+            <Link key={subject.slug} href={"/intelligence/explore/" + subject.slug}
+              className="ink-1 inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-3.5 text-xs font-extrabold text-[#111214] transition-colors hover:bg-[#eef0ff]">
+              {subject.name}<span className="font-medium text-[var(--muted)]">{subject.sampleTrial}</span><ArrowUpRight className="size-3.5 text-[#2b31d8]" aria-hidden="true" />
             </Link>
           ))}
         </div>
       </section>
 
       {selected.length > 0 && (
-        <section aria-label="Comparison selection" className="sticky bottom-4 z-30 mx-auto max-w-[900px] rounded-xl border border-[#264e36] bg-[#243f2d] p-3 text-white shadow-[0_12px_35px_rgba(15,40,25,.22)] sm:p-4">
+        <section aria-label="Comparison selection" className="ink hard sticky bottom-4 z-30 mx-auto max-w-[900px] rounded-[16px] bg-[#2b31d8] p-4 text-white">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium text-white/80">Compare selected · {selected.length}/3</p>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <p className="text-xs font-bold text-white/80">Compare selected · {selected.length}/3</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {selected.map(slug => {
                   const subject = RESEARCH_SUBJECTS.find(item => item.slug === slug)!;
                   return (
                     <button key={slug} type="button" onClick={() => toggleCompare(slug)}
                       aria-label={"Remove " + subject.name}
-                      className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2.5 py-1 text-xs font-semibold hover:bg-white/25">
-                      {subject.name} <X className="size-3" />
+                      className="inline-flex min-h-7 items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold hover:bg-white/30">
+                      {subject.name} <X className="size-3" aria-hidden="true" />
                     </button>
                   );
                 })}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button type="button" onClick={() => setSelected([])} className="rounded-lg px-3 py-2 text-xs font-medium text-white/85 hover:text-white">Clear</button>
+              <button type="button" onClick={() => setSelected([])} className="inline-flex min-h-9 items-center rounded-full px-3 text-xs font-bold text-white/85 hover:bg-white/15 hover:text-white">Clear</button>
               <Link aria-disabled={selected.length < 2} href={selected.length < 2 ? "#" : compareExplorerHref(selected, audience)}
                 onClick={event => { if (selected.length < 2) event.preventDefault(); }}
-                className={"inline-flex min-h-10 items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold " +
-                  (selected.length >= 2 ? "bg-white text-[#28472f] hover:bg-[#f1f8ef]" : "cursor-not-allowed bg-white/20 text-white/70")}>
-                Compare subjects <ArrowRight className="size-4" />
+                className={"ink inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-xs font-extrabold " +
+                  (selected.length >= 2 ? "bg-white text-[#111214] hover:bg-[#eef0ff]" : "cursor-not-allowed bg-white/30 text-white/75")}>
+                Compare subjects <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
           </div>
-          {selected.length < 2 && <p className="mt-2 text-xs text-white/75">Add one more compound to compare their research files.</p>}
+          {selected.length < 2 && <p className="mt-2 text-xs font-medium text-white/75">Add one more compound to compare their research files.</p>}
         </section>
       )}
 

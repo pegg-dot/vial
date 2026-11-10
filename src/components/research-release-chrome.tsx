@@ -21,6 +21,7 @@ const BROWSE_AREAS = [
   { href: "/grades", label: "How grades work", description: "What a letter does and does not mean" },
 ] as const;
 
+
 const OTHER_RESEARCH_AREAS = [
   { href: "/intelligence/market#browse", label: "All compounds", description: "Search and filter the 16-record library" },
   { href: "/intelligence#trial-lookup", label: "Open a trial ID", description: "Look up a ClinicalTrials.gov registration" },
@@ -34,11 +35,11 @@ export function ResearchReleaseHeader() {
   return (
     <>
       {process.env.VIALGRADE_LOCAL_PREVIEW === "true" && (
-        <div className="bg-[#174f40] px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[.1em] text-white">
+        <div className="bg-[#0b6b60] px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[.1em] text-white">
           Local interactive preview — these changes are not live on vialgrade.com
         </div>
       )}
-      <div className="border-b border-[#dededb] bg-[#f7f7f4] px-4 py-1.5 text-center text-[11px] font-medium text-[#666971]">
+      <div className="border-b border-[#111214]/15 bg-[var(--background)] px-4 py-1.5 text-center text-[11px] font-medium text-[var(--muted)]">
         Curated public research records · No sales, seller referrals, laboratory certification or medical advice
       </div>
       <header className="sticky top-0 z-40 border-b-2 border-[#111214] bg-[rgba(247,247,244,.95)] backdrop-blur-xl">
@@ -50,12 +51,12 @@ export function ResearchReleaseHeader() {
           <nav aria-label="Research navigation" className="hidden items-center gap-0.5 xl:flex">
             {NAV.map(item => (
               <Link key={item.href} href={item.href}
-                className="shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-[13px] font-bold text-[#55575f] transition hover:bg-black/[.06] hover:text-[#111214]">
+                className="shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-[13px] font-bold text-[#3a3d46] transition hover:bg-black/[.06] hover:text-[#111214]">
                 {item.label}
               </Link>
             ))}
             <details className="group relative">
-              <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full px-3 py-2 text-[13px] font-bold text-[#55575f] hover:bg-black/[.06] hover:text-[#111214] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b31d8] [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full px-3 py-2 text-[13px] font-bold text-[#3a3d46] hover:bg-black/[.06] hover:text-[#111214] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b31d8] [&::-webkit-details-marker]:hidden">
                 More research <ChevronDown className="size-3.5 transition group-open:rotate-180" />
               </summary>
               <div className="ink hard-sm absolute left-0 top-[calc(100%+13px)] z-50 w-[345px] rounded-[16px] bg-white p-2 shadow-lg">
@@ -63,8 +64,8 @@ export function ResearchReleaseHeader() {
                 <nav aria-label="More research areas" className="grid">
                   {[...(publicBrowseRelease() ? BROWSE_AREAS : []), ...OTHER_RESEARCH_AREAS].map(item => (
                     <Link href={item.href} key={item.href} className="rounded-xl px-3 py-2.5 hover:bg-[#eef0ff]">
-                      <span className="block text-[13px] font-extrabold text-[#17191b]">{item.label}</span>
-                      <span className="mt-0.5 block text-[11px] leading-5 text-[#656b70]">{item.description}</span>
+                      <span className="block text-[13px] font-extrabold text-[#111214]">{item.label}</span>
+                      <span className="mt-0.5 block text-[11px] leading-5 text-[var(--muted)]">{item.description}</span>
                     </Link>
                   ))}
                 </nav>
@@ -74,15 +75,15 @@ export function ResearchReleaseHeader() {
           <div className="ml-auto flex items-center gap-2">
             <ResearchGlobalSearch />
             <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan"
-              className="ink-1 hidden whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#f3f3f1] sm:block">
+              className="ink-1 hidden whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#eef0ff] sm:block">
               Compare
             </Link>
             <Link href="/login" aria-label="Existing account"
-              className="ink-1 hidden whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#f3f3f1] sm:inline-flex">
+              className="ink-1 hidden whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#eef0ff] sm:inline-flex">
               Existing account
             </Link>
             <nav aria-label="Mobile research navigation" className="xl:hidden">
-              <ResearchMobileMenu />
+              <ResearchMobileMenu browseLinks={publicBrowseRelease() ? BROWSE_AREAS.map(item => ({ href: item.href, label: item.label, note: item.description })) : []} />
             </nav>
           </div>
         </div>
@@ -109,8 +110,7 @@ export function ResearchReleaseFooter() {
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Explore</p>
           <Link href="/intelligence/market" className="hover:text-white">Market</Link>
           <Link href={publicBrowseRelease() ? "/compounds" : "/intelligence/market#browse"} className="hover:text-white">Compounds</Link>
-          {publicBrowseRelease() && <Link href="/vendors" className="hover:text-white">Vendors and labs</Link>}
-          {publicBrowseRelease() && <Link href="/grades" className="hover:text-white">Grades</Link>}
+          {publicBrowseRelease() && BROWSE_AREAS.slice(1).map(item => <Link key={item.href} href={item.href} className="hover:text-white">{item.label}</Link>)}
           <Link href="/intelligence/organizations" className="hover:text-white">Study sponsors</Link>
           <Link href="/intelligence/providers" className="hover:text-white">Supplier documents</Link>
           <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" className="hover:text-white">Compare</Link>

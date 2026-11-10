@@ -1,29 +1,26 @@
 import Link from "next/link";
-import { ArrowUpRight, FileSearch } from "lucide-react";
+import { FileSearch } from "lucide-react";
 import { evidenceOnlyPublicRelease } from "@/lib/public-research-release";
+import { Pill, Section, UI } from "@/components/intelligence/research-ui";
 
 export default function NotFound() {
   if (evidenceOnlyPublicRelease()) {
     return (
-      <section className="mx-auto flex min-h-[55vh] max-w-[850px] flex-col justify-center px-5 py-20 sm:px-8">
-        <p className="text-xs font-extrabold uppercase tracking-[.15em] text-[#2b31d8]">Page not found</p>
-        <h1 className="mt-5 text-balance text-4xl font-extrabold tracking-[-.05em] sm:text-6xl">
+      <Section narrow className="flex min-h-[55vh] flex-col items-center justify-center text-center">
+        <p className={UI.eyebrow}>Page not found</p>
+        <h1 className={UI.h1Compact + " mt-5 max-w-[20ch]"}>
           There is no research page at this address.
         </h1>
-        <p className="mt-6 max-w-2xl text-sm leading-7 text-[var(--muted)]">
+        <p className={UI.body + " mt-6 max-w-2xl leading-7"}>
           Some historical marketplace pages were retired when VialGrade moved to a research-only preview.
           Purchases, seller listings and checkout are unavailable. If you followed an outdated link,
           start with an active research topic or the guided study audit.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/intelligence" className="inline-flex items-center gap-2 rounded-full bg-[#111214] px-5 py-3 text-sm font-bold text-white">
-            <FileSearch className="size-4" /> Explore research
-          </Link>
-          <Link href="/intelligence/cagrilintide/audit" className="inline-flex items-center gap-2 rounded-full border border-[#111214]/25 bg-white px-5 py-3 text-sm font-bold">
-            View study audit <ArrowUpRight className="size-4" />
-          </Link>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Pill href="/intelligence" variant="primary" icon={FileSearch}>Explore research</Pill>
+          <Pill href="/intelligence/cagrilintide/audit" variant="secondary" arrow="right">View study audit</Pill>
         </div>
-      </section>
+      </Section>
     );
   }
   return (

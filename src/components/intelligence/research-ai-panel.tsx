@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { AlertCircle, ArrowUpRight, BookOpenCheck, Check, Cpu, FileQuestion, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertCircle, BookOpenCheck, Check, Cpu, FileQuestion, ShieldAlert, Sparkles } from "lucide-react";
 import type { DeskAudience, DeskTopicId } from "@/lib/peptide-research-desk";
 import type { ResearchAiResult } from "@/lib/research-ai-contract";
 import type { ResearchAiAvailability } from "@/server/intelligence/research-ai-config";
+import { Chip, Notice, Pill, Quiet, UI } from "@/components/intelligence/research-ui";
 
 export function ResearchAiPanel({
   topicId, audience, question, aiStatus, aiPilotToken,
@@ -69,105 +70,94 @@ export function ResearchAiPanel({
   }
 
   return (
-    <section aria-labelledby="research-ai-title" className="min-w-0 overflow-hidden rounded-[18px] border-2 border-[#17191b] bg-white">
-      <div className="bg-[#eae6ff] p-5">
-        <p className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[.12em] text-[#6c50a9]"><Cpu className="size-4" /> Tool-connected AI review</p>
-        <h2 id="research-ai-title" className="mt-2 text-lg font-extrabold tracking-[-.035em] text-[#252240]">AI evidence analyst</h2>
-        <p className="mt-2 text-xs leading-6 text-[#68617e]">
+    <section aria-labelledby="research-ai-title" className="ink hard-sm min-w-0 overflow-hidden rounded-[16px] bg-white">
+      <div className="border-b-2 border-[#111214] bg-[#f0edff] px-5 py-4">
+        <p className="flex items-center gap-1.5 text-[10.5px] font-extrabold uppercase tracking-[.16em] text-[#5a4be0]"><Cpu className="size-4" aria-hidden="true" /> Tool-connected AI review</p>
+        <h2 id="research-ai-title" className="mt-1 text-[clamp(1.125rem,1.6vw,1.375rem)] font-extrabold leading-[1.15] tracking-[-.03em] text-[#111214]">AI evidence analyst</h2>
+        <p className="mt-1 max-w-3xl text-[13px] font-medium leading-5 text-[#4a4d56]">
           Retrieve the pinned evidence record, ask the model for a structured interpretation, then mechanically check its source IDs before showing it.
         </p>
       </div>
-      <div className="p-5">
+      <div className="px-5 py-4">
         {aiStatus.enabled && aiPilotToken ? (
           <>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#c1e7cd] bg-[#ecfbf0] px-3 py-1.5 text-[11px] font-extrabold text-[#28634a]"><Check className="size-3.5" /> Gateway configured</span>
-              <span className="text-[10px] font-semibold text-[#718077]">{aiStatus.model}</span>
+              <Chip tone="mint" icon={Check}>Gateway configured</Chip>
+              <span className="text-[10px] font-semibold text-[var(--muted)]">{aiStatus.model}</span>
             </div>
             <form className="mt-4" onSubmit={analyze}>
-              <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-6 text-[#4b6253]">
+              <label className="flex cursor-pointer items-start gap-2.5 text-xs font-medium leading-6 text-[#3a3d46]">
                 <input type="checkbox" checked={agreed} onChange={event => setAgreed(event.target.checked)}
-                  className="mt-1 size-4 shrink-0 accent-[#326e54]" />
+                  className="mt-1 size-4 shrink-0 accent-[#2b31d8]" />
                 I consent to sending this question and the selected public source records to Vercel AI Gateway and its model provider. It may consume credits. Please don&apos;t enter private research or personal information.
               </label>
-              <button type="submit" disabled={!agreed || running}
-                className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#30275c] px-4 py-3 text-xs font-extrabold text-white hover:bg-[#463878] disabled:cursor-not-allowed disabled:bg-[#c3bfd2]">
-                <Sparkles className="size-4" /> {running ? "Reading evidence and reviewing…" : "Analyze this research question"}
-              </button>
+              <Pill type="submit" variant="primary" icon={Sparkles} disabled={!agreed || running} className="mt-4 w-full">
+                {running ? "Reading evidence and reviewing…" : "Analyze this research question"}
+              </Pill>
             </form>
-            <p className="mt-3 text-[11px] leading-5 text-[#7b778a]">Credentials are present; provider access is not proven until a real analysis succeeds. Local pilot: at most 12 runs per process, each limited to four model steps. No saved conversation, automatic follow-up or purchasing.</p>
+            <p className="mt-3 text-[11px] font-medium leading-5 text-[var(--muted)]">Credentials are present; provider access is not proven until a real analysis succeeds. Local pilot: at most 12 runs per process, each limited to four model steps. No saved conversation, automatic follow-up or purchasing.</p>
           </>
         ) : (
           <>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#e6d7b6] bg-[#fff8e7] px-3 py-1.5 text-[11px] font-extrabold text-[#896833]">
-              <AlertCircle className="size-3.5" /> Model not connected
-            </span>
-            <p className="mt-3 text-xs leading-6 text-[#66756b]">
+            <Chip tone="warn" icon={AlertCircle}>Model not connected</Chip>
+            <p className="mt-3 text-xs font-medium leading-6 text-[#3a3d46]">
               The real AI tool-calling endpoint is installed but disabled. An operator must configure a budget-limited AI Gateway key and explicitly enable the local preview before any model request can run.
             </p>
-            <p className="mt-2 text-[11px] leading-5 text-[#7b897d]">No question has been sent to a model. The source dossier, comparisons and downloadable briefings work without AI.</p>
+            <p className="mt-2 text-[11px] font-medium leading-5 text-[var(--muted)]">No question has been sent to a model. The source dossier, comparisons and downloadable briefings work without AI.</p>
           </>
         )}
       </div>
 
-      {error && <p role="alert" className="mx-5 mb-5 rounded-xl border border-[#e7b9a3] bg-[#fff4ed] p-3 text-xs leading-6 text-[#975331]">{error}</p>}
+      {error && <Notice tone="danger" role="alert" icon={AlertCircle} className="mx-5 mb-5"><p className="text-xs leading-6">{error}</p></Notice>}
 
       {result && (
-        <div aria-live="polite" className="border-t-2 border-[#17191b] bg-[#fafcfb] p-5">
-          <p className="text-[10px] font-black uppercase tracking-[.12em] text-[#785aaf]">AI draft · human review required</p>
-          <p className="mt-2 text-xs font-bold text-[#4e5c51]">{result.scope === "insufficient" ? "Evidence insufficient" : "Limited evidence · provisional interpretation"}</p>
-          <p className="mt-3 text-sm leading-7 text-[#2f453a]">{result.modelSummary}</p>
+        <div aria-live="polite" className="border-t-2 border-[#111214] bg-[var(--background)] px-5 py-5">
+          <p className="text-[10.5px] font-extrabold uppercase tracking-[.16em] text-[#5a4be0]">AI draft · human review required</p>
+          <p className="mt-2 text-xs font-bold text-[#111214]">{result.scope === "insufficient" ? "Evidence insufficient" : "Limited evidence · provisional interpretation"}</p>
+          <p className={UI.bodyInk + " mt-3 leading-7"}>{result.modelSummary}</p>
           <div className="mt-5 space-y-4">
             {result.findings.map(finding => (
-              <article key={finding.claimId} className="rounded-xl border border-[#dbe5dc] bg-white p-4">
-                <h3 className="text-sm font-extrabold leading-6 text-[#2a4436]">{finding.heading}</h3>
-                <p className="mt-2 text-xs leading-6 text-[#61746a]"><span className="font-bold">Original editorial observation:</span> {finding.originalObservation}</p>
-                <p className="mt-2 border-l-[3px] border-[#aca3d8] bg-[#f7f5ff] px-3 py-2 text-xs leading-6 text-[#5e557c]"><span className="font-bold">AI interpretation (not verified):</span> {finding.aiInterpretation}</p>
-                <p className="mt-2 text-[11px] leading-5 text-[#8b7551]">Does not prove: {finding.originalLimit}</p>
+              <Quiet as="article" key={finding.claimId} className="bg-white">
+                <h3 className="text-sm font-extrabold leading-6 text-[#111214]">{finding.heading}</h3>
+                <p className="mt-2 text-xs font-medium leading-6 text-[#3a3d46]"><span className="font-bold">Original editorial observation:</span> {finding.originalObservation}</p>
+                <p className="mt-2 border-l-[3px] border-[#6d5dfc] bg-[#f0edff] px-3 py-2 text-xs font-medium leading-6 text-[#3a3d46]"><span className="font-bold">AI interpretation (not verified):</span> {finding.aiInterpretation}</p>
+                <p className="mt-2 text-[11px] font-medium leading-5 text-[#9b6b22]">Does not prove: {finding.originalLimit}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {finding.citations.map(source => (
-                    <a key={source.id} href={source.url} rel="noopener noreferrer" target="_blank"
-                      className="inline-flex items-center gap-1 rounded-lg border border-[#c4e3d0] bg-[#f1faf5] px-2.5 py-1.5 text-[11px] font-bold text-[#2b7156]">
-                      {source.identifier} <ArrowUpRight className="size-3" />
-                    </a>
+                    <Pill key={source.id} href={source.url} external variant="ghost" size="sm" arrow="up">{source.identifier}</Pill>
                   ))}
                 </div>
-              </article>
+              </Quiet>
             ))}
           </div>
           <div className="mt-5 space-y-3">
             {result.potentialConflicts.length > 0 && (
-              <section className="rounded-xl border border-[#e9d5af] bg-[#fff7e9] p-4">
-                <h3 className="text-xs font-extrabold text-[#856134]">Unresolved source relationships, not proven contradictions</h3>
+              <Notice tone="warn" title={<h3 className="text-xs font-extrabold">Unresolved source relationships, not proven contradictions</h3>}>
                 {result.potentialConflicts.map((item, index) => (
-                  <p key={item.claimId + index} className="mt-2 text-xs leading-6 text-[#7e6646]">{item.aiNote} <span className="font-bold">Original limit:</span> {item.originalLimit}</p>
+                  <p key={item.claimId + index} className="mt-2 text-xs leading-6">{item.aiNote} <span className="font-bold">Original limit:</span> {item.originalLimit}</p>
                 ))}
-              </section>
+              </Notice>
             )}
             {result.gaps.length > 0 && (
-              <section className="rounded-xl border border-[#dbdfed] bg-[#f4f5fb] p-4">
-                <h3 className="flex items-center gap-1.5 text-xs font-extrabold text-[#51597c]"><FileQuestion className="size-4" /> Still needs verification</h3>
+              <Notice tone="blue" icon={FileQuestion} title={<h3 className="text-xs font-extrabold">Still needs verification</h3>}>
                 {result.gaps.map((gap, index) => (
-                  <p key={gap.claimId + index} className="mt-2 text-xs leading-6 text-[#636b84]">{gap.aiNote}</p>
+                  <p key={gap.claimId + index} className="mt-2 text-xs leading-6">{gap.aiNote}</p>
                 ))}
-              </section>
+              </Notice>
             )}
           </div>
           {result.nextSources.length > 0 && (
             <div className="mt-5">
-              <p className="flex items-center gap-2 text-xs font-extrabold text-[#446755]"><BookOpenCheck className="size-4" /> Original records to inspect next</p>
+              <p className="flex items-center gap-2 text-xs font-extrabold text-[#111214]"><BookOpenCheck className="size-4 text-[#2b31d8]" aria-hidden="true" /> Original records to inspect next</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {result.nextSources.map(source => (
-                  <a key={source.id} href={source.url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-[#c5e1ce] bg-white px-3 py-2 text-xs font-bold text-[#226d54]">
-                    {source.identifier}<ArrowUpRight className="size-3" />
-                  </a>
+                  <Pill key={source.id} href={source.url} external variant="secondary" size="sm" arrow="up">{source.identifier}</Pill>
                 ))}
               </div>
             </div>
           )}
-          <div className="mt-5 flex items-start gap-2 border-t border-[#e0e7e0] pt-4 text-[11px] leading-6 text-[#7d826f]"><ShieldAlert className="mt-1 size-4 shrink-0" />{result.boundaries[0]} Source snapshot: {result.sourceSnapshot}.</div>
-          <p className="mt-1 text-[10px] text-[#8a9390]">{result.evidenceToolCalls} source-file lookup(s) · {result.model} · No saved model history</p>
+          <div className="mt-5 flex items-start gap-2 border-t border-[#111214]/15 pt-4 text-[11px] font-medium leading-6 text-[var(--muted)]"><ShieldAlert className="mt-1 size-4 shrink-0" aria-hidden="true" />{result.boundaries[0]} Source snapshot: {result.sourceSnapshot}.</div>
+          <p className="mt-1 text-[10px] font-medium text-[var(--muted)]">{result.evidenceToolCalls} source-file lookup(s) · {result.model} · No saved model history</p>
         </div>
       )}
     </section>

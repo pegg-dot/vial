@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { getVendorDirectory } from "@/server/vendors/directory";
 import { SupplierSections } from "@/components/intelligence/supplier-sections";
+import { Notice, PageFootnote, PageHero, Pill, Section } from "@/components/intelligence/research-ui";
 import { supplierGradesReleased, supplierRows, TENTATIVE_BELOW_CERTIFICATES, type SupplierRow } from "@/lib/supplier-grades";
 
 export const metadata: Metadata = {
@@ -12,18 +13,42 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
+const CRUMBS = [{ href: "/intelligence/market", label: "Research Market" }, { label: "Supplier grades" }] as const;
+const TITLE = "Supplier grades, with the evidence beside each one";
+
 export default async function SuppliersPage() {
   if (!supplierGradesReleased()) {
     return (
-      <div className="mx-auto max-w-[900px] px-5 py-16 sm:px-8">
-        <h1 className="text-3xl font-extrabold tracking-[-.04em]">Supplier grades are not switched on yet</h1>
-        <p className="mt-3 text-sm font-medium leading-6 text-[#4a4d56]">Grades of laboratories, manufacturers and storefronts are built but held back until the evidence behind them has been reviewed. The research dossiers and the supplier documentation pages are unaffected.</p>
-        <Link href="/intelligence/providers" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-extrabold text-[#2b31d8] hover:underline">Company-published QC documentation <ArrowRight className="size-4" /></Link>
+      <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+        <PageHero size="compact" art={["shield", "coa"]} breadcrumb={CRUMBS}
+          eyebrow={<><ShieldCheck className="size-4" aria-hidden="true" /> Supplier grades · Not released</>}
+          title="Supplier grades are not switched on yet"
+          lead="Grades of laboratories, manufacturers and storefronts are built but held back until the evidence behind them has been reviewed."
+          note="The research dossiers and the supplier documentation pages are unaffected."
+          actions={<>
+            <Pill href="/intelligence/providers" arrow="right">Company-published QC documentation</Pill>
+            <Pill href="/intelligence/market" variant="ghost">Research Market</Pill>
+          </>}
+        />
+        <PageFootnote href="/intelligence/grading" linkLabel="How research files are graded">
+          When released, a letter will summarize the independent laboratory certificates we hold for an organization. It will not be a certification,
+          a recommendation or a statement about any product you could receive.
+        </PageFootnote>
       </div>
     );
   }
   const entries = await getVendorDirectory().catch(() => null);
-  if (!entries) return <div className="mx-auto max-w-[900px] px-5 py-16 sm:px-8"><p className="text-sm font-bold">The supplier records could not be read right now.</p></div>;
+  if (!entries) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+        <PageHero size="compact" art={["shield", "coa"]} breadcrumb={CRUMBS} eyebrow="Supplier grades" title={TITLE}
+          lead="A letter summarizes the independent laboratory certificates we hold for an organization." />
+        <Section narrow tight>
+          <Notice tone="danger" role="alert"><p>The supplier records could not be read right now.</p></Notice>
+        </Section>
+      </div>
+    );
+  }
   const rows = supplierRows(entries);
   const sections: Array<[string, SupplierRow[]]> = [
     ["Laboratory-tested storefronts and brands", rows.filter(r => r.kind !== "manufacturer")],
@@ -31,21 +56,24 @@ export default async function SuppliersPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-[1320px] px-5 pb-20 pt-8 sm:px-8">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-bold text-[#4a4d56]">
-        <Link href="/intelligence/market" className="hover:underline">Research Market</Link><span aria-hidden="true">/</span>
-        <span aria-current="page" className="text-[#111214]">Supplier grades</span>
-      </nav>
-      <header className="ink hard mt-5 rounded-[22px] bg-white px-6 py-6 sm:px-8">
-        <h1 className="text-balance text-[clamp(2rem,4vw,3.25rem)] font-extrabold leading-[.95] tracking-[-.05em]">Supplier grades, with the evidence beside each one</h1>
-        <p className="mt-3 max-w-3xl text-[15px] font-medium leading-6 text-[#3a3d46]">
-          A letter summarizes the independent laboratory certificates we hold for an organization. It is not a certification, a recommendation or a statement about any product you could receive. This page has no prices, stock or links to sellers.
-        </p>
-        <p className="mt-2 max-w-3xl text-xs font-medium leading-5 text-[#4a4d56]">
-          Fewer than {TENTATIVE_BELOW_CERTIFICATES} certificates is shown as <strong>Tentative</strong>; none is <strong>Unrated</strong>. Corrections: tell us through <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline">the contact on the legal page</Link>.
-        </p>
-      </header>
-      <SupplierSections sections={sections} />
+    <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+      <PageHero art={["shield", "coa"]} breadcrumb={CRUMBS}
+        eyebrow={<><ShieldCheck className="size-4" aria-hidden="true" /> Supplier grades · Independent certificates on file</>}
+        title={TITLE}
+        lead="A letter summarizes the independent laboratory certificates we hold for an organization. It is not a certification, a recommendation or a statement about any product you could receive. This page has no prices, stock or links to sellers."
+        note={<>Fewer than {TENTATIVE_BELOW_CERTIFICATES} certificates is shown as <strong>Tentative</strong>; none is <strong>Unrated</strong>. Corrections: tell us through <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-4">the contact on the legal page</Link>.</>}
+        actions={<>
+          <Pill href="/intelligence/providers" arrow="right">Company-published QC documentation</Pill>
+          <Pill href="/intelligence/grading" variant="ghost" arrow="right">How files are graded</Pill>
+        </>}
+      />
+      <Section tight>
+        <SupplierSections sections={sections} />
+      </Section>
+      <PageFootnote href="/intelligence/grading" linkLabel="How research files are graded">
+        Purity figures are each laboratory&apos;s result for one tested sample. A grade is a summary of certificates on file, not a guarantee of any other lot
+        and not a recommendation.
+      </PageFootnote>
     </div>
   );
 }

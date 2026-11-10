@@ -76,19 +76,19 @@ export function ResearchMarketShelves() {
       </CollectionRow>
 
       {selected.length > 0 && (
-        <section aria-label="Research shelf comparison" className="sticky bottom-4 z-30 mx-auto flex max-w-[900px] flex-wrap items-center justify-between gap-4 rounded-xl border-2 border-[#111214] bg-[#2b31d8] p-4 text-white shadow-[5px_5px_0_#111214]">
+        <section aria-label="Research shelf comparison" className="ink hard sticky bottom-4 z-30 mx-auto flex max-w-[900px] flex-wrap items-center justify-between gap-4 rounded-[16px] bg-[#2b31d8] p-4 text-white">
           <div className="min-w-0">
-            <p className="text-xs font-bold">Compare research files · {selected.length}/3</p>
+            <p className="text-xs font-bold text-white/80">Compare research files · {selected.length}/3</p>
             <div className="mt-2 flex flex-wrap gap-1.5">{selected.map(slug => (
               <button key={slug} onClick={() => toggle(slug)} aria-label={"Remove " + slug}
-                className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold">{RESEARCH_SUBJECTS.find(item => item.slug === slug)?.name}<X className="size-3" /></button>
+                className="inline-flex min-h-7 items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold hover:bg-white/30">{RESEARCH_SUBJECTS.find(item => item.slug === slug)?.name}<X className="size-3" aria-hidden="true" /></button>
             ))}</div>
           </div>
           <Link href={selected.length < 2 ? "#" : compareHref} aria-disabled={selected.length < 2}
             onClick={event => { if (selected.length < 2) event.preventDefault(); }}
-            className={"ink inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-extrabold " +
-              (selected.length < 2 ? "cursor-not-allowed bg-white/30 text-white/75" : "bg-white text-[#111214]")}>
-            Compare <GitCompareArrows className="size-4" />
+            className={"ink inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-xs font-extrabold " +
+              (selected.length < 2 ? "cursor-not-allowed bg-white/30 text-white/75" : "bg-white text-[#111214] hover:bg-[#eef0ff]")}>
+            Compare <GitCompareArrows className="size-4" aria-hidden="true" />
           </Link>
         </section>
       )}

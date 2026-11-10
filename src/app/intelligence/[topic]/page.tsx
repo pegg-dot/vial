@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, FileCheck2 } from "lucide-react";
+import { FileCheck2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { PUBLIC_RESEARCH_TOPICS } from "@/server/intelligence/public-trials";
 import { findResearchTopic, getPublicDossier } from "@/server/intelligence/public-dossiers";
 import { ResearchWorkspace } from "@/components/intelligence/research-workspace";
+import { Frame, PageFootnote, PageHero, Pill, Section, UI } from "@/components/intelligence/research-ui";
 
 export const revalidate = 21_600;
 export const dynamicParams = false;
@@ -40,63 +40,39 @@ export default async function ResearchDossierPage({
   if (!dossier) notFound();
 
   return (
-    <div>
-      <section className="border-b-2 border-[#111214] bg-[#f0edff]">
-        <div className="mx-auto max-w-[1120px] px-5 pb-14 pt-10 sm:px-8 sm:pb-16">
-          <Link href="/intelligence" className="inline-flex items-center gap-2 text-xs font-extrabold text-[#2b31d8] hover:underline">
-            <ArrowLeft className="size-4" /> All research dossiers
-          </Link>
-          <div className="mt-10 inline-flex items-center gap-2 rounded-full border border-[#111214]/20 bg-white px-4 py-2 text-[11px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">
-            <FileCheck2 className="size-4" /> Traceable source register
-          </div>
-          <h1 className="mt-6 text-[clamp(2.8rem,6vw,5.5rem)] font-extrabold leading-tight tracking-[-.06em]">
-            {dossier.label}
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-8 text-[#111214]/75">
-            A dated, reproducible starting point for exploring this R&amp;D topic.
-            It separates registered study metadata from scholarly literature metadata,
-            and makes unavailable sources and unanswered questions explicit.
-          </p>
-          <nav className="mt-7 flex flex-wrap gap-2" aria-label="Related research dossiers">
-            {PUBLIC_RESEARCH_TOPICS.filter(entry => entry.key !== topic).map(entry => (
-              <Link key={entry.key} href={"/intelligence/" + entry.key}
-                className="inline-flex items-center gap-2 rounded-full border border-[#111214]/25 bg-white px-4 py-2 text-xs font-bold hover:bg-[#f7f7f4]">
-                {entry.label} <ArrowUpRight className="size-3.5" />
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </section>
+    <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+      <PageHero art={["flask", "molecule"]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: dossier.label }]}
+        eyebrow={<><FileCheck2 className="size-4" aria-hidden="true" /> Traceable source register</>}
+        title={dossier.label}
+        lead="A dated, reproducible starting point for exploring this R&D topic. It separates registered study metadata from scholarly literature metadata, and makes unavailable sources and unanswered questions explicit."
+        note="Search-result samples from two public systems, not a systematic review. Nothing here assesses efficacy, approval, purity or lawful supply."
+        actions={<Pill href="#dossier-trail" variant="primary" arrow="right">Open the evidence trail</Pill>}
+        aside={topic === "cagrilintide" ? (
+          <Frame tone="blue" shadow="hard">
+            <p className={UI.eyebrow}>Research-task prototype</p>
+            <h2 className={UI.h3 + " mt-3"}>Follow the evidence from trial registrations to linked papers.</h2>
+            <p className={UI.bodyInk + " mt-2"}>Inspect four selected official trials, compare the registered outcomes and result sections, and follow protocol-linked papers whose exact trial IDs PubMed independently indexes. This is not a complete clinical review.</p>
+            <Pill href="/intelligence/cagrilintide/audit" variant="ink" size="sm" arrow="right" className="mt-4">Open study audit</Pill>
+          </Frame>
+        ) : undefined}>
+        <nav aria-label="Related research dossiers" className="mt-7 flex flex-wrap gap-2">
+          {PUBLIC_RESEARCH_TOPICS.filter(entry => entry.key !== topic).map(entry => (
+            <Pill key={entry.key} href={"/intelligence/" + entry.key} variant="ghost" size="sm" arrow="right">{entry.label}</Pill>
+          ))}
+        </nav>
+      </PageHero>
 
-      {topic === "cagrilintide" && (
-        <section className="mx-auto max-w-[1120px] px-5 pt-10 sm:px-8">
-          <div className="flex flex-col items-start justify-between gap-5 rounded-[18px] border-2 border-[#111214] bg-white p-6 sm:flex-row sm:items-center sm:p-7">
-            <div className="max-w-2xl">
-              <p className="text-xs font-extrabold uppercase tracking-[.15em] text-[#2b31d8]">New research-task prototype</p>
-              <h2 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">Follow the evidence from trial registrations to linked papers.</h2>
-              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">Inspect four selected official trials, compare the registered outcomes and result sections, and follow protocol-linked papers whose exact trial IDs PubMed independently indexes. This is not a complete clinical review.</p>
-            </div>
-            <Link href="/intelligence/cagrilintide/audit"
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#111214] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#333]">
-              Open study audit <ArrowUpRight className="size-4" />
-            </Link>
-          </div>
-        </section>
-      )}
+      <Section tight>
+        <ResearchWorkspace dossiers={[dossier]} selectedTopic={dossier.key} />
+      </Section>
 
-      <ResearchWorkspace dossiers={[dossier]} selectedTopic={dossier.key} />
-
-      <section className="border-t border-[#111214]/15 bg-white">
-        <div className="mx-auto max-w-[1120px] px-5 py-12 sm:px-8">
-          <p className="text-xs leading-7 text-[var(--muted)]">
-            These are search-result samples, not all trials or publications and not a systematic review.
-            A keyword match does not establish that a source directly investigates this compound.
-            This page does not assess medical efficacy, drug approval, laboratory purity, human-use
-            legality, financial valuation or recommended investments.
-            Review the <Link href="/legal/us-regulations" className="font-bold text-[#2b31d8] underline">U.S. regulatory overview</Link>.
-          </p>
-        </div>
-      </section>
+      <PageFootnote href="/legal/us-regulations" linkLabel="U.S. regulatory overview">
+        These are search-result samples, not all trials or publications and not a systematic review.
+        A keyword match does not establish that a source directly investigates this compound.
+        This page does not assess medical efficacy, drug approval, laboratory purity, human-use
+        legality, financial valuation or recommended investments.
+      </PageFootnote>
     </div>
   );
 }

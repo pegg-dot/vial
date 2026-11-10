@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, ClipboardCopy, Download } from "lucide-react";
+import { Pill } from "@/components/intelligence/research-ui";
 
 /** Browser-only export of a factual source register. No server write or research profile. */
 export function ResearchAuditExport({ markdown }: { markdown: string }) {
@@ -28,14 +29,11 @@ export function ResearchAuditExport({ markdown }: { markdown: string }) {
   }
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <button type="button" onClick={copy} className="inline-flex items-center gap-2 rounded-full border border-[#111214]/25 bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#f7f7f4]">
-        {copied ? <Check className="size-4" /> : <ClipboardCopy className="size-4" />}
+      <Pill variant="secondary" icon={copied ? Check : ClipboardCopy} onClick={copy}>
         {copied ? "Copied factual audit" : "Copy audit"}
-      </button>
-      <button type="button" onClick={download} className="inline-flex items-center gap-2 rounded-full bg-[#111214] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#333]">
-        <Download className="size-4" /> Export cited Markdown
-      </button>
-      {error && <span role="status" className="text-xs text-[#9e3d11]">Clipboard unavailable. Use the download instead.</span>}
+      </Pill>
+      <Pill variant="ink" icon={Download} onClick={download}>Export cited Markdown</Pill>
+      {error && <span role="status" className="text-xs font-bold text-[#ce403b]">Clipboard unavailable. Use the download instead.</span>}
     </div>
   );
 }
