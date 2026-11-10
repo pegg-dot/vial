@@ -4,13 +4,17 @@ import type { ResearchSubject } from "@/lib/research-explorer";
 import { dossierTrialEvidence, dossierTrialWorkpaper } from "@/lib/research-dossier-evidence";
 import { lookupStudy } from "@/server/intelligence/study-lookup";
 import { StudyBriefActions } from "@/components/intelligence/study-brief-actions";
+import { Chip, Notice, Quiet, UI, type Tone } from "@/components/intelligence/research-ui";
+
+// The heading that names an inner panel inside a dossier frame: ink, display weight, under the frame's h2.
+const PANEL_H3 = "text-lg font-extrabold tracking-[-.03em] text-[#111214]";
 
 export function TrialEvidenceLoading({ nctId }: { nctId: string }) {
   return (
-    <section aria-label="Selected official trial evidence" className="rounded-[14px] border border-[#111214]/15 bg-white p-6">
-      <h3 className="text-base font-semibold text-[#28293b]">Checking the selected trial · {nctId}</h3>
-      <p className="mt-3 text-sm leading-7 text-[#777b8b]">Loading its registered outcomes and publication relationships from official NIH sources. These links may be temporarily unavailable.</p>
-    </section>
+    <Quiet as="section" ariaLabel="Selected official trial evidence">
+      <h3 className={UI.h4}>Checking the selected trial · {nctId}</h3>
+      <p className={UI.body + " mt-2"}>Loading its registered outcomes and publication relationships from official NIH sources. These links may be temporarily unavailable.</p>
+    </Quiet>
   );
 }
 
@@ -25,22 +29,27 @@ function crosscheckText(result: "confirmed" | "not-corroborated" | "unavailable"
       "Independent indexing unavailable";
 }
 
+// Tone says what kind of fact the cross-check is: corroborated (mint), contradicted (warn), unknown (paper).
+const CROSSCHECK_TONE: Record<"confirmed" | "not-corroborated" | "unavailable", Tone> = {
+  confirmed: "mint", "not-corroborated": "warn", unavailable: "paper",
+};
+
 export async function DossierTrialEvidence({ subject }: { subject: ResearchSubject }) {
   if (!subject.sampleTrial) return null;
   const lookup = await lookupStudy(subject.sampleTrial);
   const card = dossierTrialEvidence(subject, lookup);
 
   if (card.state !== "verified") return (
-    <section id="evidence-review" aria-label="Selected official trial evidence" className="rounded-[14px] border-2 border-[#111214] bg-[#fff3d8] p-6">
-      <div className="flex items-center gap-2 text-[#9b6b22]"><ShieldAlert className="size-4" /><span className="text-xs font-bold uppercase tracking-[.1em]">Source status · Needs verification</span></div>
-      <h3 className="mt-3 text-lg font-semibold text-[#3b3544]">The selected trial could not be verified.</h3>
-      <p className="mt-3 text-sm leading-7 text-[#706a6a]">
+    <section id="evidence-review" aria-label="Selected official trial evidence" className="ink-1 rounded-[14px] bg-[#fff3d8] p-5">
+      <Chip tone="warn" icon={ShieldAlert}>Source status · Needs verification</Chip>
+      <h3 className={PANEL_H3 + " mt-3"}>The selected trial could not be verified.</h3>
+      <p className={UI.bodyInk + " mt-2 leading-7"}>
         {card.state === "identity-not-verified"
           ? "The fetched study did not reliably match this subject in its intervention fields. We are not treating it as supporting evidence."
           : "The registry record was unavailable or incomplete during this check. This does not mean the trial or its publications do not exist."}
       </p>
-      <a href={card.registryUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#2b31d8] underline">
-        Open {card.nctId} at ClinicalTrials.gov <ArrowUpRight className="size-4" />
+      <a href={card.registryUrl} target="_blank" rel="noopener noreferrer" className={UI.link + " mt-4"}>
+        Open {card.nctId} at ClinicalTrials.gov <ArrowUpRight className="size-4" aria-hidden="true" />
       </a>
     </section>
   );
@@ -48,27 +57,27 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
   return (
     <section id="evidence-review" aria-label="Selected official trial evidence" className="overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
       <div className="border-b border-[#111214]/15 bg-[#eef0ff] px-5 py-4">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[.1em] text-[#2b31d8]">
-          <CheckCircle2 className="size-4" /> Official source check · {card.nctId}
-        </div>
-        <h3 className="mt-2 text-lg font-extrabold tracking-[-.03em] text-[#111214]">What the selected trial actually records</h3>
-        <p className="mt-2 text-sm leading-6 text-[#626079]">
+        <p className={UI.eyebrow + " flex flex-wrap items-center gap-2"}>
+          <CheckCircle2 className="size-4" aria-hidden="true" /> Official source check · {card.nctId}
+        </p>
+        <h3 className={PANEL_H3 + " mt-2"}>What the selected trial actually records</h3>
+        <p className={UI.bodyInk + " mt-2"}>
           This is one verified intervention-name match, not every study of {subject.name}. It gives you original registry facts and exact PubMed citation relationships, not a conclusion about clinical benefit.
         </p>
       </div>
 
-      <dl className="grid gap-0 border-b border-[#eae8ef] sm:grid-cols-3">
-        <div className="border-b border-[#eae8ef] px-5 py-3 sm:border-b-0 sm:border-r">
-          <dt className="text-xs text-[#80808b]">Official study status</dt>
-          <dd className="mt-1 text-sm font-semibold capitalize text-[#323147]">{card.status?.toLowerCase().replaceAll("_", " ") ?? "Not reported"}</dd>
+      <dl className="grid gap-0 border-b border-[#111214]/15 sm:grid-cols-3">
+        <div className="border-b border-[#111214]/15 px-5 py-3 sm:border-b-0 sm:border-r">
+          <dt className={UI.eyebrowMuted}>Official study status</dt>
+          <dd className="mt-1 text-sm font-bold capitalize text-[#111214]">{card.status?.toLowerCase().replaceAll("_", " ") ?? "Not reported"}</dd>
         </div>
-        <div className="border-b border-[#eae8ef] px-5 py-3 sm:border-b-0 sm:border-r">
-          <dt className="text-xs text-[#80808b]">Registry result reporting</dt>
-          <dd className="mt-1 text-sm font-semibold text-[#323147]">{resultText(card.hasRegistryResults)}</dd>
+        <div className="border-b border-[#111214]/15 px-5 py-3 sm:border-b-0 sm:border-r">
+          <dt className={UI.eyebrowMuted}>Registry result reporting</dt>
+          <dd className="mt-1 text-sm font-bold text-[#111214]">{resultText(card.hasRegistryResults)}</dd>
         </div>
         <div className="px-5 py-3">
-          <dt className="text-xs text-[#80808b]">Exact PubMed NCT links</dt>
-          <dd className="mt-1 text-sm font-semibold text-[#323147]">
+          <dt className={UI.eyebrowMuted}>Exact PubMed NCT links</dt>
+          <dd className="mt-1 text-sm font-bold text-[#111214]">
             {card.confirmedPubmedLinks} / {card.citations.length} cited PubMed IDs
           </dd>
         </div>
@@ -77,19 +86,19 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
       <div className="grid gap-5 px-5 py-5 lg:grid-cols-2">
         <div className="min-w-0 space-y-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[.1em] text-[#898394]">The trial&apos;s registered question</p>
-          <h3 className="mt-1.5 text-base font-semibold leading-6 text-[#2e3043]">{card.studyTitle}</h3>
-          <p className="mt-3 text-sm leading-6 text-[#676d79]">
+          <p className={UI.eyebrowMuted}>The trial&apos;s registered question</p>
+          <h3 className={UI.h4 + " mt-1.5 leading-6"}>{card.studyTitle}</h3>
+          <p className={UI.bodyInk + " mt-3"}>
             Registered primary outcome{card.totalOutcomeMeasures === 1 ? "" : "s"}:
           </p>
           {card.outcomeMeasures.length ? (
-            <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm leading-6 text-[#404458]">
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm font-medium leading-6 text-[#3a3d46]">
               {card.outcomeMeasures.map((measure, i) => <li key={i}>{measure}</li>)}
             </ul>
-          ) : <p className="mt-2 text-sm text-[#868891]">No parseable primary outcome measure returned.</p>}
-          {card.totalOutcomeMeasures > card.outcomeMeasures.length && <p className="mt-2 text-xs text-[#858593]">More outcome measures appear in the registry; open the original source to review all.</p>}
+          ) : <p className={UI.body + " mt-2"}>No parseable primary outcome measure returned.</p>}
+          {card.totalOutcomeMeasures > card.outcomeMeasures.length && <p className={UI.small + " mt-2"}>More outcome measures appear in the registry; open the original source to review all.</p>}
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#edeaf0] pt-4 text-xs text-[#737786]">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#111214]/15 pt-4 text-xs font-medium text-[var(--muted)]">
           <span>Phase: {card.phase?.replaceAll("PHASE", "Phase ") ?? "Not reported"}</span>
           <span>Sponsor: {card.sponsor ?? "Not reported"}</span>
           <span>Registry update: {card.recordUpdatedAt ?? "Unknown"}</span>
@@ -98,38 +107,37 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
 
         </div>
         <div className="min-w-0 space-y-4">
-        <div className="rounded-xl bg-[#f7f7fa] p-4">
-          <div className="flex gap-2"><CircleHelp className="mt-0.5 size-4 shrink-0 text-[#786f9e]" /><p className="text-sm font-semibold text-[#3f3a58]">What this cannot establish</p></div>
-          <p className="mt-2 text-xs leading-6 text-[#676b7a]">
+        <Notice tone="warn" icon={CircleHelp} title="What this cannot establish">
+          <p className="text-xs leading-6">
             Registration, result-section availability and publication indexing are separate facts. This check has not evaluated clinical effectiveness, published outcome statistics, reporting compliance, all available literature or comparisons against another study.
           </p>
-        </div>
+        </Notice>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[#edeaf0] pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[#111214]/15 pt-5">
           <div>
-            <p className="text-xs font-semibold text-[#343247]">Take the source workpaper</p>
-            <p className="mt-1 text-xs leading-5 text-[#838694]">Includes original links and explicit uncertainty. No account required.</p>
+            <p className="text-xs font-extrabold text-[#111214]">Take the source workpaper</p>
+            <p className={UI.small + " mt-1"}>Includes original links and explicit uncertainty. No account required.</p>
           </div>
           <StudyBriefActions nctId={card.nctId} markdown={dossierTrialWorkpaper(card)} />
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
-          <a href={card.registryUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#55479c] hover:underline">
-            <FileText className="size-3.5" /> Read the registry <ArrowUpRight className="size-3" />
+        <div className="flex flex-wrap items-center gap-4">
+          <a href={card.registryUrl} target="_blank" rel="noopener noreferrer" className={UI.linkSmall}>
+            <FileText className="size-3.5" aria-hidden="true" /> Read the registry <ArrowUpRight className="size-3" aria-hidden="true" />
           </a>
-          <Link href={"/intelligence/studies/" + card.nctId} className="inline-flex items-center gap-1 text-[#55479c] hover:underline">
-            Full NCT evidence check <ArrowRight className="size-3.5" />
+          <Link href={"/intelligence/studies/" + card.nctId} className={UI.linkSmall}>
+            Full NCT evidence check <ArrowRight className="size-3.5" aria-hidden="true" />
           </Link>
         </div>
-        <p className="text-[11px] leading-5 text-[#8c8e99]">
+        <p className="text-[11px] font-medium leading-5 text-[var(--muted)]">
           Retrieved {card.checkedAt.slice(0, 16).replace("T", " ")} UTC. Source API responses may be cached for up to six hours. No individual research-history profile is created.
         </p>
         </div>
         <div className="border-t border-[#111214]/15 pt-4 lg:col-span-2">
           <div className="flex items-center gap-2">
-            <BookOpenCheck className="size-4 text-[#6c5d9e]" />
-            <h3 className="text-sm font-semibold text-[#323148]">Papers specifically cited by this registry</h3>
+            <BookOpenCheck className="size-4 text-[#2b31d8]" aria-hidden="true" />
+            <h3 className={UI.h4}>Papers specifically cited by this registry</h3>
           </div>
-          <p className="mt-1.5 text-xs leading-5 text-[#797d89]">
+          <p className={UI.small + " mt-1.5"}>
             The registry assigns each paper a role such as RESULT, BACKGROUND or DERIVED. PubMed may independently list the same trial ID. Neither verifies the article&apos;s conclusions.
           </p>
           {card.citations.length > 0 ? (
@@ -137,16 +145,16 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
               const head = card.citations.slice(0, 4);
               const rest = card.citations.slice(4);
               const row = (ref: (typeof card.citations)[number]) => (
-                <li key={ref.pmid} className="rounded-xl border border-[#111214]/15 bg-[#fbfbf8] p-3.5">
-                  <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-[#4a4d56]">
-                    <span className="rounded-md bg-[#eef0ff] px-2 py-1">Registry: {ref.registryRole}</span>
-                    <span className="rounded-md bg-[#f0f1f5] px-2 py-1">{crosscheckText(ref.exactNct)}</span>
+                <Quiet as="li" key={ref.pmid}>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Chip tone="blue">Registry: {ref.registryRole}</Chip>
+                    <Chip tone={CROSSCHECK_TONE[ref.exactNct]}>{crosscheckText(ref.exactNct)}</Chip>
                   </div>
-                  <p className="mt-1.5 text-[13px] font-semibold leading-5 text-[#111214]">{ref.pubmedTitle ?? "Article metadata not independently available"}</p>
-                  <a href={ref.url} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">
-                    PMID {ref.pmid} · Open original PubMed record <ArrowUpRight className="size-3" />
+                  <p className="mt-2 text-[13px] font-extrabold leading-5 text-[#111214]">{ref.pubmedTitle ?? "Article metadata not independently available"}</p>
+                  <a href={ref.url} target="_blank" rel="noopener noreferrer" className={UI.linkSmall + " mt-1.5"}>
+                    PMID {ref.pmid} · Open original PubMed record <ArrowUpRight className="size-3" aria-hidden="true" />
                   </a>
-                </li>
+                </Quiet>
               );
               return (
                 <>
@@ -160,7 +168,7 @@ export async function DossierTrialEvidence({ subject }: { subject: ResearchSubje
                 </>
               );
             })()
-          ) : <p className="mt-3 text-sm leading-6 text-[#6e7280]">No PMID is in the inspected registry reference fields. This does not mean no paper exists.</p>}
+          ) : <p className={UI.body + " mt-3"}>No PMID is in the inspected registry reference fields. This does not mean no paper exists.</p>}
         </div>
       </div>
     </section>

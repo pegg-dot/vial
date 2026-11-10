@@ -42,7 +42,7 @@ export function UpdatesPrompt() {
         </p>
         <div className="flex items-center gap-3">
           <Link href="/intelligence/updates" onClick={remember} className="ink hard-sm press inline-flex min-h-11 items-center rounded-full bg-white px-5 text-sm font-extrabold">Email me</Link>
-          <button type="button" onClick={dismiss} className="inline-flex min-h-11 items-center px-3 text-sm font-bold text-[#55575f] underline underline-offset-4">Not now</button>
+          <button type="button" onClick={dismiss} className="inline-flex min-h-11 items-center px-3 text-sm font-bold text-[var(--muted)] underline underline-offset-4">Not now</button>
         </div>
       </div>
     </aside>

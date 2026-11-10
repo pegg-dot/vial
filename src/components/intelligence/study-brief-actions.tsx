@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy, Download } from "lucide-react";
+import { Pill } from "@/components/intelligence/research-ui";
 
 export function StudyBriefActions({ markdown, nctId }: { markdown: string; nctId: string }) {
   const [copied, setCopied] = useState(false);
@@ -26,14 +27,11 @@ export function StudyBriefActions({ markdown, nctId }: { markdown: string; nctId
   }
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" onClick={copy} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#d8dbe4] bg-white px-4 py-2 text-sm font-semibold text-[#303449] hover:bg-[#f5f5f9]">
-        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+      <Pill variant="secondary" icon={copied ? Check : Copy} onClick={copy}>
         {copied ? "Copied" : "Copy brief"}
-      </button>
-      <button type="button" onClick={download} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#111214] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2b31d8]">
-        <Download className="size-4" /> Download brief
-      </button>
-      {error && <span role="alert" className="text-sm text-[#a33926]">Copy unavailable. Download the brief instead.</span>}
+      </Pill>
+      <Pill variant="ink" icon={Download} onClick={download}>Download brief</Pill>
+      {error && <span role="alert" className="text-sm font-bold text-[#ce403b]">Copy unavailable. Download the brief instead.</span>}
     </div>
   );
 }

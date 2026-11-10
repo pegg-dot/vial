@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Building2, CircleAlert, FileCheck2, FlaskConical, ShieldAlert } from "lucide-react";
+import { Building2, CircleAlert, FileCheck2, ShieldAlert } from "lucide-react";
 import { PexNoLabVerification } from "@/components/intelligence/pexiganan-evidence";
 import { PEXIGANAN_RECORDED_ORGANIZATIONS, PEXIGANAN_REVIEW_DATE } from "@/lib/pexiganan-evidence-network";
 import { getPexigananTrialEvidence } from "@/server/intelligence/pexiganan-network";
+import {
+  Chip, Frame, Notice, NumberedSection, PageFootnote, PageHero, Pill, Quiet, Section, UI,
+} from "@/components/intelligence/research-ui";
 
 export const metadata: Metadata = {
   title: "Organizations and evidence provenance | VialGrade",
@@ -12,110 +14,102 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const STUDY_COUNT = PEXIGANAN_RECORDED_ORGANIZATIONS.reduce((total, org) => total + org.nctIds.length, 0);
+
+/** One numbered section per recorded sponsor, so the organization name is the section's own h2. */
 async function OrganizationAttributionList() {
   const rows = await getPexigananTrialEvidence();
   return (
-    <div className="mt-6 grid gap-5 md:grid-cols-2">
-      {PEXIGANAN_RECORDED_ORGANIZATIONS.map(org => {
+    <>
+      {PEXIGANAN_RECORDED_ORGANIZATIONS.map((org, index) => {
         const matching = org.nctIds.map(id => rows.find(r => r.selected.nctId === id)!);
         const verified = matching.filter(row => row.state === "matched" && row.sponsor === org.name);
+        const complete = verified.length === org.nctIds.length;
         return (
-          <article key={org.name} className="overflow-hidden rounded-[19px] border-2 border-[#17191b] bg-white">
-            <div className="border-b border-[#dce6e0] bg-[#f0faf4] p-6">
-              <div className="grid size-11 place-items-center rounded-xl border border-[#cee2d4] bg-white"><Building2 className="size-5 text-[#287362]" /></div>
-              <p className="mt-4 text-[11px] font-bold uppercase tracking-[.09em] text-[#548371]">Public clinical registry · Lead sponsor field</p>
-              <h2 className="mt-2 text-xl font-extrabold tracking-[-.04em] text-[#202b25]">{org.name}</h2>
-              <p className="mt-2 text-sm leading-6 text-[#64756d]">{org.recordRole}.</p>
-              <p className={"mt-3 inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-[11px] font-bold " + (
-                verified.length === org.nctIds.length ? "bg-[#d9f3e3] text-[#226a54]" : "bg-[#fff1dc] text-[#8c662e]"
-              )}>
-                {verified.length === org.nctIds.length
-                  ? <FileCheck2 className="size-4" /> : <CircleAlert className="size-4" />}
-                {verified.length === org.nctIds.length
-                  ? "Sponsor field reconfirmed in both selected NCTs"
-                  : "Source check incomplete or sponsor field changed"}
-              </p>
+          <NumberedSection key={org.name} id={"sponsor-" + (index + 1)} number={index + 1} eyebrow="Public clinical registry · Lead sponsor field"
+            title={org.name} intro={org.recordRole + "."}
+            chips={<Chip tone={complete ? "mint" : "warn"} icon={complete ? FileCheck2 : CircleAlert}>
+              {complete ? "Sponsor field reconfirmed in both selected NCTs" : "Source check incomplete or sponsor field changed"}
+            </Chip>}>
+            <div>
+              <p className={UI.eyebrowMuted}>Registered study links</p>
+              <ul className="mt-2 grid gap-2.5">
+                {matching.map(row => (
+                  <Quiet as="li" key={row.selected.nctId} className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-extrabold text-[#111214]">{row.selected.nctId}</p>
+                      <p className={UI.small + " mt-0.5"}>
+                        {row.state !== "matched" ? "Exact intervention not reconfirmed" : row.sponsor === org.name ? "Original intervention and sponsor fields confirmed" : "Reported sponsor does not match the earlier editorial snapshot"}
+                      </p>
+                    </div>
+                    <Pill href={row.sourceUrl} external size="sm" variant="ghost" arrow="up" className="shrink-0" ariaLabel={"Open source " + row.selected.nctId}>
+                      Registry
+                    </Pill>
+                  </Quiet>
+                ))}
+              </ul>
             </div>
-            <div className="space-y-3 p-6">
-              <h3 className="text-xs font-extrabold uppercase tracking-[.08em] text-[#728078]">Registered study links</h3>
-              {matching.map(row => (
-                <div key={row.selected.nctId} className="flex items-start justify-between gap-3 rounded-xl border border-[#e2e8e4] bg-[#fdfefd] p-3">
-                  <div>
-                    <p className="text-xs font-extrabold text-[#263e32]">{row.selected.nctId}</p>
-                    <p className="mt-1 text-[11px] leading-5 text-[#778078]">
-                      {row.state !== "matched" ? "Exact intervention not reconfirmed" : row.sponsor === org.name ? "Original intervention and sponsor fields confirmed" : "Reported sponsor does not match the earlier editorial snapshot"}
-                    </p>
-                  </div>
-                  <a href={row.sourceUrl} target="_blank" rel="noopener noreferrer"
-                    className="-m-2.5 grid size-11 shrink-0 place-items-center rounded-lg text-[#2b8069] hover:bg-[#e6f5e9] hover:text-[#164f40]" aria-label={"Open source " + row.selected.nctId}>
-                    <ArrowUpRight className="size-4" />
-                  </a>
-                </div>
-              ))}
-              <p className="text-xs leading-6 text-[#7a817c]">
-                A lead-sponsor field establishes what this trial registry records, not current corporate ownership,
-                licensing, manufacturing capability, financial condition, or scientific endorsement.
-              </p>
-            </div>
-          </article>
+            <p className={UI.small}>
+              A lead-sponsor field establishes what this trial registry records, not current corporate ownership,
+              licensing, manufacturing capability, financial condition, or scientific endorsement.
+            </p>
+          </NumberedSection>
         );
       })}
-    </div>
+    </>
   );
 }
 
 export default function ResearchOrganizationsPage() {
   return (
-    <div className="bg-[#faf9f7] pb-24">
-      <div className="mx-auto max-w-[1130px] px-5 pt-8 sm:px-8">
-        <nav aria-label="Organization directory breadcrumbs" className="flex flex-wrap gap-2 text-xs font-bold text-[#7e8e83]">
-          <Link href="/intelligence/market" className="hover:underline">Research Market</Link>
-          <span>/</span>
-          <Link href="/intelligence/explore/pexiganan" className="hover:underline">Pexiganan</Link>
-          <span>/</span>
-          <span aria-current="page" className="text-[#326e5c]">Source organizations</span>
-        </nav>
-        <header className="mt-7 rounded-[22px] border-2 border-[#17191b] bg-[#eafff2] px-6 py-9 sm:px-9 sm:py-11">
-          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.13em] text-[#207867]"><Building2 className="size-4" /> Historical study sponsors · Pexiganan pilot</p>
-          <h1 className="mt-3 text-[clamp(2.4rem,5vw,4rem)] font-extrabold tracking-[-.06em] text-[#17191b]">Who sponsored the selected studies?</h1>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-[#506b5f] sm:text-base">
-            These are the organization names recorded in the lead-sponsor fields of four selected trial registrations.
-            A sponsor name is a historical source fact, not proof of current ownership, scientific performance or supplier quality.
-          </p>
-          <p className="mt-3 text-xs font-bold text-[#698878]">Two lead-sponsor names · Four curated registry records · Editorial check {PEXIGANAN_REVIEW_DATE}</p>
-        </header>
+    <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+      <PageHero size="compact" art={["molecule", "shield"]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/intelligence/explore/pexiganan", label: "Pexiganan" }, { label: "Source organizations" }]}
+        eyebrow={<><Building2 className="size-4" aria-hidden="true" /> Historical study sponsors · Pexiganan pilot</>}
+        title="Who sponsored the selected studies?"
+        lead={"These are the organization names recorded in the lead-sponsor fields of " + STUDY_COUNT + " selected trial registrations."}
+        note={"A sponsor name is a historical source fact, not current corporate ownership, scientific performance or supplier quality. "
+          + PEXIGANAN_RECORDED_ORGANIZATIONS.length + " lead-sponsor names · " + STUDY_COUNT + " curated registry records · Editorial check " + PEXIGANAN_REVIEW_DATE + "."}
+        actions={<>
+          <Pill href="/intelligence/passports/pexiganan" arrow="right">Evidence passport</Pill>
+          <Pill href="/intelligence/explore/pexiganan" variant="ghost" arrow="right">Pexiganan dossier</Pill>
+        </>}
+      />
+      <Section tight>
+        <div className="grid items-start gap-4 md:grid-cols-2">
+          <Suspense fallback={
+            <Frame as="section" ariaLabel="Checking sponsor fields" shadow="sm" radius="rounded-[16px]" className="md:col-span-2">
+              <p className={UI.body}>Checking the original sponsor and intervention fields on {STUDY_COUNT} NIH records…</p>
+            </Frame>
+          }>
+            <OrganizationAttributionList />
+          </Suspense>
 
-        <Suspense fallback={<div className="mt-6 rounded-xl border border-[#d8e1db] bg-white p-6 text-sm text-[#697b70]">Checking the original sponsor and intervention fields on four NIH records…</div>}>
-          <OrganizationAttributionList />
-        </Suspense>
+          <NumberedSection id="lab-verification" number={3} eyebrow="Testing laboratories" title="Laboratory verification"
+            intro="A trial sponsor or research publication is not a testing laboratory.">
+            <PexNoLabVerification />
+            <p className={UI.small}>
+              Before listing an organization as an accredited laboratory, evidence of the specific accreditor, scope, independent status and current
+              standing would need to be independently checked. No such lab is endorsed in this pilot.
+            </p>
+          </NumberedSection>
 
-        <section className="mt-10 space-y-4">
-          <div className="flex items-center gap-2 text-[#2b6253]"><FlaskConical className="size-5" /><h2 className="text-xl font-extrabold tracking-[-.03em]">Laboratory verification</h2></div>
-          <PexNoLabVerification />
-          <p className="max-w-3xl text-xs leading-6 text-[#718177]">
-            A trial sponsor or research publication is not a testing laboratory. Before listing an organization as
-            an accredited laboratory, evidence of the specific accreditor, scope, independent status and current
-            standing would need to be independently checked. No such lab is endorsed in this pilot.
-          </p>
-        </section>
-
-        <section className="mt-10 rounded-2xl border border-[#d9e7de] bg-white p-6 sm:p-8">
-          <div className="flex items-center gap-2 text-[#2c806d]"><ShieldAlert className="size-5" /><h2 className="text-lg font-extrabold">What has not been verified?</h2></div>
-          <p className="mt-3 text-sm leading-7 text-[#66756d]">
-            This directory does not identify research-material suppliers, verify their businesses or products,
-            validate COAs, or infer ownership from similar corporate names. The original commercial vendor directory
-            is still archived. Document authentication and accredited lab partnerships would require separate source rights,
-            current accreditation checks, a correction process and professional legal review.
-          </p>
-          <Link href="/intelligence/passports/pexiganan" className="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-[#2f765f] hover:underline">
-            Return to the evidence passport <ArrowRight className="size-4" />
-          </Link>
-        </section>
-
-        <Link href="/intelligence/explore/pexiganan" className="mt-7 inline-flex items-center gap-1 text-xs font-bold text-[#347461] hover:underline">
-          <ArrowLeft className="size-4" /> Back to compound dossier
-        </Link>
-      </div>
+          <NumberedSection id="not-verified" number={4} eyebrow="Limits" title="What has not been verified?">
+            <Notice tone="warn" icon={ShieldAlert}>
+              <p>
+                This directory does not identify research-material suppliers, verify their businesses or products, validate COAs, or infer ownership
+                from similar corporate names. The original commercial vendor directory is still archived. Document authentication and accredited lab
+                partnerships would require separate source rights, current accreditation checks, a correction process and professional legal review.
+              </p>
+            </Notice>
+            <Pill href="/intelligence/passports/pexiganan" variant="ghost" size="sm" arrow="right">Return to the evidence passport</Pill>
+          </NumberedSection>
+        </div>
+      </Section>
+      <PageFootnote href="/intelligence/explore/pexiganan" linkLabel="Back to compound dossier">
+        Sponsor names come from each registry record&apos;s lead-sponsor field on the snapshot date, re-read from NIH when this page loads.
+        They are not a supplier list, a manufacturer list or a statement about who made any material.
+      </PageFootnote>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy, Download } from "lucide-react";
+import { Pill } from "@/components/intelligence/research-ui";
 
 export function ResearchWorkpaperActions({ markdown, filename }: { markdown: string; filename: string }) {
   const [copied, setCopied] = useState(false);
@@ -30,13 +31,11 @@ export function ResearchWorkpaperActions({ markdown, filename }: { markdown: str
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={copy} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d9d6e9] bg-white px-4 py-2.5 text-xs font-semibold text-[#4c456e] hover:bg-[#f6f3ff]">
-        {copied ? <Check className="size-4" /> : <Copy className="size-4" />} {copied ? "Copied" : "Copy workpaper"}
-      </button>
-      <button type="button" onClick={download} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#2f294f] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#493a7b]">
-        <Download className="size-4" /> Download workpaper
-      </button>
-      {copyFailed && <p role="alert" className="w-full text-xs text-[#a33926]">Clipboard access was unavailable. You can download the workpaper instead.</p>}
+      <Pill variant="secondary" icon={copied ? Check : Copy} onClick={copy}>
+        {copied ? "Copied" : "Copy workpaper"}
+      </Pill>
+      <Pill variant="ink" icon={Download} onClick={download}>Download workpaper</Pill>
+      {copyFailed && <p role="alert" className="w-full text-sm font-bold text-[#ce403b]">Clipboard access was unavailable. You can download the workpaper instead.</p>}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, BookOpen, Building2, ClipboardCheck, FileSearch, NotebookPen, SearchCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, Building2, ClipboardCheck, FileSearch, NotebookPen, SearchCheck, ShieldAlert } from "lucide-react";
+import { Notice, UI } from "@/components/intelligence/research-ui";
 import { RecentlyUpdatedStrip } from "@/components/intelligence/recently-updated-strip";
 import { StudyLookupForm } from "@/components/intelligence/study-lookup-form";
 import {
@@ -27,8 +28,10 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
   return (
     <div className="min-h-screen bg-[var(--background)] text-[#111214]">
       {notice === "retired" && (
-        <div role="status" className="border-b-2 border-[#111214] bg-[#fff3d8] px-5 py-3 text-center text-xs font-semibold leading-6">
-          The previous shopping marketplace is archived. Purchasing and seller referrals are not available; existing accounts can still access historical records.
+        <div className={UI.container + " pt-5"}>
+          <Notice role="status" tone="warn" icon={ShieldAlert}>
+            The previous shopping marketplace is archived. Purchasing and seller referrals are not available; existing accounts can still access historical records.
+          </Notice>
         </div>
       )}
       <OriginalResearchHero />

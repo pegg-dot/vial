@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight, ShieldAlert } from "lucide-react";
+import { Building2, FileBadge2, NotebookPen, ScanSearch } from "lucide-react";
 import { PexSourceVerifier } from "@/components/intelligence/pexiganan-source-verifier";
+import { NumberedSection, PageFootnote, PageHero, Pill, RecordList, Section } from "@/components/intelligence/research-ui";
 
 export const metadata: Metadata = {
   title: "Verify a scientific source | VialGrade",
@@ -17,42 +17,36 @@ export default async function ResearchSourceVerifyPage({
   const params = await searchParams;
   const initialRef = typeof params.ref === "string" ? params.ref.slice(0, 80) : "";
   return (
-    <div className="bg-[#faf9f7] pb-24">
-      <div className="mx-auto max-w-[1040px] px-5 pt-9 sm:px-8">
-        <nav aria-label="Verifier breadcrumbs" className="flex flex-wrap gap-2 text-xs font-semibold text-[#77877e]">
-          <Link href="/intelligence/market" className="hover:underline">Research Market</Link>
-          <span>/</span>
-          <Link href="/intelligence/explore/pexiganan" className="hover:underline">Pexiganan</Link>
-          <span>/</span>
-          <span aria-current="page" className="text-[#356f61]">Verify source</span>
-        </nav>
-        <div className="mb-5 mt-5">
-          <p className="text-[11px] font-black uppercase tracking-[.13em] text-[#1f8573]">Exact source ID lookup · Pexiganan pilot</p>
-          <h1 className="mt-1.5 text-[clamp(1.9rem,3.6vw,2.6rem)] font-extrabold tracking-[-.05em] text-[#17191b]">Verify what a source says.</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#65746c]">Look up an exact PubMed PMID, ClinicalTrials.gov NCT number or PubChem CID. This is a limited pilot, not a general claim checker.</p>
+    <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+      {/* Compact so the verifier, and the limitation it returns, sit above the fold at 1440×900. */}
+      <PageHero size="compact" art={["magnifier", "molecule"]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/intelligence/explore/pexiganan", label: "Pexiganan" }, { label: "Verify source" }]}
+        eyebrow={<><ScanSearch className="size-4" aria-hidden="true" /> Exact source ID lookup · Pexiganan pilot</>}
+        title="Verify what a source says."
+        lead="Look up an exact PubMed PMID, ClinicalTrials.gov NCT number or PubChem CID."
+        note="This is a limited pilot, not a general claim checker. This is not a COA, supplier or clinical-benefit verifier."
+        actions={<>
+          <Pill href="/intelligence/passports/pexiganan" arrow="right">Evidence passport</Pill>
+          <Pill href="/intelligence/organizations" variant="ghost" arrow="right">Study sponsors</Pill>
+        </>}
+      />
+      <Section tight>
+        <div className="grid gap-4">
+          <PexSourceVerifier initialRef={initialRef} />
+          <NumberedSection id="verify-next" number={2} eyebrow="Go deeper" title="Where a checked record leads"
+            intro="A matched identifier is one node in a small, fixed evidence network. These pages show the rest of it.">
+            <RecordList items={[
+              { href: "/intelligence/passports/pexiganan", icon: FileBadge2, title: "Evidence passport", note: "Six specific research observations and their source limitations, ready for export.", action: "Open the passport" },
+              { href: "/intelligence/organizations", icon: Building2, title: "Study sponsors named in the registry", note: "Which names appear in official trial sponsor fields, and which laboratories are not verified here.", action: "Inspect attribution" },
+              { href: "/intelligence/desk", icon: NotebookPen, title: "Research Desk", note: "Build a source-linked brief from the same records, with what each one does not establish.", action: "Open the desk" },
+            ]} />
+          </NumberedSection>
         </div>
-        <PexSourceVerifier initialRef={initialRef} />
-        <div className="mt-7 grid gap-4 sm:grid-cols-2">
-          <Link href="/intelligence/passports/pexiganan" className="rounded-xl border border-[#dbe5df] bg-white p-5 hover:border-[#26937b]">
-            <span className="text-sm font-extrabold text-[#2e5849]">Evidence passport</span>
-            <p className="mt-2 text-xs leading-6 text-[#69796f]">Six specific research observations and their source limitations, ready for export.</p>
-            <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#2c7868]">Open the passport <ArrowRight className="size-3.5" /></span>
-          </Link>
-          <Link href="/intelligence/organizations" className="rounded-xl border border-[#dbe5df] bg-white p-5 hover:border-[#26937b]">
-            <span className="text-sm font-extrabold text-[#2e5849]">Study sponsors named in the registry</span>
-            <p className="mt-2 text-xs leading-6 text-[#69796f]">Which names appear in official trial sponsor fields, and which laboratories are not verified here.</p>
-            <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#2c7868]">Inspect attribution <ArrowRight className="size-3.5" /></span>
-          </Link>
-        </div>
-        <p className="mt-7 flex items-start gap-2 text-xs leading-6 text-[#89958b]">
-          <ShieldAlert className="mt-0.5 size-4 shrink-0" />
-          A match means a record is present in this reviewed source index, not that its scientific conclusions, a vendor,
-          a certificate or a sample have been authenticated. No user-input data is saved in a research profile.
-        </p>
-        <Link href="/intelligence/explore/pexiganan" className="mt-6 inline-flex items-center gap-1 text-xs font-bold text-[#30735e] hover:underline">
-          <ArrowLeft className="size-3.5" /> Return to Pexiganan
-        </Link>
-      </div>
+      </Section>
+      <PageFootnote href="/intelligence/explore/pexiganan" linkLabel="Return to Pexiganan">
+        A match means a record is present in this reviewed source index, not that its scientific conclusions, a vendor, a certificate or a sample have been authenticated.
+        External source records can change and must be inspected directly. No user-input data is saved in a research profile.
+      </PageFootnote>
     </div>
   );
 }

@@ -26,13 +26,13 @@ export default async function ResearchMarketPage({ searchParams }: {
   const selected = initial.theme === "all" ? undefined : initial.theme;
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
-      <section className="relative overflow-hidden border-b-2 border-[#111214] bg-[#e9fff6]">
+      <section className="relative overflow-hidden border-b-2 border-[#111214] bg-[#e6fbf6]">
         <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
-          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0e8f80]">The research market</p>
+          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#0b6b60]">The research market</p>
           <h1 className="mt-5 max-w-[13ch] text-balance text-[clamp(3.1rem,7.6vw,6.5rem)] font-extrabold leading-[.9] tracking-[-.055em]">
             The research,<br /><span className="text-[#0e8f80]">on one screen.</span>
           </h1>
-          <p className="mt-7 max-w-[570px] text-base font-medium leading-8 text-[#51585a] sm:text-lg">
+          <p className="mt-7 max-w-[570px] text-base font-medium leading-8 text-[var(--muted)] sm:text-lg">
             Compounds, identities, study records and their limitations side by side. The original sources stay one click away.
           </p>
           <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 hidden w-[35%] md:block">
@@ -46,8 +46,8 @@ export default async function ResearchMarketPage({ searchParams }: {
         <div className="grid gap-4 md:grid-cols-3">
           {START_PATHS.map(({icon:Icon,title,note,href}) => (
             <Link href={href} key={title} className="ink hard-sm press group flex items-start gap-3 rounded-[14px] bg-white p-4">
-              <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-[#12b3a6] text-white"><Icon className="size-5" /></div>
-              <div className="min-w-0 flex-1"><p className="text-sm font-extrabold">{title} <ArrowRight className="inline size-3.5 transition-transform group-hover:translate-x-1" /></p><p className="mt-1 text-xs leading-5 text-[#656872]">{note}</p></div>
+              <div className="ink-1 grid size-11 shrink-0 place-items-center rounded-lg bg-[#12b3a6] text-white" aria-hidden="true"><Icon className="size-5" /></div>
+              <div className="min-w-0 flex-1"><p className="text-sm font-extrabold">{title} <ArrowRight className="inline size-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" /></p><p className="mt-1 text-xs font-medium leading-5 text-[var(--muted)]">{note}</p></div>
             </Link>
           ))}
         </div>
@@ -56,15 +56,15 @@ export default async function ResearchMarketPage({ searchParams }: {
         <section id="browse" className="scroll-mt-36 pt-12">
           <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#0e8f80]">Every curated subject</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">Every curated subject</p>
               <h2 className="mt-3 text-[clamp(2.5rem,5vw,4rem)] font-extrabold leading-[.9] tracking-[-.045em]">Browse everything.</h2>
-              <p className="mt-3 text-sm font-medium leading-6 text-[#656872]">Filter by biology and documented source coverage. This is a reference library, not an inventory.</p>
+              <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">Filter by biology and documented source coverage. This is a reference library, not an inventory.</p>
             </div>
-            <Link href="/intelligence/grading" className="ink hard-sm press inline-flex items-center gap-1 rounded-full bg-white px-4 py-2.5 text-xs font-bold">Our file checking method <ArrowRight className="size-4" /></Link>
+            <Link href="/intelligence/grading" className="ink hard-sm press inline-flex min-h-11 items-center gap-1 rounded-full bg-white px-5 text-sm font-extrabold">Our file checking method <ArrowRight className="size-4" aria-hidden="true" /></Link>
           </div>
           <ResearchExplorer key={selected || "all"} initial={initial} />
         </section>
-        <p className="mt-12 border-t border-[#111214]/15 pt-6 text-xs font-medium leading-6 text-[#696b71]">
+        <p className="mt-12 border-t border-[#111214]/15 pt-6 text-xs font-medium leading-6 text-[var(--muted)]">
           All sixteen cards are dated public research reference files. They do not establish clinical effectiveness, a tested physical lot, a scientific consensus or purchase eligibility.
         </p>
       </div>

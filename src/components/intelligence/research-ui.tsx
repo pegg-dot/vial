@@ -120,10 +120,12 @@ export function Breadcrumb({ items, label = "Breadcrumb", className = "" }: { it
  * bottom ink rule and floating art, exactly like the landing hero.
  */
 export function PageHero({
-  eyebrow, title, lead, note, actions, aside, breadcrumb, art = ["molecule", "flask"], tone = "paper",
+  eyebrow, title, lead, note, actions, aside, asideClassName = "", breadcrumb, art = ["molecule", "flask"], tone = "paper",
   align = "left", size = "default", children, className = "",
 }: {
   eyebrow?: ReactNode; title: ReactNode; lead?: ReactNode; note?: ReactNode; actions?: ReactNode; aside?: ReactNode;
+  /** Classes for the aside's grid cell itself, so `hidden lg:block` hides the cell and its gap, not just its content. */
+  asideClassName?: string;
   breadcrumb?: readonly Crumb[]; art?: readonly ArtName[]; tone?: Tone; align?: "left" | "center";
   size?: "default" | "compact"; children?: ReactNode; className?: string;
 }) {
@@ -143,7 +145,7 @@ export function PageHero({
             {actions && <div className={"mt-7 flex flex-wrap items-center gap-3" + (centered ? " justify-center" : "")}>{actions}</div>}
             {children}
           </div>
-          {aside && <div className="min-w-0">{aside}</div>}
+          {aside && <div className={"min-w-0 " + asideClassName}>{aside}</div>}
         </div>
       </div>
     </section>
@@ -327,8 +329,9 @@ export function Pill({ href, external = false, variant = "secondary", size = "md
       {arrow === "up" && <ArrowUpRight className="size-4" aria-hidden="true" />}
     </>
   );
-  if (href && external) return <a href={href} target="_blank" rel="noopener noreferrer" aria-label={ariaLabel} className={cls}>{inner}</a>;
-  if (href) return <Link href={href} aria-label={ariaLabel} className={cls}>{inner}</Link>;
+  // A link may also need a click handler (closing a dialog it sits in); it never turns the link into a button.
+  if (href && external) return <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} aria-label={ariaLabel} className={cls}>{inner}</a>;
+  if (href) return <Link href={href} onClick={onClick} aria-label={ariaLabel} className={cls}>{inner}</Link>;
   return <button type={type} disabled={disabled} onClick={onClick} aria-label={ariaLabel} aria-pressed={ariaPressed} className={cls}>{inner}</button>;
 }
 

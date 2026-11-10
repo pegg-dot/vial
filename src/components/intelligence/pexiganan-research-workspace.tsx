@@ -10,6 +10,7 @@ import {
   PEXIGANAN_CLAIMS, PEXIGANAN_REVIEW_DATE, PEXIGANAN_SOURCES,
   pexSourceById, type PexEvidenceSource,
 } from "@/lib/pexiganan-evidence-network";
+import { Chip, Notice, Pill, UI } from "@/components/intelligence/research-ui";
 
 type ResearchLens = "identity" | "experiment" | "trials" | "material";
 
@@ -123,26 +124,24 @@ export function PexigananResearchWorkspace() {
 
   return (
     <section id="research-workspace" aria-labelledby="research-workspace-title"
-      className="scroll-mt-32 overflow-hidden rounded-[22px] border-2 border-[#111214] bg-white shadow-[5px_5px_0_#111214]">
-      <div className="border-b-2 border-[#111214] bg-[#eafff2] px-5 py-6 sm:px-8 sm:py-8">
-        <p className="text-[11px] font-black uppercase tracking-[.16em] text-[#147b6b]">Pexiganan · guided evidence inspection</p>
+      className="ink hard scroll-mt-32 overflow-hidden rounded-[18px] bg-white">
+      <div className="border-b-2 border-[#111214] bg-[#e6fbf6] px-5 py-6 sm:px-8 sm:py-7">
+        <p className={UI.eyebrow}>Pexiganan · guided evidence inspection</p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-5">
-          <div>
-            <h2 id="research-workspace-title" className="max-w-[18ch] text-[clamp(1.9rem,4.1vw,3.2rem)] font-extrabold leading-[1.04] tracking-[-.05em]">
+          <div className="max-w-3xl">
+            <h2 id="research-workspace-title" className={UI.h2 + " max-w-[18ch]"}>
               One compound. Four different evidence questions.
             </h2>
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[#49675a]">
+            <p className={UI.body + " mt-3 max-w-2xl"}>
               Choose what you want to investigate. Then inspect the exact source and what it cannot establish,
               without leaving the research file.
             </p>
           </div>
-          <span className="rounded-full border border-[#95c5b1] bg-white px-3 py-2 text-xs font-bold text-[#336a53]">
-            Editorial sources checked {PEXIGANAN_REVIEW_DATE}
-          </span>
+          <Chip tone="mint">Editorial sources checked {PEXIGANAN_REVIEW_DATE}</Chip>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 border-b-2 border-[#111214] sm:grid-cols-4" aria-label="Select evidence question">
+      <div role="group" aria-label="Select evidence question" className="grid grid-cols-2 gap-px border-b-2 border-[#111214] bg-[#111214]/15 sm:grid-cols-4">
         {LENSES.map(item => {
           const Icon = item.icon;
           const selected = lens === item.key;
@@ -150,99 +149,90 @@ export function PexigananResearchWorkspace() {
             <button type="button" key={item.key} aria-pressed={selected}
               aria-label={"Investigate " + item.label}
               onClick={() => chooseLens(item.key)}
-              className={"group min-h-[112px] border-b border-r border-[#dfe7e1] p-3 text-left outline-offset-[-4px] transition-colors last:border-r-0 focus-visible:outline-2 focus-visible:outline-[#2b31d8] sm:min-h-[122px] sm:grow sm:p-5 " +
-                (selected ? "bg-[#2b31d8] text-white" : "bg-white text-[#25322b] hover:bg-[#eef0ff]")}>
+              className={"min-h-[104px] p-3 text-left outline-offset-[-4px] transition-colors focus-visible:outline-2 focus-visible:outline-[#2b31d8] sm:min-h-[118px] sm:p-5 " +
+                (selected ? "bg-[#2b31d8] text-white" : "bg-white text-[#111214] hover:bg-[#eef0ff]")}>
               <div className="flex items-center justify-between gap-1">
-                <span className={"text-[10px] font-extrabold tracking-[.1em] " + (selected ? "text-white/70" : "text-[#7f8a86]")}>{item.number}</span>
-                <Icon className={"size-5 " + (selected ? "text-white" : "text-[#2b31d8]")} />
+                <span className={"text-[10px] font-extrabold tracking-[.1em] " + (selected ? "text-white/70" : "text-[#4a4d56]")}>{item.number}</span>
+                <Icon className={"size-5 " + (selected ? "text-white" : "text-[#2b31d8]")} aria-hidden="true" />
               </div>
               <span className="mt-2 block text-[13px] font-extrabold leading-5 sm:text-sm">{item.label}</span>
-              <span className={"mt-1 block text-[11px] font-medium leading-4 " + (selected ? "text-white/80" : "text-[#68746d]")}>{item.short}</span>
+              <span className={"mt-1 block text-[11px] font-medium leading-4 " + (selected ? "text-white/80" : "text-[var(--muted)]")}>{item.short}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 p-5 sm:p-8" aria-live="polite">
-          <p className="text-[11px] font-extrabold uppercase tracking-[.1em] text-[#2b31d8]">What the record shows · {active.number}/04</p>
-          <h3 className="mt-2 text-balance text-[clamp(1.5rem,3vw,2rem)] font-extrabold leading-tight tracking-[-.04em]">{active.title}</h3>
-          <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-[#4b5853]">{active.explanation}</p>
+          <p className={UI.eyebrow}>What the record shows · {active.number}/04</p>
+          <h3 className="mt-2 text-balance text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold leading-tight tracking-[-.04em] text-[#111214]">{active.title}</h3>
+          <p className={UI.bodyInk + " mt-3 max-w-2xl leading-7"}>{active.explanation}</p>
 
           {lens !== "material" ? (
             <div className="mt-7 grid gap-4 lg:grid-cols-[minmax(205px,.8fr)_minmax(0,1.25fr)]">
-              <div>
-                <h4 className="text-xs font-extrabold uppercase tracking-[.12em] text-[#64716b]">
+              <div className="min-w-0">
+                <h4 className={UI.eyebrowMuted}>
                   Original records <span className="font-semibold normal-case tracking-normal">({sources.length})</span>
                 </h4>
-                <div aria-label="Original evidence documents" className="mt-3 flex snap-x gap-2 overflow-x-auto pb-2 lg:grid lg:overflow-visible lg:pb-0">
+                <div role="group" aria-label="Original evidence documents" className="mt-3 flex snap-x gap-2 overflow-x-auto pb-2 lg:grid lg:overflow-visible lg:pb-0">
                   {sources.map(item => (
                     <button type="button" key={item.id} aria-pressed={item.id === source?.id}
                       onClick={() => setSourceId(item.id)}
-                      className={"w-[210px] shrink-0 snap-start rounded-[12px] border-2 px-3.5 py-3 text-left transition-colors lg:w-full focus-visible:outline-2 focus-visible:outline-[#2b31d8] " +
-                        (item.id === source?.id ? "border-[#2b31d8] bg-[#eef0ff]" : "border-[#e2e5e3] bg-white hover:border-[#aeb3b5]")}>
-                      <span className="block text-[11px] font-black tracking-[.04em] text-[#2b31d8]">{item.identifier}</span>
-                      <span className="mt-1 block text-[12px] font-semibold leading-5 text-[#28332e]">{item.label}</span>
-                      <span className="mt-1.5 block text-[10px] font-medium text-[#667771]">{kindLabel(item)}</span>
+                      className={"w-[210px] shrink-0 snap-start rounded-[12px] px-3.5 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b31d8] lg:w-full " +
+                        (item.id === source?.id ? "ink bg-[#eef0ff]" : "ink-1 bg-white hover:bg-[#eef0ff]")}>
+                      <span className="block text-[11px] font-extrabold tracking-[.04em] text-[#2b31d8]">{item.identifier}</span>
+                      <span className="mt-1 block text-xs font-bold leading-5 text-[#111214]">{item.label}</span>
+                      <span className="mt-1.5 block text-[10px] font-medium text-[var(--muted)]">{kindLabel(item)}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               {source && (
-                <section aria-label="Selected original source" className="min-w-0 self-start overflow-hidden rounded-[16px] border-2 border-[#111214] bg-[#fbfbf8]">
-                  <div className="border-b border-[#dedfdb] bg-white px-5 py-4">
-                    <p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#247a63]">Source inspection</p>
-                    <h4 className="mt-1.5 text-lg font-extrabold tracking-[-.035em]">{source.identifier}</h4>
-                    <p className="mt-1 text-xs font-semibold text-[#6a716f]">{source.publisher} · {kindLabel(source)}</p>
+                <section aria-label="Selected original source" className="min-w-0 self-start overflow-hidden rounded-[14px] border border-[#111214]/15 bg-[#fbfbf8]">
+                  <div className="border-b border-[#111214]/15 bg-white px-5 py-4">
+                    <p className={UI.eyebrowMuted}>Source inspection</p>
+                    <h4 className={UI.h3 + " mt-1.5 break-words"}>{source.identifier}</h4>
+                    <p className="mt-1 text-xs font-semibold text-[var(--muted)]">{source.publisher} · {kindLabel(source)}</p>
                   </div>
                   <div className="space-y-4 px-5 py-5">
                     <div>
-                      <p className="text-[11px] font-extrabold uppercase tracking-[.08em] text-[#2c765a]">Documented observation</p>
-                      <p className="mt-1.5 text-sm leading-6 text-[#414b46]">{source.observation}</p>
+                      <p className={UI.eyebrowMuted}>Documented observation</p>
+                      <p className={UI.bodyInk + " mt-1.5"}>{source.observation}</p>
                     </div>
-                    <div className="rounded-[10px] border-l-[3px] border-[#c48a41] bg-[#fff6e8] px-3.5 py-3">
-                      <p className="text-[11px] font-extrabold text-[#956626]">What this does not prove</p>
-                      <p className="mt-1 text-xs leading-5 text-[#776348]">{source.limitation}</p>
-                    </div>
-                    <a href={source.url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#17191b] px-4 py-2.5 text-xs font-extrabold text-white hover:bg-[#2b31d8]">
-                      Open original record <ArrowUpRight className="size-4" />
-                    </a>
+                    <Notice tone="warn" title="What this does not prove">
+                      <p className="text-xs leading-5">{source.limitation}</p>
+                    </Notice>
+                    <Pill href={source.url} external variant="ink" size="sm" arrow="up">Open original record</Pill>
                   </div>
                 </section>
               )}
             </div>
           ) : (
-            <div className="mt-6 rounded-xl border-2 border-[#bdc7c0] bg-[#f5f8f5] p-6">
-              <div className="flex items-center gap-2 text-[#806143]"><ShieldAlert className="size-5" />
-                <p className="text-sm font-extrabold">No authenticated physical lot on file</p>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-[#56645b]">
+            <Notice tone="warn" icon={ShieldAlert} className="mt-6">
+              <p className="font-extrabold">No authenticated physical lot on file</p>
+              <p className="mt-1 text-xs leading-5">
                 Do not mistake the molecule&apos;s PubChem entry, a laboratory&apos;s general methods or
                 an issuer&apos;s certificate for an independently verified sample.
               </p>
-              <Link href="/intelligence/materials?subject=pexiganan"
-                className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#17191b] px-4 py-2 text-xs font-extrabold text-white hover:bg-[#2b31d8]">
-                Check label and report IDs <ArrowRight className="size-4" />
-              </Link>
-            </div>
+              <Pill href="/intelligence/materials?subject=pexiganan" variant="ink" size="sm" arrow="right" className="mt-3">Check label and report IDs</Pill>
+            </Notice>
           )}
 
           {checks.length > 0 && (
-            <details className="mt-6 rounded-xl border border-[#dde4e0] bg-white">
-              <summary className="cursor-pointer px-4 py-3.5 text-xs font-bold text-[#306b59]">
+            <details className="group mt-6 overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-xs font-extrabold text-[#111214] hover:bg-[#eef0ff] [&::-webkit-details-marker]:hidden">
                 Read the {checks.length} underlying evidence {checks.length === 1 ? "check" : "checks"} and remaining questions
+                <ArrowRight className="size-4 shrink-0 text-[#2b31d8] transition-transform group-open:rotate-90" aria-hidden="true" />
               </summary>
-              <div className="divide-y divide-[#e6ebe7] border-t border-[#e1e7e3]">
+              <div className="divide-y divide-[#111214]/10 border-t border-[#111214]/15">
                 {checks.map(check => (
                   <div key={check.id} className="p-4">
-                    <p className="text-sm font-bold text-[#202b25]">{check.heading}</p>
-                    <p className="mt-1 text-xs leading-6 text-[#56635c]">{check.finding}</p>
-                    <p className="mt-2 text-xs leading-5 text-[#895d2b]">Still to check: {check.reviewTask}</p>
-                    <Link href={"/intelligence/passports/pexiganan#evidence-claim-" + check.id}
-                      className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">
-                      Read complete check <ArrowUpRight className="size-3.5" />
+                    <p className="text-sm font-extrabold text-[#111214]">{check.heading}</p>
+                    <p className={UI.small + " mt-1"}>{check.finding}</p>
+                    <p className="mt-2 text-xs font-medium leading-5 text-[#9b6b22]">Still to check: {check.reviewTask}</p>
+                    <Link href={"/intelligence/passports/pexiganan#evidence-claim-" + check.id} className={UI.linkSmall + " mt-2"}>
+                      Read complete check <ArrowUpRight className="size-3.5" aria-hidden="true" />
                     </Link>
                   </div>
                 ))}
@@ -251,34 +241,27 @@ export function PexigananResearchWorkspace() {
           )}
         </div>
 
-        <aside className="flex flex-col gap-5 border-t-2 border-[#111214] bg-[#f8f7f2] p-5 xl:border-l-2 xl:border-t-0 xl:p-6">
+        <aside className="flex flex-col gap-5 border-t-2 border-[#111214] bg-[var(--background)] p-5 xl:border-l-2 xl:border-t-0 xl:p-6">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[.12em] text-[#9c692e]">Limit of the finding</p>
-            <p className="mt-2 text-sm leading-6 text-[#4c5850]">{active.limit}</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#9b6b22]">Limit of the finding</p>
+            <p className={UI.bodyInk + " mt-2"}>{active.limit}</p>
           </div>
-          <div className="border-t border-[#daddd7] pt-5">
-            <p className="text-[11px] font-black uppercase tracking-[.12em] text-[#267968]">Useful next check</p>
-            <p className="mt-2 text-sm leading-6 text-[#4c5850]">{active.next}</p>
+          <div className="border-t border-[#111214]/15 pt-5">
+            <p className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#0b6b60]">Useful next check</p>
+            <p className={UI.bodyInk + " mt-2"}>{active.next}</p>
           </div>
-          <Link href={active.contextLink}
-            className="mt-auto inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border-2 border-[#111214] bg-white px-4 py-3 text-xs font-extrabold text-[#1f2b26] hover:bg-[#eafff2]">
-            {active.contextLabel} <ArrowRight className="size-4 shrink-0" />
-          </Link>
+          <Pill href={active.contextLink} variant="secondary" size="sm" arrow="right" className="mt-auto w-full">{active.contextLabel}</Pill>
           {active.deskTopic && (
-            <Link href={"/intelligence/desk?topic=" + active.deskTopic}
-              className="inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border-2 border-[#111214] bg-[#111214] px-4 py-3 text-xs font-extrabold text-white hover:bg-[#2b31d8]">
-              Build a source brief from this <ArrowRight className="size-4 shrink-0" />
-            </Link>
+            <Pill href={"/intelligence/desk?topic=" + active.deskTopic} variant="ink" size="sm" arrow="right" className="w-full">Build a source brief from this</Pill>
           )}
-          <div className="border-t border-[#daddd7] pt-4 text-[11px] leading-5 text-[#68736c]">
-            <p><CheckCircle2 className="mr-1 inline size-3.5 text-[#28775f]" /> Source relationships are editorially selected, not systematically reviewed.</p>
+          <div className="border-t border-[#111214]/15 pt-4 text-[11px] font-medium leading-5 text-[var(--muted)]">
+            <p><CheckCircle2 className="mr-1 inline size-3.5 text-[#0b6b60]" aria-hidden="true" /> Source relationships are editorially selected, not systematically reviewed.</p>
             <p className="mt-1.5">No efficacy rating, human-use guidance, seller endorsement or independently checked physical sample.</p>
-            <Link href="/intelligence/grading" className="mt-3 inline-flex items-center gap-1 font-bold text-[#2b31d8] hover:underline">
-              Understand the source-file score <ArrowUpRight className="size-3.5" />
+            <Link href="/intelligence/grading" className={UI.linkSmall + " mt-3"}>
+              Understand the source-file score <ArrowUpRight className="size-3.5" aria-hidden="true" />
             </Link>
-            <Link href="/intelligence/passports/pexiganan"
-              className="mt-2 flex items-center gap-1 font-bold text-[#2b31d8] hover:underline">
-              All six evidence checks <FileSearch className="size-3.5" />
+            <Link href="/intelligence/passports/pexiganan" className={UI.linkSmall + " mt-2 flex"}>
+              All six evidence checks <FileSearch className="size-3.5" aria-hidden="true" />
             </Link>
           </div>
         </aside>

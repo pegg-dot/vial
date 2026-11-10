@@ -26,7 +26,7 @@ export function SupplierSections({ sections }: { sections: ReadonlyArray<readonl
                   <div><dt className="font-bold text-[#4a4d56]">Last tested</dt><dd className="mt-0.5 text-sm font-extrabold">{row.latestTestedAt ? row.latestTestedAt.slice(0, 10) : "—"}</dd></div>
                 </dl>
                 {(row.enforcement || row.integrityFlagged) && (
-                  <p className="mt-3 flex items-start gap-1.5 text-xs font-bold text-[#8a4b00]"><ShieldAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                  <p className="mt-3 flex items-start gap-1.5 text-xs font-bold text-[#9b6b22]"><ShieldAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
                     {row.enforcement ? "A public regulatory action is on record." : ""}{row.integrityFlagged ? " A certificate integrity flag is on record." : ""}
                   </p>
                 )}
