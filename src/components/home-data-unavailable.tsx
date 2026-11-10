@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
+import { Chip, Frame, Notice, Pill, UI } from "@/components/intelligence/research-ui";
 
 /**
  * The homepage when the live catalog cannot be read.
@@ -16,33 +16,25 @@ import { AlertTriangle } from "lucide-react";
 export function DataUnavailable({ surface = "the catalogue" }: { surface?: string }) {
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-[900px] items-center px-5 py-20 sm:px-8">
-      <div className="ink hard w-full rounded-[18px] bg-white p-8 sm:p-12">
-        <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-[#fff6e6] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.12em] text-[#b26a00]">
-          <AlertTriangle className="size-3.5" /> Live data unavailable
-        </span>
-        <h1 className="mt-5 text-[clamp(1.9rem,4vw,2.8rem)] font-extrabold leading-[1.02] tracking-[-.04em]">
-          We can&rsquo;t reach {surface} right now.
-        </h1>
-        <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-[var(--muted)]">
-          Rather than show you numbers we can&rsquo;t stand behind, we&rsquo;d rather show you
-          nothing. Vendor grades, prices and lab tests are temporarily unreadable — they are not
-          zero, and nothing has been lost. This usually clears within a few minutes.
-        </p>
-        <p className="mt-4 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
+      <Frame pad="lg" className="w-full">
+        <Chip tone="warn" icon={AlertTriangle}>Live data unavailable</Chip>
+        <h1 className={UI.h1Compact + " mt-5"}>We can&rsquo;t reach {surface} right now.</h1>
+        <Notice tone="warn" className="mt-6 max-w-2xl">
+          <p>
+            Rather than show you numbers we can&rsquo;t stand behind, we&rsquo;d rather show you
+            nothing. Vendor grades, prices and lab tests are temporarily unreadable — they are not
+            zero, and nothing has been lost. This usually clears within a few minutes.
+          </p>
+        </Notice>
+        <p className={UI.body + " mt-5 max-w-2xl"}>
           These pages don&rsquo;t depend on live data and are working normally:
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/grades" className="ink-1 hard press rounded-full bg-[#111214] px-5 py-2.5 text-sm font-bold text-white">
-            What a grade actually means
-          </Link>
-          <Link href="/how-we-check" className="ink-1 hard press rounded-full bg-white px-5 py-2.5 text-sm font-bold">
-            How we check
-          </Link>
-          <Link href="/about" className="ink-1 hard press rounded-full bg-white px-5 py-2.5 text-sm font-bold">
-            About VialGrade
-          </Link>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Pill href="/grades" variant="ink">What a grade actually means</Pill>
+          <Pill href="/how-we-check">How we check</Pill>
+          <Pill href="/intelligence">About VialGrade</Pill>
         </div>
-      </div>
+      </Frame>
     </section>
   );
 }

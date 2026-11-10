@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, CircleDashed, X } from "lucide-react";
 import type { ReputationDimension } from "@/server/reputation/repository";
+import { Chip, Frame, UI } from "@/components/intelligence/research-ui";
 
 const PLAIN_DIMENSION_LABELS: Record<string, string> = {
   identity_claim: "Who they are",
@@ -36,12 +37,12 @@ const PROVENANCE_LABELS: Record<string, string> = {
   fraud_cases: "Fraud and abuse case records",
 };
 
-function toneOf(status: string) {
-  return status === "established"
-    ? { chip: "bg-[#e6fbf6] text-[#0e8f80]", Icon: CheckCircle2, iconClass: "text-[#0e8f80]", card: "ink-1 hard bg-white" }
-    : status === "disputed"
-    ? { chip: "bg-[#fff6e6] text-[#b26a00]", Icon: AlertTriangle, iconClass: "text-[#b26a00]", card: "ink-1 hard bg-[#fff6e6]" }
-    : { chip: "bg-[#111214]/[.06] text-black/55", Icon: CircleDashed, iconClass: "text-black/35", card: "border-2 border-dashed border-[#111214]/20 bg-white/40" };
+// The chip tone says what kind of answer it is: mint for a recorded fact, warn for a disagreement,
+// paper for a gap we are not going to paper over.
+function toneOf(status: string): { tone: "mint" | "warn" | "paper"; Icon: typeof CheckCircle2 } {
+  return status === "established" ? { tone: "mint", Icon: CheckCircle2 }
+    : status === "disputed" ? { tone: "warn", Icon: AlertTriangle }
+    : { tone: "paper", Icon: CircleDashed };
 }
 
 export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDimension[] }) {
@@ -55,18 +56,18 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
 
   return (
     <>
-      {/* One matrix, not six floating cards — the same label | stamp | answer rows the product
-          page's verify matrix uses. Six cards repeated the same explainer link six times and left
-          half of each box empty; here the whole read is six tight rows and one drawer per row. */}
-      <div className="ink hard-sm overflow-hidden rounded-[16px] bg-white">
-        {dimensions.map((d, i) => {
+      {/* One matrix, not six floating cards — the same label | stamp | answer rows the verdict
+          ledger above uses. Six cards repeated the same explainer link six times and left half of
+          each box empty; here the whole read is six tight rows and one drawer per row. */}
+      <div className="divide-y divide-[#111214]/10 overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
+        {dimensions.map((d) => {
           const t = toneOf(d.status);
           return (
-            <div key={d.key} className={`grid gap-2 px-4 py-3 sm:grid-cols-[170px_150px_1fr_auto] sm:items-center ${i > 0 ? "border-t border-[#111214]/10" : ""} ${d.status === "disputed" ? "bg-[#fff6e6]" : ""}`}>
-              <p className="text-sm font-extrabold">{PLAIN_DIMENSION_LABELS[d.key] ?? d.label}</p>
-              <span className={`ink-1 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[d.status] ?? d.status}</span>
+            <div key={d.key} className={`grid gap-2 px-4 py-3 sm:grid-cols-[170px_170px_1fr_auto] sm:items-center ${d.status === "disputed" ? "bg-[#fff3d8]" : ""}`}>
+              <p className="text-sm font-extrabold text-[#111214]">{PLAIN_DIMENSION_LABELS[d.key] ?? d.label}</p>
+              <Chip tone={t.tone} icon={t.Icon} className="w-fit">{STATUS_WORD[d.status] ?? d.status}</Chip>
               <p className="min-w-0 text-[13px] font-medium leading-5 text-[var(--muted)]"><span className="font-extrabold text-[#111214]">{d.value}.</span> {d.basis}</p>
-              <button type="button" onClick={() => setOpen(d)} aria-label={`What ${STATUS_WORD[d.status] ?? d.status} means for ${PLAIN_DIMENSION_LABELS[d.key] ?? d.label}`} className="justify-self-start whitespace-nowrap text-[11px] font-bold text-[#2b31d8] transition hover:opacity-70 sm:justify-self-end">
+              <button type="button" onClick={() => setOpen(d)} aria-label={`What ${STATUS_WORD[d.status] ?? d.status} means for ${PLAIN_DIMENSION_LABELS[d.key] ?? d.label}`} className={UI.linkSmall + " justify-self-start whitespace-nowrap sm:justify-self-end"}>
                 Meaning →
               </button>
             </div>
@@ -74,12 +75,11 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
         })}
       </div>
 
-      {/* Sliding explainer modal */}
+      {/* Sliding explainer drawer. Esc closes it (the listener above), as does the scrim. */}
       <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
         <div onClick={() => setOpen(null)} className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`} />
         {/* The drawer speaks the site's own language — ink borders, hard shadows, extrabold type,
-            warm paper — the same register as the matrix it explains. The old soft-hairline version
-            read as a different product bolted onto this one. */}
+            paper ground — the same register as the matrix it explains. */}
         <aside role="dialog" aria-modal="true" className={`absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l-2 border-[#111214] bg-[var(--background)] transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}>
           {open ? (() => {
             const t = toneOf(open.status);
@@ -87,19 +87,19 @@ export function VendorReputationTiles({ dimensions }: { dimensions: ReputationDi
               <>
                 <div className="flex items-start justify-between gap-4 border-b-2 border-[#111214] bg-white p-5 sm:p-6">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[var(--muted)]">{PLAIN_DIMENSION_LABELS[open.key] ?? open.label}</p>
-                    <span className={`ink-1 mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${t.chip}`}><t.Icon className={`size-3 ${t.iconClass}`} />{STATUS_WORD[open.status] ?? open.status}</span>
+                    <p className={UI.eyebrowMuted}>{PLAIN_DIMENSION_LABELS[open.key] ?? open.label}</p>
+                    <Chip tone={t.tone} icon={t.Icon} className="mt-2">{STATUS_WORD[open.status] ?? open.status}</Chip>
                   </div>
-                  <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="ink-1 press grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#111214] transition hover:bg-[var(--background)]"><X className="size-4" /></button>
+                  <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="ink-1 press grid size-9 shrink-0 place-items-center rounded-full bg-white text-[#111214] hover:bg-[var(--background)]"><X className="size-4" aria-hidden="true" /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5 sm:p-6">
-                  <p className="text-xl font-extrabold leading-7 tracking-[-.03em]">{open.value}</p>
-                  <p className="mt-3 text-sm font-medium leading-6 text-[var(--muted)]">{open.basis}</p>
-                  <div className="ink-1 hard-sm mt-5 rounded-[14px] bg-white p-4">
-                    <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[#2b31d8]">What &ldquo;{STATUS_WORD[open.status] ?? open.status}&rdquo; means here</p>
-                    <p className="mt-2 text-sm font-medium leading-6 text-[#111214]/75">{STATUS_MEANING[open.status] ?? ""}</p>
-                  </div>
-                  <p className="mt-4 text-xs font-medium leading-5 text-[var(--muted)]">Where this came from: <span className="font-bold text-[#111214]">{PROVENANCE_LABELS[open.provenance.sourceType] ?? open.provenance.sourceType}</span>. Every answer stands on its own and says where it came from &mdash; we never blend them into one score.</p>
+                  <p className={UI.h3 + " leading-7"}>{open.value}</p>
+                  <p className={UI.body + " mt-3"}>{open.basis}</p>
+                  <Frame thin shadow="sm" radius="rounded-[14px]" pad="sm" className="mt-5">
+                    <p className={UI.eyebrow}>What &ldquo;{STATUS_WORD[open.status] ?? open.status}&rdquo; means here</p>
+                    <p className={UI.bodyInk + " mt-2"}>{STATUS_MEANING[open.status] ?? ""}</p>
+                  </Frame>
+                  <p className={UI.small + " mt-4"}>Where this came from: <span className="font-bold text-[#111214]">{PROVENANCE_LABELS[open.provenance.sourceType] ?? open.provenance.sourceType}</span>. Every answer stands on its own and says where it came from &mdash; we never blend them into one score.</p>
                 </div>
               </>
             );

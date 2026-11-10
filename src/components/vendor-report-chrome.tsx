@@ -2,22 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-// Consistent hardened section header used across the vendor report.
-export function SectionHead({ eyebrow, title, note }: { eyebrow: string; title: string; note?: string }) {
-  return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">{eyebrow}</p>
-        <h2 className="mt-2 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">{title}</h2>
-      </div>
-      {note && <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold text-[var(--muted)]">{note}</span>}
-    </div>
-  );
-}
-
-// Sticky sub-nav for the long report — jumps to a section and highlights the one you're in.
-// `identity` keeps the vendor's name + grade letter on screen for the whole read once the header
-// has scrolled away (the CoinGecko sticky-bar compression pattern).
+// Sticky sub-nav for the long report — jumps to a section and highlights the one you're in. The
+// chips carry the same numbers as the section frames (both read one ordered list on the page), so
+// the bar is the kit's sticky contents laid flat. `identity` keeps the vendor's name + grade letter
+// on screen for the whole read once the header has scrolled away.
 export function JumpNav({ items, identity }: { items: Array<{ id: string; label: string }>; identity?: { name: string; letter: string | null } }) {
   const [active, setActive] = useState(items[0]?.id ?? "");
   useEffect(() => {
@@ -35,31 +23,30 @@ export function JumpNav({ items, identity }: { items: Array<{ id: string; label:
   }, [items]);
 
   return (
-    // The gap lives on the nav, not on the section above it. Whatever precedes this bar varies —
-    // the verdict ledger, or the alert group when a vendor has one — and both ended flush against
-    // its top border, close enough that the ledger's hard shadow touched it. Putting the space here
-    // covers either case and cannot double up with the alert section's own top padding. It only
-    // applies in normal flow; once the bar sticks, `top` governs.
-    <div className="sticky top-[71px] z-30 mt-10 border-y-2 border-[#111214] bg-[rgba(247,247,244,.9)] backdrop-blur">
+    // No margin of its own: the section band above it supplies the gap, so whatever precedes the
+    // bar (the verdict, or the alert group when a vendor has one) ends the same distance from it.
+    // Once the bar sticks, `top` governs — 71px is the site header.
+    <nav aria-label="Report sections" className="sticky top-[71px] z-30 border-y-2 border-[#111214] bg-[rgba(247,247,244,.96)] backdrop-blur-md">
       <div className="mx-auto max-w-[1320px] overflow-x-auto px-5 no-scrollbar sm:px-8">
-        <div className="flex items-center gap-1 py-2.5">
+        <div className="flex items-center gap-1 py-1.5">
           {identity && (
             <span className="mr-2 hidden shrink-0 items-center gap-1.5 sm:inline-flex">
-              <span className="max-w-[180px] truncate text-sm font-extrabold tracking-[-.02em]">{identity.name}</span>
-              {identity.letter && <span className="ink-1 rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold">{identity.letter}</span>}
+              <span className="max-w-[180px] truncate text-sm font-extrabold tracking-[-.02em] text-[#111214]">{identity.name}</span>
+              {identity.letter && <span className="ink-1 rounded-[6px] bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-[#111214]">{identity.letter}</span>}
             </span>
           )}
-          {items.map((it) => (
+          {items.map((it, index) => (
             <a
               key={it.id}
               href={`#${it.id}`}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-bold transition ${active === it.id ? "bg-[#111214] text-white" : "text-[#111214]/55 hover:bg-[#111214]/[.06] hover:text-[#111214]"}`}
+              className={`flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13px] font-bold transition ${active === it.id ? "bg-[#111214] text-white" : "text-[#3a3d46] hover:bg-black/[.06] hover:text-[#111214]"}`}
             >
-              {it.label}
+              <span aria-hidden="true" className={`font-mono text-[11px] ${active === it.id ? "text-white/70" : "text-[#2b31d8]"}`}>{String(index + 1).padStart(2, "0")}</span>
+              <span className="whitespace-nowrap">{it.label}</span>
             </a>
           ))}
         </div>
       </div>
-    </div>
+    </nav>
   );
 }

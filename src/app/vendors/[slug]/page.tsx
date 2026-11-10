@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
-import { ArrowLeft, Building2, Check, CircleDashed, Clock3, FlaskConical, MapPin, PackageSearch, ShieldCheck, Star, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CircleDashed, Factory, FileCheck2, FlaskConical, Gavel, PackageSearch, ShieldCheck, Star, Store, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
 import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
 import { vendorPriceIndex } from "@/lib/curation";
 import { daysSince } from "@/lib/format";
@@ -51,7 +51,8 @@ import { AggregatorRatingsPanel } from "@/components/aggregator-ratings-panel";
 import { VendorSignalsPanel } from "@/components/vendor-signals-panel";
 import { VendorOffersPanel } from "@/components/vendor-offers-panel";
 import { VendorNewsPanel } from "@/components/vendor-news-panel";
-import { SectionHead, JumpNav } from "@/components/vendor-report-chrome";
+import { JumpNav } from "@/components/vendor-report-chrome";
+import { Chip, Notice, NumberedSection, PageHero, Pill, Quiet, Section, StatRow, UI } from "@/components/intelligence/research-ui";
 import { JsonLd } from "@/components/json-ld";
 import { vendorSchema } from "@/lib/structured-data";
 
@@ -63,6 +64,10 @@ const REVIEW_PLAIN: Record<string, string> = {
   positive: "mostly positive", mixed: "mixed", negative: "mostly negative",
   scam: "unverified adverse allegations", unknown: "no clear signal",
 };
+
+// The sections that leave with the catalog under the evidence-only release: offers, trackers, the
+// storefront read, buyer reports and the catalog itself. Nothing on this list may render there.
+const COMMERCE_SECTIONS = new Set(["offers", "trackers", "signals", "reviews", "catalog"]);
 
 /** "a", "a and b", "a, b and c" — for reading a list of findings out loud in a sentence. */
 function joinList(parts: Array<string | null | false>): string {
@@ -78,10 +83,18 @@ function joinList(parts: Array<string | null | false>): string {
 const OG_IMAGE = [{ url: "/og-image.png", width: 1200, height: 630, alt: "VialGrade" }];
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  // Metadata requests can run separately from the page and must never
-  // retrieve retired seller data in research-only production mode.
-  if (evidenceOnlyPublicRelease()) return { robots: { index: false, follow: false } };
   const { slug } = await params;
+  // Metadata requests can run separately from the page. In research-only production mode the page
+  // is readable only under the browse release, and then it carries the vendor's name and nothing
+  // else of the seller record: an evidence-record title, never indexed. With browsing off the page
+  // redirects, so the catalog is not read at all.
+  if (evidenceOnlyPublicRelease()) {
+    const robots = { index: false, follow: false };
+    if (!publicBrowseRelease()) return { robots };
+    const vendor = await getVendorBySlug(slug);
+    // `absolute` keeps the root layout's " · VialGrade" template off a title that already names the site.
+    return vendor ? { title: { absolute: `${vendor.name} evidence record | VialGrade` }, robots } : { robots };
+  }
   const vendor = await getVendorBySlug(slug);
   if (!vendor) return {};
   // The title is the question a reader actually types. A question asserts nothing — which is the
@@ -191,8 +204,6 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   }, null);
   const staleDays = daysSince(newestObservation);
   const catalogStale = listings.length > 0 && staleDays != null && staleDays >= 3;
-  const secondaryLabel = vendor.kind === "storefront" ? "Listings" : "Batch test records";
-  const secondaryValue = vendor.kind === "storefront" ? vendor.productCount : vendor.passportCount;
 
   const maker = vendor.kind === "manufacturer";
   // A plain, labeled link to the company's own site. Off by default; never for avoid/high-risk
@@ -213,6 +224,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 
   // One sentence naming every seam the verdict rests on. Each clause is a count this page renders
   // further down — nothing new is derived here, so the summary can never drift from the sections.
+  // Buyer reports and community mentions are hidden under the evidence-only release, so the
+  // sentence must not name them there: a clause is only allowed in when its section is.
   const restsOn = joinList([
     vendor.coaCount > 0
       ? `${vendor.coaCount} independent lab test${vendor.coaCount === 1 ? "" : "s"} on record${blindTests > 0 ? ` (${blindTests} of them blind)` : ""}`
@@ -222,8 +235,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
       : "no FDA, DOJ or FTC enforcement record on file",
     vendorFlags.length > 0 ? `${vendorFlags.length} certificate-integrity flag${vendorFlags.length === 1 ? "" : "s"}` : null,
     strongLinks.length > 0 ? `shared identifiers with ${strongLinks.length} other storefront${strongLinks.length === 1 ? "" : "s"}` : null,
-    vendorReview ? `buyer reports that read ${REVIEW_PLAIN[vendorReview.sentiment] ?? "unclear"}` : "no buyer-review record gathered yet",
-    communitySignal ? `${communitySignal.mention_count} r/Peptides mention${communitySignal.mention_count === 1 ? "" : "s"}` : null,
+    noCommerce ? null : vendorReview ? `buyer reports that read ${REVIEW_PLAIN[vendorReview.sentiment] ?? "unclear"}` : "no buyer-review record gathered yet",
+    noCommerce ? null : communitySignal ? `${communitySignal.mention_count} r/Peptides mention${communitySignal.mention_count === 1 ? "" : "s"}` : null,
   ]);
 
   // What the alert banners at the top are actually saying, stated once in plain words next to the
@@ -240,308 +253,293 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const repDisputed = reputation ? reputation.dimensions.filter((d) => d.status === "disputed").length : 0;
   const repUnknown = reputation ? reputation.dimensions.filter((d) => d.status === "unknown").length : 0;
 
-  // Jump-nav. Every target below is now rendered unconditionally except the alert group, so these
-  // anchors can no longer point at a section that isn't there (the old "Enforcement" chip jumped to
-  // an empty div, and "Buyers" broke whenever only the community signal existed).
-  const nav = [
+  // One ordered list for the whole report, in document order. The jump-nav reads it for its chips
+  // and every section takes its number from its place in it, so the bar and the frames can never
+  // count differently. Conditional entries are left out rather than rendered empty (the old
+  // "Enforcement" chip jumped to an empty div, and "Buyers" broke whenever only the community
+  // signal existed), and the commerce sections leave with their content under the evidence-only
+  // release — a chip that scrolls to nothing is worse than no chip.
+  const sections = [
     { id: "verdict", label: "Verdict" },
     hasAlerts ? { id: "alerts", label: "Alerts" } : null,
-    vendorOffers.length > 0 ? { id: "offers", label: "Offers" } : null,
     { id: "reputation", label: "Evidence" },
     { id: "lab-tests", label: "Lab tests" },
     { id: "trackers", label: "Trackers" },
     { id: "signals", label: "Storefront" },
     { id: "reviews", label: "Buyers" },
     { id: "enforcement", label: "Regulators" },
-    // Conditional for the same reason the alert chip is: most vendors have no coverage on file, and
-    // a chip that scrolls to nothing is worse than no chip.
+    // Conditional for the same reason the alert chip is: most vendors have no coverage on file.
     vendorNews.length > 0 ? { id: "news", label: "In the news" } : null,
+    vendorOffers.length > 0 ? { id: "offers", label: "Offers" } : null,
     { id: "network", label: "Who owns it" },
     { id: "catalog", label: "Catalog" },
     { id: "history", label: "History" },
-  ].filter((x): x is { id: string; label: string } => Boolean(x) && !(noCommerce && ["offers", "trackers", "reviews", "catalog"].includes(x!.id)));
+  ].filter((x): x is { id: string; label: string } => Boolean(x) && !(noCommerce && COMMERCE_SECTIONS.has(x!.id)));
+  const number = (id: string) => sections.findIndex((s) => s.id === id) + 1;
+
+  // The masthead figures. "Listings" is a catalog count, so under the evidence-only release every
+  // vendor shows its batch test records in that slot instead — the hero never counts what the page
+  // does not show. The price delta is the only coloured figure, and only outside that release.
+  const stats = [
+    { icon: FlaskConical, value: vendor.coaCount, label: "Independent lab tests" },
+    { icon: ShieldCheck, value: vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—", label: "Median tested purity" },
+    noCommerce || vendor.kind !== "storefront"
+      ? { icon: FileCheck2, value: vendor.passportCount, label: "Batch test records" }
+      : { icon: PackageSearch, value: vendor.productCount, label: "Listings" },
+    ...(noCommerce ? [] : [
+      {
+        icon: priceIndex.medianPctVsMarket ? (priceIndex.medianPctVsMarket > 0 ? TrendingUp : TrendingDown) : Tag,
+        value: priceIndex.medianPctVsMarket != null
+          ? <span className={!priceIndex.medianPctVsMarket ? "" : priceIndex.medianPctVsMarket < 0 ? "text-[#0b6b60]" : "text-[#ce403b]"}>{priceIndex.medianPctVsMarket > 0 ? "+" : ""}{priceIndex.medianPctVsMarket}%</span>
+          : "—",
+        label: "Typical price vs market",
+      },
+      { icon: Star, value: vendor.reviewCount > 0 ? vendor.reviewCount : "—", label: "Buyer reviews on file" },
+    ]),
+  ];
+  const whereAndWhen = [vendor.location, vendor.founded ? `Founded ${vendor.founded}` : null, vendor.lastObserved ? `Updated ${vendor.lastObserved}` : null].filter(Boolean).join(" · ");
 
   return (
-    <>
+    <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       {/* The vendor as an organization. No aggregateRating and no review: the VialGrade letter is
           our own derived verdict over evidence seams, not customers rating a seller, and shipping
           it as a star rating would both invent review data and read as an endorsement. */}
       <JsonLd data={vendorSchema({ slug, name: vendor.name, description: vendor.description, location: vendor.location, founded: vendor.founded })} />
-      <ResearchScopeNotice />
 
-      {/* ── Report header: paper, not slate — the tier-colored grade card is the only heavy
-          color, a rating letter stamped on a white tearsheet. ─────────────────────────── */}
-      <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[var(--background)]">
-        <div className="mx-auto max-w-[1320px] px-5 py-6 sm:px-8 sm:py-8">
-          <Link href="/vendors" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] transition hover:text-black"><ArrowLeft className="size-4" /> All vendors</Link>
-
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_.95fr] lg:items-start">
-            {/* identity */}
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-              <div className="shrink-0"><VendorMark initials={vendor.initials} accent={vendor.accent} size="lg" /></div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.08em] text-[#111214]">{vendor.kind === "manufacturer" ? "Manufacturer" : "Storefront"}</span>
-                  <span className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#111214]/70">{vendorClaimLabel(vendor.profileStatus)}</span>
-                  <DataOriginBadge origin={vendor.origin} />
-                </div>
-                <h1 className="mt-3 text-balance text-[clamp(1.9rem,3.8vw,2.9rem)] font-extrabold leading-[.98] tracking-[-.04em]">{vendor.name}</h1>
-                <p className="mt-3 max-w-xl text-[15px] font-medium leading-7 text-[var(--muted)]">{vendor.description}</p>
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-semibold text-[var(--muted)]">
-                  {vendor.location && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" /> {vendor.location}</span>}
-                  {vendor.founded && <span className="inline-flex items-center gap-1.5"><Building2 className="size-4" /> Founded {vendor.founded}</span>}
-                  {vendor.lastObserved && <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" /> Updated {vendor.lastObserved}</span>}
-                </div>
-                {noCommerce ? null : <div className="mt-5"><FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} /></div>}
-              </div>
-            </div>
-
-            {/* the bottom line — the headline grade, its reason, and the dimensions it rests on */}
-            <VialGradeCard grade={grade} summary={composed.summary} />
-          </div>
-
-          {/* at-a-glance stats */}
-          {/* plain masthead figures, no box — the price-vs-market delta is the only colored figure */}
-          <div className="mt-6 flex flex-wrap gap-x-10 gap-y-4">
-            <HeroStat icon={FlaskConical} value={String(vendor.coaCount)} label="Independent lab tests" />
-            <HeroStat icon={ShieldCheck} value={vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—"} label="Median tested purity" />
-            <HeroStat icon={PackageSearch} value={String(secondaryValue)} label={secondaryLabel} />
-            {noCommerce ? null : <>
-            <HeroStat
-              icon={priceIndex.medianPctVsMarket ? (priceIndex.medianPctVsMarket > 0 ? TrendingUp : TrendingDown) : Tag}
-              value={priceIndex.medianPctVsMarket != null ? `${priceIndex.medianPctVsMarket > 0 ? "+" : ""}${priceIndex.medianPctVsMarket}%` : "—"}
-              label="Typical price vs market"
-              accent={!priceIndex.medianPctVsMarket ? undefined : priceIndex.medianPctVsMarket < 0 ? "#0e8f80" : "#d3372c"}
-            />
-            <HeroStat icon={Star} value={vendor.reviewCount > 0 ? String(vendor.reviewCount) : "—"} label="Buyer reviews on file" />
-            </>}
-          </div>
-          {vendor.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-bold text-[#2b31d8] underline underline-offset-2">Purity vs grade</Link></p>}
-        </div>
-      </section>
+      {/* ── Report header: paper hero, the tier-coloured grade card as its aside — a rating letter
+          stamped beside a white tearsheet. The market crumb carries its #browse hash: the browse
+          release bans any `main` href that ends in "/market". ─────────────────────────── */}
+      <PageHero art={["magnifier", "coa"]}
+        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { href: "/vendors", label: "Vendors" }, { label: vendor.name }]}
+        eyebrow={
+          <span className="flex flex-wrap items-center gap-2">
+            <Chip tone="blue" icon={maker ? Factory : Store}>{maker ? "Manufacturer" : "Storefront"}</Chip>
+            <Chip tone="paper" plain className="normal-case tracking-normal">{vendorClaimLabel(vendor.profileStatus)}</Chip>
+            <DataOriginBadge origin={vendor.origin} />
+          </span>
+        }
+        title={<span className="flex items-center gap-4"><VendorMark initials={vendor.initials} accent={vendor.accent} size="lg" /><span>{vendor.name}</span></span>}
+        lead={vendor.description}
+        note={whereAndWhen || undefined}
+        actions={<>
+          <Pill href="#lab-tests" variant="primary" arrow="right">Independent lab tests</Pill>
+          <Pill href="/vendors" variant="ghost" icon={ArrowLeft}>All vendors</Pill>
+          {noCommerce ? null : <FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} />}
+        </>}
+        aside={<VialGradeCard grade={grade} summary={composed.summary} vendorName={vendor.name} />}
+      >
+        <StatRow className="mt-8" items={stats} />
+        {vendor.medianPurity != null && <p className={UI.small + " mt-3 max-w-2xl"}>{PURITY_PROVENANCE_SHORT} <Link href="/grades" className={UI.linkSmall}>Purity vs grade <ArrowRight className="size-3.5" aria-hidden="true" /></Link></p>}
+      </PageHero>
 
       {sourceUrl ? <VendorSourceLink url={sourceUrl} /> : null}
+      <ResearchScopeNotice />
 
-      {/* ── Upstream-manufacturer context ───────────────────────────────────────────────
-          This used to render only when a vendor happened to also have an alert, so the single most
-          important framing fact about a manufacturer page — that it is not a shop — was invisible on
-          the clean ones. It reframes everything below it, so it goes first and unconditionally. */}
-      {maker && (
-        <div className="mx-auto max-w-[1320px] px-5 pt-6 sm:px-8">
-          <p className="ink hard-sm rounded-[16px] bg-[#fff6e6] p-4 text-sm font-medium leading-6 text-[#111214]"><span className="font-extrabold">Upstream manufacturer, not a storefront.</span> We surfaced {vendor.name} from third-party lab records &mdash; the party a certificate names as having made or ordered the tested material, not a shop you buy from directly. Treat its test history as upstream intelligence.</p>
-        </div>
-      )}
+      <Section tight className="grid gap-4">
+        {/* ── Upstream-manufacturer context ─────────────────────────────────────────────
+            This used to render only when a vendor happened to also have an alert, so the single most
+            important framing fact about a manufacturer page — that it is not a shop — was invisible on
+            the clean ones. It reframes everything below it, so it goes first and unconditionally. */}
+        {maker && (
+          <Notice tone="warn" icon={Factory}>
+            <p><span className="font-extrabold">Upstream manufacturer, not a storefront.</span> We surfaced {vendor.name} from third-party lab records &mdash; the party a certificate names as having made or ordered the tested material, not a shop you buy from directly. Treat its test history as upstream intelligence.</p>
+          </Notice>
+        )}
 
-      {/* ── The answer, up front ─────────────────────────────────────────────────────────
-          The question the reader arrived with, answered in the first two sentences under it, then
-          decomposed into the checks it rests on. Every clause is a count rendered further down. */}
-      <section id="verdict" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-8 sm:px-8">
-        <SectionHead eyebrow="The bottom line" title={headlineQuestion} note={`Based on ${composed.weighed} check${composed.weighed === 1 ? "" : "s"}. ${composed.verifiedCount > 0 ? `${composed.verifiedCount} backed by a document.` : "None backed by a document."}`} />
-        {/* The answer, in one quotable sentence, immediately under the question. It deliberately does
-            NOT repeat the grade card's summary sentence a few hundred pixels above — it names the
-            evidence the verdict is standing on instead, which is the part a reader can go check. */}
-        <p className="mt-3 max-w-3xl text-[15px] font-medium leading-6 text-[#111214]">
-          <span className="font-extrabold">{grade.headline}.</span> What that rests on: {restsOn}.
-        </p>
-        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-          This grade describes documented observations only. It is not a determination of product safety, vendor legality, shipment authenticity, or whether a transaction should occur. Missing evidence stays visible.
-        </p>
+        {/* ── The answer, up front ───────────────────────────────────────────────────────
+            The question the reader arrived with, answered in the first two sentences under it, then
+            decomposed into the checks it rests on. Every clause is a count rendered further down. */}
+        <NumberedSection id="verdict" number={number("verdict")} eyebrow="The bottom line" title={headlineQuestion}
+          intro={`Based on ${composed.weighed} check${composed.weighed === 1 ? "" : "s"}. ${composed.verifiedCount > 0 ? `${composed.verifiedCount} backed by a document.` : "None backed by a document."}`}>
+          {/* The answer, in one quotable sentence, immediately under the question. It deliberately does
+              NOT repeat the grade card's summary sentence a few hundred pixels above — it names the
+              evidence the verdict is standing on instead, which is the part a reader can go check. */}
+          <p className="max-w-3xl text-[15px] font-medium leading-6 text-[#111214]">
+            <span className="font-extrabold">{grade.headline}.</span> What that rests on: {restsOn}.
+          </p>
+          <p className={UI.body + " max-w-3xl"}>
+            This grade describes documented observations only. It is not a determination of product safety, vendor legality, shipment authenticity, or whether a transaction should occur. Missing evidence stays visible.
+          </p>
 
-        <h3 className="mt-8 text-[clamp(1.15rem,2vw,1.45rem)] font-extrabold tracking-[-.03em]">Which checks did we run, and what did each one find?</h3>
-        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Each check comes from something you can read further down &mdash; a good result and a bad one both stay visible. Marked <span className="font-bold text-[#0a6b60]">Confirmed</span> (we hold the document), <span className="font-bold text-[#2b31d8]">Reported</span> (a source we cite), or <span className="font-bold text-black/55">Our guess</span>.</p>
-        {/* A ledger, not a card wall — the same label | stamp | answer rows the reputation matrix
-            below uses, so the two evidence readouts on this page share one shape. The old 3-across
-            cards spent more height on frames and trapped air than on findings. */}
-        <div className="ink-1 hard-sm mt-5 overflow-hidden rounded-[14px] bg-white">
-          {composed.factors.map((f, i) => (
-            <div key={f.label} className={`flex items-start gap-3 px-4 py-3 ${i > 0 ? "border-t border-[#111214]/10" : ""} ${f.ok === false ? "bg-[#fff5f4]" : ""}`}>
-              <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-md ${f.ok === true ? "bg-[#12b3a6] text-white" : f.ok === false ? "bg-[#f5463d] text-white" : "bg-[#111214]/[.06] text-black/45"}`}>
-                {f.ok === true ? <Check className="size-3" /> : f.ok === false ? <X className="size-3" /> : <CircleDashed className="size-3" />}
-              </span>
-              <div className="grid min-w-0 flex-1 gap-x-4 gap-y-0.5 sm:grid-cols-[200px_1fr]">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 self-start">
-                  <p className="text-[13px] font-extrabold tracking-[-.01em]">{signalLabel(f.label)}</p>
-                  {f.confidence && <TierChip tier={f.confidence} />}
+          <h3 className={UI.h3 + " pt-4"}>Which checks did we run, and what did each one find?</h3>
+          <p className={UI.body + " max-w-3xl"}>Each check comes from something you can read further down &mdash; a good result and a bad one both stay visible. Marked <span className="font-bold text-[#0b6b60]">Confirmed</span> (we hold the document), <span className="font-bold text-[#2b31d8]">Reported</span> (a source we cite), or <span className="font-bold text-[#4a4d56]">Our guess</span>.</p>
+          {/* A ledger, not a card wall — the same label | stamp | answer rows the reputation matrix
+              below uses, so the two evidence readouts on this page share one shape. */}
+          <ul className="divide-y divide-[#111214]/10 overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
+            {composed.factors.map((f) => (
+              <li key={f.label} className={`flex items-start gap-3 px-4 py-3 ${f.ok === false ? "bg-[#ffecea]" : ""}`}>
+                <span className={`ink-1 mt-0.5 grid size-5 shrink-0 place-items-center rounded-md ${f.ok === true ? "bg-[#12b3a6] text-white" : f.ok === false ? "bg-[#ce403b] text-white" : "bg-[var(--background)] text-[#4a4d56]"}`} aria-hidden="true">
+                  {f.ok === true ? <Check className="size-3" /> : f.ok === false ? <X className="size-3" /> : <CircleDashed className="size-3" />}
+                </span>
+                <div className="grid min-w-0 flex-1 gap-x-4 gap-y-0.5 sm:grid-cols-[200px_1fr]">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 self-start">
+                    <p className="text-[13px] font-extrabold tracking-[-.01em] text-[#111214]">{signalLabel(f.label)}</p>
+                    {f.confidence && <TierChip tier={f.confidence} />}
+                  </div>
+                  <p className="text-[13px] font-medium leading-5 text-[var(--muted)]">{f.detail}</p>
                 </div>
-                <p className="text-[13px] font-medium leading-5 text-[var(--muted)]">{f.detail}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+              </li>
+            ))}
+          </ul>
+        </NumberedSection>
 
-      {/* ── Alerts: grouped, only when present ──────────────────────────────────────── */}
-      {hasAlerts && (
-        <section id="alerts" className="mx-auto max-w-[1320px] scroll-mt-[140px] space-y-4 px-5 pt-8 sm:px-8">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#d3372c]">Read this first</p>
-            <h2 className="mt-3 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">What is flagged on {vendor.name} right now?</h2>
-            <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Enough to change how you read the rest of this page: {alertReasons}. Each one is a record we can show you, not our opinion &mdash; the detail and its source are below.</p>
-          </div>
-          {statusAlert && <VendorStatusBanner status={statusAlert} vendorName={vendor.name} />}
-          {vendorFlags.length > 0 && <VendorFlagsBanner flags={vendorFlags} vendorName={vendor.name} />}
-          {enforcement.length > 0 && <EnforcementBanner actions={enforcement} vendorName={vendor.name} />}
-        </section>
-      )}
+        {/* ── Alerts: grouped, only when present ──────────────────────────────────────── */}
+        {hasAlerts && (
+          <NumberedSection id="alerts" number={number("alerts")} eyebrow="Read this first" title={`What is flagged on ${vendor.name} right now?`}
+            intro={`Enough to change how you read the rest of this page: ${alertReasons}. Each one is a record we can show you, not our opinion — the detail and its source are below.`}>
+            {statusAlert && <VendorStatusBanner status={statusAlert} vendorName={vendor.name} />}
+            {vendorFlags.length > 0 && <VendorFlagsBanner flags={vendorFlags} vendorName={vendor.name} />}
+            {enforcement.length > 0 && <EnforcementBanner actions={enforcement} vendorName={vendor.name} />}
+          </NumberedSection>
+        )}
+      </Section>
 
       {/* ── Sticky jump-nav ─────────────────────────────────────────────────────────── */}
-      <JumpNav items={nav} identity={{ name: vendor.name, letter: grade.letter }} />
+      <JumpNav items={sections} identity={{ name: vendor.name, letter: grade.letter }} />
 
       {/* ── Evidence ──────────────────────────────────────────────────────────────────
           Every section below renders whether or not we hold the evidence for it. A missing section
           reads as "nothing to see here"; the honest answer is "nobody has published this", and that
-          gap is the single most useful thing this site can tell a buyer. */}
-      <section id="reputation" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-10 sm:px-8">
-        <SectionHead eyebrow="Evidence, check by check" title="Where does the evidence hold up, and where is it missing?" />
-        {reputation ? (
-          <>
-            <p className="mt-4 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-              Of the {reputation.dimensions.length} things we check on a vendor, {repEstablished} {repEstablished === 1 ? "is" : "are"} backed by evidence we can point at, {repDisputed} {repDisputed === 1 ? "needs" : "need"} a closer look, and {repUnknown} we simply don&rsquo;t know. Each card says which, and where it came from.
-            </p>
-            <div className="mt-5"><VendorReputationTiles dimensions={reputation.dimensions} /></div>
-            <p className="mt-5 max-w-3xl text-xs font-medium leading-5 text-[var(--muted)]">Each answer stands on its own and says where it came from. Where we don&rsquo;t have the evidence, it says so &mdash; we never invent a number or blend everything into one score.</p>
-          </>
-        ) : (
-          <NoEvidence
-            answer={`We haven’t built a check-by-check reputation record for ${vendor.name} yet.`}
-            note="That record is assembled from lab reports, shipping history, buyer reviews and fraud-case records. Until it exists, read the individual sections below on their own — an absent record is a gap in what we hold, not a finding about the vendor."
-          />
-        )}
-      </section>
+          gap is the single most useful thing this site can tell a buyer. Panels that bring their own
+          container (the lab-test table, the legacy trackers, buyers and offers) sit in a wrapper that
+          cancels this band's side padding, so their edges line up with the frames. */}
+      <Section tight className="grid gap-4">
+        <NumberedSection id="reputation" number={number("reputation")} eyebrow="Evidence, check by check" title="Where does the evidence hold up, and where is it missing?"
+          intro={reputation
+            ? <>Of the {reputation.dimensions.length} things we check on a vendor, {repEstablished} {repEstablished === 1 ? "is" : "are"} backed by evidence we can point at, {repDisputed} {repDisputed === 1 ? "needs" : "need"} a closer look, and {repUnknown} we simply don&rsquo;t know. Each row says which, and where it came from.</>
+            : undefined}>
+          {reputation ? (
+            <>
+              <VendorReputationTiles dimensions={reputation.dimensions} />
+              <p className={UI.small + " max-w-3xl"}>Each answer stands on its own and says where it came from. Where we don&rsquo;t have the evidence, it says so &mdash; we never invent a number or blend everything into one score.</p>
+            </>
+          ) : (
+            <NoEvidence
+              answer={`We haven’t built a check-by-check reputation record for ${vendor.name} yet.`}
+              note="That record is assembled from lab reports, shipping history, buyer reviews and fraud-case records. Until it exists, read the individual sections below on their own — an absent record is a gap in what we hold, not a finding about the vendor."
+            />
+          )}
+        </NumberedSection>
 
-      <div id="lab-tests" className="scroll-mt-[140px]">
         {vendorLabTests.length > 0 ? (
-          <LabTestsPanel tests={vendorLabTests} heading={`Has anyone independently tested ${vendor.name}?`} />
+          <div id="lab-tests" className="-mx-5 scroll-mt-36 sm:-mx-8">
+            <LabTestsPanel tests={vendorLabTests} heading={`Has anyone independently tested ${vendor.name}?`} />
+          </div>
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
-            <SectionHead eyebrow="Independent testing" title={`Has anyone independently tested ${vendor.name}?`} />
+          <NumberedSection id="lab-tests" number={number("lab-tests")} eyebrow="Independent testing" title={`Has anyone independently tested ${vendor.name}?`}>
             <NoEvidence
               answer={`No independent lab certificate for ${vendor.name} is on record with us.`}
               note="We read certificates from the public feeds independent labs publish and from the certificates vendors post themselves. Neither has produced one for this vendor. That is not evidence against them — it means nobody has published a test we can read, so there is nothing here to check a claim against. Unknown is not the same as clean."
             />
-          </section>
+          </NumberedSection>
         )}
-      </div>
 
-      {noCommerce ? null : <>
-      <div id="trackers" className="scroll-mt-[140px]">
+        {noCommerce ? null : <>
         {aggregatorRatings.length > 0 ? (
-          <AggregatorRatingsPanel ratings={aggregatorRatings} vendorName={vendor.name} />
+          <div id="trackers" className="-mx-5 scroll-mt-36 sm:-mx-8">
+            <AggregatorRatingsPanel ratings={aggregatorRatings} vendorName={vendor.name} />
+          </div>
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
-            <SectionHead eyebrow="Third-party aggregators" title={`What do other trackers say about ${vendor.name}?`} />
+          <NumberedSection id="trackers" number={number("trackers")} eyebrow="Third-party aggregators" title={`What do other trackers say about ${vendor.name}?`}>
             <NoEvidence
               answer={`No independent peptide tracker we follow has published a rating for ${vendor.name}.`}
               note="We read the ratings other aggregators publish and show them side by side with a link to each source. None of them covers this vendor, so there is no second opinion to compare ours against."
             />
-          </section>
+          </NumberedSection>
         )}
-      </div>
 
-      <div id="signals" className="scroll-mt-[140px]">
         {vendorSignals ? (
-          <VendorSignalsPanel signals={vendorSignals} vendorName={vendor.name} />
+          <VendorSignalsPanel signals={vendorSignals} vendorName={vendor.name} number={number("signals")} />
         ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
-            <SectionHead eyebrow="Operational signals" title={`What does ${vendor.name}’s own storefront tell us?`} />
+          <NumberedSection id="signals" number={number("signals")} eyebrow="Operational signals" title={`What does ${vendor.name}’s own storefront tell us?`}>
             <NoEvidence
               answer={`We haven’t read ${vendor.name}’s own site into a record yet.`}
               note="This section normally carries neutral facts from the vendor's public site and domain records — how old the domain is, which payment rails it takes, whether it posts a research-use-only notice. None of it proves what is in a vial, and right now we hold none of it for this vendor."
             />
-          </section>
+          </NumberedSection>
         )}
-      </div>
 
-      </>}
-      {noCommerce ? null : (
-      <div id="reviews" className="scroll-mt-[140px]">
-        {vendorReview ? (
-          <VendorReviewsPanel review={vendorReview} vendorName={vendor.name} />
-        ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
-            <SectionHead eyebrow="What buyers say" title={`What do buyers report about ${vendor.name}?`} />
+        </>}
+        {noCommerce ? null : (
+        <div id="reviews" className="grid scroll-mt-36 gap-4">
+          {vendorReview ? (
+            <div className="-mx-5 sm:-mx-8"><VendorReviewsPanel review={vendorReview} vendorName={vendor.name} /></div>
+          ) : (
+            <NumberedSection id="reviews-record" number={number("reviews")} eyebrow="What buyers say" title={`What do buyers report about ${vendor.name}?`}>
+              <NoEvidence
+                answer={`We haven’t gathered a buyer-review record for ${vendor.name}.`}
+                note="We collect buyer reports from public web sources and weight them toward specific, reproducible failures over generic praise. Nothing has been gathered for this vendor yet — silence here is an absence of information, not an absence of problems."
+              />
+            </NumberedSection>
+          )}
+          {communitySignal ? (
+            <div className="-mx-5 sm:-mx-8"><CommunitySignalCard signal={communitySignal} vendorName={vendor.name} /></div>
+          ) : (
+            <NumberedSection id="community-record" number={number("reviews")} eyebrow="Community" title={`What does r/Peptides say about ${vendor.name}?`}>
+              <NoEvidence
+                answer={`No r/Peptides discussion for ${vendor.name} has been captured.`}
+                note="Real vendors usually get talked about. An absence of mentions is a mild signal worth noticing — it is not a clean bill of health, and it is not proof the vendor is new or fake either."
+              />
+            </NumberedSection>
+          )}
+        </div>
+        )}
+
+        {/* Regulators get their own section even when the answer is "nothing on file" — that is the
+            answer most readers came for, and the jump-nav chip used to land on an empty div. When
+            there IS a record, the full detail stays in the alert at the top rather than being
+            repeated here, because the alarm belongs above the fold. */}
+        <NumberedSection id="enforcement" number={number("enforcement")} eyebrow="Regulators" title={`Has any regulator taken action against ${vendor.name}?`}>
+          {enforcement.length > 0 ? (
+            <Notice tone="danger" icon={Gavel} title={<>Yes &mdash; {enforcement.length} public record{enforcement.length === 1 ? "" : "s"} name{enforcement.length === 1 ? "s" : ""} {vendor.name}, or an operator we matched to it.</>}>
+              <p className="mt-1 max-w-2xl text-[13px] leading-5 text-[#3a3d46]">Each agency, action type, outcome and a link to the original document {enforcement.length === 1 ? "is" : "are"} at the <a href="#alerts" className="font-extrabold text-[#2b31d8] underline underline-offset-2">top of this page</a>. We report the action and link the source; we do not add an accusation of our own.</p>
+            </Notice>
+          ) : (
             <NoEvidence
-              answer={`We haven’t gathered a buyer-review record for ${vendor.name}.`}
-              note="We collect buyer reports from public web sources and weight them toward specific, reproducible failures over generic praise. Nothing has been gathered for this vendor yet — silence here is an absence of information, not an absence of problems."
+              answer={`No FDA, DOJ or FTC enforcement or recall record is on file for ${vendor.name}.`}
+              note="We check public agency records for actions naming this vendor or an operator matched to it, and found none. An absent record is not a clean bill of health: most sellers in this market have never been the subject of a public action, and enforcement lags the market by years."
             />
-          </section>
-        )}
-        {communitySignal ? (
-          <CommunitySignalCard signal={communitySignal} vendorName={vendor.name} />
-        ) : (
-          <section className="mx-auto max-w-[1320px] px-5 pt-10 sm:px-8">
-            <SectionHead eyebrow="Community" title={`What does r/Peptides say about ${vendor.name}?`} />
-            <NoEvidence
-              answer={`No r/Peptides discussion for ${vendor.name} has been captured.`}
-              note="Real vendors usually get talked about. An absence of mentions is a mild signal worth noticing — it is not a clean bill of health, and it is not proof the vendor is new or fake either."
-            />
-          </section>
-        )}
-      </div>
-      )}
+          )}
+        </NumberedSection>
 
-      {/* Regulators get their own section even when the answer is "nothing on file" — that is the
-          answer most readers came for, and the jump-nav chip used to land on an empty div. When
-          there IS a record, the full detail stays in the alert at the top rather than being
-          repeated here, because the alarm belongs above the fold. */}
-      <section id="enforcement" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 pt-10 sm:px-8">
-        <SectionHead eyebrow="Regulators" title={`Has any regulator taken action against ${vendor.name}?`} />
-        {enforcement.length > 0 ? (
-          <div className="ink hard-sm mt-4 rounded-[16px] bg-[#fff1f0] p-4">
-            <p className="text-base font-extrabold leading-6">Yes &mdash; {enforcement.length} public record{enforcement.length === 1 ? "" : "s"} name{enforcement.length === 1 ? "s" : ""} {vendor.name}, or an operator we matched to it.</p>
-            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#111214]/70">Each agency, action type, outcome and a link to the original document {enforcement.length === 1 ? "is" : "are"} at the <a href="#alerts" className="font-bold underline underline-offset-2">top of this page</a>. We report the action and link the source; we do not add an accusation of our own.</p>
-          </div>
-        ) : (
-          <NoEvidence
-            answer={`No FDA, DOJ or FTC enforcement or recall record is on file for ${vendor.name}.`}
-            note="We check public agency records for actions naming this vendor or an operator matched to it, and found none. An absent record is not a clean bill of health: most sellers in this market have never been the subject of a public action, and enforcement lags the market by years."
-          />
+        <VendorNewsPanel items={vendorNews} vendorName={vendor.name} vendorSlug={vendor.slug} number={number("news")} />
+        {vendorOffers.length > 0 && !noCommerce && <div id="offers" className="-mx-5 scroll-mt-36 sm:-mx-8"><VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} /></div>}
+        <VendorLinksPanel links={vendorLinks} vendorName={vendor.name} number={number("network")} />
+
+        {/* ── Catalog + history ───────────────────────────────────────────────────────── */}
+        {catalogStale && !noCommerce && (
+          <Notice tone="warn" icon={CircleDashed}>
+            <p>
+              <strong className="font-extrabold">These prices may be out of date.</strong> We last read this
+              vendor&rsquo;s store {staleDays} days ago and haven&rsquo;t been able to since &mdash; some storefronts
+              block automated checks. Treat the prices below as last-seen, not current, and confirm on their site.
+            </p>
+          </Notice>
         )}
-      </section>
-
-      <VendorNewsPanel items={vendorNews} vendorName={vendor.name} vendorSlug={vendor.slug} />
-      {vendorOffers.length > 0 && !noCommerce && <div id="offers" className="scroll-mt-[140px]"><VendorOffersPanel offers={vendorOffers} vendorName={vendor.name} /></div>}
-      <div id="network" className="scroll-mt-[140px]"><VendorLinksPanel links={vendorLinks} vendorName={vendor.name} /></div>
-
-      {/* ── Catalog + history ───────────────────────────────────────────────────────── */}
-      {catalogStale && !noCommerce && (
-        <div className="mx-auto mt-8 max-w-[1320px] px-5 sm:px-8"><div className="ink-1 hard-sm flex items-start gap-3 rounded-[16px] bg-[#fff4e0] p-4 text-sm font-medium leading-6 text-[#b26a00]">
-          <CircleDashed className="mt-0.5 size-4 shrink-0" />
-          <span>
-            <strong className="font-extrabold">These prices may be out of date.</strong> We last read this
-            vendor&rsquo;s store {staleDays} days ago and haven&rsquo;t been able to since &mdash; some storefronts
-            block automated checks. Treat the prices below as last-seen, not current, and confirm on their site.
-          </span>
-        </div></div>
-      )}
-      <section id="catalog" className="mx-auto max-w-[1320px] scroll-mt-[140px] px-5 py-8 sm:px-8 sm:py-10">
-        <div className={noCommerce ? "grid gap-8" : "grid gap-8 lg:grid-cols-[1fr_340px]"}>
-          {noCommerce ? null : <div>
-            {listings.length > 0 ? (
-              <>
-                <SectionHead eyebrow="Catalog" title={`What does ${vendor.name} sell, and at what price?`} note={priceIndex.medianPctVsMarket == null ? undefined : priceIndex.medianPctVsMarket < 0 ? "typically below market" : priceIndex.medianPctVsMarket > 0 ? "typically above market" : "around market rate"} />
-                <p className="mt-4 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">
-                  {listings.length} listing{listings.length === 1 ? "" : "s"} we have read from their store, cheapest per milligram first{priceIndex.medianPctVsMarket != null ? `, priced ${Math.abs(priceIndex.medianPctVsMarket)}% ${priceIndex.medianPctVsMarket < 0 ? "below" : priceIndex.medianPctVsMarket > 0 ? "above" : "at"} the market median across ${priceIndex.comparedCount} comparable listing${priceIndex.comparedCount === 1 ? "" : "s"}` : ", with too few priced peers to compare against the market"}. A price is not evidence of quality either way.
-                </p>
+        <section id="catalog" className={noCommerce ? "grid scroll-mt-36 gap-4" : "grid scroll-mt-36 gap-8 lg:grid-cols-[1fr_340px] lg:items-start"}>
+          {noCommerce ? null : (
+            <NumberedSection id="catalog-listings" number={number("catalog")} eyebrow="Catalog" title={`What does ${vendor.name} sell, and at what price?`}
+              chips={listings.length > 0 && priceIndex.medianPctVsMarket != null ? <Chip tone={priceIndex.medianPctVsMarket < 0 ? "mint" : priceIndex.medianPctVsMarket > 0 ? "warn" : "paper"}>{priceIndex.medianPctVsMarket < 0 ? "typically below market" : priceIndex.medianPctVsMarket > 0 ? "typically above market" : "around market rate"}</Chip> : undefined}
+              intro={listings.length > 0
+                ? `${listings.length} listing${listings.length === 1 ? "" : "s"} we have read from their store, cheapest per milligram first${priceIndex.medianPctVsMarket != null ? `, priced ${Math.abs(priceIndex.medianPctVsMarket)}% ${priceIndex.medianPctVsMarket < 0 ? "below" : priceIndex.medianPctVsMarket > 0 ? "above" : "at"} the market median across ${priceIndex.comparedCount} comparable listing${priceIndex.comparedCount === 1 ? "" : "s"}` : ", with too few priced peers to compare against the market"}. A price is not evidence of quality either way.`
+                : undefined}>
+              {listings.length > 0 ? (
                 <CatalogGrid products={catalogSorted} />
-              </>
-            ) : (
-              <>
-                <SectionHead eyebrow="Catalog" title={`What does ${vendor.name} sell, and at what price?`} />
+              ) : (
                 <NoEvidence
                   answer="We haven’t captured a shoppable catalog for this vendor."
                   note={`We track ${vendor.name} from lab records and public sources, but haven’t read a live storefront catalog${maker ? " — it’s an upstream manufacturer, not a shop" : ""}. There are no prices here to compare against the market.`}
                 />
-              </>
-            )}
-          </div>}
+              )}
+            </NumberedSection>
+          )}
 
-          <aside id="history" className="scroll-mt-[140px]">
-            <VendorHistoryRail history={noCommerce ? vendor.history.filter((h) => h.type !== "catalog") : vendor.history} vendorName={vendor.name} />
+          <aside id="history" className="scroll-mt-36">
+            <VendorHistoryRail history={noCommerce ? vendor.history.filter((h) => h.type !== "catalog") : vendor.history} vendorName={vendor.name} number={number("history")} />
           </aside>
-        </div>
-      </section>
-    </>
+        </section>
+      </Section>
+    </div>
   );
 }
 
@@ -549,25 +547,12 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
 // the section stays independently readable, then why the gap exists — never a claim about the
 // vendor. A visible "we don't know" is the product; a silently dropped section is not.
 function NoEvidence({ answer, note }: { answer: string; note: string }) {
-  // A missing record is one honest line, not a billboard — the dashed border still marks it as a
-  // gap, but it takes the height of a row, not a card.
+  // A missing record is one honest line in the quiet inner panel, not a billboard — the dashed
+  // glyph marks it as a gap, and it takes the height of a row, not a card.
   return (
-    <div className="mt-4 rounded-[14px] border-2 border-dashed border-[#111214]/25 bg-white/50 px-4 py-3.5">
-      <p className="flex items-start gap-2.5 text-sm font-extrabold leading-5 text-[#111214]"><CircleDashed className="mt-0.5 size-4 shrink-0 text-[#111214]/35" />{answer}</p>
-      <p className="mt-1 max-w-2xl pl-[26px] text-[13px] font-medium leading-5 text-[var(--muted)]">{note}</p>
-    </div>
-  );
-}
-
-function HeroStat({ icon: Icon, value, label, accent }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; value: string; label: string; accent?: string }) {
-  // One masthead figure — ink numbers on the page itself; `accent` (price-vs-market) is the only colored one.
-  return (
-    <div className="flex items-start gap-2.5">
-      <Icon className="mt-1 size-4 shrink-0" style={{ color: accent ?? "#2b31d8" }} />
-      <div>
-        <p className="text-2xl font-extrabold tabular-nums leading-none tracking-[-.04em]" style={accent ? { color: accent } : undefined}>{value}</p>
-        <p className="mt-1 text-[11px] font-semibold text-[var(--muted)]">{label}</p>
-      </div>
-    </div>
+    <Quiet>
+      <p className="flex items-start gap-2.5 text-sm font-extrabold leading-5 text-[#111214]"><CircleDashed className="mt-0.5 size-4 shrink-0 text-[#111214]/35" aria-hidden="true" />{answer}</p>
+      <p className={UI.small + " mt-1 max-w-2xl pl-[26px]"}>{note}</p>
+    </Quiet>
   );
 }

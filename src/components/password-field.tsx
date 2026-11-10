@@ -71,8 +71,10 @@ export function PasswordField({
           aria-label={shown ? "Hide password" : "Show password"}
           aria-pressed={shown}
           aria-controls={inputId}
+          // Secondary ink, not a 40% black: the glyph is the control's only visible part and
+          // #4a4d56 on white clears the 3:1 non-text contrast line that a faded grey did not.
           className={`absolute inset-y-0 right-0 grid w-12 place-items-center rounded-r-[12px] transition ${
-            tone === "dark" ? "text-white/60 hover:text-white" : "text-black/40 hover:text-[#111214]"
+            tone === "dark" ? "text-white/60 hover:text-white" : "text-[#4a4d56] hover:text-[#111214]"
           }`}
         >
           {shown ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}

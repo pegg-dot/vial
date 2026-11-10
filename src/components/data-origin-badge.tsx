@@ -1,4 +1,5 @@
 import type { DataOrigin } from "@/lib/types";
+import { Chip } from "@/components/intelligence/research-ui";
 
 // Honest provenance marker. 'live' = aggregated from a real public third-party source;
 // 'demo' = seeded demo sample. Never implies endorsement or human-use safety.
@@ -31,23 +32,17 @@ export function DataOriginBadge({ origin, className = "", compact = false }: { o
       </span>
     );
   }
+  // The kit chip carries no tooltip of its own, so the provenance sentence sits on a wrapper.
   if (origin === "live") {
     return (
-      <span
-        title={LIVE_TITLE}
-        className={`ink-1 inline-flex items-center gap-1.5 rounded-full bg-[#e6fbf4] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#0e8f80] ${className}`}
-      >
-        <Pulse />
-        Live data
+      <span title={LIVE_TITLE} className={`inline-flex ${className}`}>
+        <Chip tone="mint" icon={Pulse}>Live data</Chip>
       </span>
     );
   }
   return (
-    <span
-      title={DEMO_TITLE}
-      className={`ink-1 inline-flex items-center gap-1.5 rounded-full bg-[#f2f2ef] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[var(--muted)] ${className}`}
-    >
-      Demo data
+    <span title={DEMO_TITLE} className={`inline-flex ${className}`}>
+      <Chip tone="paper">Demo data</Chip>
     </span>
   );
 }

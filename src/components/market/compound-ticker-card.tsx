@@ -1,15 +1,16 @@
 "use client";
 import Link from "next/link";
-import { ArrowUpRight, CircleHelp, FlaskConical, ShieldCheck } from "lucide-react";
+import { ArrowRight, CircleHelp, FlaskConical, ShieldCheck } from "lucide-react";
 import type { Compound, Product } from "@/lib/types";
 import { shelfForCompound } from "@/lib/market-taxonomy";
 import { compoundPriceRange, compoundTrustTier, type TrustTier } from "@/lib/curation";
 import { formatCurrency } from "@/lib/format";
+import { Chip } from "@/components/intelligence/research-ui";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 
 // A compound ticker tile — the same six things in the same six places on every tile, so a row
 // of ten reads as one board rather than ten cards of different heights:
-//   stamp · shelf · live ↗  /  name  /  lowest price + the row's own metric  /  one evidence line.
+//   stamp · shelf · live →  /  name  /  lowest price + the row's own metric  /  one evidence line.
 //
 // What is deliberately NOT here any more:
 //   • The price-change delta. `compounds.price_change` is a median of per-listing moves computed
@@ -20,7 +21,7 @@ import { DataOriginBadge } from "@/components/data-origin-badge";
 //   • The tint pills. One evidence line, in the tier's colour, with an icon — never colour alone.
 const TIER: Record<TrustTier["tier"], { cls: string; Icon: typeof ShieldCheck }> = {
   independent: { cls: "text-[#0e8f80]", Icon: ShieldCheck },
-  vendor: { cls: "text-[#b26a00]", Icon: FlaskConical },
+  vendor: { cls: "text-[#9b6b22]", Icon: FlaskConical },
   none: { cls: "text-[var(--muted)]", Icon: CircleHelp },
 };
 
@@ -54,49 +55,46 @@ export function CompoundTickerCard({
   const body = (
     <>
       <div className="flex items-center gap-2">
-        <span className="ink-1 inline-flex h-5 shrink-0 items-center rounded-[5px] bg-white px-1.5 text-[10px] font-extrabold uppercase tracking-[.1em] text-[#111214]">
-          {compound.shorthand}
-        </span>
+        <Chip plain className="shrink-0">{compound.shorthand}</Chip>
         <span className="min-w-0 flex-1 truncate text-[10.5px] font-bold uppercase tracking-[.08em] text-[var(--muted)]">{shelf.label}</span>
         {compound.origin === "live" && <DataOriginBadge origin="live" compact />}
-        <ArrowUpRight className="size-4 shrink-0 text-[#111214] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
+        <ArrowRight className="size-4 shrink-0 text-[#111214] transition-transform group-hover:translate-x-1" aria-hidden="true" />
       </div>
 
-      <h3 className="mt-2.5 truncate text-[17px] font-extrabold leading-tight tracking-[-.03em]">{compound.name}</h3>
+      <h3 className="mt-2.5 truncate text-[17px] font-extrabold leading-tight tracking-[-.03em] text-[#111214]">{compound.name}</h3>
 
       {hidePrice ? (
         <div className="mt-2.5">
-          <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em]">{compound.coaCount}</p>
-          <p className="mt-1 truncate text-[11px] font-semibold text-[var(--muted)]">independent lab {compound.coaCount === 1 ? "test" : "tests"} on record</p>
+          <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]">{compound.coaCount}</p>
+          <p className="mt-1 truncate text-[11px] font-bold text-[var(--muted)]">independent lab {compound.coaCount === 1 ? "test" : "tests"} on record</p>
         </div>
       ) : (
-      <div className="mt-2.5 flex items-end justify-between gap-3">
+        <div className="mt-2.5 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em]" title="Lowest priced listing on the market">{range.from != null ? formatCurrency(range.from) : "—"}</p>
-            <p className="mt-1 truncate text-[11px] font-semibold text-[var(--muted)]">
+            <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]" title="Lowest priced listing on the market">{range.from != null ? formatCurrency(range.from) : "—"}</p>
+            <p className="mt-1 truncate text-[11px] font-bold text-[var(--muted)]">
               {range.from != null ? `${range.vendors} vendor${range.vendors === 1 ? "" : "s"}` : "no priced listing"}
               {compound.medianPrice > 0 ? ` · median ${formatCurrency(compound.medianPrice)}` : ""}
             </p>
           </div>
           {metric && (
             <div className="shrink-0 text-right">
-              <p className="text-[20px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]/70">{metric.value}</p>
+              <p className="text-[20px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#4a4d56]">{metric.value}</p>
               <p className="mt-1 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
             </div>
           )}
         </div>
-  
       )}
 
       <p className={`mt-3 flex items-center gap-1.5 border-t-2 border-[#111214]/10 pt-2.5 text-[11px] font-bold ${cls}`} title={tier.reasons.join(" · ")}>
-        <Icon className="size-3.5 shrink-0" aria-hidden />
+        <Icon className="size-3.5 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">{tier.label}</span>
         {purity && <span className="shrink-0 tabular-nums">{purity}</span>}
       </p>
     </>
   );
 
-  const className = "ink-1 hard-sm press group flex w-full flex-col rounded-[14px] bg-white p-3.5 text-left";
+  const className = "ink-1 hard-sm press group flex w-full flex-col rounded-[16px] bg-white p-3.5 text-left";
 
   if (onQuickView) {
     return (

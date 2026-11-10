@@ -1,25 +1,23 @@
-import { CalendarClock, CreditCard, Info, MapPin, ShieldQuestion, Truck } from "lucide-react";
+import { ArrowUpRight, CalendarClock, CreditCard, Info, MapPin, ShieldQuestion, Truck } from "lucide-react";
 import type { VendorSignals } from "@/server/external/repository";
+import { Chip, NumberedSection, Quiet, UI } from "@/components/intelligence/research-ui";
 
 // Operational / legitimacy signals read from the vendor's OWN public site (payment rails, how old the
 // domain is, whether they post a research-use disclaimer). These are observations, not accusations —
 // each is neutral market context a careful buyer would want, with the honest caveat that none of it
-// proves product quality.
+// proves product quality. Rendered only outside the evidence-only release; `number` is the section's
+// place in the report, handed down by the page so the frame and the jump-nav agree.
 const ALT_RAILS = new Set(["crypto", "zelle", "venmo", "cashapp", "bitcoin", "btc", "ach", "gift-certificate"]);
 const RAIL_LABEL: Record<string, string> = { card: "Card", crypto: "Crypto", zelle: "Zelle", venmo: "Venmo", cashapp: "Cash App", ach: "ACH", applepay: "Apple Pay", googlepay: "Google Pay", bitcoin: "Bitcoin" };
 
-export function VendorSignalsPanel({ signals, vendorName }: { signals: VendorSignals; vendorName: string }) {
+export function VendorSignalsPanel({ signals, vendorName, number }: { signals: VendorSignals; vendorName: string; number: number }) {
   const methods = Array.isArray(signals.payment_methods) ? (signals.payment_methods as string[]) : [];
   const youngDomain = /~?\s*(7 months|1\.\d|2\.\d)\s*yr|months old|VERY YOUNG|YOUNG/i.test(signals.domain_age_note ?? "");
   const disclaimer = signals.research_disclaimer;
   return (
-    <section className="mx-auto max-w-[1320px] px-5 pt-8 sm:px-8 sm:pt-10">
-      <div className="mb-7">
-        <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Operational signals</p>
-        <h2 className="mt-2 text-xl font-extrabold tracking-[-.03em] sm:text-2xl">What does {vendorName}&rsquo;s own storefront tell us?</h2>
-        <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--muted)]">Neutral operational facts we read directly from {vendorName}&rsquo;s public site and domain records. Context for judgment, not a verdict — none of it proves what&rsquo;s in the vial.</p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <NumberedSection id="signals" number={number} eyebrow="Operational signals" title={<>What does {vendorName}&rsquo;s own storefront tell us?</>}
+      intro={<>Neutral operational facts we read directly from {vendorName}&rsquo;s public site and domain records. Context for judgment, not a verdict — none of it proves what&rsquo;s in the vial.</>}>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {signals.domain_age_note && (
           <SignalTile icon={CalendarClock} label="Domain age" tone={youngDomain ? "warn" : "plain"}>
             {signals.domain_age_note}
@@ -30,10 +28,10 @@ export function VendorSignalsPanel({ signals, vendorName }: { signals: VendorSig
             <span className="flex flex-wrap gap-1.5">
               {methods.map((m) => {
                 const alt = ALT_RAILS.has(m.toLowerCase());
-                return <span key={m} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${alt ? "bg-amber-50 text-amber-800" : "bg-black/[.05] text-black/60"}`}>{RAIL_LABEL[m.toLowerCase()] ?? m}</span>;
+                return <Chip key={m} tone={alt ? "warn" : "white"} plain>{RAIL_LABEL[m.toLowerCase()] ?? m}</Chip>;
               })}
             </span>
-            {methods.some((m) => ALT_RAILS.has(m.toLowerCase())) && <span className="mt-2 block text-[11px] leading-4 text-[var(--muted)]">Alternative rails (crypto/Zelle/etc.) are common where card processors won&rsquo;t serve research chemicals — a context signal, not a fault.</span>}
+            {methods.some((m) => ALT_RAILS.has(m.toLowerCase())) && <span className={UI.small + " mt-2 block"}>Alternative rails (crypto/Zelle/etc.) are common where card processors won&rsquo;t serve research chemicals — a context signal, not a fault.</span>}
           </SignalTile>
         )}
         {disclaimer != null && (
@@ -50,20 +48,32 @@ export function VendorSignalsPanel({ signals, vendorName }: { signals: VendorSig
         )}
       </div>
       {signals.source_url && (
-        <p className="mt-4 text-[11px] text-[var(--muted)]">Read from <a href={signals.source_url} target="_blank" rel="noopener noreferrer nofollow" className="font-semibold text-black/50 underline underline-offset-2 hover:text-black">{new URL(signals.source_url).hostname}</a>. Domain age from public WHOIS records.</p>
+        <p className={UI.small}>Read from <a href={signals.source_url} target="_blank" rel="noopener noreferrer nofollow" className={UI.linkSmall}>{new URL(signals.source_url).hostname} <ArrowUpRight className="size-3.5" aria-hidden="true" /></a>. Domain age from public WHOIS records.</p>
       )}
-    </section>
+    </NumberedSection>
   );
 }
 
+// A warn tile is the kit's warn tint behind the same thin panel; a plain one is the quiet inner panel.
 function SignalTile({ icon: Icon, label, tone = "plain", children }: { icon: React.ComponentType<{ className?: string }>; label: string; tone?: "plain" | "warn"; children: React.ReactNode }) {
-  return (
-    <div className={`ink-1 hard-sm rounded-[14px] p-5 ${tone === "warn" ? "bg-[#fff6e6]" : "bg-white"}`}>
-      <div className="flex items-center gap-2">
-        <Icon className={`size-4 ${tone === "warn" ? "text-[#b26a00]" : "text-black/35"}`} />
-        <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">{label}</p>
-      </div>
-      <div className="mt-3 text-sm font-medium leading-6 text-black/75">{children}</div>
+  const head = (
+    <div className="flex items-center gap-2">
+      <Icon className={`size-4 ${tone === "warn" ? "text-[#9b6b22]" : "text-[#2b31d8]"}`} aria-hidden="true" />
+      <p className={UI.eyebrowMuted}>{label}</p>
     </div>
+  );
+  if (tone === "warn") {
+    return (
+      <div className="ink-1 rounded-[14px] bg-[#fff3d8] p-4">
+        {head}
+        <div className={UI.bodyInk + " mt-3"}>{children}</div>
+      </div>
+    );
+  }
+  return (
+    <Quiet>
+      {head}
+      <div className={UI.bodyInk + " mt-3"}>{children}</div>
+    </Quiet>
   );
 }

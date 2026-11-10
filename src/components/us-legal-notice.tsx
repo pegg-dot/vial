@@ -1,12 +1,14 @@
-import Link from "next/link";
-import { Pill, AlertTriangle, Scale } from "lucide-react";
+import { Pill as PillIcon, AlertTriangle, Scale } from "lucide-react";
 import { usLegalFor } from "@/lib/us-legal";
+import { Chip, Frame, Pill, type Tone } from "@/components/intelligence/research-ui";
 
+// Each legal bucket is one kit tone: danger for prescription-only, warn for investigational, white
+// for research-only. The tone says which bucket; the chip and the headline say why.
 const STYLE = {
-  prescription: { bg: "bg-[#ffecea]", chip: "bg-white text-[#d3372c]", icon: Pill },
-  investigational: { bg: "bg-[#fff6e6]", chip: "bg-white text-[#b26a00]", icon: AlertTriangle },
-  "research-only": { bg: "bg-white", chip: "bg-[#111214]/[.06] text-black/60", icon: Scale },
-} as const;
+  prescription: { tone: "danger", icon: PillIcon },
+  investigational: { tone: "warn", icon: AlertTriangle },
+  "research-only": { tone: "white", icon: Scale },
+} as const satisfies Record<string, { tone: Tone; icon: typeof Scale }>;
 
 // The compound-specific US legal reality, surfaced in context. Informational, never advice or a
 // gate — it tells a US buyer which legal bucket this compound is in and links to the full law.
@@ -19,21 +21,20 @@ const STYLE = {
 export function UsLegalNotice({ slug }: { slug: string }) {
   const s = usLegalFor(slug);
   const st = STYLE[s.category];
-  const Icon = st.icon;
   return (
-    <div className={`ink hard-sm rounded-[16px] ${st.bg} p-5`}>
+    <Frame tone={st.tone} shadow="sm" radius="rounded-[16px]">
       <div className="flex flex-col gap-x-10 gap-y-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${st.chip}`}><Icon className="size-3.5" /> US regulatory context</span>
-            {s.flags.map((f) => <span key={f} className="ink-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-black/60">{f}</span>)}
+            <Chip tone="white" icon={st.icon}>US regulatory context</Chip>
+            {s.flags.map((f) => <Chip key={f} tone="white" plain>{f}</Chip>)}
           </div>
-          <p className="mt-4 max-w-[46ch] text-[16px] font-extrabold leading-6 tracking-[-.02em]">{s.headline}</p>
-          <p className="mt-2 max-w-[76ch] text-[13px] font-medium leading-6 text-black/70">{s.detail}</p>
+          <p className="mt-4 max-w-[46ch] text-base font-extrabold leading-6 tracking-[-.02em] text-[#111214]">{s.headline}</p>
+          <p className="mt-2 max-w-[76ch] text-[13px] font-medium leading-6 text-[#3a3d46]">{s.detail}</p>
         </div>
-        <Link href="/legal/us-regulations" className="ink-1 hard-sm press shrink-0 self-start rounded-full bg-white px-4 py-2 text-xs font-bold text-[#2b31d8]">Read US regulatory overview →</Link>
+        <Pill href="/legal/us-regulations" variant="ghost" size="sm" arrow="right" className="shrink-0 self-start">Read US regulatory overview</Pill>
       </div>
-      <p className="mt-4 max-w-[96ch] text-[10px] leading-4 text-black/40">Regulatory context only. This label does not establish that a vendor, sample, shipment or transaction is lawful.</p>
-    </div>
+      <p className="mt-4 max-w-[96ch] text-[11px] font-medium leading-4 text-[var(--muted)]">Regulatory context only. This label does not establish that a vendor, sample, shipment or transaction is lawful.</p>
+    </Frame>
   );
 }

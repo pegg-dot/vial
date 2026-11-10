@@ -34,20 +34,21 @@ export function CategoryRail({ counts, activeKey, onSelect }: { counts: Map<stri
 
   return (
     <div className="scroll-fade-x -mx-5 overflow-x-auto px-5 pb-2 no-scrollbar sm:-mx-8 sm:px-8">
-      <div className="flex w-max gap-3">
+      <div className="flex w-max gap-2.5">
         {pills.map(({ key, label, Icon, count }) => {
           const active = activeKey === key || (key === null && !activeKey);
           const inner = (
             <>
-              <span className="grid size-8 place-items-center rounded-full bg-[#12b3a6] text-white">
-                <Icon className="size-4" />
+              <span className={"grid size-8 place-items-center rounded-full " + (active ? "bg-white/15 text-white" : "bg-[#eef0ff] text-[#2b31d8]")}>
+                <Icon className="size-4" aria-hidden="true" />
               </span>
               {label}
-              {count != null && <span className="tabular-nums opacity-60">{count}</span>}
+              {count != null && <span className={"tabular-nums " + (active ? "text-white/70" : "text-[var(--muted)]")}>{count}</span>}
             </>
           );
-          const cls = `ink-1 hard-sm press inline-flex shrink-0 items-center gap-2.5 rounded-full py-2 pl-2 pr-5 text-[15px] font-bold ${
-            active ? "bg-[#111214] text-white" : "bg-white text-[#111214]"
+          // The same `ink-1 rounded-full` pill the research explorer's theme rail uses.
+          const cls = `ink-1 inline-flex min-h-11 shrink-0 items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-4 text-sm font-extrabold transition-colors ${
+            active ? "bg-[#111214] text-white" : "bg-white text-[#111214] hover:bg-[#eef0ff]"
           }`;
           return onSelect ? (
             <button key={label} type="button" onClick={() => onSelect(key)} aria-pressed={active} className={cls}>
