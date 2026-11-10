@@ -76,18 +76,21 @@ export function PexEvidenceWayfinder({ condensed = false }: { condensed?: boolea
 }
 
 /** The six claim cards. `compact` shows the first three (the dossier) with a link to all six. */
-export function PexEvidenceClaimGrid({ compact = false }: { compact?: boolean }) {
+/** `headless` drops the grid's own heading when a numbered section already supplies one. */
+export function PexEvidenceClaimGrid({ compact = false, headless = false }: { compact?: boolean; headless?: boolean }) {
   const claims = compact ? PEXIGANAN_CLAIMS.slice(0, 3) : PEXIGANAN_CLAIMS;
   return (
     <section aria-label="Pexiganan claim and evidence checks">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className={UI.eyebrowMuted}>The evidence, explained</p>
-          <h3 className={UI.h3 + " mt-1"}>What these original sources actually support</h3>
-        </div>
+        {!headless && (
+          <div>
+            <p className={UI.eyebrowMuted}>The evidence, explained</p>
+            <h3 className={UI.h3 + " mt-1"}>What these original sources actually support</h3>
+          </div>
+        )}
         {compact && <Link href="/intelligence/passports/pexiganan" className={UI.linkSmall}>All six checks <ArrowRight className="size-4" aria-hidden="true" /></Link>}
       </div>
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className={"grid gap-4 lg:grid-cols-2 " + (headless && !compact ? "" : "mt-4")}>
         {claims.map((claim, i) => {
           const badge = STATUS[claim.status];
           return (
@@ -127,13 +130,13 @@ const REGISTRY_RESULTS: Record<"present" | "not-shown" | "uncertain", { text: st
 };
 
 /** The four pinned registry rows, re-read live. Sits inside a numbered section on the passport and the dossier. */
-export function PexTrialNetworkTable({ rows }: { rows: readonly PexTrialEvidence[] }) {
+export function PexTrialNetworkTable({ rows, headless = false }: { rows: readonly PexTrialEvidence[]; headless?: boolean }) {
   return (
     <section id="pexiganan-trials" aria-label="Pexiganan selected original trial records" className="scroll-mt-36 overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
       <div className="border-b border-[#111214]/15 bg-[#e6fbf6] px-5 py-4">
-        <p className={UI.eyebrow}>The registry, checked live</p>
-        <h3 className={UI.h3 + " mt-1"}>Four selected registered studies</h3>
-        <p className={UI.small + " mt-2 max-w-3xl"}>
+        {!headless && <p className={UI.eyebrow}>The registry, checked live</p>}
+        {!headless && <h3 className={UI.h3 + " mt-1"}>Four selected registered studies</h3>}
+        <p className={UI.small + (headless ? " max-w-3xl" : " mt-2 max-w-3xl")}>
           Individually pinned NCTs, not a complete study review. Each row is checked for the name in its
           intervention field. A registry results section is different from a publication and from a conclusion about effectiveness.
         </p>

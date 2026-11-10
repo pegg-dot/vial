@@ -269,13 +269,15 @@ const HEADER_TONE = { white: "", mint: "bg-[#e6fbf6]", blue: "bg-[#eef0ff]", vio
  * `flush` drops the body padding for content that brings its own rows (a divided list, a table),
  * so the frame ends where the content ends. `titleId` pins the h2's id when something links to it.
  */
-export function NumberedSection({ id, number, eyebrow, title, intro, actions, chips, titleId, headerTone = "white", flush = false, className = "", children }: {
+export function NumberedSection({ id, number, eyebrow, title, intro, actions, chips, titleId, ariaLabel, headerTone = "white", flush = false, className = "", children }: {
   id: string; number: number; eyebrow: ReactNode; title: ReactNode; intro?: ReactNode; actions?: ReactNode; chips?: ReactNode; titleId?: string;
+  /** A fixed accessible name for the section when something (a test, a link) relies on it; otherwise the h2 names it. */
+  ariaLabel?: string;
   headerTone?: keyof typeof HEADER_TONE; flush?: boolean; className?: string; children: ReactNode;
 }) {
   const headingId = titleId ?? id + "-title";
   return (
-    <section id={id} aria-labelledby={headingId} className={"ink hard-sm scroll-mt-36 overflow-hidden rounded-[16px] bg-white " + className}>
+    <section id={id} aria-label={ariaLabel} aria-labelledby={ariaLabel ? undefined : headingId} className={"ink hard-sm scroll-mt-36 overflow-hidden rounded-[16px] bg-white " + className}>
       <header className={"border-b-2 border-[#111214] px-5 py-3.5 " + HEADER_TONE[headerTone]}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -341,10 +343,10 @@ const CHIP: Record<Tone, string> = {
   danger: "bg-[#ffecea] text-[#ce403b]", ink: "bg-[#111214] text-white", blueSolid: "bg-[#2b31d8] text-white",
 };
 
-/** Small uppercase label chip. Use `tone` to say what kind of fact it is, never to decorate. */
-export function Chip({ tone = "white", icon: Icon, className = "", children }: { tone?: Tone; icon?: ComponentType<{ className?: string }>; className?: string; children: ReactNode }) {
+/** Small label chip, uppercase by default. `plain` keeps the text's own case for brand names and identifiers. Use `tone` to say what kind of fact it is, never to decorate. */
+export function Chip({ tone = "white", icon: Icon, plain = false, className = "", children }: { tone?: Tone; icon?: ComponentType<{ className?: string }>; plain?: boolean; className?: string; children: ReactNode }) {
   return (
-    <span className={"ink-1 inline-flex min-h-7 items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-[.1em] " + CHIP[tone] + " " + className}>
+    <span className={"ink-1 inline-flex min-h-7 items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold " + (plain ? "" : "uppercase tracking-[.1em] ") + CHIP[tone] + " " + className}>
       {Icon && <Icon className="size-3.5" aria-hidden="true" />}{children}
     </span>
   );

@@ -141,8 +141,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
       <section aria-labelledby="browse-title" className="scroll-mt-28">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className={UI.eyebrow}>The research library</p>
-            <h2 id="browse-title" className={UI.h2 + " mt-3"}>Compounds</h2>
+            <h2 id="browse-title" className={UI.h3}>Compounds</h2>
           </div>
           <span className={UI.small}>16 curated research records · No products for sale</span>
         </div>

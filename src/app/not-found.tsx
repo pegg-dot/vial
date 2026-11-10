@@ -18,7 +18,7 @@ export default function NotFound() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Pill href="/intelligence" variant="primary" icon={FileSearch}>Explore research</Pill>
-          <Pill href="/intelligence/cagrilintide/audit" variant="secondary" arrow="up">View study audit</Pill>
+          <Pill href="/intelligence/cagrilintide/audit" variant="secondary" arrow="right">View study audit</Pill>
         </div>
       </Section>
     );

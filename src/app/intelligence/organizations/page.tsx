@@ -85,7 +85,7 @@ export default function ResearchOrganizationsPage() {
             <OrganizationAttributionList />
           </Suspense>
 
-          <NumberedSection id="lab-verification" number={3} eyebrow="Testing laboratories" title="Laboratory verification"
+          <NumberedSection id="lab-verification" number={PEXIGANAN_RECORDED_ORGANIZATIONS.length + 1} eyebrow="Testing laboratories" title="Laboratory verification"
             intro="A trial sponsor or research publication is not a testing laboratory.">
             <PexNoLabVerification />
             <p className={UI.small}>
@@ -94,7 +94,7 @@ export default function ResearchOrganizationsPage() {
             </p>
           </NumberedSection>
 
-          <NumberedSection id="not-verified" number={4} eyebrow="Limits" title="What has not been verified?">
+          <NumberedSection id="not-verified" number={PEXIGANAN_RECORDED_ORGANIZATIONS.length + 2} eyebrow="Limits" title="What has not been verified?">
             <Notice tone="warn" icon={ShieldAlert}>
               <p>
                 This directory does not identify research-material suppliers, verify their businesses or products, validate COAs, or infer ownership
@@ -107,7 +107,7 @@ export default function ResearchOrganizationsPage() {
         </div>
       </Section>
       <PageFootnote href="/intelligence/explore/pexiganan" linkLabel="Back to compound dossier">
-        Sponsor names come from each registry record&apos;s lead-sponsor field on the snapshot date, re-read from NIH when this page loads.
+        Sponsor names come from each registry record&apos;s lead-sponsor field on the snapshot date, re-read from NIH on request (responses may be cached for up to six hours).
         They are not a supplier list, a manufacturer list or a statement about who made any material.
       </PageFootnote>
     </div>

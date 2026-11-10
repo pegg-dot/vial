@@ -1,19 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
-import { ArrowRight, ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, GitCompareArrows, X, ClipboardCheck } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, GitCompareArrows, X, ClipboardCheck } from "lucide-react";
 import { ResearchSubjectArt } from "@/components/intelligence/research-subject-art";
 import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intelligence/research-file-grade";
 import { Chip, Pill, Quiet, UI } from "@/components/intelligence/research-ui";
 import type { ExplorerAudience, ResearchSubject } from "@/lib/research-explorer";
 
-// Pill-shaped links that must also close the dialog on click. The kit's `Pill` drops `onClick`
-// on its link form, so these carry the same classes by hand.
-const LINK_PILL = "inline-flex items-center justify-center gap-2 rounded-full font-extrabold ";
-const LINK_PRIMARY = LINK_PILL + "ink hard-sm press min-h-11 bg-[#2b31d8] px-5 text-sm text-white";
-const LINK_GHOST = LINK_PILL + "ink-1 min-h-11 bg-white px-4 text-xs text-[#111214] hover:bg-[#eef0ff]";
-const LINK_MINT = LINK_PILL + "ink-1 min-h-11 bg-[#e6fbf6] px-4 text-xs text-[#111214] hover:bg-[#eef0ff]";
 
 export function ResearchQuickView({
   subject,
@@ -116,24 +109,14 @@ export function ResearchQuickView({
               <div className="mt-3"><ResearchFileGradeCard subject={subject} compact /></div>
             </details>
             <div className="mt-6 flex flex-wrap gap-3 border-t-2 border-[#111214]/10 pt-5">
-              <Link
-                href={"/intelligence/explore/" + subject.slug}
-                onClick={onClose}
-                className={LINK_PRIMARY}
-              >
-                Open research dossier <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
+              <Pill href={"/intelligence/explore/" + subject.slug} onClick={onClose} variant="primary" arrow="right">Open research dossier</Pill>
               <Pill variant="secondary" icon={GitCompareArrows} onClick={() => { onCompare(subject.slug); onClose(); }}
                 disabled={compareLimitReached && !selected} className="disabled:cursor-not-allowed">
                 {selected ? "Remove from compare" : "Add to compare"}
               </Pill>
-              <Link href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)} onClick={onClose} className={LINK_GHOST}>
-                <ClipboardCheck className="size-4 text-[#2b31d8]" aria-hidden="true" /> Material file · unverified
-              </Link>
+              <Pill href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)} onClick={onClose} variant="ghost" icon={ClipboardCheck}>Material file · unverified</Pill>
               {subject.slug === "pexiganan" && (
-                <Link href="/intelligence/passports/pexiganan" onClick={onClose} className={LINK_MINT}>
-                  Evidence passport <ArrowRight className="size-3.5" aria-hidden="true" />
-                </Link>
+                <Pill href="/intelligence/passports/pexiganan" onClick={onClose} variant="mint" arrow="right">Evidence passport</Pill>
               )}
               <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-extrabold text-[#2b31d8] hover:underline">
                 Original identity record <ArrowUpRight className="size-4" aria-hidden="true" />

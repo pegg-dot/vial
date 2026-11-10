@@ -64,7 +64,7 @@ export default async function ResearchMaterialsPage({ searchParams }: {
             </div>
           </NumberedSection>
 
-          <NumberedSection id="material-limits" number={3} eyebrow="Limits" title="Scientific promise and sample verification are different questions.">
+          <NumberedSection id="material-limits" number={3} eyebrow="Limits" title="Scientific promise and sample verification are different questions">
             <Notice tone="warn" icon={ShieldAlert}>
               <p>The research-file A/B/C grades describe linked primary-source layers. They do not certify an experiment&apos;s conclusions, a supplier, or a lot.</p>
             </Notice>

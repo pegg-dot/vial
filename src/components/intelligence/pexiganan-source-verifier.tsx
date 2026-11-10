@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, CircleAlert, Search, ShieldAlert } from "lucide-react";
 import { normalizeNctId } from "@/lib/nct-identifier";
 import { PEXIGANAN_CLAIMS, PEXIGANAN_SOURCES, pexSourceByIdentifier } from "@/lib/pexiganan-evidence-network";
-import { Chip, Frame, Notice, Pill, Quiet, RecordList, UI } from "@/components/intelligence/research-ui";
+import { Chip, Frame, Notice, NumberedSection, Pill, Quiet, RecordList, UI } from "@/components/intelligence/research-ui";
 
 const SAMPLES = ["PMID 36781451", "PMID 18990064", "NCT01594762", "CID 16132253"] as const;
 
@@ -40,16 +40,9 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
     } catch { /* ignore */ }
   }, [checked]);
 
-  // The region keeps its fixed, tested name rather than the h2's, so the numbered header is composed
-  // here instead of through NumberedSection (which names its section after the heading).
   return (
-    <Frame as="section" ariaLabel="Original research source verification" shadow="sm" pad="none" radius="rounded-[16px]" className="scroll-mt-36 overflow-hidden">
-      <header className="border-b-2 border-[#111214] px-5 py-3.5">
-        <p className="text-[10.5px] font-extrabold uppercase tracking-[.16em] text-[#2b31d8]">
-          <span className="font-mono">01</span> · Source check · {PEXIGANAN_SOURCES.length} public identifiers
-        </p>
-        <h2 className="mt-1 text-balance text-[clamp(1.125rem,1.6vw,1.375rem)] font-extrabold leading-[1.15] tracking-[-.03em] text-[#111214]">Paste an exact source identifier.</h2>
-      </header>
+    <NumberedSection id="source-check" number={1} ariaLabel="Original research source verification" flush className="scroll-mt-36"
+      eyebrow={"Source check · " + PEXIGANAN_SOURCES.length + " public identifiers"} title="Paste an exact source identifier.">
 
       {/* Form on the left, result on the right, so a returned limitation is on screen without scrolling. */}
       <div className="grid lg:grid-cols-2">
@@ -152,6 +145,6 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
           )}
         </div>
       </div>
-    </Frame>
+    </NumberedSection>
   );
 }

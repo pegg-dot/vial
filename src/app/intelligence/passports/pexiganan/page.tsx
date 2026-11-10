@@ -10,7 +10,7 @@ import {
   ContentsLayout, Frame, IconTile, Notice, NumberedSection, PageFootnote, PageHero, Pill, Quiet, Section, UI,
 } from "@/components/intelligence/research-ui";
 import {
-  PEXIGANAN_NETWORK_VERSION, PEXIGANAN_REVIEW_DATE, pexEvidencePassportMarkdown,
+  PEXIGANAN_NETWORK_VERSION, PEXIGANAN_REVIEW_DATE, PEXIGANAN_SOURCES, PEXIGANAN_TRIAL_SELECTION, pexEvidencePassportMarkdown,
 } from "@/lib/pexiganan-evidence-network";
 
 export const metadata: Metadata = {
@@ -26,6 +26,13 @@ const CONTENTS = [
   { id: "passport-register", label: "Source register" },
   { id: "passport-limits", label: "Limits" },
 ] as const;
+
+// Counts come from the register itself, so the copy cannot drift from the records.
+const SOURCE_COUNT = PEXIGANAN_SOURCES.length;
+const COMPOUND_COUNT = PEXIGANAN_SOURCES.filter(source => source.kind === "compound").length;
+const REGISTRY_COUNT = PEXIGANAN_SOURCES.filter(source => source.kind === "registry").length;
+const PUBMED_COUNT = SOURCE_COUNT - COMPOUND_COUNT - REGISTRY_COUNT;
+const PINNED_TRIALS = PEXIGANAN_TRIAL_SELECTION.length;
 
 export default function PexigananEvidencePassportPage() {
   return (
@@ -84,18 +91,18 @@ export default function PexigananEvidencePassportPage() {
         <ContentsLayout contents={CONTENTS} label="Passport sections" className="mt-6">
           <NumberedSection id="passport-claims" number={1} eyebrow="Evidence checks" title="Six observations, each tied to its original record"
             intro="Every card names the records it rests on, what they show, and what they do not prove. The status chip says whether a fact is read from one source field, connected across two sources, or still needs a reviewer.">
-            <PexEvidenceClaimGrid />
+            <PexEvidenceClaimGrid headless />
           </NumberedSection>
 
           <NumberedSection id="passport-studies" number={2} eyebrow="Registered studies" title="The registry, re-read on request"
-            intro="Four pinned NCT records are fetched live from ClinicalTrials.gov and matched on their intervention field. A row that cannot be reconfirmed stays unverified rather than inheriting the editorial snapshot.">
+            intro={PINNED_TRIALS + " pinned NCT records are fetched live from ClinicalTrials.gov and matched on their intervention field. A row that cannot be reconfirmed stays unverified rather than inheriting the editorial snapshot."}>
             <Suspense fallback={<PexTrialNetworkLoading />}>
-              <PexTrialNetworkLive />
+              <PexTrialNetworkLive headless />
             </Suspense>
           </NumberedSection>
 
           <NumberedSection id="passport-register" number={3} eyebrow="Source register" title="Every record behind this passport"
-            intro="Ten original records: two PubChem identities, four registry entries and four PubMed items. Each links to the verifier, which reports the record and its limitation.">
+            intro={SOURCE_COUNT + " original records: " + COMPOUND_COUNT + " PubChem identities, " + REGISTRY_COUNT + " registry entries and " + PUBMED_COUNT + " PubMed items. Each links to the verifier, which reports the record and its limitation."}>
             <PexSourceRegister />
           </NumberedSection>
 
@@ -111,7 +118,7 @@ export default function PexigananEvidencePassportPage() {
         </ContentsLayout>
       </Section>
 
-      <PageFootnote href="/intelligence/grading" linkLabel="What we actually check">
+      <PageFootnote href="/intelligence/grading" linkLabel="How we check">
         This passport is a selected-source metadata and claim-provenance review, not laboratory accreditation,
         medical advice, clinical-evidence certainty, an allegation of reporting misconduct, or a market-ready seller verification.
         Scientific methods review, source-rights and any use in professional decisions remain separate.

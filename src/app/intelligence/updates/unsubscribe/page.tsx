@@ -17,7 +17,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
         breadcrumb={[{ href: "/intelligence", label: "Research" }, { href: "/intelligence/updates", label: "Monthly update" }, { label: "Unsubscribe" }]}
         eyebrow={<><Mail className="size-4" aria-hidden="true" /> Monthly update</>}
         title="Unsubscribe"
-        lead="Stopping the monthly update deletes your address and consent record. There is nothing else to remove."
+        lead="Stopping the monthly update deletes your address, your consent record and the date we last emailed you."
         actions={<Pill href="/legal/privacy" variant="ghost" arrow="right">Privacy notice</Pill>}
       />
       <Section narrow tight>

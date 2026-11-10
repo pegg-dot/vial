@@ -28,7 +28,7 @@ export default function ResearchProvidersPage() {
       <Section tight>
         <div className="grid gap-4">
           <NumberedSection id="provider-profiles" number={1} eyebrow="Documentation profiles" title="Who publishes QC information, in their own words"
-            intro="Each profile quotes what the organization says about its own analytical methods and documentation, with a link to the original page.">
+            intro="Each profile summarises what the organization says about its own analytical methods and documentation, with a link to the original page.">
             <div className="grid gap-3 md:grid-cols-2">
               {RESEARCH_PROVIDER_RECORDS.map(provider => (
                 <Quiet as="article" key={provider.slug} className="flex min-w-0 flex-col">

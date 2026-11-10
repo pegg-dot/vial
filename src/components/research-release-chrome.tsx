@@ -21,13 +21,6 @@ const BROWSE_AREAS = [
   { href: "/grades", label: "How grades work", description: "What a letter does and does not mean" },
 ] as const;
 
-// The phone menu's browse entries when the read-only browse release is on: the same three links the
-// footer swaps in, with a note each. Owned here, handed to the menu as a prop.
-const MOBILE_BROWSE_LINKS = [
-  { href: "/compounds", label: "Compound pages", note: "Lab evidence, passports and research for each compound" },
-  { href: "/vendors", label: "Vendors and labs", note: "VialGrade letters with the evidence behind them" },
-  { href: "/grades", label: "Grades", note: "What a letter does and does not mean" },
-] as const;
 
 const OTHER_RESEARCH_AREAS = [
   { href: "/intelligence/market#browse", label: "All compounds", description: "Search and filter the 16-record library" },
@@ -46,7 +39,7 @@ export function ResearchReleaseHeader() {
           Local interactive preview — these changes are not live on vialgrade.com
         </div>
       )}
-      <div className="border-b border-[#111214]/15 bg-[#f7f7f4] px-4 py-1.5 text-center text-[11px] font-medium text-[var(--muted)]">
+      <div className="border-b border-[#111214]/15 bg-[var(--background)] px-4 py-1.5 text-center text-[11px] font-medium text-[var(--muted)]">
         Curated public research records · No sales, seller referrals, laboratory certification or medical advice
       </div>
       <header className="sticky top-0 z-40 border-b-2 border-[#111214] bg-[rgba(247,247,244,.95)] backdrop-blur-xl">
@@ -90,7 +83,7 @@ export function ResearchReleaseHeader() {
               Existing account
             </Link>
             <nav aria-label="Mobile research navigation" className="xl:hidden">
-              <ResearchMobileMenu browseLinks={publicBrowseRelease() ? MOBILE_BROWSE_LINKS : []} />
+              <ResearchMobileMenu browseLinks={publicBrowseRelease() ? BROWSE_AREAS.map(item => ({ href: item.href, label: item.label, note: item.description })) : []} />
             </nav>
           </div>
         </div>
@@ -117,8 +110,7 @@ export function ResearchReleaseFooter() {
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Explore</p>
           <Link href="/intelligence/market" className="hover:text-white">Market</Link>
           <Link href={publicBrowseRelease() ? "/compounds" : "/intelligence/market#browse"} className="hover:text-white">Compounds</Link>
-          {publicBrowseRelease() && <Link href="/vendors" className="hover:text-white">Vendors and labs</Link>}
-          {publicBrowseRelease() && <Link href="/grades" className="hover:text-white">Grades</Link>}
+          {publicBrowseRelease() && BROWSE_AREAS.slice(1).map(item => <Link key={item.href} href={item.href} className="hover:text-white">{item.label}</Link>)}
           <Link href="/intelligence/organizations" className="hover:text-white">Study sponsors</Link>
           <Link href="/intelligence/providers" className="hover:text-white">Supplier documents</Link>
           <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" className="hover:text-white">Compare</Link>

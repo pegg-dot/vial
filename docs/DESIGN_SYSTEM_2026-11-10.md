@@ -32,10 +32,12 @@ Everything below is lifted from `src/app/intelligence/page.tsx` and `src/compone
 - `dossier-layout.tsx` is now a thin wrapper: `DossierSection` = `NumberedSection`, `DossierToc` = `StickyContents` with the dossier label.
 
 ### The page template
-1. `PageHero` — breadcrumb (when the page sits under the market), eyebrow, **one h1**, one-sentence lead, the fixed caveat as `note`, 1–3 pill actions. Tool pages use `size="compact"` so the first working control is above the fold at 1440×900.
-2. Body in a `Section`, built from `NumberedSection` frames in a fixed order (01, 02, 03 …). Multi-section evidence pages (dossier, passport, case, study) add `ContentsLayout` for the sticky contents. Tool pages (desk, verify, materials) do not.
-3. Limits as a `Notice tone="warn"` or a numbered "Limits" section, never a fifth card style.
-4. `PageFootnote` for scope small print, linking to `/intelligence/grading`.
+1. `PageHero` — breadcrumb whose first crumb is always "Research Market" → `/intelligence/market` (site utilities such as the update email use "Research" → `/intelligence`), eyebrow, **one h1**, one-sentence lead, the fixed caveat as `note`, 1–3 pill actions. Tool and directory pages (desk, verify, materials, providers, organizations, updates) use `size="compact"` so the first working control or list is above the fold at 1440×900; explainer and evidence pages (grading, passport, case, study, topic, audit) use the default size.
+2. Body in a `Section`, built from `NumberedSection` frames in a fixed order (01, 02, 03 …). A client component may own 01 (the materials workbench, the verifier) and the page continues from 02. Multi-section evidence pages (dossier, passport, case, study, audit) add `ContentsLayout` for the sticky contents. Tool pages do not.
+3. Limits as a `Notice tone="warn"` or a numbered "Limits" section, never a fifth card style. Section titles carry no trailing period.
+4. `PageFootnote` for scope small print. Its link to `/intelligence/grading` is always labelled "How we check" (the nav's label); a link back to the catalog is "Back to the research market" → `/intelligence/market#browse`.
+5. Arrows: `ArrowUpRight` only on links that leave the site; internal links use `ArrowRight`. Chips are uppercase except brand names and identifiers (`Chip plain`). Counts and dates in copy come from the data (`PEXIGANAN_SOURCES.length`, `caseStudy.followUps.length`), never retyped.
+6. When a component already renders a heading (the pexiganan claim grid, the trial table) and sits inside a `NumberedSection`, it is rendered `headless` so a reader sees one heading per section.
 
 ## 3. Rules that do not bend (tests enforce most of them)
 - The root layout renders `<main id="main-content">`; pages never render `main`. Exactly **one h1**, outside any `Suspense`. No duplicate ids (streamed fallbacks need their own ids). Every button has a name; every input has a label.
@@ -51,7 +53,7 @@ Everything below is lifted from `src/app/intelligence/page.tsx` and `src/compone
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Audit (three read-only agents), kit, design doc, Research Desk as the worked example | done 2026-11-10 |
-| 1 | Every other `/intelligence/**` page and the components they share; header mobile menu gains the browse links; `not-found`; the retired notice | in progress |
+| 1 | Every other `/intelligence/**` page and the components they share; header mobile menu gains the browse links; `not-found`; the retired notice. Built by four parallel agents on disjoint files, then a fresh-eyes review of the diff (copy regressions, retyped counts, duplicated headers, label drift) fixed in one pass; a visual walk at 1440 and 390 of every page | done 2026-11-10 |
 | 2 | Browse pages (`/compounds`, `/vendors`, `/labs`, `/passports`, `/grades`, `/how-we-check`) and their shared panels (`lab-tests-panel`, banners, `vial-grade-card`); legal pages; login/register. Also fixes found in audit: vendor page "N Listings" stat shown under evidence-only, dead "Storefront" jump chip, verdict sentence naming hidden sections, links to closed routes (`/stacks`, `/reference-standard`, `/news`, `/testing`, `/verify`, `/research`, `/enforcement`, `/about`), compound page `<title>` says "market", grades `CHECKED_ON` date mismatch, `persistVendorGrade` writing on a public GET | next |
 | 3 | A visual walk of every page at 1440 / 1024 / 390 by a fresh-eyes agent against this document, then the owner's own look | after 2 |
 

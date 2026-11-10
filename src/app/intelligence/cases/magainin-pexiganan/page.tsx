@@ -37,14 +37,14 @@ export default function MagaininPexigananGuidedCase() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero art={["molecule", "flask"]}
-        breadcrumb={[{ href: "/intelligence#explore", label: "Research Explorer" }, { label: "Guided research example" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Guided research example" }]}
         eyebrow={<><Dna className="size-4" aria-hidden="true" /> Guided evidence workpaper</>}
         title="When related peptides are not the same evidence."
         lead={caseStudy.question}
         note={"Source-check editorial review " + caseStudy.updatedAt + " · Pexiganan passport source check " + PEXIGANAN_REVIEW_DATE + " · not an exhaustive literature review and not a scientific verdict."}
         actions={<>
           <Pill href="/intelligence/compare?subjects=magainin-2%2Cpexiganan&audience=researcher" variant="primary" arrow="right">Compare the molecules</Pill>
-          <Pill href="/intelligence/studies/NCT01594762" arrow="up">Inspect the clinical trial</Pill>
+          <Pill href="/intelligence/studies/NCT01594762" arrow="right">Inspect the clinical trial</Pill>
           <Pill href="/intelligence/passports/pexiganan" variant="ghost" arrow="right">Pexiganan evidence passport</Pill>
         </>}
         aside={
@@ -92,7 +92,7 @@ export default function MagaininPexigananGuidedCase() {
           </NumberedSection>
 
           <NumberedSection id="case-register" number={2} eyebrow="Source register" title="Every record behind this case" flush
-            intro="Each source is cited by original URL and role, never copied wholesale. Expand for classifications and specific limitations.">
+            intro="Each source is cited by its original URL and role. Expand for classifications and specific limitations.">
             <details className="group">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 hover:bg-[#eef0ff] [&::-webkit-details-marker]:hidden">
                 <span className="flex items-center gap-2"><BookOpenCheck className="size-4 text-[#2b31d8]" aria-hidden="true" /><h3 className={UI.h4}>Full source register · 5 records</h3></span>
@@ -116,7 +116,7 @@ export default function MagaininPexigananGuidedCase() {
             </details>
           </NumberedSection>
 
-          <NumberedSection id="case-follow-up" number={3} eyebrow="Continue the actual research" title="Four checks before drawing a conclusion"
+          <NumberedSection id="case-follow-up" number={3} eyebrow="Continue the actual research" title={caseStudy.followUps.length + " checks before drawing a conclusion"}
             intro="The workpaper stops where independent appraisal starts.">
             <ol className="list-inside list-decimal space-y-3 text-sm font-medium leading-7 text-[#3a3d46]">
               {caseStudy.followUps.map((item, i) => <li key={i}>{item}</li>)}
@@ -153,7 +153,7 @@ export default function MagaininPexigananGuidedCase() {
         </ContentsLayout>
       </Section>
 
-      <PageFootnote href="/intelligence#explore" linkLabel="Return to Research Explorer">
+      <PageFootnote href="/intelligence/market#browse" linkLabel="Back to the research market">
         Source-check editorial review {caseStudy.updatedAt}. The workpaper is a limited research starting point; professional scientific review, publication-rights checks and user-demand validation remain open. Physical peptide sales and vendor referrals are disabled.
       </PageFootnote>
     </div>

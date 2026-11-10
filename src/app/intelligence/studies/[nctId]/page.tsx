@@ -28,6 +28,9 @@ function ExternalSource({ href, children }: { href: string; children: React.Reac
   return <a href={href} target="_blank" rel="noopener noreferrer" className={UI.link}>{children}<ArrowUpRight className="size-3.5 shrink-0" aria-hidden="true" /></a>;
 }
 
+// The registry check time as people read it, not as the API wrote it.
+const checkedLabel = (iso: string) => iso.slice(0, 16).replace("T", " ") + " UTC";
+
 export default async function StudySourcePage({ params }: { params: Promise<{ nctId: string }> }) {
   const { nctId: raw } = await params;
   const id = normalizeNctId(raw);
@@ -44,7 +47,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
         lead={result.state === "not-found"
           ? "ClinicalTrials.gov returned no record for " + id + ". Check the identifier or try another."
           : "We could not verify this registry response. That does not establish that the study or its papers are missing."}
-        note={"Checked " + result.checkedAt + " · NIH responses may be cached for up to six hours."}
+        note={"Checked " + checkedLabel(result.checkedAt) + " · NIH responses may be cached for up to six hours."}
         actions={<>
           <Pill href={"https://clinicaltrials.gov/study/" + id} external variant="primary" arrow="up">Check ClinicalTrials.gov directly</Pill>
           <Pill href="/intelligence#trial-lookup" variant="ghost" icon={ArrowLeft}>Back to study lookup</Pill>
@@ -69,7 +72,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
       <PageHero size="compact" art={["magnifier", "coa"]} breadcrumb={breadcrumb} eyebrow={eyebrow}
         title={"Evidence for " + id}
         lead={study.title}
-        note={"Live registry and PubMed check · " + result.checkedAt + " · responses may be cached for up to six hours."}
+        note={"Live registry and PubMed check · " + checkedLabel(result.checkedAt) + " · responses may be cached for up to six hours."}
         actions={<>
           <Pill href="#study-sources" variant="primary" arrow="right">See the original sources</Pill>
           <Pill href="/intelligence#trial-lookup" variant="ghost" icon={ArrowLeft}>Back to study lookup</Pill>
@@ -86,7 +89,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
                 <p className={"text-xs font-extrabold " + TONE_ACCENT.mint}>Connected to Pexiganan research</p>
                 <p className={UI.small + " mt-1"}>This is one of four curated registry records. The evidence passport shows its molecular, article and sponsor relationships without assuming clinical benefit.</p>
               </div>
-              <Pill href="/intelligence/passports/pexiganan" variant="mint" size="sm" arrow="up" className="shrink-0">Evidence passport</Pill>
+              <Pill href="/intelligence/passports/pexiganan" variant="mint" size="sm" arrow="right" className="shrink-0">Evidence passport</Pill>
             </Frame>
           )}
 
@@ -99,7 +102,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
               ]} />
             </NumberedSection>
 
-            <NumberedSection id="study-sources" number={2} eyebrow="Original sources" title="Original sources" flush
+            <NumberedSection id="study-sources" number={2} eyebrow="Registry and papers" title="Original sources" flush
               intro="The study record, then papers explicitly listed by the registry. This is not a full literature search.">
               <div className="flex gap-3 px-5 py-5">
                 <IconTile icon={FileCheck2} size="sm" />
@@ -173,7 +176,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
       </Section>
 
       <PageFootnote href="/intelligence/grading" linkLabel="How we check">
-        Checked {result.checkedAt}. NIH responses may be cached for up to six hours. No research profile is created, though normal hosting logs may record a request. VialGrade provides no purchase or medical-advice features.
+        Checked {checkedLabel(result.checkedAt)}. NIH responses may be cached for up to six hours. No research profile is created, though normal hosting logs may record a request. VialGrade provides no purchase or medical-advice features.
       </PageFootnote>
     </div>
   );

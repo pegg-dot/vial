@@ -2,9 +2,9 @@ import { PexTrialNetworkTable } from "@/components/intelligence/pexiganan-eviden
 import { UI } from "@/components/intelligence/research-ui";
 import { getPexigananTrialEvidence } from "@/server/intelligence/pexiganan-network";
 
-export async function PexTrialNetworkLive() {
+export async function PexTrialNetworkLive({ headless = false }: { headless?: boolean } = {}) {
   const rows = await getPexigananTrialEvidence();
-  return <PexTrialNetworkTable rows={rows} />;
+  return <PexTrialNetworkTable rows={rows} headless={headless} />;
 }
 
 /** Streamed fallback; keeps its own id so the page never carries two `pexiganan-trials`. */

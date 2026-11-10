@@ -80,11 +80,11 @@ export function MaterialReviewWorkbench({ initialSlug }: { initialSlug: string }
     <div className="grid gap-4">
       <NumberedSection id="material-workpaper" number={1} eyebrow="Sample and report checklist" titleId="material-workpaper-title"
         title={subject.name + " material file"}
-        intro="Compare IDs from a sample label and a report you already have. This checks only what you type, not whether the report or sample is authentic. Nothing is uploaded or saved."
-        chips={<Chip tone="warn" icon={ShieldQuestion}>Unverified · no sample or certificate authenticated</Chip>}
+        intro="Compare IDs from a sample label and a report you already have. This checks only what you type, not whether the report or sample is authentic. No physical sample or certificate has been authenticated. Nothing is uploaded or saved."
+        chips={<Chip tone="warn" icon={ShieldQuestion}>Unverified</Chip>}
         actions={<>
           <Pill size="sm" variant="ghost" onClick={openIndex}>Choose another compound</Pill>
-          <Pill size="sm" variant="ghost" href={"/intelligence/explore/" + slug} arrow="up">Scientific dossier</Pill>
+          <Pill size="sm" variant="ghost" href={"/intelligence/explore/" + slug} arrow="right">Scientific dossier</Pill>
           <Pill size="sm" variant="ghost" href={subject.referenceUrl} external arrow="up">Original identity source</Pill>
         </>}>
         <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">

@@ -128,9 +128,9 @@ export default async function ResearchDossierPage({ params }: { params: Promise<
 
             <DossierSection className="xl:col-span-2" id="studies" number={3} eyebrow="Studies" title="What the registered studies record"
               intro="Original registry facts and exact citation links. A registered study is not a result.">
-              {isPex && <PexEvidenceClaimGrid compact />}
+              {isPex && <PexEvidenceClaimGrid compact headless />}
               {isPex ? (
-                <Suspense fallback={<PexTrialNetworkLoading />}><PexTrialNetworkLive /></Suspense>
+                <Suspense fallback={<PexTrialNetworkLoading />}><PexTrialNetworkLive headless /></Suspense>
               ) : subject.sampleTrial ? (
                 <Suspense fallback={<TrialEvidenceLoading nctId={subject.sampleTrial} />}><DossierTrialEvidence subject={subject} /></Suspense>
               ) : (

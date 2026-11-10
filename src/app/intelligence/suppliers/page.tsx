@@ -60,7 +60,7 @@ export default async function SuppliersPage() {
       <PageHero art={["shield", "coa"]} breadcrumb={CRUMBS}
         eyebrow={<><ShieldCheck className="size-4" aria-hidden="true" /> Supplier grades · Independent certificates on file</>}
         title={TITLE}
-        lead="A letter summarizes the independent laboratory certificates we hold for an organization. It is not a certification, a recommendation or a statement about any product you could receive. This page has no catalog, stock or links to sellers."
+        lead="A letter summarizes the independent laboratory certificates we hold for an organization. It is not a certification, a recommendation or a statement about any product you could receive. This page has no prices, stock or links to sellers."
         note={<>Fewer than {TENTATIVE_BELOW_CERTIFICATES} certificates is shown as <strong>Tentative</strong>; none is <strong>Unrated</strong>. Corrections: tell us through <Link href="/legal/privacy" className="font-bold text-[#2b31d8] underline underline-offset-4">the contact on the legal page</Link>.</>}
         actions={<>
           <Pill href="/intelligence/providers" arrow="right">Company-published QC documentation</Pill>

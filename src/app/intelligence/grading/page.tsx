@@ -34,15 +34,14 @@ export default function ResearchFileGradingMethodPage() {
         lead="The letter grades the completeness of a VialGrade starter FILE. Not the peptide itself. It cannot tell you whether a molecule is promising, safe, effective, or worth obtaining."
         note={"Method " + FILE_GRADE_METHOD_VERSION + " · Audited source list dated " + FILE_GRADE_CURATION_DATE + " · file coverage is not a quality claim."}
         actions={<>
-          <Pill href="#grade-examples" variant="primary" arrow="right">See the four worked examples</Pill>
-          <Pill href="/intelligence/market#browse" variant="ghost">Back to research market</Pill>
+          <Pill href="#grade-examples" variant="primary" arrow="right">{"See the " + examples.length + " worked examples"}</Pill>
         </>}
       />
 
       <Section tight>
         <div className="grid gap-4">
           <NumberedSection id="grade-checks" number={1} eyebrow="Source checks" title="Three visible source checks"
-            intro="A letter counts how many of these three kinds of original source are individually anchored in the file. Nothing else moves it.">
+            intro="A letter counts how many of these three kinds of original source are individually anchored in the file.">
             <div className="grid gap-3 md:grid-cols-3">
               {criteria.map(({ icon, name, description }) => (
                 <Quiet key={name}>
@@ -91,7 +90,7 @@ export default function ResearchFileGradingMethodPage() {
         </div>
       </Section>
 
-      <PageFootnote href="/intelligence/market#browse" linkLabel="Back to research market">
+      <PageFootnote href="/intelligence/market#browse" linkLabel="Back to the research market">
         Editorial file-coverage letters, not grades of clinical effectiveness or material quality. No purchasing, clinical advice or laboratory certification.
       </PageFootnote>
     </div>

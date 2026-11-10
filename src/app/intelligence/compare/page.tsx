@@ -62,11 +62,11 @@ export default async function CompareResearchPage({ searchParams }: {
       <Section tight>
         <div className="grid gap-4">
           {!paired ? (
-            <NumberedSection id="compare-pick" number={1} eyebrow="Selection" title="Select two or three research subjects."
+            <NumberedSection id="compare-pick" number={1} eyebrow="Selection" title="Select two or three research subjects"
               intro="The comparison uses only curated, source-linked identities. Choose subjects from the catalog, or start from a pair already on file.">
               <RecordList items={[
-                { href: compareExplorerHref(["magainin-2", "pexiganan"], "researcher"), title: "Magainin 2 and Pexiganan", note: "A natural peptide and its designed analog: separate records, separate evidence.", action: "Compare" },
-                { href: compareExplorerHref(["retatrutide", "tirzepatide"], "researcher"), title: "Retatrutide and Tirzepatide", note: "Two incretin-pathway subjects, one with an unresolved compound identity.", action: "Compare" },
+                { href: compareExplorerHref(["magainin-2", "pexiganan"], "researcher"), title: "Magainin 2 and Pexiganan", note: "The guided case study pair: two separate source files, compared on what each record supports.", action: "Compare" },
+                { href: compareExplorerHref(["retatrutide", "tirzepatide"], "researcher"), title: "Retatrutide and Tirzepatide", note: "Two files from the same research area, compared on their sources only.", action: "Compare" },
               ]} />
             </NumberedSection>
           ) : (
@@ -128,7 +128,7 @@ export default async function CompareResearchPage({ searchParams }: {
         </div>
       </Section>
 
-      <PageFootnote href="/intelligence/market#browse" linkLabel="Back to Research Explorer">
+      <PageFootnote href="/intelligence/market#browse" linkLabel="Back to the research market">
         Editorial research starting points, not grades of clinical effectiveness or material quality. No purchasing, clinical advice or laboratory certification.
       </PageFootnote>
     </div>

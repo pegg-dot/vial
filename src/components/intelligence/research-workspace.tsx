@@ -24,7 +24,7 @@ const filterLabels: Array<{ value: Filter; label: string }> = [
 ];
 
 function SourceStatus({ unavailable, count, label }: { unavailable: boolean; count: number; label?: string }) {
-  return <Chip tone={unavailable ? "warn" : "paper"}>{label ? label + ": " : ""}{sampled(count, unavailable)}</Chip>;
+  return <Chip plain tone={unavailable ? "warn" : "paper"}>{label ? label + ": " : ""}{sampled(count, unavailable)}</Chip>;
 }
 
 /**
