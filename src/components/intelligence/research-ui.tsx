@@ -73,10 +73,10 @@ const ART: Record<ArtName, ComponentType<{ className?: string }>> = {
   magnifier: ArtMagnifierVial,
 };
 
+// Two slots, both on the right, clear of the heading column; a third on the left sat over long leads.
 const ART_SLOTS = [
   "gum-float absolute right-[5%] top-[14%] hidden w-24 drop-shadow-[5px_5px_0_#111214] sm:block lg:w-28",
   "gum-float-rev absolute right-[16%] bottom-[10%] hidden w-16 drop-shadow-[4px_4px_0_#111214] lg:block lg:w-20",
-  "gum-float-slow absolute left-[3%] bottom-[12%] hidden w-16 drop-shadow-[4px_4px_0_#111214] xl:block",
 ];
 
 /** Floating illustrations behind a hero. Purely decorative; hidden from assistive tech. */
@@ -133,7 +133,8 @@ export function PageHero({
   return (
     <section className={"relative isolate overflow-hidden border-b-2 border-[#111214] " + TONE_BG[tone] + " " + className}>
       {tone === "paper" && <div aria-hidden="true" className="hero-grid pointer-events-none absolute inset-0 -z-10 opacity-40" />}
-      <FloatingArt art={art} />
+      {/* An aside card occupies the lower right, where the second illustration would otherwise peek out from under it. */}
+      <FloatingArt art={aside ? art.slice(0, 1) : art} />
       <div className={UI.container + (size === "compact" ? " pb-10 pt-7 sm:pb-12 sm:pt-9" : " pb-14 pt-10 sm:pb-20 sm:pt-14")}>
         {breadcrumb && <Breadcrumb items={breadcrumb} className={centered ? "justify-center" : ""} />}
         <div className={"grid gap-8 " + (aside ? "lg:grid-cols-[1.1fr_.9fr] lg:items-end " : "") + (breadcrumb ? "mt-6" : "")}>
