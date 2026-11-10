@@ -174,7 +174,7 @@ export default function GradesPage() {
       })} />
 
       <PageHero art={["coa", "shield", "vial"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { label: "Purity vs grade" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Purity vs grade" }]}
         eyebrow={<><FileText className="size-4" aria-hidden="true" /> Purity vs grade</>}
         title={<>&ldquo;99.4% pure&rdquo; is not <span className="text-[#2b31d8]">a grade.</span></>}
         lead="A purity number and a manufacturing standard are two different claims. Vendors let you hear them as one, because that gap is where this market does its selling. Here is the difference in plain English, and the one question that settles it."
@@ -280,7 +280,7 @@ export default function GradesPage() {
           </NumberedSection>
 
           {/* ── The actionable half ─────────────────────────────────────────────────── */}
-          <NumberedSection id="ask" number={3} eyebrow="What to actually do" title="Ask, then read the shape of the answer"
+          <NumberedSection id="ask" number={3} eyebrow="What to actually do" title="Ask. Then read the shape of the answer"
             intro="You cannot inspect a factory. You can send a message and watch what comes back. A real answer is specific and checkable — including when the answer is no. A dodge answers a question you did not ask.">
             {ASKS.map((ask) => (
               <Quiet key={ask.q}>
@@ -360,7 +360,7 @@ export default function GradesPage() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <CardLink href="/intelligence/grading" title="How research files are graded" body="The three source checks behind every research file letter, and why a letter is not a quality claim." />
               <CardLink href="/how-we-check" title="How we check" body="What a lab test proves, the six questions one report answers, and what we refuse to guess." />
-              <CardLink href="/intelligence" title="Research records" body="Every compound we track, with its original sources and what stays unknown." />
+              <CardLink href="/intelligence" title="Research records" body="Every research subject on file, with its original sources and what stays unknown." />
               <CardLink href="/legal/us-regulations" title="The law around this" body="How research peptides are regulated in the US, in plain English." />
             </div>
             <Notice tone="warn" icon={Scale}>

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, CircleDashed, Factory, FileCheck2, FlaskConical, Gavel, PackageSearch, ShieldCheck, Star, Store, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
+import { ArrowRight, Check, CircleDashed, Factory, FileCheck2, FlaskConical, Gavel, PackageSearch, ShieldCheck, Star, Store, Tag, TrendingDown, TrendingUp, X } from "lucide-react";
 import { getCatalogSnapshot, getProductsByVendorSlug, getVendorBySlug } from "@/server/catalog/repository";
 import { vendorPriceIndex } from "@/lib/curation";
 import { daysSince } from "@/lib/format";
@@ -310,11 +310,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           stamped beside a white tearsheet. The market crumb carries its #browse hash: the browse
           release bans any `main` href that ends in "/market". ─────────────────────────── */}
       <PageHero art={["magnifier", "coa"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { href: "/vendors", label: "Vendors" }, { label: vendor.name }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/vendors", label: "Vendors" }, { label: vendor.name }]}
         eyebrow={
           <span className="flex flex-wrap items-center gap-2">
             <Chip tone="blue" icon={maker ? Factory : Store}>{maker ? "Manufacturer" : "Storefront"}</Chip>
-            <Chip tone="paper" plain className="normal-case tracking-normal">{vendorClaimLabel(vendor.profileStatus)}</Chip>
+            <Chip tone="paper" plain>{vendorClaimLabel(vendor.profileStatus)}</Chip>
             <DataOriginBadge origin={vendor.origin} />
           </span>
         }
@@ -323,7 +323,6 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         note={whereAndWhen || undefined}
         actions={<>
           <Pill href="#lab-tests" variant="primary" arrow="right">Independent lab tests</Pill>
-          <Pill href="/vendors" variant="ghost" icon={ArrowLeft}>All vendors</Pill>
           {noCommerce ? null : <FollowButton entityType="vendor" entitySlug={slug} entityName={vendor.name} initialFollowed={followed} />}
         </>}
         aside={<VialGradeCard grade={grade} summary={composed.summary} vendorName={vendor.name} />}
@@ -422,9 +421,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         </NumberedSection>
 
         {vendorLabTests.length > 0 ? (
-          <div id="lab-tests" className="-mx-5 scroll-mt-36 sm:-mx-8">
-            <LabTestsPanel tests={vendorLabTests} heading={`Has anyone independently tested ${vendor.name}?`} />
-          </div>
+          <LabTestsPanel id="lab-tests" number={number("lab-tests")} tests={vendorLabTests} heading={`Has anyone independently tested ${vendor.name}?`} />
         ) : (
           <NumberedSection id="lab-tests" number={number("lab-tests")} eyebrow="Independent testing" title={`Has anyone independently tested ${vendor.name}?`}>
             <NoEvidence

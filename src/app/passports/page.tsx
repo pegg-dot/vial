@@ -58,14 +58,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["coa", "magnifier"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { label: "Batch test records" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Batch records" }]}
         eyebrow={<><Fingerprint className="size-4" aria-hidden="true" /> Batch test records</>}
         title="The full test record for a batch."
         lead={<>When a batch gets tested, everything lands here: who picked the sample, who tested it, what came back &mdash; including results that disagree.</>}
         note="This never says every vial is the same, or safe to use.">
         <StatRow className="mt-8" items={[
-          { value: total ?? passports.length, label: total !== null ? "batch records published" : "batch records loaded" },
-          { icon: AlertTriangle, value: disagreeing, label: truncated ? `with results that disagree, of the newest ${passports.length}` : "with results that disagree" },
+          { value: total ?? passports.length, label: total !== null ? "Batch records published" : "Batch records loaded" },
+          { icon: AlertTriangle, value: disagreeing, label: truncated ? `With results that disagree, of the newest ${passports.length}` : "With results that disagree" },
         ]} />
       </PageHero>
 
@@ -105,13 +105,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
               about the other vials in the batch.
             </p>
           </Frame>
-          <Notice tone="warn" icon={AlertTriangle}>
-            <h2 className={UI.h4}>When results disagree, we show both.</h2>
-            <p className="mt-1">
+          <Frame tone="warn">
+            <AlertTriangle className={"size-5 " + TONE_ACCENT.warn} aria-hidden="true" />
+            <h2 className={UI.h3 + " mt-4"}>When results disagree, we show both.</h2>
+            <p className={UI.bodyInk + " mt-2"}>
               We never average a disagreement away. Conflicting results stay on the record until more testing
               settles it.
             </p>
-          </Notice>
+          </Frame>
         </div>
       </Section>
     </div>

@@ -27,7 +27,7 @@ export default async function VendorsPage() {
       {/* The market crumb carries its #browse hash: the browse release bans any `main` href that
           ends in "/market", and the browse section is where a reader coming back from here lands. */}
       <PageHero size="compact" art={["magnifier", "shield"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { label: "Vendors" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Vendors" }]}
         eyebrow={<><Store className="size-4" aria-hidden="true" /> Vendor directory</>}
         title="Explore vendors through documented evidence."
         lead="Browse documented vendor observations, laboratory sample findings and source histories. Sorting these records does not certify a vendor or recommend purchasing anything.">

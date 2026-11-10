@@ -153,7 +153,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       {/* The first crumb lands on the market's catalog anchor: the browse release rejects any
           in-page href that ends in "/market" (the closed per-compound market tables). */}
       <PageHero art={["molecule", "flask"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { href: "/compounds", label: "Compounds" }, { label: compound.name }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/compounds", label: "Compounds" }, { label: compound.name }]}
         eyebrow={<><Chip tone="blue">{compound.category}</Chip>{compound.origin === "live" && <DataOriginBadge origin="live" />}</>}
         title={compound.name}
         /* Plain words first. The scientific one-liner ("a synthetic pentadecapeptide…") told a
@@ -254,7 +254,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
           <UsLegalNotice slug={slug} />
 
-          <Notice tone="warn" icon={CircleAlert} title={<>Research notes aren&rsquo;t product proof</>}>
+          <Notice tone="warn" icon={CircleAlert}>
+            <h2 className={UI.h4}>Research notes aren&rsquo;t product proof</h2>
             <p className="mt-1 max-w-3xl">{compound.researchNote}</p>
           </Notice>
         </div>

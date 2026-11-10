@@ -54,15 +54,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ i
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["flask", "magnifier"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { label: "Testing laboratories" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Labs" }]}
         eyebrow={<><FlaskConical className="size-4" aria-hidden="true" /> The testing laboratories</>}
         title="Who actually runs the tests."
         lead={<>Every certificate names a lab. Here is what we could verify about each one &mdash; whether it&rsquo;s a real, independent third-party lab, whether it holds accreditation (and whether that accreditation even covers peptides), and how much evidence flows through it.</>}
         note={<>We only call a lab &ldquo;independent&rdquo; when we&rsquo;ve confirmed it. Everything is sourced; naming a lab is never an endorsement.</>}>
         <StatRow className="mt-8" items={[
-          { value: rows.length, label: "labs in the registry" },
-          { icon: ShieldCheck, value: confirmed, label: "confirmed independent" },
-          { value: certificates, label: "certificates on VialGrade" },
+          { value: rows.length, label: "Labs in the registry" },
+          { icon: ShieldCheck, value: confirmed, label: "Confirmed independent" },
+          { value: certificates, label: "Certificates on VialGrade" },
         ]} />
       </PageHero>
 
@@ -122,17 +122,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ i
   );
 }
 
-// The tier filter is a row of links (so a filtered view survives a reload and can be linked), drawn
-// as the kit's ghost pill, and as its ink pill when current. `Pill` has no aria-current or title
-// slot, so the classes are composed here.
 function TierLink({ href, current, title, children }: { href: string; current: boolean; title?: string; children: React.ReactNode }) {
-  return (
-    <Link href={href} title={title} aria-current={current ? "page" : undefined}
-      className={"inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-extrabold "
-        + (current ? "ink hard-sm press bg-[#111214] text-white" : "ink-1 bg-white text-[#111214] hover:bg-[#eef0ff]")}>
-      {children}
-    </Link>
-  );
+  return <Pill href={href} title={title} ariaCurrent={current ? "page" : undefined} variant={current ? "ink" : "ghost"}>{children}</Pill>;
 }
 
 function LabCard({ lab: l, usage }: { lab: LabProfile; usage: LabUsage }) {

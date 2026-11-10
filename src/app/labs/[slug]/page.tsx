@@ -54,7 +54,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero art={["flask", "coa"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { href: "/labs", label: "Testing laboratories" }, { label: l.displayName }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/labs", label: "Labs" }, { label: l.displayName }]}
         eyebrow={<><FlaskConical className="size-4" aria-hidden="true" /> Testing laboratory <Chip tone={tier.tone} icon={tier.Icon}>{tier.label}</Chip></>}
         title={l.displayName}
         note={<span className="flex flex-wrap items-center gap-x-3 gap-y-1">

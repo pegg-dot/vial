@@ -44,7 +44,7 @@ export default function HowWeCheckPage() {
       })} />
 
       <PageHero art={["shield", "coa", "vial"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { label: "How we check" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "How we check" }]}
         eyebrow={<><ShieldCheck className="size-4" aria-hidden="true" /> How we check</>}
         title={<>Trust is a chain of evidence, <span className="text-[#2b31d8]">not a green check.</span></>}
         lead="A laboratory report may establish narrow facts about an identified sample. This page shows how VialGrade organizes those facts, what different forms of provenance mean, and what remains unverified. No report is a purchasing or safety recommendation."
@@ -118,7 +118,7 @@ export default function HowWeCheckPage() {
         <SectionHeading eyebrow="Go deeper" title="The full records, if you want them" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <CardLink href="/passports" title="Batch test records" body="The complete test record for a specific batch — including results that disagree." />
-          <CardLink href="/intelligence" title="Research records" body="Every compound we track, with its original sources and what stays unknown." />
+          <CardLink href="/intelligence" title="Research records" body="Every research subject on file, with its original sources and what stays unknown." />
           <CardLink href="/intelligence/materials" title="Research material checks" body="What has been independently checked about a research material, what has not, and why sample origin matters." />
           <CardLink href="/labs" title="Laboratories" body="Who runs the tests, their methods, and their report history." />
         </div>

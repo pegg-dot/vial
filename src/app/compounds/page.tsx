@@ -36,8 +36,8 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
       {/* The first crumb lands on the market's catalog anchor: the browse release rejects any
           in-page href that ends in "/market" (the closed per-compound market tables). */}
       <PageHero size="compact" art={["molecule", "vial"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { label: "Compounds" }]}
-        eyebrow="Compound directory"
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Compounds" }]}
+        eyebrow={<><Layers3 className="size-4" aria-hidden="true" /> Compound directory</>}
         title="Every peptide we track."
         lead={<>{hidesCommerce() ? "One page per compound with laboratory-report coverage, batch passports and the research on file." : "One page per compound with documented vendor observations, historical price ranges and laboratory-report coverage."} Research topics are indexing labels, not validated health benefits or purchasing recommendations.</>}
       >
@@ -48,7 +48,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
         ]} />
       </PageHero>
 
-      <Section>
+      <Section tight>
         <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
       </Section>
     </div>

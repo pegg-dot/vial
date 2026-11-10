@@ -16,7 +16,8 @@ test.describe("Browse release (read-only original pages)", () => {
       const text = await page.locator("main").innerText();
       expect(text).not.toMatch(LEAKS);
       const hrefs = await page.locator("main a[href]").evaluateAll(els => els.map(e => e.getAttribute("href") ?? ""));
-      expect(hrefs.filter(h => /^\/(go|cart|checkout|products)(\/|$)/.test(h) || /\/market$/.test(h))).toEqual([]);
+      // Retired paths: the shop, product pages, the old /market, and the per-compound market tables. The research market itself is fine.
+      expect(hrefs.filter(h => /^\/(go|cart|checkout|products)(\/|$)/.test(h) || h === "/market" || /\/compounds\/[^/]+\/market$/.test(h))).toEqual([]);
     });
   }
 

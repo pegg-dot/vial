@@ -220,14 +220,5 @@ function Facets({ label, hint, children }: { label: string; hint: string; childr
 
 // The pressed-pill pattern the market's explorer uses: thin ink ring, ink fill when pressed.
 function Chip({ on, title, onClick, children }: { on: boolean; title: string; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      aria-pressed={on}
-      className={`ink-1 inline-flex min-h-9 items-center gap-1.5 rounded-full px-4 text-xs font-extrabold transition-colors ${on ? "bg-[#111214] text-white" : "bg-white text-[#111214] hover:bg-[#eef0ff]"}`}
-    >
-      {children}
-    </button>
-  );
+  return <Pill size="sm" variant={on ? "ink" : "ghost"} ariaPressed={on} title={title} onClick={onClick}>{children}</Pill>;
 }

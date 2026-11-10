@@ -50,6 +50,11 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests", id, nu
   const withPurity = independentTests.filter((t) => t.purity_pct != null);
   const blindCount = independentTests.filter((t) => t.is_blind).length;
   const framed = Boolean(id && number != null);
+  // With no certificate on record the frame is about the batch records it was handed, not about tests.
+  const hasTests = tests.length > 0;
+  const frameEyebrow = hasTests ? "Independent testing" : "Batch records";
+  const frameTitle = hasTests ? heading : heading.replace(/\s+—\s+independent lab tests$/, " — batch test records");
+  const frameIntro = hasTests ? INTRO : "No independent certificate is on record for this compound yet. The batch records below are published passports: documents on file, not tests VialGrade ran.";
 
   const renderRow = (t: LabTestRow) => {
     const isImg = isImageDoc(t.verify_url);
@@ -114,7 +119,7 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests", id, nu
 
   const body = (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      {hasTests && <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-wrap gap-4">
           <details className="group max-w-2xl">
             <summary className={UI.linkSmall + " cursor-pointer list-none [&::-webkit-details-marker]:hidden"}>
@@ -148,8 +153,8 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests", id, nu
             )}
           </div>
         )}
-      </div>
-      {tests.length > 0 && (
+      </div>}
+      {hasTests && (
         <div className={(framed ? "ink-1 rounded-[14px]" : "ink hard-sm rounded-[16px]") + " overflow-x-auto bg-white"}>
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-[#fbfbf8]">
@@ -180,7 +185,7 @@ export function LabTestsPanel({ tests, heading = "Independent lab tests", id, nu
 
   if (framed) {
     return (
-      <NumberedSection id={id!} number={number!} eyebrow="Independent testing" title={heading} intro={INTRO}>
+      <NumberedSection id={id!} number={number!} eyebrow={frameEyebrow} title={frameTitle} intro={frameIntro}>
         {body}
       </NumberedSection>
     );

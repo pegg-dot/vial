@@ -32,7 +32,7 @@ export function DataUnavailable({ surface = "the catalogue" }: { surface?: strin
         <div className="mt-5 flex flex-wrap gap-3">
           <Pill href="/grades" variant="ink">What a grade actually means</Pill>
           <Pill href="/how-we-check">How we check</Pill>
-          <Pill href="/intelligence">About VialGrade</Pill>
+          <Pill href="/intelligence">Research home</Pill>
         </div>
       </Frame>
     </section>
