@@ -170,7 +170,7 @@ The "Research tools" menu (header, mobile, footer) is **Research Desk · Check a
 
 Both retired addresses are in `REDIRECTED_ROUTES`.
 
-## 11. The market record (2026-11-11, Nate: bring the listings and prices back, framed as research)
+## 11. The market record (2026-11-11)
 
 Owner decision, 2026-11-11: the price and listing half of the evidence-only quarantine comes back as a **record**, behind its own flag, while the rest of the shop stays closed. This is a product and release decision by the owner. It is not a legal clearance, and nothing here has been reviewed by counsel.
 
