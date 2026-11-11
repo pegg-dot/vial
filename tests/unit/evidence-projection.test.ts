@@ -30,9 +30,11 @@ describe("evidence-only projections", () => {
   });
 
   it("directory entry: price index, priced listings and sentiment are removed", () => {
-    const e = projectDirectoryEntry({ vendor, priceIndex: -30, pricedListings: 9, enforcement: "caution", defunct: false, integrityFlagged: true, reviewSentiment: "scam", verdict: "caution", redFlag: false } as unknown as VendorDirectoryEntry);
+    const e = projectDirectoryEntry({ vendor, priceIndex: -30, pricedListings: 9, enforcement: "caution", defunct: false, integrityFlagged: true, reviewSentiment: "scam", websiteUrl: "https://acme.example/", verdict: "caution", redFlag: false } as unknown as VendorDirectoryEntry);
     expect([e.priceIndex, e.pricedListings, e.reviewSentiment]).toEqual([null, 0, null]);
     expect([e.enforcement, e.integrityFlagged]).toEqual(["caution", true]);
+    // The storefront link is governed by its own release rule, not by the commerce projection.
+    expect(e.websiteUrl).toBe("https://acme.example/");
     expect(JSON.stringify(e)).not.toMatch(/price reduced|-30/);
   });
 

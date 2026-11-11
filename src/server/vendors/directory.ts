@@ -6,6 +6,8 @@ import { getFlaggedVendorSlugs } from "@/server/verify/coa-integrity";
 import { composeVerdict } from "@/server/verify/trust-graph";
 import type { Verdict } from "@/server/verify";
 import type { ReviewSentiment, VendorDirectoryEntry } from "@/lib/vendor-ranking";
+import { vendorDomains } from "@/server/collect/vendor-domains";
+import { storefrontUrlFor } from "@/lib/vendor-source-link";
 
 const SEVERITY_RANK: Record<string, number> = { severe: 2, caution: 1 };
 
@@ -65,14 +67,16 @@ export function assessVendorRisk(
 
 export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
   const [{ vendors, products }, db] = await Promise.all([getCatalogSnapshot(), getDatabase()]);
-  const [regActions, flagged, statusRows, reviewRows, communityRows, linkRows] = await Promise.all([
+  const [regActions, flagged, statusRows, reviewRows, communityRows, linkRows, domainRows] = await Promise.all([
     listRegulatoryActions(db, 500),
     getFlaggedVendorSlugs(db),
     db.query<{ vendor_slug: string; status: string; consecutive_failures: number }>(`SELECT vendor_slug, status, consecutive_failures FROM vendor_status WHERE status <> 'operating'`),
     db.query<{ vendor_slug: string; sentiment: ReviewSentiment; review_volume: string; confidence: string }>(`SELECT vendor_slug, sentiment, review_volume, confidence FROM vendor_reviews`),
     db.query<{ vendor_slug: string; sentiment: string; mention_count: number; negative_count: number; positive_count: number }>(`SELECT DISTINCT ON (vendor_slug) vendor_slug, sentiment, mention_count, negative_count, positive_count FROM community_mentions ORDER BY vendor_slug, fetched_at DESC`),
     db.query<{ vendor_slug: string; linked_slug: string; strength: string }>(`SELECT vendor_slug, linked_slug, strength FROM vendor_links`),
+    vendorDomains(db),
   ]);
+  const domainByVendor = new Map(domainRows.map((r) => [r.slug, r.domain]));
 
   // Group the batch reads by vendor. Enforcement keeps both the full list (for the verdict) and the
   // worst severity (for the directory badge).
@@ -136,6 +140,7 @@ export async function getVendorDirectory(): Promise<VendorDirectoryEntry[]> {
       defunct,
       integrityFlagged,
       reviewSentiment,
+      websiteUrl: storefrontUrlFor({ verdict, status: statusKind, domain: domainByVendor.get(vendor.slug) ?? null }),
       verdict,
       redFlag,
     };

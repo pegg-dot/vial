@@ -2,13 +2,18 @@ import { expect, test } from "@playwright/test";
 
 test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Research-only preview");
 
-// Default build: the supplier lens is OFF. The page must say so and must not list organizations.
-test("supplier grades page is honest when not switched on", async ({ page }) => {
-  const res = await page.goto("/intelligence/suppliers");
-  expect(res?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1, name: /not switched on yet/i })).toBeVisible();
-  await expect(page.getByText(/price|buy now|add to cart|available from/i)).toHaveCount(0);
-  await expect(page.locator("main h1")).toHaveCount(1);
+// The supplier-grades lens folded into the vendor directory: its address only forwards there.
+test("the old supplier grades address forwards to the vendor directory", async ({ page, request }) => {
+  const hop = await request.get("/intelligence/suppliers", { maxRedirects: 0 });
+  expect([307, 308]).toContain(hop.status());
+  expect(hop.headers().location).toBe("/vendors");
+  await page.goto("/intelligence/suppliers");
+  if (process.env.VIALGRADE_PUBLIC_BROWSE === "true") {
+    await expect(page).toHaveURL(/\/vendors$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Explore vendors through documented evidence");
+  } else {
+    await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
+  }
 });
 
 test("old shop routes stay retired", async ({ page, request }) => {

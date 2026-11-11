@@ -26,6 +26,9 @@ import { listPublicPassportsForCompound } from "@/server/evidence-network/reposi
 import { PriceLeaderboard } from "@/components/price-leaderboard";
 import { SectionNav } from "@/components/section-nav";
 import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
+import { getVendorDirectory } from "@/server/vendors/directory";
+import { projectDirectoryEntry } from "@/lib/evidence-projection";
+import { TestedByVendors } from "@/components/tested-by-vendors";
 import { getDatabase } from "@/server/db/client";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
@@ -57,8 +60,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 // and caching anything derived from it would leak one visitor's session state to another.
 const loadCompoundPublicData = unstable_cache(
   async (slug: string) => {
-    const [listings, labTests, research, regulatory, allPassports, medianSeries] = await Promise.all([getProductsByCompoundSlug(slug), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassportsForCompound(slug, 12), getDatabase().then((db) => getCompoundDailyMedianSeries(db, slug))]);
-    return { listings, labTests, research, regulatory, allPassports, medianSeries };
+    const [listings, labTests, research, regulatory, allPassports, medianSeries, directory] = await Promise.all([getProductsByCompoundSlug(slug), getDatabase().then((db) => getLabTestsForCompound(db, slug)), getDatabase().then((db) => getCompoundResearch(slug, db)), getDatabase().then((db) => getCompoundRegulatory(slug, db)), listPublicPassportsForCompound(slug, 12), getDatabase().then((db) => getCompoundDailyMedianSeries(db, slug)), getVendorDirectory().catch(() => [])]);
+    return { listings, labTests, research, regulatory, allPassports, medianSeries, directory };
   },
   ["compound-page"],
   { tags: [CATALOG_CACHE_TAG], revalidate: 21600 },
@@ -73,11 +76,15 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
     notFound();
   }
   const [publicData, principal] = await Promise.all([loadCompoundPublicData(slug), getCurrentPrincipal()]);
-  const { listings, labTests, research, regulatory, allPassports, medianSeries } = publicData;
+  const { listings, labTests, research, regulatory, allPassports, medianSeries, directory } = publicData;
   const passports = allPassports as unknown as PassportRow[];
   // Under the evidence-only release this page is for looking into a compound: lab evidence, passports,
   // research. No prices, listings, market table or follow button.
   const noCommerce = hidesCommerce();
+  // The vendors this compound's evidence names, with the letter from each one's own record. Under the
+  // evidence-only release the entries are projected like the directory's, so no price reaches the page.
+  const testedVendorSlugs = new Set([...labTests.map((t) => t.vendor_slug), ...passports.map((p) => p.vendor_slug)].filter((s): s is string => Boolean(s)));
+  const testedBy = directory.filter((e) => testedVendorSlugs.has(e.vendor.slug)).map((e) => (noCommerce ? projectDirectoryEntry(e) : e));
   const edu = educationFor(slug);
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
   // (so we only ever link to compounds we actually track) and carry its cheapest listing price.
@@ -102,6 +109,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
     ...(edu ? [{ id: "understand", label: "Understand" }] : []),
     ...(listings.length && !noCommerce ? [{ id: "market", label: "The market" }] : []),
     ...(labTests.length || passports.length ? [{ id: "lab-tests", label: "Lab tests" }] : []),
+    ...(testedBy.length ? [{ id: "tested-by", label: "Tested by" }] : []),
     ...(research.length || regulatory ? [{ id: "research", label: "Research" }] : []),
     ...(stacked.length || inStacks.length ? [{ id: "stacked", label: "Stacked with" }] : []),
   ];
@@ -213,6 +221,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
               {passports.length ? <PassportCarousel passports={passports} compoundName={compound.name} /> : null}
             </LabTestsPanel>
           ) : null}
+
+          {testedBy.length ? <TestedByVendors entries={testedBy} compoundName={compound.name} number={sectionNumber("tested-by")} /> : null}
 
           <CompoundResearchPanel id="research" number={sectionNumber("research")} findings={research} regulatoryStatus={regulatory?.regulatory_status ?? null} evidenceSummary={regulatory?.evidence_summary ?? null} compoundName={compound.name} fdaApprovedDrugExists={regulatory?.fda_approved_drug_exists ?? null} />
 
