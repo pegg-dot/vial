@@ -28,7 +28,7 @@ export default async function ResearchMaterialsPage({ searchParams }: {
         lead="Have a sample label and a report? Start by comparing their lot IDs. A matching number is not proof of authenticity or quality."
         note="This is a local note-taking checklist, not a laboratory test. Nothing is uploaded or saved, and no indexed identity has an independently authenticated physical lot on file."
         actions={<>
-          <Pill href="/intelligence/providers" arrow="right">Supplier quality documents</Pill>
+          <Pill href="#material-providers" arrow="right">Supplier quality documents</Pill>
           <Pill href={"/compounds/" + initialSlug} variant="ghost" arrow="right">Compound dossier</Pill>
         </>}
       />
@@ -44,8 +44,7 @@ export default async function ResearchMaterialsPage({ searchParams }: {
           <MaterialReviewWorkbench initialSlug={initialSlug} />
 
           <NumberedSection id="material-providers" number={2} eyebrow="Public laboratory documents" title="Who publishes the quality information?"
-            intro={RESEARCH_PROVIDER_RECORDS.length + " organization profiles show first-party documentation about general peptide QC practices. None is independently verified by VialGrade or linked to the availability of any molecule in this catalog."}
-            actions={<Pill href="/intelligence/providers" size="sm" variant="ghost" arrow="right">Full source directory</Pill>}>
+            intro={RESEARCH_PROVIDER_RECORDS.length + " organization profiles show first-party documentation about general peptide QC practices. None is independently verified by VialGrade or linked to the availability of any molecule in this catalog, and no name here is a preferred-supplier list."}>
             <div className="grid gap-3 md:grid-cols-2">
               {RESEARCH_PROVIDER_RECORDS.map(provider => (
                 <Quiet as="article" key={provider.slug} className="flex min-w-0 flex-col">

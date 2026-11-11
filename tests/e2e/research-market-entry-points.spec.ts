@@ -10,7 +10,7 @@ test.describe("Connected research market entry points", () => {
       ["Open Pexiganan dossier", "/compounds/pexiganan"],
       ["See evidence passport", "/compounds/pexiganan#studies"],
       ["Try source verifier", "/intelligence/verify?ref=PMID%2036781451"],
-      ["Explore source organizations", "/intelligence/organizations"],
+      ["Explore source organizations", "/compounds/pexiganan#organizations"],
       ["Compare Magainin 2 and Pexiganan", "/intelligence/compare?subjects=magainin-2%2Cpexiganan"],
     ];
     for (const [label, href] of links) {

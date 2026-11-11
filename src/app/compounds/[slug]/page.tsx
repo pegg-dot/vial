@@ -38,6 +38,7 @@ import { getCompoundResearch, getCompoundRegulatory } from "@/server/external/re
 import { CompoundResearchPanel } from "@/components/compound-research-panel";
 import { InnovatorNote } from "@/components/innovator-note";
 import { JsonLd } from "@/components/json-ld";
+import { HashLanding } from "@/components/hash-landing";
 import { compoundSchema } from "@/lib/structured-data";
 import { stacksContaining } from "@/lib/stacks";
 import { DossierPerspective } from "@/components/intelligence/dossier-perspective";
@@ -221,6 +222,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+      {/* Sections above the source trail stream in; a hash landing (the retired sponsor page, the
+          passport) must still end up on its target. */}
+      <HashLanding />
       {/* A reference entry in the compound directory. Deliberately DefinedTerm and not schema.org/Drug:
           asserting a medical entity for a grey-market research peptide would claim a standing no
           evidence on this page supports. */}
@@ -353,7 +357,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                     ))}
                   </ul>
                 )}
-                <Suspense fallback={<OrganizationsLoading />}><DossierOrganizations subject={subject} /></Suspense>
+                {/* The id sits outside the Suspense boundary so /compounds/<slug>#organizations can land on it
+                    before the panel streams in (the old sponsor page forwards here). */}
+                <div id="organizations" className="scroll-mt-40"><Suspense fallback={<OrganizationsLoading />}><DossierOrganizations subject={subject} /></Suspense></div>
               </NumberedSection>
 
               <NumberedSection id="material-evidence" number={sectionNumber("material-evidence")} eyebrow="Materials" title="Sample verification: not yet authenticated"
@@ -361,7 +367,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                 {isPex && <PexNoLabVerification />}
                 <div className="flex flex-wrap items-center gap-3">
                   <Pill href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)} icon={ClipboardCheck} arrow="right">Open material checks</Pill>
-                  <Link href="/intelligence/providers" className={UI.link}>Company-published QC documentation <ArrowUpRight className="size-4" /></Link>
+                  <Link href="/intelligence/materials#material-providers" className={UI.link}>Company-published QC documentation <ArrowUpRight className="size-4" /></Link>
                   {isPex && <Link href="/intelligence/desk" className={UI.link}>Build a briefing in the Research Desk <ArrowUpRight className="size-4" /></Link>}
                 </div>
                 {compound && showCatalog && (labTests.length || passports.length) ? (

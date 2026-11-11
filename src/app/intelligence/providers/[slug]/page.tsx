@@ -24,14 +24,14 @@ export default async function ResearchProviderProfile({ params }: { params: Prom
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       {/* The h1 is the provider name; the id rides on its text because PageHero does not take a title id. */}
       <PageHero size="compact" art={["coa", "shield"]}
-        breadcrumb={[{ href: "/intelligence", label: "Home" }, { href: "/intelligence/providers", label: "Supplier documentation" }, { label: provider.name }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { href: "/intelligence/materials#material-providers", label: "Material checks" }, { label: provider.name }]}
         eyebrow={<><Building2 className="size-4" aria-hidden="true" /> Public organization dossier · {provider.category}</>}
         title={<span id="source-profile-title">{provider.name}</span>}
         lead={provider.summary}
         note={"Company-authored statements noted " + MATERIAL_REVIEW_DATE + ". Nothing here is an independent audit, a lot-linked report or a supply relationship to any indexed molecule."}
         actions={<>
           <Pill href="/intelligence/materials" arrow="right">Check a sample report</Pill>
-          <Pill href="/intelligence/providers" variant="ghost">All documentation profiles</Pill>
+          <Pill href="/intelligence/materials#material-providers" variant="ghost">All documentation profiles</Pill>
         </>}
         aside={<Facts tone="mint" cols={3} items={[
           { term: "Company source", detail: "Public process description" },
@@ -73,7 +73,7 @@ export default async function ResearchProviderProfile({ params }: { params: Prom
           </NumberedSection>
         </div>
       </Section>
-      <PageFootnote href="/intelligence/providers" linkLabel="Back to supplier documentation">
+      <PageFootnote href="/intelligence/materials#material-providers" linkLabel="Back to material checks">
         This is a read-only quality-source audit, not vendor certification, material availability, accreditation verification, a scientific effectiveness score,
         or an invitation to purchase. A company profile is not evidence that it made the molecule in any VialGrade dossier.
       </PageFootnote>

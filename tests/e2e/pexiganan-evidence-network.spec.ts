@@ -21,7 +21,7 @@ test.describe("Pexiganan source-first research network", () => {
     await expect(wayfinder.getByRole("link", { name: "Try verification" }))
       .toHaveAttribute("href", "/intelligence/verify?ref=PMID%2036781451");
     await expect(wayfinder.getByRole("link", { name: "View source organizations" }))
-      .toHaveAttribute("href", "/intelligence/organizations");
+      .toHaveAttribute("href", "/compounds/pexiganan#organizations");
     await expect(page.getByRole("navigation", { name: "On this page" }).getByRole("link", { name: "Studies", exact: true }))
       .toHaveAttribute("href", "#studies");
     // The passport is the Studies section of this same page now; the link jumps to its six checks.
@@ -92,14 +92,19 @@ test.describe("Pexiganan source-first research network", () => {
     ).first()).toBeVisible();
   });
 
-  test("organization directory reports named sponsors and explicitly refuses lab/vendor certification", async ({ page }) => {
-    await page.goto("/intelligence/organizations");
-    await expect(page.getByRole("heading", { level: 1, name: "Who sponsored the selected studies?" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Dipexium Pharmaceuticals, Inc." })).toBeVisible({ timeout: 30000 });
-    await expect(page.getByRole("heading", { name: "Abeona Therapeutics, Inc" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open source NCT00563394" }))
+  test("the pexiganan page names the recorded sponsors in its source trail and explicitly refuses lab/vendor certification", async ({ page }) => {
+    // The old sponsor page forwards here; the panel says the same thing with the same records.
+    const hop = await page.request.get("/intelligence/organizations", { maxRedirects: 0 });
+    expect(hop.status()).toBe(308);
+    expect(hop.headers().location).toBe("/compounds/pexiganan#organizations");
+    await page.goto("/compounds/pexiganan#organizations");
+    const panel = page.locator("#organizations");
+    await expect(panel.getByRole("heading", { name: "Organizations on record" })).toBeInViewport();
+    await expect(panel).toContainText("Dipexium Pharmaceuticals, Inc.");
+    await expect(panel).toContainText("Abeona Therapeutics, Inc");
+    await expect(panel.getByRole("link", { name: "ClinicalTrials.gov NCT00563394" }).first())
       .toHaveAttribute("href", "https://clinicaltrials.gov/study/NCT00563394");
-    await expect(page.locator("main")).toContainText("not current corporate ownership");
+    await expect(panel).toContainText("does not establish who originated the compound");
     await expect(page.getByRole("heading", { name: "No research-material testing verified here" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Buy|Purchase|Checkout/ })).toHaveCount(0);
   });
@@ -109,7 +114,6 @@ test.describe("Pexiganan source-first research network", () => {
     for (const path of [
       "/intelligence", "/compounds/pexiganan",
       "/compounds", "/intelligence/verify?ref=PMID%2036781451",
-      "/intelligence/organizations",
     ]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
