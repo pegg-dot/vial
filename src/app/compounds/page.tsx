@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { BarChart3, BookOpenText, Layers3 } from "lucide-react";
-import { ArtMolecule, VialBuddy, ArtDroplet } from "@/components/vial-art";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { getCertificatesOnRecord } from "@/server/public-repository";
 import { SHELVES } from "@/lib/market-taxonomy";
 import { CompoundsExperience } from "@/components/market/compounds-experience";
 import { DataUnavailable } from "@/components/home-data-unavailable";
+import { PageHero, Section, StatRow } from "@/components/intelligence/research-ui";
 import { hidesCommerce } from "@/lib/public-research-release";
 import { projectCatalog } from "@/lib/evidence-projection";
 import { reportError } from "@/server/observability/alerts";
 
-export const metadata: Metadata = { title: "Compound directory", description: "Browse canonical compound records, market coverage, and evidence context.", alternates: { canonical: "/compounds" } };
+export const metadata: Metadata = { title: "Compound directory", description: "Browse canonical compound records, laboratory-report coverage and evidence context.", alternates: { canonical: "/compounds" } };
 export const dynamic = "force-dynamic";
 
 // Map a legacy goal-tag key (?goal=) onto a shelf key so old links keep working.
@@ -31,31 +31,26 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
   const { compounds, products } = catalog;
   const initialShelf = shelfKeyFor(goal, shelf);
 
-  return <>
-    <section className="relative isolate overflow-hidden border-b-2 border-[#111214] bg-[#f0edff]">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <ArtMolecule className="gum-float absolute right-[5%] top-[16%] hidden w-24 drop-shadow-[5px_5px_0_#111214] sm:block lg:w-32" a="#6d5dfc" b="#8fffd6" c="#fff" />
-        <VialBuddy className="gum-float-slow absolute right-[15%] bottom-[10%] hidden w-16 drop-shadow-[4px_4px_0_#111214] lg:block" liquid="#6d5dfc" />
-        <ArtDroplet className="gum-float-rev absolute right-[24%] top-[24%] hidden w-11 drop-shadow-[3px_3px_0_#111214] lg:block" fill="#6d5dfc" />
-      </div>
-      <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
-        <div className="max-w-3xl">
-          <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#4c3fd6]">Compound directory</p>
-          <h1 className="mt-4 text-balance text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[.9] tracking-[-.05em]">Every peptide <span className="text-[#5a4be0]">we track.</span></h1>
-          <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-[#111214]/70">{hidesCommerce() ? "One page per compound with laboratory-report coverage, batch passports and the research on file." : "One page per compound with documented vendor observations, historical price ranges and laboratory-report coverage."} Research topics are indexing labels, not validated health benefits or purchasing recommendations.</p>
-        </div>
-        <div className="mt-9 grid max-w-2xl grid-cols-3 gap-3">
-          <Stat icon={Layers3} value={String(compounds.length)} label="Records" />
-          {hidesCommerce() ? null : <Stat icon={BarChart3} value={String(products.length)} label="Listings" />}
-          <Stat icon={BookOpenText} value={String(totalCoa)} label="Lab certificates" />
-        </div>
-      </div>
-    </section>
+  return (
+    <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
+      {/* The first crumb lands on the market's catalog anchor: the browse release rejects any
+          in-page href that ends in "/market" (the closed per-compound market tables). */}
+      <PageHero size="compact" art={["molecule", "vial"]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Compounds" }]}
+        eyebrow={<><Layers3 className="size-4" aria-hidden="true" /> Compound directory</>}
+        title="Every peptide we track."
+        lead={<>{hidesCommerce() ? "One page per compound with laboratory-report coverage, batch passports and the research on file." : "One page per compound with documented vendor observations, historical price ranges and laboratory-report coverage."} Research topics are indexing labels, not validated health benefits or purchasing recommendations.</>}
+      >
+        <StatRow className="mt-8" items={[
+          { icon: Layers3, value: compounds.length, label: "Records" },
+          ...(hidesCommerce() ? [] : [{ icon: BarChart3, value: products.length, label: "Listings" }]),
+          { icon: BookOpenText, value: totalCoa, label: "Lab certificates" },
+        ]} />
+      </PageHero>
 
-    <div className="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
-      <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
+      <Section tight>
+        <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
+      </Section>
     </div>
-  </>;
+  );
 }
-
-function Stat({ icon: Icon, value, label }: { icon: React.ComponentType<{ className?: string }>; value: string; label: string }) { return <div className="ink hard rounded-[16px] bg-white p-4"><Icon className="size-4 text-[#6d5dfc]" /><p className="mt-3 text-2xl font-extrabold tracking-[-.05em]">{value}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">{label}</p></div>; }

@@ -34,7 +34,7 @@ export default async function CompareResearchPage({ searchParams }: {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["molecule", "flask"]}
-        breadcrumb={[{ href: "/intelligence/market#browse", label: "Research Market" }, { label: "Compare" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Compare" }]}
         eyebrow={<><GitCompareArrows className="size-4" aria-hidden="true" /> Scientific comparison</>}
         title="Compare compounds"
         lead="Put molecular references, study questions, and source records side by side. This is a research comparison, not a ranking of effectiveness or safety."

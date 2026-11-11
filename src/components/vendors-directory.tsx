@@ -1,10 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight, Factory, Filter, Search, ShieldAlert, Store, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Factory, Filter, Search, ShieldAlert, Store, X } from "lucide-react";
 import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { VialGradeMark } from "@/components/vial-grade-card";
+import { Chip, Frame, Pill, UI } from "@/components/intelligence/research-ui";
 import { PRIORITIES, rankVendors, type VendorDirectoryEntry } from "@/lib/vendor-ranking";
 import { filterVendorEntries, hasActiveVendorFilters, offeredVendorKinds } from "@/lib/vendor-directory-filter";
 import { vendorClaimLabelShort } from "@/lib/vendor-copy";
@@ -35,10 +36,10 @@ type ColKey = (typeof COLS)[number]["key"];
 const ACTIVE_COL: Record<string, ColKey> = { price: "price", purity: "purity", tested: "tests", reputation: "buyers" };
 
 const SENTIMENT: Record<string, { word: string; spoken: string; cls: string }> = {
-  positive: { word: "Positive", spoken: "positive buyer reports", cls: "text-[#0e8f80]" },
-  mixed: { word: "Mixed", spoken: "mixed buyer reports", cls: "text-[#b26a00]" },
-  negative: { word: "Negative", spoken: "negative buyer reports", cls: "text-[#d3372c]" },
-  scam: { word: "Adverse reports", spoken: "unverified allegations in reports", cls: "text-[#d3372c]" },
+  positive: { word: "Positive", spoken: "positive buyer reports", cls: "text-[#0b6b60]" },
+  mixed: { word: "Mixed", spoken: "mixed buyer reports", cls: "text-[#9b6b22]" },
+  negative: { word: "Negative", spoken: "negative buyer reports", cls: "text-[#ce403b]" },
+  scam: { word: "Adverse reports", spoken: "unverified allegations in reports", cls: "text-[#ce403b]" },
 };
 
 // The most specific known reason a vendor is flagged, from the composed verdict — so the directory
@@ -55,11 +56,11 @@ function redFlagLabel(entry: VendorDirectoryEntry): string | null {
     : entry.verdict === "avoid" ? "Adverse records — review sources" : "Review evidence";
 }
 
+// Danger for an avoid verdict, warn for a caution: the tone says how serious, the label says why.
 function RedFlag({ entry }: { entry: VendorDirectoryEntry }) {
   const label = redFlagLabel(entry);
   if (!label) return null;
-  const amber = entry.verdict === "caution";
-  return <span className={`ink-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${amber ? "bg-[#fff4e0] text-[#b26a00]" : "bg-[#fff1f0] text-[#d3372c]"}`}><ShieldAlert className="size-3" /> {label}</span>;
+  return <Chip tone={entry.verdict === "caution" ? "warn" : "danger"} icon={ShieldAlert} plain>{label}</Chip>;
 }
 
 /**
@@ -109,11 +110,11 @@ function VendorRow({ entry, rank, activeCol, cols }: { entry: VendorDirectoryEnt
     grade: graded
       ? <VialGradeMark grade={v.grade!} vendorName={v.name} />
       : <span title={standIn!.note} className="text-[10px] font-bold uppercase tracking-[.04em] text-[#111214]/40">{standIn!.word}</span>,
-    tests: v.coaCount > 0 ? <span className="text-[13px] font-extrabold tabular-nums">{v.coaCount}</span> : <Dash />,
-    purity: v.medianPurity != null ? <span className="text-[13px] font-extrabold tabular-nums">{v.medianPurity.toFixed(1)}%</span> : <Dash />,
-    listings: v.productCount > 0 ? <span className="text-[13px] font-extrabold tabular-nums">{v.productCount}</span> : <Dash />,
+    tests: v.coaCount > 0 ? <span className="text-[13px] font-extrabold tabular-nums text-[#111214]">{v.coaCount}</span> : <Dash />,
+    purity: v.medianPurity != null ? <span className="text-[13px] font-extrabold tabular-nums text-[#111214]">{v.medianPurity.toFixed(1)}%</span> : <Dash />,
+    listings: v.productCount > 0 ? <span className="text-[13px] font-extrabold tabular-nums text-[#111214]">{v.productCount}</span> : <Dash />,
     price: idx != null
-      ? <span className={`text-[13px] font-extrabold tabular-nums ${idx === 0 ? "" : idx < 0 ? "text-[#0e8f80]" : "text-[#d3372c]"}`}>{idx > 0 ? "+" : ""}{idx}%</span>
+      ? <span className={`text-[13px] font-extrabold tabular-nums ${idx === 0 ? "text-[#111214]" : idx < 0 ? "text-[#0b6b60]" : "text-[#ce403b]"}`}>{idx > 0 ? "+" : ""}{idx}%</span>
       : <Dash />,
     buyers: sentiment ? <span className={`text-[12px] font-extrabold ${sentiment.cls}`}>{sentiment.word}</span> : <Dash />,
   };
@@ -149,7 +150,7 @@ function VendorRow({ entry, rank, activeCol, cols }: { entry: VendorDirectoryEnt
     <Link
       href={`/vendors/${v.slug}`}
       aria-label={spoken}
-      className={`group flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 transition sm:px-4 ${flagged ? "bg-[#fff5f4] hover:bg-[#ffe9e7]" : "hover:bg-[var(--background)]"}`}
+      className={`group flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 transition sm:px-4 ${flagged ? "bg-[#ffecea]" : "hover:bg-[#eef0ff]"}`}
     >
       <span aria-hidden="true" className="w-7 shrink-0 text-right text-[13px] font-extrabold tabular-nums text-[var(--muted)]">{rank}</span>
       <VendorMark initials={v.initials} accent={v.accent} size="sm" />
@@ -158,16 +159,16 @@ function VendorRow({ entry, rank, activeCol, cols }: { entry: VendorDirectoryEnt
           is how a screen-reader user scans a directory. The numeric cells below stay hidden because
           the label already says them in words. */}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <h3 className="truncate text-[15px] font-extrabold leading-5 tracking-[-.02em]">{v.name}</h3>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h3 className="truncate text-[15px] font-extrabold leading-5 tracking-[-.02em] text-[#111214]">{v.name}</h3>
           {v.origin === "live" && <DataOriginBadge origin="live" compact />}
-          {v.kind === "manufacturer" && <span className="inline-flex items-center gap-1 rounded-full bg-[#39414e] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[.06em] text-white"><Factory className="size-2.5" /> Maker</span>}
+          {v.kind === "manufacturer" && <Chip tone="ink" icon={Factory}>Maker</Chip>}
           <RedFlag entry={entry} />
         </div>
         <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--muted)]">{vendorClaimLabelShort(v.profileStatus)}{v.location ? ` · ${v.location}` : ""}</p>
       </div>
       {cols.map((col) => <Cell key={col.key} col={col} active={activeCol === col.key}><span aria-hidden="true">{stat[col.key]}</span></Cell>)}
-      <ArrowUpRight aria-hidden="true" className="hidden size-4 shrink-0 text-[#111214]/25 transition group-hover:translate-x-0.5 group-hover:text-[#111214] sm:block" />
+      <ArrowRight aria-hidden="true" className="hidden size-4 shrink-0 text-[#111214]/25 transition group-hover:translate-x-0.5 group-hover:text-[#2b31d8] sm:block" />
       {/* Below lg the columns collapse into this one line, indented under the vendor's name. It is
           a row-width child rather than part of the name block, which is only ~170px on a phone. */}
       {compact.length > 0 && (
@@ -235,26 +236,27 @@ export function VendorsDirectory({ entries, hidePrices = false }: { entries: Ven
     <div>
       {/* Priority selector — the pills and the question sit straight on the page, no card. */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#2b31d8]">What matters most to you?</p>
+        <p className={UI.eyebrow}>What matters most to you?</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {priorities.map((p) => (
-            <button key={p.key} type="button" onClick={() => applyPriority(p.key)} aria-pressed={priority === p.key}
-              className={`ink-1 press rounded-full px-3.5 py-2 text-[13px] font-bold transition ${priority === p.key ? "bg-[#111214] text-white" : "bg-white text-[#111214]"}`}>
+            <Pill key={p.key} size="sm" variant={priority === p.key ? "ink" : "secondary"} onClick={() => applyPriority(p.key)} ariaPressed={priority === p.key}>
               {p.label}
-            </button>
+            </Pill>
           ))}
         </div>
-        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+        <p className={UI.body + " mt-3 max-w-3xl"}>
           <span className="font-extrabold tracking-[-.01em] text-[#111214]">&ldquo;{active.question}&rdquo;</span> {active.blurb}
-          {/* Said out loud because no column can carry it: this lens weighs four signals at once,
-              and a reader who sees an A- below three ungraded rows deserves to know why. */}
-          {activeCol === null && <span className="text-[#111214]/55"> Ordered on tests, purity, buyer reputation and flags together &mdash; never one blended number.</span>}
+          {/* Said out loud because no column can carry it: this lens weighs several signals at once,
+              and a reader who sees an A- below three ungraded rows deserves to know why. Buyer
+              reputation is neither shown nor ranked on under the evidence-only release, so the
+              sentence drops it there rather than name a signal the page does not carry. */}
+          {activeCol === null && <span className="text-[#4a4d56]"> Ordered on tests, purity{hidePrices ? "" : ", buyer reputation"} and flags together &mdash; never one blended number.</span>}
         </p>
       </div>
 
       {/* Newcomer guidance (default lens only) — one quiet line, not a box. */}
       {priority === "reliable" && (
-        <p className="mt-2.5 max-w-4xl text-[11px] font-semibold leading-5 text-[var(--muted)]">
+        <p className={UI.small + " mt-2.5 max-w-4xl"}>
           <span className="font-bold uppercase tracking-[.1em] text-[#2b31d8]">New to this?</span> A real vendor shows a batch-matched third-party certificate
           {hidePrices ? null : <><span className="mx-1.5 text-[#111214]/30">·</span>a price far below everyone else is a warning, not a deal</>}
           <span className="mx-1.5 text-[#111214]/30">·</span>everything here is research-use-only.
@@ -264,7 +266,7 @@ export function VendorsDirectory({ entries, hidePrices = false }: { entries: Ven
       {/* One control row: search, kind, count. A buyer who arrives knowing the name — from a forum,
           a friend, a receipt — answers "is this the one that scams people?" without paging. */}
       <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2.5">
-        <div className="ink-1 flex min-w-[15rem] flex-1 items-center gap-2.5 rounded-full bg-white px-4 py-2.5 focus-within:shadow-[3px_3px_0_#111214]">
+        <div className="ink-1 flex min-w-[15rem] flex-1 items-center gap-2.5 rounded-full bg-white px-4 py-2.5 focus-within:shadow-[3px_3px_0_#2b31d8]">
           <Search className="size-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
           <input
             value={query}
@@ -274,55 +276,53 @@ export function VendorsDirectory({ entries, hidePrices = false }: { entries: Ven
             className="min-w-0 flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--muted)]"
           />
           {query && (
-            <button type="button" onClick={() => applyQuery("")} aria-label="Clear search" className="ink-1 rounded-full bg-white p-1 text-[var(--muted)] transition hover:text-[#111214]">
-              <X className="size-3" />
+            <button type="button" onClick={() => applyQuery("")} aria-label="Clear search" className="ink-1 grid size-6 place-items-center rounded-full bg-white text-[var(--muted)] transition hover:text-[#111214]">
+              <X className="size-3" aria-hidden="true" />
             </button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           {/* "Everyone" always renders — it is the only way back to the unfiltered directory. */}
-          <button type="button" onClick={() => applyKind("all")} aria-pressed={kind === "all"}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${kind === "all" ? "ink-1 bg-[#111214] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
+          <Pill size="sm" variant={kind === "all" ? "ink" : "ghost"} onClick={() => applyKind("all")} ariaPressed={kind === "all"}>
             Everyone
-          </button>
+          </Pill>
           {kindOptions.map((option) => (
-            <button key={option.id} type="button" onClick={() => applyKind(option.id)} aria-pressed={kind === option.id} title={option.note}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${kind === option.id ? "ink-1 bg-[#111214] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
-              {option.id === "storefront" ? <Store className="size-3.5" /> : <Factory className="size-3.5" />}{option.label}
-              <span className="tabular-nums opacity-60">{option.count}</span>
-            </button>
+            <span key={option.id} title={option.note}>
+              <Pill size="sm" variant={kind === option.id ? "ink" : "ghost"} icon={option.id === "storefront" ? Store : Factory} onClick={() => applyKind(option.id)} ariaPressed={kind === option.id}>
+                {option.label}
+                <span className="tabular-nums opacity-60">{option.count}</span>
+              </Pill>
+            </span>
           ))}
         </div>
         {/* The bare "N vendors" stays its own element: it is the honest headline count, and the
             "of N" qualifier sits beside it rather than inside it. */}
-        <p className="text-sm font-medium text-[var(--muted)]">
-          <span data-testid="vendor-count"><span className="font-extrabold text-black tabular-nums">{ranked.length}</span> vendor{ranked.length === 1 ? "" : "s"}</span>
+        <p className={UI.body}>
+          <span data-testid="vendor-count"><span className="font-extrabold text-[#111214] tabular-nums">{ranked.length}</span> vendor{ranked.length === 1 ? "" : "s"}</span>
           {filtered && <span className="tabular-nums"> of {entries.length}</span>}
         </p>
         {filtered && (
-          <button type="button" onClick={reset} className="ink-1 press inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold">
-            <Filter className="size-3" /> Clear filters
-          </button>
+          <Pill size="sm" icon={Filter} onClick={reset}>Clear filters</Pill>
         )}
       </div>
 
-      <p className="mt-2 text-[11px] font-medium text-[var(--muted)]">
+      <p className={UI.small + " mt-2"}>
         Names match with or without spacing &mdash; &ldquo;swisschems&rdquo; finds Swiss Chems. Search reads the name, URL, and location, never marketing copy.
       </p>
 
       {ranked.length === 0 ? (
-        <div className="ink hard-sm mt-4 rounded-[16px] bg-white px-6 py-14 text-center">
-          <p className="text-lg font-extrabold">No vendor on record matches that.</p>
-          <p className="mx-auto mt-2 max-w-md text-sm font-medium leading-6 text-[var(--muted)]">
+        <Frame shadow="sm" radius="rounded-[16px]" className="mt-4 px-6 py-14 text-center">
+          <p className="text-lg font-extrabold text-[#111214]">No vendor on record matches that.</p>
+          <p className={UI.body + " mx-auto mt-2 max-w-md"}>
             We only list sellers we hold a record for, so the directory is deliberately narrower than the market. Finding nothing here is a fact about our coverage, not a verdict on the vendor.
           </p>
-          <button type="button" onClick={reset} className="ink hard-sm press mt-6 rounded-full bg-[#111214] px-5 py-2.5 text-sm font-bold text-white">Clear filters</button>
-        </div>
+          <Pill variant="ink" onClick={reset} className="mt-6">Clear filters</Pill>
+        </Frame>
       ) : (
         <>
           {/* The leaderboard. One ink frame around the whole ledger; inside it, rows and hairlines
               only — the boxes-inside-boxes card grid spent more pixels on frames than on facts. */}
-          <div className="ink hard mt-4 overflow-hidden rounded-[18px] bg-white">
+          <Frame pad="none" className="mt-4 overflow-hidden">
             <div className="flex items-center gap-3 border-b-2 border-[#111214] bg-[var(--background)] px-3 py-2 sm:px-4" aria-hidden="true">
               <span className="w-7 shrink-0 text-right text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">#</span>
               <span className="w-10 shrink-0" />
@@ -332,7 +332,7 @@ export function VendorsDirectory({ entries, hidePrices = false }: { entries: Ven
                 const align = "align" in col && col.align === "center" ? "justify-center" : "justify-end";
                 return (
                   <span key={col.key} className={`${col.w} shrink-0 items-center gap-0.5 text-[10px] font-bold uppercase tracking-[.1em] ${col.key === "grade" ? "flex" : "hidden lg:flex"} ${on ? "text-[#2b31d8]" : "text-[var(--muted)]"} ${align}`}>
-                    {col.label}{on && <ArrowDown className="size-3" />}
+                    {col.label}{on && <ArrowDown className="size-3" aria-hidden="true" />}
                   </span>
                 );
               })}
@@ -341,14 +341,14 @@ export function VendorsDirectory({ entries, hidePrices = false }: { entries: Ven
             <div className="divide-y divide-[#111214]/10">
               {shown.map((entry, i) => <VendorRow key={entry.vendor.slug} entry={entry} rank={i + 1} activeCol={activeCol} cols={cols} />)}
             </div>
-          </div>
+          </Frame>
 
           {/* What a dash means, said on the page. Over half this directory is upstream makers who
               sell nothing here, and a column of unexplained blanks reads as broken data rather
               than as the refusal to publish a letter the evidence can't support. */}
           {standIns.size > 0 && (
-            <p className="mt-3 max-w-4xl text-[11px] font-medium leading-5 text-[var(--muted)]">
-              <span className="font-bold uppercase tracking-[.1em] text-[#111214]/50">No grade?</span> A missing letter is never a mark against a vendor.{" "}
+            <p className={UI.small + " mt-3 max-w-4xl"}>
+              <span className="font-bold uppercase tracking-[.1em] text-[#4a4d56]">No grade?</span> A missing letter is never a mark against a vendor.{" "}
               {standIns.has("Not a shop") && <><span className="font-bold text-[#111214]">Not a shop</span> &mdash; an upstream maker we know from lab records; they sell nothing here, so the buyer scale doesn&rsquo;t apply. </>}
               {standIns.has("No listings") && <><span className="font-bold text-[#111214]">No listings</span> &mdash; a real storefront whose catalog we haven&rsquo;t captured, which is a fact about our coverage, not about them. </>}
               {standIns.has("Not rated") && <><span className="font-bold text-[#111214]">Not rated</span> &mdash; not enough independent evidence to publish a letter yet, which is different from finding something bad. </>}
@@ -358,8 +358,8 @@ export function VendorsDirectory({ entries, hidePrices = false }: { entries: Ven
 
           {ranked.length > visible && (
             <div className="mt-6 flex flex-col items-center gap-2">
-              <button onClick={() => setVisible((v) => v + PAGE)} className="ink hard press rounded-full bg-white px-6 py-3 text-sm font-bold">Show {Math.min(PAGE, ranked.length - visible)} more</button>
-              <p className="text-xs font-medium tabular-nums text-[var(--muted)]">Showing {shown.length} of {ranked.length}</p>
+              <Pill onClick={() => setVisible((v) => v + PAGE)}>Show {Math.min(PAGE, ranked.length - visible)} more</Pill>
+              <p className={UI.small + " tabular-nums"}>Showing {shown.length} of {ranked.length}</p>
             </div>
           )}
         </>

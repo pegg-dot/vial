@@ -1,6 +1,7 @@
 "use client";
 import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { UI } from "@/components/intelligence/research-ui";
 
 // Progressive disclosure for long tables. The first rows are always visible; the rest live in a
 // second tbody the button reveals. Rows stay SERVER-rendered — they arrive here as ReactNode
@@ -22,14 +23,10 @@ export function ExpandableRows({ preview, rest, restCount, colSpan, label, bodyC
       <tbody hidden={!open} className={`${bodyClassName ?? ""} border-t border-[#111214]/10`}>{rest}</tbody>
       <tbody>
         <tr>
-          <td colSpan={colSpan} className="border-t-2 border-[#111214] bg-[#f7f7f4] px-5 py-3">
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-[#2b31d8] hover:underline"
-            >
+          <td colSpan={colSpan} className="border-t-2 border-[#111214] bg-[var(--background)] px-5 py-3">
+            <button type="button" onClick={() => setOpen((v) => !v)} className={UI.link}>
               {open ? "Show fewer" : label}
-              <ChevronDown className={`size-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+              <ChevronDown className={`size-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
             </button>
           </td>
         </tr>

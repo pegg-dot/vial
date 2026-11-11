@@ -4,6 +4,7 @@ import { LayoutGrid, Search, Table2, X } from "lucide-react";
 import type { CatalogSnapshot, Compound } from "@/lib/types";
 import { trending } from "@/lib/curation";
 import { groupByShelf } from "@/lib/market-taxonomy";
+import { Frame, Pill, UI } from "@/components/intelligence/research-ui";
 import { CategoryRail } from "./category-rail";
 import { STACKS, resolveStack, type ResolvedStack } from "@/lib/stacks";
 import { CollectionRow } from "./collection-row";
@@ -92,19 +93,19 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
       )}
 
       <div className="flex items-center justify-between gap-4 pt-6">
-        <h2 className="text-3xl font-extrabold tracking-[-.045em]">Every compound</h2>
+        <h2 className={UI.h2}>Every compound</h2>
         {hidePrices ? null : <div className="ink-1 inline-flex gap-1 rounded-full bg-white p-1">
-          <button type="button" onClick={() => setView("shelves")} aria-pressed={view === "shelves"} className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${view === "shelves" ? "bg-[#111214] text-white" : "text-[var(--muted)]"}`}>
-            <LayoutGrid className="size-3.5" /> Shelves
+          <button type="button" onClick={() => setView("shelves")} aria-pressed={view === "shelves"} className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-extrabold transition-colors ${view === "shelves" ? "bg-[#111214] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
+            <LayoutGrid className="size-3.5" aria-hidden="true" /> Shelves
           </button>
-          <button type="button" onClick={() => setView("terminal")} aria-pressed={view === "terminal"} className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${view === "terminal" ? "bg-[#111214] text-white" : "text-[var(--muted)]"}`}>
-            <Table2 className="size-3.5" /> Terminal
+          <button type="button" onClick={() => setView("terminal")} aria-pressed={view === "terminal"} className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-extrabold transition-colors ${view === "terminal" ? "bg-[#111214] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
+            <Table2 className="size-3.5" aria-hidden="true" /> Terminal
           </button>
         </div>}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[14px] border-[1.5px] border-[#111214] bg-white px-4 py-3 transition focus-within:shadow-[3px_3px_0_#2b31d8] sm:max-w-[420px]">
+        <div className="ink-1 flex min-w-0 flex-1 items-center gap-3 rounded-[14px] bg-white px-4 py-3 transition-shadow focus-within:shadow-[3px_3px_0_#2b31d8] sm:max-w-[420px]">
           <Search className="size-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
           <input
             value={query}
@@ -114,12 +115,12 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
             className="min-w-0 flex-1 bg-transparent text-[15px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--muted)]"
           />
           {query && (
-            <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="ink-1 rounded-full bg-white p-1.5 text-[var(--muted)] transition hover:text-[#111214]">
-              <X className="size-3.5" />
+            <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="ink-1 grid size-7 shrink-0 place-items-center rounded-full bg-white text-[var(--muted)] transition-colors hover:bg-[#eef0ff] hover:text-[#111214]">
+              <X className="size-3.5" aria-hidden="true" />
             </button>
           )}
         </div>
-        <p className="text-sm font-bold tabular-nums" data-testid="compound-count">
+        <p className="text-sm font-bold tabular-nums text-[#111214]" data-testid="compound-count">
           {results.length} {results.length === 1 ? "compound" : "compounds"}
           {results.length !== compounds.length && <span className="font-medium text-[var(--muted)]"> of {compounds.length}</span>}
         </p>
@@ -134,16 +135,16 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
       {results.length === 0 || (view === "shelves" && visibleGroups.length === 0) ? (
         /* Without this the table rendered its header over an empty tbody and the shelves view
            collapsed to nothing — a search that missed looked like the directory had broken. */
-        <div className="ink mt-6 rounded-[20px] bg-white px-6 py-20 text-center">
-          <p className="text-xl font-extrabold tracking-[-0.03em]">
+        <Frame pad="none" radius="rounded-[20px]" className="mt-6 px-6 py-20 text-center">
+          <p className={UI.h3}>
             {results.length === 0 ? <>No compounds match “{query.trim()}”</> : <>Nothing on this shelf matches “{query.trim()}”</>}
           </p>
-          <p className="mt-2 text-sm font-medium text-[var(--muted)]">Try the shorthand printed on the vial, an older name, or a category.</p>
+          <p className={UI.body + " mt-2"}>Try the shorthand printed on the vial, an older name, or a category.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {query && <button type="button" onClick={() => setQuery("")} className="ink hard press rounded-full bg-[#2b31d8] px-5 py-3 text-sm font-bold text-white">Clear search</button>}
-            {activeShelf && <button type="button" onClick={() => setActiveShelf(null)} className="ink hard-sm press rounded-full bg-white px-5 py-3 text-sm font-bold">All shelves</button>}
+            {query && <Pill variant="primary" onClick={() => setQuery("")}>Clear search</Pill>}
+            {activeShelf && <Pill onClick={() => setActiveShelf(null)}>All shelves</Pill>}
           </div>
-        </div>
+        </Frame>
       ) : view === "terminal" ? (
         <div className="mt-6">
           <CompoundMarketTable compounds={results} products={products} onOpen={openRow} />
@@ -160,8 +161,8 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
               <section key={shelf.key} id={`shelf-${shelf.key}`} className="scroll-mt-24">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <h3 className="text-2xl font-extrabold tracking-[-.03em]">{shelf.label}</h3>
-                    <p className="mt-1 text-sm font-medium text-[var(--muted)]">{shelf.blurb}</p>
+                    <h3 className={UI.h3}>{shelf.label}</h3>
+                    <p className={UI.body + " mt-1"}>{shelf.blurb}</p>
                   </div>
                   <p className="text-xs font-bold tabular-nums text-[var(--muted)]">
                     {hidden > 0 ? <>Showing {shown.length} of {shelfCompounds.length}</> : <>{shelfCompounds.length} compound{shelfCompounds.length === 1 ? "" : "s"}</>}
@@ -174,9 +175,9 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
                 </div>
                 {hidden > 0 && (
                   <div className="mt-4 flex justify-center">
-                    <button type="button" onClick={() => expandShelf(shelf.key)} className="ink hard-sm press rounded-full bg-white px-5 py-2.5 text-sm font-bold">
+                    <Pill size="sm" onClick={() => expandShelf(shelf.key)}>
                       Show {hidden} more {shelf.label.toLowerCase()}
-                    </button>
+                    </Pill>
                   </div>
                 )}
               </section>

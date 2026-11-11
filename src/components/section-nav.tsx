@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { UI } from "@/components/intelligence/research-ui";
 
 // The "don't get lost" bar: a sticky in-page map of the compound page's sections, pinned just
 // below the 72px site header. Anchor links (not tabs) so every section stays in the document —
@@ -27,14 +28,14 @@ export function SectionNav({ items }: { items: { id: string; label: string }[] }
 
   if (items.length < 2) return null;
   return (
-    <nav aria-label="On this page" className="sticky top-[72px] z-30 border-b-2 border-[#111214] bg-[rgba(247,247,244,.92)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-[1320px] items-center gap-1.5 overflow-x-auto px-5 py-2.5 sm:px-8">
+    <nav aria-label="On this page" className="sticky top-[72px] z-30 border-b-2 border-[#111214] bg-[rgba(247,247,244,.96)] backdrop-blur-md">
+      <div className={UI.container + " flex items-center gap-1 overflow-x-auto py-2"}>
         {items.map((item) => (
           <a
             key={item.id}
             href={`#${item.id}`}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-bold transition ${
-              active === item.id ? "bg-[#111214] text-white" : "text-[#111214]/60 hover:bg-[#111214]/[.06] hover:text-[#111214]"
+            className={`flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-[13px] font-bold transition-colors ${
+              active === item.id ? "bg-[#111214] text-white" : "text-[#3a3d46] hover:bg-black/[.06] hover:text-[#111214]"
             }`}
           >
             {item.label}

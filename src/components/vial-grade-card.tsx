@@ -1,5 +1,6 @@
 import { Check, CircleAlert, CircleDashed, CircleSlash, Factory, ShieldCheck, X } from "lucide-react";
 import type { GradeBand, DimensionKey, DimensionState, VialGradeResult } from "@/server/verify/grade";
+import { Chip, Frame, UI, type Tone } from "@/components/intelligence/research-ui";
 
 // The pill also renders from the MATERIALIZED grade on a vendor row, which is a plain object
 // rather than a full VialGradeResult — same fields, no dimensions.
@@ -8,13 +9,16 @@ export type GradeLike = { letter: string | null; band: string; rationale?: strin
 // The headline evidence grade. It is deliberately never shown alone: the letter, the reason it landed
 // there, and the per-dimension evidence ship as one block, so the reader can always audit the
 // number instead of trusting it. When the evidence is too thin, there is no letter at all.
-const BAND: Record<GradeBand, { wrap: string; chip: string; accent: string; icon: typeof ShieldCheck }> = {
-  strong: { wrap: "bg-[#e6fbf4]", chip: "bg-[#0e8f80]", accent: "#0e8f80", icon: ShieldCheck },
-  mixed: { wrap: "bg-[#fff4e0]", chip: "bg-[#b26a00]", accent: "#b26a00", icon: CircleAlert },
-  adverse: { wrap: "bg-[#fff1f0]", chip: "bg-[#d3372c]", accent: "#d3372c", icon: X },
-  insufficient: { wrap: "bg-[#f0edff]", chip: "bg-[#6d5dfc]", accent: "#6d5dfc", icon: CircleDashed },
-  // Neutral, never a rank — a maker is not a worse shop, it is not a shop.
-  reference: { wrap: "bg-[#f2f2ef]", chip: "bg-[#39414e]", accent: "#39414e", icon: Factory },
+//
+// Each band is one kit tone: the frame tint says which kind of answer this is, the letter box is
+// the tone's ink. Blue is the informational tone for "not enough evidence" (the kit keeps violet
+// for model-draft surfaces); a maker is paper — neutral, never a rank, because it is not a shop.
+const BAND: Record<GradeBand, { tone: Tone; box: string; accent: string; icon: typeof ShieldCheck }> = {
+  strong: { tone: "mint", box: "bg-[#0e8f80]", accent: "#0b6b60", icon: ShieldCheck },
+  mixed: { tone: "warn", box: "bg-[#9b6b22]", accent: "#9b6b22", icon: CircleAlert },
+  adverse: { tone: "danger", box: "bg-[#ce403b]", accent: "#ce403b", icon: X },
+  insufficient: { tone: "blue", box: "bg-[#2b31d8]", accent: "#2b31d8", icon: CircleDashed },
+  reference: { tone: "paper", box: "bg-[#3a3d46]", accent: "#3a3d46", icon: Factory },
 };
 
 // The row names, in the words a buyer would use. The graph files these as testing / regulatory /
@@ -28,13 +32,13 @@ const DIMENSION_LABEL: Record<DimensionKey, string> = {
 };
 
 const STATE: Record<DimensionState, { label: string; icon: typeof ShieldCheck; tone: string }> = {
-  supported: { label: "Yes", icon: ShieldCheck, tone: "text-[#0e8f80]" },
+  supported: { label: "Yes", icon: ShieldCheck, tone: "text-[#0b6b60]" },
   // "We checked and found nothing against them" — real, but weaker than evidence FOR them.
-  clear: { label: "Nothing bad found", icon: Check, tone: "text-[#111214]/55" },
-  adverse: { label: "Concerns found", icon: X, tone: "text-[#d3372c]" },
-  conflicting: { label: "Reports disagree", icon: CircleAlert, tone: "text-[#b26a00]" },
+  clear: { label: "Nothing bad found", icon: Check, tone: "text-[#4a4d56]" },
+  adverse: { label: "Concerns found", icon: X, tone: "text-[#ce403b]" },
+  conflicting: { label: "Reports disagree", icon: CircleAlert, tone: "text-[#9b6b22]" },
   // Neutral observation, not an alarm — styled like a note, not a warning.
-  noted: { label: "Worth a look", icon: CircleDashed, tone: "text-[#111214]/55" },
+  noted: { label: "Worth a look", icon: CircleDashed, tone: "text-[#4a4d56]" },
   absent: { label: "Nothing on file", icon: CircleSlash, tone: "text-[#111214]/35" },
 };
 
@@ -45,10 +49,10 @@ function DimensionRow({ dimensionKey, label, state, count }: { dimensionKey: Dim
   // trust graph records "no lab tests on record" AS a factor — but there is nothing to count.
   const showCount = state !== "absent" && count > 0;
   return (
-    <div className="flex items-center justify-between gap-3 border-t-2 border-[#111214]/10 py-2.5 first:border-t-0">
-      <span className="text-[13px] font-bold text-[#111214]/80">{DIMENSION_LABEL[dimensionKey] ?? label}</span>
+    <div className="flex items-center justify-between gap-3 border-t border-[#111214]/10 py-2.5 first:border-t-0">
+      <span className="text-[13px] font-bold text-[#3a3d46]">{DIMENSION_LABEL[dimensionKey] ?? label}</span>
       <span className={`inline-flex items-center gap-1.5 text-[12px] font-bold ${s.tone}`}>
-        <Icon className="size-3.5" />
+        <Icon className="size-3.5" aria-hidden="true" />
         {s.label}
         {/* The number is how many checks fed this row — say so, so it can't be misread as
             "13 lab tests" when it is "1 check that found 13". */}
@@ -58,19 +62,18 @@ function DimensionRow({ dimensionKey, label, state, count }: { dimensionKey: Dim
   );
 }
 
-export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summary: string }) {
+// `vendorName` names the card as a region ("VialGrade {name}") where it is the hero's aside.
+export function VialGradeCard({ grade, summary, vendorName }: { grade: VialGradeResult; summary: string; vendorName?: string }) {
   const b = BAND[grade.band];
   const Icon = b.icon;
   const letterLabel = grade.letter === null ? "Not graded — not enough evidence" : `VialGrade ${grade.letter}`;
   return (
-    <div className={`ink hard-lg flex flex-col rounded-[20px] p-5 text-[#111214] sm:p-6 ${b.wrap}`}>
-      <div className="ink inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: b.accent }}>
-        <Icon className="size-4" /> VialGrade
-      </div>
+    <Frame as="section" tone={b.tone} shadow="lg" radius="rounded-[20px]" ariaLabel={vendorName ? `VialGrade ${vendorName}` : undefined} className="flex flex-col">
+      <Chip tone={b.tone} icon={Icon} className="w-fit">VialGrade</Chip>
 
       <div className="mt-4 flex items-center gap-4">
-        <span className={`ink grid size-[76px] shrink-0 place-items-center rounded-[18px] text-white ${b.chip}`}>
-          <span aria-hidden className="text-[34px] font-extrabold leading-none tracking-[-.06em]">{grade.letter ?? "—"}</span>
+        <span className={`ink hard-sm grid size-[76px] shrink-0 place-items-center rounded-[18px] text-white ${b.box}`}>
+          <span aria-hidden="true" className="text-[34px] font-extrabold leading-none tracking-[-.06em]">{grade.letter ?? "—"}</span>
           <span className="sr-only">{letterLabel}</span>
         </span>
         <div className="min-w-0">
@@ -78,30 +81,30 @@ export function VialGradeCard({ grade, summary }: { grade: VialGradeResult; summ
               asserts a vendor is trustworthy; the same words as a sentence, under a heading that
               asks the question instead, say exactly as much without the page structure vouching
               for it. The verdict section below owns the heading. */}
-          <p className="text-2xl font-extrabold leading-tight tracking-[-.03em]">{grade.headline}</p>
-          <p className="mt-1.5 text-[15px] font-medium leading-6 text-[#111214]/75">{summary}</p>
-          <p className="mt-2 text-[11px] font-semibold leading-5 text-[#111214]/65">Evidence summary only. Not a safety, authenticity, approval, or lawful-sale certification.</p>
+          <p className="text-2xl font-extrabold leading-tight tracking-[-.03em] text-[#111214]">{grade.headline}</p>
+          <p className="mt-1.5 text-[15px] font-medium leading-6 text-[#3a3d46]">{summary}</p>
+          <p className={UI.small + " mt-2"}>Evidence summary only. Not a safety, authenticity, approval, or lawful-sale certification.</p>
         </div>
       </div>
 
       {/* The decomposition the letter is built from — never collapsed away entirely. */}
-      <div className="ink-1 mt-5 rounded-[14px] bg-white/70 px-4 py-1.5">
+      <div className="ink-1 mt-5 rounded-[14px] bg-white px-4 py-1.5">
         {grade.dimensions.map(d => (
           <DimensionRow key={d.key} dimensionKey={d.key} label={d.label} state={d.state} count={d.factors.length} />
         ))}
       </div>
 
-      <p className="mt-3 text-[12px] font-medium leading-5 text-[#111214]/60">
-        <span className="font-bold uppercase tracking-[.08em] text-[#111214]/45">Why this grade — </span>
+      <p className={UI.small + " mt-3"}>
+        <span className={UI.eyebrowMuted}>Why this grade — </span>
         {grade.rationale}
       </p>
 
       {/* Sentence case, not the uppercase kicker it used to be — this is a sentence now, and
           "WEIGHED ACROSS 4 SIGNALS" was neither readable nor a phrase anyone says. */}
-      <p className="mt-auto pt-4 text-[11px] font-bold text-[#111214]/45">
+      <p className="mt-auto pt-4 text-[11px] font-bold text-[#4a4d56]">
         {`${grade.letter === null ? "Only" : "Based on"} ${grade.weighed} check${grade.weighed === 1 ? "" : "s"}${grade.letter === null ? " so far" : ""}. ${grade.verifiedCount > 0 ? `${grade.verifiedCount} backed by a document.` : "None backed by a document."}`}
       </p>
-    </div>
+    </Frame>
   );
 }
 
@@ -113,11 +116,11 @@ export function VialGradePill({ grade, vendorName }: { grade: GradeLike; vendorN
   const ungraded = grade.letter === null || grade.letter === undefined;
   return (
     <span
-      className={`ink-1 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold ${b.wrap}`}
+      className="ink-1 inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-1 text-[11px] font-bold"
       style={{ color: b.accent }}
       title={grade.rationale || undefined}
     >
-      <span className={`ink-1 grid size-5 shrink-0 place-items-center rounded-full text-white ${b.chip}`}>
+      <span className={`ink-1 grid size-5 shrink-0 place-items-center rounded-full text-white ${b.box}`}>
         <span className="text-[10px] font-extrabold leading-none">{ungraded ? "?" : grade.letter}</span>
       </span>
       <span className="uppercase tracking-[.08em]">
@@ -128,7 +131,7 @@ export function VialGradePill({ grade, vendorName }: { grade: GradeLike; vendorN
   );
 }
 
-// The grade at card density: the letter in an ink box, nothing else. The pill's wash of band
+// The grade at row density: the letter in an ink box, nothing else. The pill's wash of band
 // colour was one more coloured thing on a tile already carrying three; the letter is the
 // information, the rationale rides in the tooltip, and the vendor page has the full block.
 // No letter → nothing: three quarters of vendors are unrated, and a "?" on three quarters of the
@@ -138,7 +141,7 @@ export function VialGradeMark({ grade, vendorName }: { grade: GradeLike; vendorN
   const b = BAND[(grade.band as GradeBand) ?? "insufficient"];
   return (
     <span
-      className="ink-1 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-[5px] bg-white px-1 text-[10px] font-extrabold leading-none tabular-nums"
+      className="ink hard-sm inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-[6px] bg-white px-1 text-[11px] font-extrabold leading-none tabular-nums"
       style={{ color: b.accent }}
       title={`${vendorName ? `${vendorName} — ` : ""}VialGrade ${grade.letter}${grade.rationale ? `. ${grade.rationale}` : ""}`}
       aria-label={`VialGrade ${grade.letter}`}

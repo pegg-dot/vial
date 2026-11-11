@@ -1,30 +1,27 @@
 import { ShieldAlert } from "lucide-react";
 import type { CoaFlag } from "@/server/verify/coa-integrity";
+import { Chip, Frame, UI } from "@/components/intelligence/research-ui";
 
 // The "salvage title" banner. When a vendor's published certificates don't hold up, a buyer
 // sees exactly what's wrong — and why it matters — before anything else on the page.
 export function VendorFlagsBanner({ flags, vendorName }: { flags: CoaFlag[]; vendorName: string }) {
   if (flags.length === 0) return null;
   const high = flags.some((f) => f.severity === "high");
+  const tone = high ? "danger" : "warn";
   return (
-    <div className={`hard-sm rounded-[16px] border-2 p-6 ${high ? "border-[#111214] bg-[#ffecea]" : "border-[#111214] bg-[#fff6e6]"}`}>
-      <div className="flex items-center gap-2.5">
-        <span className={`grid size-9 place-items-center rounded-xl ${high ? "bg-white text-[#d3372c]" : "bg-white text-[#b26a00]"}`}><ShieldAlert className="size-4" /></span>
-        <div>
-          <p className={`text-[11px] font-semibold uppercase tracking-[.16em] ${high ? "text-[#d3372c]" : "text-[#b26a00]"}`}>Certificate integrity warning</p>
-          {/* h3: nested under the vendor page's alert-group h2. */}
-          <h3 className="mt-1 text-lg font-semibold tracking-[-.025em]">{vendorName}&rsquo;s posted lab certificates need additional review</h3>
-        </div>
-      </div>
+    <Frame tone={tone} shadow="sm" radius="rounded-[16px]">
+      <Chip tone={tone} icon={ShieldAlert}>Certificate integrity warning</Chip>
+      {/* h3: nested under the vendor page's alert-group h2. */}
+      <h3 className={UI.h3 + " mt-3"}>{vendorName}&rsquo;s posted lab certificates need additional review</h3>
       <ul className="mt-4 space-y-3">
         {flags.map((f) => (
-          <li key={f.kind} className="flex items-start gap-3">
-            <span className={`mt-1.5 inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${f.severity === "high" ? "bg-white text-[#d3372c]" : "bg-white text-[#b26a00]"}`}>{f.label}</span>
-            <p className="text-sm leading-6 text-black/70">{f.detail}</p>
+          <li key={f.kind} className="flex flex-wrap items-start gap-x-3 gap-y-1.5 sm:flex-nowrap">
+            <Chip tone={f.severity === "high" ? "danger" : "warn"} plain className="shrink-0">{f.label}</Chip>
+            <p className={UI.bodyInk}>{f.detail}</p>
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-[11px] leading-4 text-black/45">Derived from the certificates this vendor publishes. A red flag here doesn&rsquo;t mean the product is fake — it means the available documents need additional verification before conclusions are drawn. Not an accusation of intent.</p>
-    </div>
+      <p className={UI.small + " mt-4"}>Derived from the certificates this vendor publishes. A red flag here doesn&rsquo;t mean the product is fake — it means the available documents need additional verification before conclusions are drawn. Not an accusation of intent.</p>
+    </Frame>
   );
 }

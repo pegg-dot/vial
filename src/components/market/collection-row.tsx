@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { Pill, UI } from "@/components/intelligence/research-ui";
 
 /**
  * How much of the set this row is actually showing.
@@ -43,21 +42,17 @@ export function CollectionRow({
     <section className="py-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-2xl">
-          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#0e8f80]">{eyebrow}</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-[-.045em]">{title}</h2>
-          {blurb && <p className="mt-1.5 text-sm font-medium leading-6 text-[var(--muted)]">{blurb}</p>}
+          <p className={UI.eyebrow}>{eyebrow}</p>
+          <h2 className={UI.h2 + " mt-2"}>{title}</h2>
+          {blurb && <p className={UI.body + " mt-2"}>{blurb}</p>}
           {extent && truncated && (
-            <p className="mt-1 text-xs font-bold text-[#0e8f80]">
+            <p className="mt-1 text-xs font-bold text-[#4a4d56]">
               Showing the top <span className="tabular-nums">{extent.shown}</span> of{" "}
               <span className="tabular-nums">{extent.total}</span> {extent.noun}.
             </p>
           )}
         </div>
-        {seeAllHref && (
-          <Link href={seeAllHref} className="ink hard-sm press inline-flex items-center gap-1.5 rounded-full bg-white px-5 py-3 text-sm font-bold text-[#111214]">
-            {seeAllLabel} <ArrowRight className="size-4" />
-          </Link>
-        )}
+        {seeAllHref && <Pill href={seeAllHref} arrow="right">{seeAllLabel}</Pill>}
       </div>
       <div className="scroll-fade-x -mx-5 mt-4 overflow-x-auto px-5 pb-2 no-scrollbar sm:-mx-8 sm:px-8">
         <div className="flex w-max snap-x snap-mandatory gap-4">{children}</div>
