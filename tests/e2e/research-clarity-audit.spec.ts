@@ -10,7 +10,7 @@ test.describe("research UX comprehension without deleting tools", () => {
     await expect(page.getByText(/looked up live\. PubMed and PubChem IDs are checked against the selected Pexiganan records only/)).toBeVisible();
     const startingPoints = page.getByRole("group", { name: "Choose a research starting point" });
     await expect(startingPoints.getByRole("link", { name: "a compound" }))
-      .toHaveAttribute("href", "/intelligence/market#browse");
+      .toHaveAttribute("href", "/compounds#browse");
     await expect(startingPoints.getByRole("link", { name: "a trial ID" }))
       .toHaveAttribute("href", "/intelligence#trial-lookup");
     await expect(startingPoints.getByRole("link", { name: "a research question" }))
@@ -18,25 +18,90 @@ test.describe("research UX comprehension without deleting tools", () => {
   });
 
   test("desktop nav separates original source, sponsors, and supplier claims", async ({ page }) => {
-    await page.goto("/intelligence/market");
+    await page.goto("/compounds");
     const nav = page.getByRole("navigation", { name: "Research navigation" });
-    await expect(nav.getByRole("link", { name: "Market" }))
-      .toHaveAttribute("href", "/intelligence/market");
-    await expect(nav.getByRole("link", { name: "Check a source" }))
+    await expect(nav.getByRole("link", { name: "Compounds", exact: true }))
+      .toHaveAttribute("href", "/compounds");
+    await expect(nav.getByRole("link", { name: "How we check", exact: true }))
+      .toHaveAttribute("href", "/how-we-check");
+    await nav.locator("summary", { hasText: "Research tools" }).click();
+    const tools = nav.getByRole("navigation", { name: "Research tools" });
+    await expect(tools.getByRole("link", { name: /Check a source/ }))
       .toHaveAttribute("href", "/intelligence/verify");
-    await nav.getByText("More research", { exact: false }).click();
-    const more = page.getByRole("navigation", { name: "More research areas" });
-    await expect(more.getByRole("link", { name: /Study sponsors/ }))
+    await expect(tools.getByRole("link", { name: /Study sponsors/ }))
       .toHaveAttribute("href", "/intelligence/organizations");
-    await expect(more.getByRole("link", { name: /Supplier documentation/ }))
+    await expect(tools.getByRole("link", { name: /Supplier documentation/ }))
       .toHaveAttribute("href", "/intelligence/providers");
-    await expect(more.getByRole("link", { name: /Sample report checks/ }))
+    await expect(tools.getByRole("link", { name: /Sample report checks/ }))
       .toHaveAttribute("href", "/intelligence/materials");
-    await expect(more.getByRole("link", { name: /All compounds/ }))
-      .toHaveAttribute("href", "/intelligence/market#browse");
-    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
+    // "All compounds" is the library itself now: the hero's first action lands on the explorer.
+    await expect(page.getByRole("link", { name: "Browse the research library" })).toHaveAttribute("href", "#browse");
+    await expect(page.getByRole("heading", { level: 1, name: /Every peptide we track/ })).toBeVisible();
     await expect(page.locator('[data-testid="research-card"]')).toHaveCount(16);
     await expect(page.getByRole("heading", { name: "Studies on file" })).toBeVisible();
+  });
+
+  // One navigation. The header, the mobile menu and the footer draw from the same two lists: the
+  // directories (vendors, labs and batch records only under the browse release) and the research
+  // tools in one menu. The old "Market" / "More research" / "Browse the directory" menus are gone.
+  test("header, footer and mobile menu share one directory list and one research-tools list", async ({ page }) => {
+    const browse = process.env.VIALGRADE_PUBLIC_BROWSE === "true";
+    const directories: [string, string][] = [
+      ["Compounds", "/compounds"],
+      ...(browse ? [["Vendors", "/vendors"], ["Labs", "/labs"], ["Batch records", "/passports"]] as [string, string][] : []),
+      ["How we check", "/how-we-check"],
+    ];
+    const tools: [string, string][] = [
+      ["Research Desk", "/intelligence/desk"],
+      ["Check a source", "/intelligence/verify"],
+      ["Compare compounds", "/intelligence/compare?subjects=magainin-2%2Cpexiganan"],
+      ["Open a trial ID", "/intelligence#trial-lookup"],
+      ["Sample report checks", "/intelligence/materials"],
+      ["Study sponsors", "/intelligence/organizations"],
+      ["Supplier documentation", "/intelligence/providers"],
+      ...(browse ? [["Purity vs grade", "/grades"]] as [string, string][] : []),
+      ["Monthly update", "/intelligence/updates"],
+    ];
+    const gone = ["Market", "More research", "Other research tools", "More research areas", "Browse the directory", "Verify research"];
+
+    await page.goto("/intelligence");
+    const nav = page.getByRole("navigation", { name: "Research navigation" });
+    // The directory links are the nav's own children, in order; the tools sit behind one summary.
+    await expect(nav.locator(":scope > a")).toHaveText(directories.map(([label]) => label));
+    for (const [label, href] of directories) await expect(nav.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
+    if (!browse) for (const label of ["Vendors", "Labs", "Batch records"]) await expect(nav.getByRole("link", { name: label, exact: true })).toHaveCount(0);
+    await expect(nav.locator("summary")).toHaveCount(1);
+    await expect(nav.locator("summary")).toContainText("Research tools");
+    // A closed <details> hides its menu from the accessibility tree; open it before counting.
+    await nav.locator("summary").click();
+    const headerTools = nav.getByRole("navigation", { name: "Research tools" });
+    await expect(headerTools.getByRole("link")).toHaveCount(tools.length);
+    for (const [label, href] of tools) {
+      const link = headerTools.getByRole("link", { name: label });
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", href);
+    }
+    for (const label of gone) await expect(nav.getByText(label, { exact: true })).toHaveCount(0);
+
+    const footerDirectories = page.getByRole("navigation", { name: "Explore research" });
+    await expect(footerDirectories.getByRole("link")).toHaveText(directories.map(([label]) => label));
+    for (const [label, href] of directories) await expect(footerDirectories.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
+    const footerTools = page.getByRole("navigation", { name: "Research tools" }).last();
+    await expect(footerTools.getByRole("link")).toHaveText(tools.map(([label]) => label));
+    for (const [label, href] of tools) await expect(footerTools.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Read the methodology" })).toHaveAttribute("href", "/how-we-check");
+    await expect(page.getByRole("navigation", { name: "How we check" })).toHaveCount(0);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Open menu" }).click();
+    const menu = page.getByRole("navigation", { name: "Mobile research links" });
+    await expect(menu.getByText("Directories", { exact: true })).toBeVisible();
+    await expect(menu.getByText("Research tools", { exact: true })).toBeVisible();
+    for (const [label, href] of [...directories, ...tools]) await expect(menu.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
+    await expect(menu.getByRole("link")).toHaveCount(directories.length + tools.length + 2); // + Home, + Existing account
+    for (const label of [...gone, "Start with", "Dig deeper", "Verify"]) await expect(menu.getByText(label, { exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Close menu" }).click();
+    await expect(menu).toHaveCount(0);
   });
 
   test("dossier leads with answers and still exposes all technical sections", async ({ page }) => {
@@ -90,7 +155,7 @@ test.describe("research UX comprehension without deleting tools", () => {
     await expect(page.getByText("Exact source ID lookup · Pexiganan pilot")).toBeVisible();
     await expect(page.getByText("This is a limited pilot, not a general claim checker", { exact: false })).toBeVisible();
     await expect(page.getByRole("textbox").first()).toBeVisible();
-    await page.goto("/intelligence/passports/pexiganan");
+    await page.goto("/compounds/pexiganan#studies");
     await expect(page.getByRole("heading", { name: "What can we actually say?" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Pexiganan claim and evidence checks" })).toBeVisible();
     await page.goto("/intelligence/organizations");
@@ -105,19 +170,19 @@ test.describe("research UX comprehension without deleting tools", () => {
     await page.getByRole("button", { name: "Open menu" }).click();
     const menu = page.getByRole("navigation", { name: "Mobile research links" });
     for (const [label, href] of [
-      ["Market", "/intelligence/market"],
-      ["Compounds", "/intelligence/market#browse"],
-      ["Verify", "/intelligence/verify"],
+      ["Compounds", "/compounds"],
+      ["How we check", "/how-we-check"],
+      ["Check a source", "/intelligence/verify"],
       ["Study sponsors", "/intelligence/organizations"],
-      ["Supplier documents", "/intelligence/providers"],
+      ["Supplier documentation", "/intelligence/providers"],
       ["Sample report checks", "/intelligence/materials"],
     ]) {
-      await expect(menu.getByRole("link", { name: label })).toHaveAttribute("href", href);
+      await expect(menu.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
-    await menu.getByRole("link", { name: "Market" }).click();
-    await expect(page).toHaveURL(/\/intelligence\/market$/);
-    for (const route of ["/compounds/pexiganan", "/intelligence/passports/pexiganan", "/intelligence/materials"]) {
+    await menu.getByRole("link", { name: "Compounds", exact: true }).click();
+    await expect(page).toHaveURL(/\/compounds$/);
+    for (const route of ["/compounds/pexiganan", "/how-we-check", "/intelligence/materials"]) {
       const response = await page.goto(route);
       expect(response?.status()).toBe(200);
       expect(await page.evaluate(() => document.documentElement.scrollWidth), route).toBeLessThanOrEqual(391);

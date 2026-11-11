@@ -29,9 +29,18 @@ test.describe("privacy-first research mode", () => {
     await expect(page.getByRole("heading", { name: /New account registration is paused/i })).toBeVisible();
   });
 
-  test("closes interactive verifier until provenance and privacy review", async ({ page }) => {
+  test("the paused interactive verifier forwards to the research source checker; its API stays closed", async ({ page }) => {
+    // The paused notice had no content of its own, so /verify now forwards permanently to the one
+    // source checker. Under the evidence-only release the proxy answers /verify before the page can
+    // (see compound-page-unified.spec.ts), so this is the legacy-mode check.
+    test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY === "true", "The release gate answers /verify first");
+    const hop = await page.request.get("/verify", { maxRedirects: 0 });
+    expect(hop.status()).toBe(308);
+    expect(hop.headers().location).toBe("/intelligence/verify");
     await page.goto("/verify");
-    await expect(page.getByRole("heading", { name: /Interactive verification is temporarily paused/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/intelligence\/verify$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Verify what a source says." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Interactive verification is temporarily paused/i })).toHaveCount(0);
     expect((await page.request.post("/api/v1/verify", { data: { query: "BPC-157" } })).status()).toBe(410);
   });
 });

@@ -4,8 +4,10 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
   test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Research-only release");
 
   test("publishes the exact three-check grading policy and opens every example source", async ({ page }) => {
-    const response = await page.goto("/intelligence/grading");
+    // The letters are a section of the method page now, public with the browse release off.
+    const response = await page.goto("/how-we-check#grade-checks");
     expect(response?.status()).toBe(200);
+    await expect(page.locator("#research-files")).toContainText("Research file letters");
     await expect(page.getByRole("heading", { name: "What have we actually checked?" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Three visible source checks" })).toBeVisible();
     for (const item of ["Molecular reference", "Named registry intervention", "Original experiment"]) {
@@ -25,9 +27,9 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
   });
 
   test("makes file grades visible and filterable without hiding the limits", async ({ page }) => {
-    await page.goto("/intelligence/market");
+    await page.goto("/compounds");
     await expect(page.getByRole("link", { name: "About file coverage" }))
-      .toHaveAttribute("href", "/intelligence/grading");
+      .toHaveAttribute("href", "/how-we-check#grade-checks");
     await page.getByText("More filters", { exact: false }).click();
     const grade = page.getByRole("combobox", { name: "Research file grade filter" });
     await grade.selectOption("A");
@@ -51,7 +53,7 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
   });
 
   test("reuses the decomposed file grade inside quick-view and a full research dossier", async ({ page }) => {
-    await page.goto("/intelligence/market");
+    await page.goto("/compounds");
     await page.locator('[data-testid="research-card"]').getByRole("button", { name: "Quick view Pexiganan" }).click();
     const quick = page.getByRole("dialog", { name: "Quick research view: Pexiganan" });
     await expect(quick).toContainText("File coverage A");
@@ -69,7 +71,7 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
 
   test("keeps research grading accessible at mobile width and shopping disabled", async ({ page, request }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence/grading", "/intelligence", "/compounds/retatrutide"]) {
+    for (const path of ["/how-we-check", "/intelligence", "/compounds/retatrutide"]) {
       const res = await page.goto(path);
       expect(res?.status(), path).toBe(200);
       const width = await page.evaluate(() => document.documentElement.scrollWidth);

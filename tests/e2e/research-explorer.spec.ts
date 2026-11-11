@@ -6,9 +6,9 @@ test.describe("Research Explorer discovery experience", () => {
   test("provides browsing, scientific theme filters and alias search without a sales funnel", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
-    await page.goto("/intelligence/market");
-    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Compounds" })).toBeVisible();
+    await page.goto("/compounds");
+    await expect(page.getByRole("heading", { level: 1, name: /Every peptide we track/ })).toBeVisible();
+    await expect(page.locator("#browse").getByRole("heading", { name: "Compounds", exact: true })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Showing 16 of 16 compounds" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Open research dossier: Pexiganan" })).toHaveAttribute("href", "/compounds/pexiganan");
 
@@ -32,7 +32,7 @@ test.describe("Research Explorer discovery experience", () => {
   });
 
   test("can build a real two-subject comparison from the cards in either research perspective", async ({ page }) => {
-    await page.goto("/intelligence/market");
+    await page.goto("/compounds");
     await page.getByText("More filters", { exact: false }).click();
     await page.getByRole("button", { name: "Analyst", exact: true }).click();
     await expect(page.getByRole("button", { name: "Analyst", exact: true })).toHaveAttribute("aria-pressed", "true");
