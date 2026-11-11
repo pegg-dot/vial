@@ -21,20 +21,27 @@ test.describe("Research materials and source provenance", () => {
       page.getByRole("button", { name: "Download provisional workpaper" }).click(),
     ]);
     expect(file.suggestedFilename()).toContain("unverified");
-    await page.getByRole("link", { name: "Full source directory" }).click();
-    await expect(page.getByRole("heading", { name: "Supplier quality documents" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open source profile" })).toHaveCount(2);
+    // The supplier documents are a section of this page now (the old index forwards here).
+    await page.getByRole("link", { name: "Supplier quality documents" }).click();
+    await expect(page.getByRole("heading", { name: "Who publishes the quality information?" })).toBeInViewport();
+    await expect(page.getByRole("link", { name: "Inspect quality sources" })).toHaveCount(2);
     expect((await request.post("/api/v1/commerce/checkout", { data: {} })).status()).toBe(410);
   });
 
   test("keeps phone layouts within viewport and connects a compound dossier", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence/materials", "/intelligence/providers", "/intelligence/providers/bachem", "/compounds/pexiganan"]) {
+    for (const path of ["/intelligence/materials", "/intelligence/providers/bachem", "/compounds/pexiganan"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(391);
     }
     await expect(page.getByRole("link", { name: "Open material checks" }))
       .toHaveAttribute("href", "/intelligence/materials?subject=pexiganan");
+    // The supplier-documentation index is a section of Material checks now; its address forwards there.
+    const index = await page.request.get("/intelligence/providers", { maxRedirects: 0 });
+    expect(index.status()).toBe(308);
+    expect(index.headers().location).toBe("/intelligence/materials#material-providers");
+    await page.goto("/intelligence/providers/bachem");
+    await expect(page.getByRole("link", { name: "All documentation profiles" })).toHaveAttribute("href", "/intelligence/materials#material-providers");
   });
 });

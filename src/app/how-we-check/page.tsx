@@ -187,8 +187,9 @@ export default function HowWeCheckPage() {
 
       <Section band="white">
         <SectionHeading eyebrow="Go deeper" title="The full records, if you want them" />
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {directories && <CardLink href="/passports" title="Batch test records" body="The complete test record for a specific batch — including results that disagree." />}
+          {directories && <CardLink href="/grades" title="Purity vs grade" body="Why a purity number is not a grade, and what the three words on a label mean." />}
           <CardLink href="/intelligence" title="Research records" body="Every research subject on file, with its original sources and what stays unknown." />
           <CardLink href="/intelligence/materials" title="Research material checks" body="What has been independently checked about a research material, what has not, and why sample origin matters." />
           {directories && <CardLink href="/labs" title="Laboratories" body="Who runs the tests, their methods, and their report history." />}

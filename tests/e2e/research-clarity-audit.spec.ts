@@ -17,7 +17,7 @@ test.describe("research UX comprehension without deleting tools", () => {
       .toHaveAttribute("href", "/intelligence/desk");
   });
 
-  test("desktop nav separates original source, sponsors, and supplier claims", async ({ page }) => {
+  test("desktop nav: the directories, then four research tools", async ({ page }) => {
     await page.goto("/compounds");
     const nav = page.getByRole("navigation", { name: "Research navigation" });
     await expect(nav.getByRole("link", { name: "Compounds", exact: true }))
@@ -28,12 +28,11 @@ test.describe("research UX comprehension without deleting tools", () => {
     const tools = nav.getByRole("navigation", { name: "Research tools" });
     await expect(tools.getByRole("link", { name: /Check a source/ }))
       .toHaveAttribute("href", "/intelligence/verify");
-    await expect(tools.getByRole("link", { name: /Study sponsors/ }))
-      .toHaveAttribute("href", "/intelligence/organizations");
-    await expect(tools.getByRole("link", { name: /Supplier documentation/ }))
-      .toHaveAttribute("href", "/intelligence/providers");
-    await expect(tools.getByRole("link", { name: /Sample report checks/ }))
+    await expect(tools.getByRole("link", { name: /Material checks/ }))
       .toHaveAttribute("href", "/intelligence/materials");
+    // Sponsors live on the pexiganan page and supplier documents inside Material checks: not menu items.
+    await expect(tools.getByRole("link", { name: /Study sponsors|Supplier documentation|Sample report checks|Open a trial ID/ })).toHaveCount(0);
+    await expect(page.getByRole("banner").getByRole("link", { name: "Compare", exact: true })).toHaveCount(0);
     // "All compounds" is the library itself now: the hero's first action lands on the explorer.
     await expect(page.getByRole("link", { name: "Browse the research library" })).toHaveAttribute("href", "#browse");
     await expect(page.getByRole("heading", { level: 1, name: /Every peptide we track/ })).toBeVisible();
@@ -51,18 +50,15 @@ test.describe("research UX comprehension without deleting tools", () => {
       ...(browse ? [["Vendors", "/vendors"], ["Labs", "/labs"], ["Batch records", "/passports"]] as [string, string][] : []),
       ["How we check", "/how-we-check"],
     ];
+    // Four tools (doc §10). The monthly update is a footer link only.
     const tools: [string, string][] = [
       ["Research Desk", "/intelligence/desk"],
       ["Check a source", "/intelligence/verify"],
       ["Compare compounds", "/intelligence/compare?subjects=magainin-2%2Cpexiganan"],
-      ["Open a trial ID", "/intelligence#trial-lookup"],
-      ["Sample report checks", "/intelligence/materials"],
-      ["Study sponsors", "/intelligence/organizations"],
-      ["Supplier documentation", "/intelligence/providers"],
-      ...(browse ? [["Purity vs grade", "/grades"]] as [string, string][] : []),
-      ["Monthly update", "/intelligence/updates"],
+      ["Material checks", "/intelligence/materials"],
     ];
-    const gone = ["Market", "More research", "Other research tools", "More research areas", "Browse the directory", "Verify research"];
+    const gone = ["Market", "More research", "Other research tools", "More research areas", "Browse the directory", "Verify research",
+      "Open a trial ID", "Sample report checks", "Study sponsors", "Supplier documentation", "Purity vs grade", "Monthly update"];
 
     await page.goto("/intelligence");
     const nav = page.getByRole("navigation", { name: "Research navigation" });
@@ -87,8 +83,8 @@ test.describe("research UX comprehension without deleting tools", () => {
     await expect(footerDirectories.getByRole("link")).toHaveText(directories.map(([label]) => label));
     for (const [label, href] of directories) await expect(footerDirectories.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
     const footerTools = page.getByRole("navigation", { name: "Research tools" }).last();
-    await expect(footerTools.getByRole("link")).toHaveText(tools.map(([label]) => label));
-    for (const [label, href] of tools) await expect(footerTools.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
+    await expect(footerTools.getByRole("link")).toHaveText([...tools.map(([label]) => label), "Monthly update"]);
+    for (const [label, href] of [...tools, ["Monthly update", "/intelligence/updates"]]) await expect(footerTools.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
     await expect(page.getByRole("contentinfo").getByRole("link", { name: "Read the methodology" })).toHaveAttribute("href", "/how-we-check");
     await expect(page.getByRole("navigation", { name: "How we check" })).toHaveCount(0);
 
@@ -158,10 +154,14 @@ test.describe("research UX comprehension without deleting tools", () => {
     await page.goto("/compounds/pexiganan#studies");
     await expect(page.getByRole("heading", { name: "What can we actually say?" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Pexiganan claim and evidence checks" })).toBeVisible();
-    await page.goto("/intelligence/organizations");
-    await expect(page.getByRole("heading", { level: 1, name: "Who sponsored the selected studies?" })).toBeVisible();
-    await page.goto("/intelligence/providers");
-    await expect(page.getByRole("heading", { level: 1, name: "Supplier quality documents" })).toBeVisible();
+    // The sponsor page and the supplier-documentation index forward to where their content lives.
+    for (const [from, to] of [["/intelligence/organizations", "/compounds/pexiganan#organizations"], ["/intelligence/providers", "/intelligence/materials#material-providers"]]) {
+      const hop = await page.request.get(from, { maxRedirects: 0 });
+      expect(hop.status(), from).toBe(308);
+      expect(hop.headers().location, from).toBe(to);
+    }
+    await page.goto("/intelligence/materials#material-providers");
+    await expect(page.getByRole("heading", { name: "Who publishes the quality information?" })).toBeInViewport();
   });
 
   test("a mobile reader can find all functions in a single scrollable navigation", async ({ page }) => {
@@ -173,9 +173,7 @@ test.describe("research UX comprehension without deleting tools", () => {
       ["Compounds", "/compounds"],
       ["How we check", "/how-we-check"],
       ["Check a source", "/intelligence/verify"],
-      ["Study sponsors", "/intelligence/organizations"],
-      ["Supplier documentation", "/intelligence/providers"],
-      ["Sample report checks", "/intelligence/materials"],
+      ["Material checks", "/intelligence/materials"],
     ]) {
       await expect(menu.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", href);
     }

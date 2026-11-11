@@ -157,3 +157,16 @@ Nate: "when they click compounds … let's go ahead and [let people go to the ve
 - **Directory.** `/compounds` counts distinct vendors per compound on the server (`vendorCounts`) and passes the counts to `CompoundsExperience`, so the ticker cards show "N vendors" in the evidence-only mode too (the projection strips every product from the client payload; the e2e asserts no `vendorSlug`/`pricePerMg` anywhere in the document). The hero gains a "Vendor directory" pill → `/vendors` and a "Vendors" stat.
 - Still nothing about price, stock or ranking, and no `/go` click-throughs. Tests: `tests/unit/compound-vendors.test.ts`, `tests/e2e/research-compound-vendors.spec.ts`.
 
+## 10. Research tools, nine to four (2026-11-11, Nate: "can we converge that a little bit more")
+
+The "Research tools" menu (header, mobile, footer) is **Research Desk · Check a source · Compare compounds · Material checks**. What left it, and where it went:
+
+- *Open a trial ID* — Check a source takes an NCT number and links the study audit; the home page's `#trial-lookup` section stays.
+- *Study sponsors* (`/intelligence/organizations`) — permanent redirect to `/compounds/pexiganan#organizations`, the "Organizations on record" panel in the pexiganan source trail (the page was pexiganan-only).
+- *Supplier documentation* (`/intelligence/providers`) — permanent redirect to `/intelligence/materials#material-providers`; the profiles keep their own pages under `/intelligence/providers/[slug]`, whose crumb root is now "Material checks".
+- *Purity vs grade* (`/grades`) — the page stays (linked wherever a purity figure appears); it is a "Go deeper" card on `/how-we-check` under the browse release and leaves the menu.
+- *Monthly update* — a footer link only (`FOOTER_ONLY`).
+- The header's duplicate "Compare" button is gone; Compare lives in the menu.
+
+Both retired addresses are in `REDIRECTED_ROUTES`.
+

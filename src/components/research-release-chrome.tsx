@@ -15,17 +15,17 @@ const DIRECTORIES = [
   { href: "/how-we-check", label: "How we check", note: "The evidence ladder, lab reports, and the research-file letters", browse: false },
 ] as const;
 
+// Four tools. The rest of what used to sit here lives where it is used: a trial ID goes through
+// Check a source (which links the study audit), study sponsors sit on the pexiganan page, supplier
+// documents sit inside Material checks, Purity vs grade is linked wherever a purity figure appears
+// and from the method page, and the monthly update is a footer link.
 const TOOLS = [
   { href: "/intelligence/desk", label: "Research Desk", note: "Build a source-linked brief from a fixed question" },
-  { href: "/intelligence/verify", label: "Check a source", note: "An exact NCT, PMID or CID against the source register" },
+  { href: "/intelligence/verify", label: "Check a source", note: "An exact NCT, PMID or CID against the source register, the study audit one step on" },
   { href: "/intelligence/compare?subjects=magainin-2%2Cpexiganan", label: "Compare compounds", note: "Two research files side by side" },
-  { href: "/intelligence#trial-lookup", label: "Open a trial ID", note: "Look up a ClinicalTrials.gov registration" },
-  { href: "/intelligence/materials", label: "Sample report checks", note: "Compare the lot IDs on two documents" },
-  { href: "/intelligence/organizations", label: "Study sponsors", note: "Names recorded on selected trial registrations" },
-  { href: "/intelligence/providers", label: "Supplier documentation", note: "Company-published laboratory methods, unverified" },
-  { href: "/grades", label: "Purity vs grade", note: "Why a purity number is not a grade", browse: true },
-  { href: "/intelligence/updates", label: "Monthly update", note: "A note when a source record changes" },
+  { href: "/intelligence/materials", label: "Material checks", note: "Compare the lot IDs on two documents; supplier quality documents" },
 ] as const;
+const FOOTER_ONLY = [{ href: "/intelligence/updates", label: "Monthly update" }] as const;
 
 const navItems = (browse: boolean) => DIRECTORIES.filter((item) => browse || !item.browse);
 const toolItems = (browse: boolean) => TOOLS.filter((item) => browse || !("browse" in item && item.browse));
@@ -73,10 +73,6 @@ export function ResearchReleaseHeader() {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <ResearchGlobalSearch />
-            <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan"
-              className="ink-1 hidden whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#eef0ff] sm:block">
-              Compare
-            </Link>
             <Link href="/login" aria-label="Existing account"
               className="ink-1 hidden whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#eef0ff] sm:inline-flex">
               Existing account
@@ -111,7 +107,7 @@ export function ResearchReleaseFooter() {
         </nav>
         <nav aria-label="Research tools" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Research tools</p>
-          {toolItems(publicBrowseRelease()).map(item => <Link key={item.href} href={item.href} className="hover:text-white">{item.label}</Link>)}
+          {[...toolItems(publicBrowseRelease()), ...FOOTER_ONLY].map(item => <Link key={item.href} href={item.href} className="hover:text-white">{item.label}</Link>)}
         </nav>
         <nav aria-label="About and legal" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Legal</p>

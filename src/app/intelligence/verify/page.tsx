@@ -27,7 +27,7 @@ export default async function ResearchSourceVerifyPage({
         note="This is a limited pilot, not a general claim checker. This is not a COA, supplier or clinical-benefit verifier."
         actions={<>
           <Pill href="/compounds/pexiganan#studies" arrow="right">Evidence passport</Pill>
-          <Pill href="/intelligence/organizations" variant="ghost" arrow="right">Study sponsors</Pill>
+          <Pill href="/compounds/pexiganan#organizations" variant="ghost" arrow="right">Study sponsors</Pill>
         </>}
       />
       <Section tight>
@@ -37,7 +37,7 @@ export default async function ResearchSourceVerifyPage({
             intro="A matched identifier is one node in a small, fixed evidence network. These pages show the rest of it.">
             <RecordList items={[
               { href: "/compounds/pexiganan#studies", icon: FileBadge2, title: "Evidence passport", note: "Six specific research observations and their source limitations, ready for export.", action: "Open the passport" },
-              { href: "/intelligence/organizations", icon: Building2, title: "Study sponsors named in the registry", note: "Which names appear in official trial sponsor fields, and which laboratories are not verified here.", action: "Inspect attribution" },
+              { href: "/compounds/pexiganan#organizations", icon: Building2, title: "Study sponsors named in the registry", note: "Which names appear in official trial sponsor fields, and which laboratories are not verified here.", action: "Inspect attribution" },
               { href: "/intelligence/desk", icon: NotebookPen, title: "Research Desk", note: "Build a source-linked brief from the same records, with what each one does not establish.", action: "Open the desk" },
             ]} />
           </NumberedSection>

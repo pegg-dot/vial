@@ -26,7 +26,7 @@ export async function DossierOrganizations({ subject }: { subject: ResearchSubje
   const lookup = subject.slug !== "pexiganan" && subject.sampleTrial ? await lookupStudy(subject.sampleTrial) : null;
   const view = organizationsForSubject(subject, lookup);
   return (
-    <section id="organizations" aria-labelledby="dossier-organizations-title" className="scroll-mt-40 overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
+    <section aria-labelledby="dossier-organizations-title" className="overflow-hidden rounded-[14px] border border-[#111214]/15 bg-white">
       <div className="border-b border-[#111214]/15 px-5 py-4">
         <p className={UI.eyebrow + " flex items-center gap-2"}><Building2 className="size-4" aria-hidden="true" /> Who is on record</p>
         <h3 id="dossier-organizations-title" className={PANEL_H3 + " mt-2"}>Organizations on record</h3>

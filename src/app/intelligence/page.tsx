@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 const deeper = [
   { name: "Verify a source", note: "Inspect an original trial or publication", href: "/intelligence/verify?ref=PMID%2036781451", action: "Try source verifier", icon: SearchCheck },
   { name: "Research Desk", note: "Explore an exact question, sources and gaps", href: "/intelligence/desk", action: "Open Research Desk", icon: NotebookPen },
-  { name: "Organizations & labs", note: "Follow sponsors and laboratory documents", href: "/intelligence/organizations", action: "Explore source organizations", icon: Building2 },
+  { name: "Organizations & labs", note: "Follow sponsors and laboratory documents", href: "/compounds/pexiganan#organizations", action: "Explore source organizations", icon: Building2 },
   { name: "Material records", note: "Check report-to-lot documents without a quality claim", href: "/intelligence/materials?subject=pexiganan", action: "Open material verification", icon: ClipboardCheck },
 ] as const;
 
@@ -105,7 +105,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-[#2b31d8]">
             <Link href="/compounds/pexiganan" aria-label="Open Pexiganan dossier" className="inline-flex items-center gap-1 hover:underline">Pexiganan dossier <ArrowUpRight className="size-4" /></Link>
             <Link href="/compounds/pexiganan#studies" aria-label="See evidence passport" className="inline-flex items-center gap-1 hover:underline">Evidence passport <ArrowUpRight className="size-4" /></Link>
-            <Link href="/intelligence/providers" className="inline-flex items-center gap-1 hover:underline">Public supplier documentation <ArrowUpRight className="size-4" /></Link>
+            <Link href="/intelligence/materials#material-providers" className="inline-flex items-center gap-1 hover:underline">Public supplier documentation <ArrowUpRight className="size-4" /></Link>
             <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" aria-label="Compare Magainin 2 and Pexiganan" className="inline-flex items-center gap-1 hover:underline">Compare Magainin 2 and Pexiganan <ArrowUpRight className="size-4" /></Link>
           </div>
         </div>

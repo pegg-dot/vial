@@ -31,19 +31,19 @@ test.describe("Research UX coherence: context, honesty and reach", () => {
 
   test("Journey F: sponsor links are reachable touch targets and attribution stays historical", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/intelligence/organizations");
-    const link = page.getByRole("link", { name: "Open source NCT00563394" });
+    await page.goto("/compounds/pexiganan#organizations");
+    const link = page.locator("#organizations").getByRole("link", { name: "ClinicalTrials.gov NCT00563394" }).first();
     await expect(link).toBeVisible({ timeout: 30000 });
     const box = (await link.boundingBox())!;
     expect(box.width).toBeGreaterThanOrEqual(24);
     expect(box.height).toBeGreaterThanOrEqual(24);
-    await expect(page.locator("main")).toContainText("not current corporate ownership");
+    await expect(page.locator("#organizations")).toContainText("does not establish who originated the compound");
   });
 
   test("every public research page exposes exactly one main landmark", async ({ page }) => {
     for (const path of ["/", "/intelligence", "/compounds", "/intelligence/desk", "/compounds/pexiganan",
       "/intelligence/compare?subjects=magainin-2%2Cpexiganan", "/intelligence/materials", "/how-we-check",
-      "/intelligence/studies/NCT01594762", "/intelligence/cases/magainin-pexiganan", "/intelligence/providers", "/legal/privacy"]) {
+      "/intelligence/studies/NCT01594762", "/intelligence/cases/magainin-pexiganan", "/intelligence/providers/bachem", "/legal/privacy"]) {
       await page.goto(path);
       expect(await page.locator("main, [role=main]").count(), path).toBe(1);
     }

@@ -120,7 +120,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     // public with the browse release off; the four retired addresses only forward to them.
     const publicPages = [
       "/intelligence", "/compounds", "/intelligence/retatrutide", "/intelligence/cagrilintide",
-      "/intelligence/tirzepatide", "/how-we-check", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/verify", "/compounds/pexiganan", "/intelligence/organizations", "/compounds/cagrilintide", "/compounds/ll-37", "/compounds/oxytocin", "/compounds/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
+      "/intelligence/tirzepatide", "/how-we-check", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/verify", "/compounds/pexiganan", "/compounds/cagrilintide", "/compounds/ll-37", "/compounds/oxytocin", "/compounds/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
       "/legal/us-regulations", "/legal/privacy", "/legal/contact",
       "/legal/terms", "/legal/disclaimer", "/login", "/register",
     ];
@@ -128,7 +128,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     // The browse release deliberately opens the read-only original pages (see research-browse.spec.ts).
     const browse = process.env.VIALGRADE_PUBLIC_BROWSE === "true";
     const disallowedPaths = new Set([
-      "/market", "/checkout", "/cart", "/go", "/products", "/intelligence/market", "/intelligence/grading", "/verify", "/intelligence/passports/pexiganan",
+      "/market", "/checkout", "/cart", "/go", "/products", "/intelligence/market", "/intelligence/grading", "/verify", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/providers",
       ...(browse ? [] : ["/vendors"]),
     ]);
     for (const path of publicPages) {

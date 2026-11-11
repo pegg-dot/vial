@@ -44,7 +44,7 @@ const WAYFINDER = [
   },
   {
     icon: Building2, title: "Organizations", sub: "Registered sponsors, not retailers or sellers",
-    href: "/intelligence/organizations", label: "View source organizations",
+    href: "/compounds/pexiganan#organizations", label: "View source organizations",
   },
 ] as const;
 
