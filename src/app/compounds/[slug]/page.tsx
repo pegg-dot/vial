@@ -112,11 +112,13 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   // directory's order, with the letter from each one's own record. Under the evidence-only release
   // the entries are projected like the directory's, so no price reaches the page; the listings
   // themselves never leave the server (only which vendors they belong to).
-  const testedVendorSlugs = new Set([...labTests.map((t) => t.vendor_slug), ...passports.map((p) => p.vendor_slug)].filter((s): s is string => Boolean(s)));
+  const countBy = (slugs: (string | null | undefined)[]) => { const m = new Map<string, number>(); for (const s of slugs) if (s) m.set(s, (m.get(s) ?? 0) + 1); return m; };
+  const testsByVendor = countBy(labTests.map((t) => t.vendor_slug));
+  const batchesByVendor = countBy(passports.map((p) => p.vendor_slug));
   const listingVendorSlugs = new Set(listings.map((l) => l.vendorSlug));
   const vendorEntries: CompoundVendorEntry[] = directory
-    .filter((e) => listingVendorSlugs.has(e.vendor.slug) || testedVendorSlugs.has(e.vendor.slug))
-    .map((e) => ({ entry: noCommerce ? projectDirectoryEntry(e) : e, lists: listingVendorSlugs.has(e.vendor.slug), evidence: testedVendorSlugs.has(e.vendor.slug) }));
+    .filter((e) => listingVendorSlugs.has(e.vendor.slug) || testsByVendor.has(e.vendor.slug) || batchesByVendor.has(e.vendor.slug))
+    .map((e) => ({ entry: noCommerce ? projectDirectoryEntry(e) : e, lists: listingVendorSlugs.has(e.vendor.slug), tests: testsByVendor.get(e.vendor.slug) ?? 0, batches: batchesByVendor.get(e.vendor.slug) ?? 0 }));
   const vendorsLabel = vendorEntries.length === 1 ? "See 1 vendor" : "See " + vendorEntries.length + " vendors";
   const edu = showCatalog ? educationFor(slug) : null;
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound

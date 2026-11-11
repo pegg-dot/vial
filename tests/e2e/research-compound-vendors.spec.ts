@@ -20,11 +20,12 @@ test.describe("Vendors from compounds", () => {
     await expect(section.getByRole("listitem")).toHaveCount(4);
     for (const name of ["Helix Science", "Meridian Biosciences", "Northstar Research"]) {
       const item = section.getByRole("listitem").filter({ hasText: name });
-      await expect(item).toContainText("Lists BPC-157");
+      await expect(item).toContainText("Lists BPC-157 · no independent evidence for BPC-157 on file");
       await expect(item.getByRole("link", { name: name + " vendor record" })).toHaveAttribute("href", "/vendors/" + name.toLowerCase().replace(/ /g, "-"));
     }
     const arcwell = section.getByRole("listitem").filter({ hasText: "Arcwell Analytics" });
-    await expect(arcwell).toContainText("Evidence names BPC-157");
+    // The page's own batch-record list, not the directory's vendor-wide count (which is 0 for this fixture vendor).
+    await expect(arcwell).toContainText("Evidence names BPC-157 · 1 batch record for BPC-157");
     await expect(arcwell.getByRole("link", { name: "Arcwell Analytics vendor record" })).toHaveAttribute("href", "/vendors/arcwell-analytics");
     await expect(section.getByRole("link", { name: /website, external/ })).toHaveCount(0);
 
