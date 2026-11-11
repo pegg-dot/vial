@@ -61,10 +61,15 @@ export function publicReleaseAction(
 ): PublicReleaseAction {
   if (!enabled) return null;
   if (browse && isBrowsePage(pathname, method)) return null;
-  // A compound page that carries a research file IS the research dossier now, so it stays public
-  // whatever the browse release says; the page itself hides the catalog parts when browse is off.
+  // The compound directory and the method page are research surfaces (the research library, the
+  // research-file letters) and stay public whatever the browse release says; a compound page that
+  // carries a research file IS the research dossier now. Each page hides its catalog parts when
+  // browse is off.
+  const reading = ["GET", "HEAD"].includes(method.toUpperCase());
+  const path0 = pathname.replace(/\/+$/, "") || "/";
+  if (reading && (path0 === "/compounds" || path0 === "/how-we-check")) return null;
   const compound = /^\/compounds\/([a-z0-9-]+)\/?$/.exec(pathname);
-  if (compound && ["GET", "HEAD"].includes(method.toUpperCase()) && hasDossier(compound[1])) return null;
+  if (compound && reading && hasDossier(compound[1])) return null;
   const path = pathname.replace(/\/+$/, "") || "/";
 
   // Only the source-linked public research preview, legal notices, and
@@ -117,12 +122,14 @@ export function publicReleaseAction(
 /**
  * Where a retired shop URL has a real equivalent in the research product.
  *
- * Only `/compounds` (to the research market). A per-compound page is itself the research dossier
- * and is let through by publicReleaseAction. Everything else keeps the generic "retired" notice,
- * which says so honestly instead of guessing a destination.
+ * Nothing, since the compound directory became the research library: `/compounds` and every
+ * compound page with a research file are let through by publicReleaseAction. Everything else
+ * keeps the generic "retired" notice, which says so honestly instead of guessing a destination.
+ * Kept as a seam so the proxy's shape does not change when a destination appears again.
  */
 export function legacyResearchDestination(pathname: string): string | null {
-  const path = pathname.replace(/\/+$/, "");
-  // The per-compound page is the dossier now and never redirects; only the old directory maps.
-  return path === "/compounds" ? "/intelligence/market" : null;
+  // The compound directory and every compound page are research surfaces now and never redirect;
+  // nothing retired has a better destination than the honest notice.
+  void pathname;
+  return null;
 }

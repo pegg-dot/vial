@@ -37,7 +37,7 @@ export default function MagaininPexigananGuidedCase() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero art={["molecule", "flask"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Guided research example" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Guided research example" }]}
         eyebrow={<><Dna className="size-4" aria-hidden="true" /> Guided evidence workpaper</>}
         title="When related peptides are not the same evidence."
         lead={caseStudy.question}
@@ -45,7 +45,7 @@ export default function MagaininPexigananGuidedCase() {
         actions={<>
           <Pill href="/intelligence/compare?subjects=magainin-2%2Cpexiganan&audience=researcher" variant="primary" arrow="right">Compare the molecules</Pill>
           <Pill href="/intelligence/studies/NCT01594762" arrow="right">Inspect the clinical trial</Pill>
-          <Pill href="/intelligence/passports/pexiganan" variant="ghost" arrow="right">Pexiganan evidence passport</Pill>
+          <Pill href="/compounds/pexiganan#studies" variant="ghost" arrow="right">Pexiganan evidence passport</Pill>
         </>}
         aside={
           <Frame tone="mint">
@@ -153,7 +153,7 @@ export default function MagaininPexigananGuidedCase() {
         </ContentsLayout>
       </Section>
 
-      <PageFootnote href="/intelligence/market#browse" linkLabel="Back to the research market">
+      <PageFootnote href="/compounds#browse" linkLabel="Back to all compounds">
         Source-check editorial review {caseStudy.updatedAt}. The workpaper is a limited research starting point; professional scientific review, publication-rights checks and user-demand validation remain open. Physical peptide sales and vendor referrals are disabled.
       </PageFootnote>
     </div>

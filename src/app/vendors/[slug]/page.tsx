@@ -310,7 +310,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           stamped beside a white tearsheet. The market crumb carries its #browse hash: the browse
           release bans any `main` href that ends in "/market". ─────────────────────────── */}
       <PageHero art={["magnifier", "coa"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/vendors", label: "Vendors" }, { label: vendor.name }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { href: "/vendors", label: "Vendors" }, { label: vendor.name }]}
         eyebrow={
           <span className="flex flex-wrap items-center gap-2">
             <Chip tone="blue" icon={maker ? Factory : Store}>{maker ? "Manufacturer" : "Storefront"}</Chip>

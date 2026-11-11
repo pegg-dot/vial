@@ -54,8 +54,9 @@ describe("retired shop URLs with a research equivalent", () => {
       expect(dest("/compounds/" + slug + "/")).toBeNull();
     });
 
-  it("sends the compounds index to the research market", () => {
-    expect(dest("/compounds")).toBe("/intelligence/market");
+  it("leaves the compounds index on its own page: it is the research library now", () => {
+    expect(dest("/compounds")).toBeNull();
+    expect(dest("/compounds/")).toBeNull();
   });
 
   it.each(["/compounds/bpc-157", "/compounds/not-a-compound", "/compounds/retatrutide/market", "/market", "/vendors/x", "/compounds/..%2Fadmin"])(
@@ -67,6 +68,22 @@ describe("retired shop URLs with a research equivalent", () => {
 
 describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
   afterEach(() => vi.unstubAllEnvs());
+
+  it.each(["/compounds", "/compounds/", "/how-we-check", "/how-we-check/"])(
+    "the research library and the method page stay public with browse OFF: %s", path => {
+      expect(publicReleaseAction(path, "GET", true, false)).toBeNull();
+      expect(publicReleaseAction(path, "HEAD", true, false)).toBeNull();
+    });
+
+  it.each(["/compounds", "/how-we-check"])("but only for reading: %s", path => {
+    expect(publicReleaseAction(path, "POST", true, false)).not.toBeNull();
+    expect(publicReleaseAction(path, "POST", true, true)).not.toBeNull();
+  });
+
+  it.each(["/compounds/x", "/compoundsx", "/how-we-check/x", "/vendors", "/labs", "/passports", "/grades"])(
+    "everything else under the directories still needs the browse release: %s", path => {
+      expect(publicReleaseAction(path, "GET", true, false)).not.toBeNull();
+    });
 
   it("is off unless exactly true", () => {
     expect(publicBrowseRelease("")).toBe(false);

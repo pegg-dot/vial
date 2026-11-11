@@ -54,7 +54,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ i
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["flask", "magnifier"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Labs" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Labs" }]}
         eyebrow={<><FlaskConical className="size-4" aria-hidden="true" /> The testing laboratories</>}
         title="Who actually runs the tests."
         lead={<>Every certificate names a lab. Here is what we could verify about each one &mdash; whether it&rsquo;s a real, independent third-party lab, whether it holds accreditation (and whether that accreditation even covers peptides), and how much evidence flows through it.</>}

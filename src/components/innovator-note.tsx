@@ -20,7 +20,7 @@ export function InnovatorNote({ slug, compoundName }: { slug: string; compoundNa
   if (!inn) return null;
   // The pharmaceutical-grade explainer is closed under the evidence-only release; the grading
   // page carries the same distinction there.
-  const href = hidesCommerce() ? "/intelligence/grading" : "/reference-standard";
+  const href = hidesCommerce() ? "/how-we-check#grade-checks" : "/reference-standard";
   return (
     <Notice tone="warn" icon={Landmark} title="Reference source">
       <p className="mt-1">

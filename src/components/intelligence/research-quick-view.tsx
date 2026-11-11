@@ -116,7 +116,7 @@ export function ResearchQuickView({
               </Pill>
               <Pill href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)} onClick={onClose} variant="ghost" icon={ClipboardCheck}>Material file · unverified</Pill>
               {subject.slug === "pexiganan" && (
-                <Pill href="/intelligence/passports/pexiganan" onClick={onClose} variant="mint" arrow="right">Evidence passport</Pill>
+                <Pill href="/compounds/pexiganan#studies" onClick={onClose} variant="mint" arrow="right">Evidence passport</Pill>
               )}
               <a href={subject.referenceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-extrabold text-[#2b31d8] hover:underline">
                 Original identity record <ArrowUpRight className="size-4" aria-hidden="true" />

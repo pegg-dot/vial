@@ -15,7 +15,7 @@ export default function ResearchProvidersPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["coa", "shield"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Supplier documentation" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Supplier documentation" }]}
         eyebrow={<><FileCheck2 className="size-4" aria-hidden="true" /> Company-published QC statements · {RESEARCH_PROVIDER_RECORDS.length} profiles</>}
         title="Supplier quality documents"
         lead="Read the quality-control methods these companies describe on their own websites."
@@ -71,7 +71,7 @@ export default function ResearchProvidersPage() {
           </NumberedSection>
         </div>
       </Section>
-      <PageFootnote href="/intelligence/market" linkLabel="Back to Research Market">
+      <PageFootnote href="/compounds" linkLabel="Back to compounds">
         Company-published documentation only, dated {MATERIAL_REVIEW_DATE}. No endorsements, rankings, purchasing or independently authenticated batches;
         file coverage is not a quality claim.
       </PageFootnote>

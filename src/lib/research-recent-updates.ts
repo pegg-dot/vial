@@ -25,7 +25,7 @@ export type RecentUpdate = {
 export const RECENT_UPDATE_ENTRIES: readonly RecentUpdate[] = [
   {
     id: "pexiganan-passport", title: "Pexiganan evidence passport", date: PEXIGANAN_REVIEW_DATE,
-    href: "/intelligence/passports/pexiganan",
+    href: "/compounds/pexiganan#studies",
     note: "Identifier snapshot re-checked against PubChem and NIH records.",
   },
   {
@@ -35,7 +35,7 @@ export const RECENT_UPDATE_ENTRIES: readonly RecentUpdate[] = [
   },
   {
     id: "source-file-coverage", title: "Source-file coverage method", date: FILE_GRADE_CURATION_DATE,
-    href: "/intelligence/grading",
+    href: "/how-we-check#grade-checks",
     note: "Coverage checks reviewed across the starter set.",
   },
   {

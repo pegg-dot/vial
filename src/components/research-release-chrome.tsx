@@ -5,31 +5,30 @@ import { ResearchGlobalSearch, ResearchMobileMenu } from "@/components/intellige
 import { publicBrowseRelease } from "@/lib/public-research-release";
 import { ResearchBrandTicker } from "@/components/intelligence/research-brand-ticker";
 
-// Keep the original visible brand and the main research tasks; everything
-// else stays available in a single clearly labeled source/tools menu.
-const NAV = [
-  { href: "/intelligence/market", label: "Market" },
-  { href: "/intelligence/verify", label: "Check a source" },
-  { href: "/intelligence/desk", label: "Research Desk" },
-  { href: "/intelligence/grading", label: "How we check" },
+// One navigation: the directories first, the method page, then the research tools in one menu.
+// Vendors, labs and batch records exist only under the browse release; the rest is always public.
+const DIRECTORIES = [
+  { href: "/compounds", label: "Compounds", note: "Research files, lab evidence and batch records, one page per compound", browse: false },
+  { href: "/vendors", label: "Vendors", note: "VialGrade letters with the evidence behind them, and each vendor's own site", browse: true },
+  { href: "/labs", label: "Labs", note: "Who tests, and what they have published", browse: true },
+  { href: "/passports", label: "Batch records", note: "The full test record for a batch, including results that disagree", browse: true },
+  { href: "/how-we-check", label: "How we check", note: "The evidence ladder, lab reports, and the research-file letters", browse: false },
 ] as const;
 
-const BROWSE_AREAS = [
-  { href: "/compounds", label: "Compound pages", description: "Lab evidence, passports and research for each compound" },
-  { href: "/vendors", label: "Vendors and storefronts", description: "VialGrade letters with the evidence behind them" },
-  { href: "/labs", label: "Testing laboratories", description: "Who tests, and what they have published" },
-  { href: "/grades", label: "How grades work", description: "What a letter does and does not mean" },
+const TOOLS = [
+  { href: "/intelligence/desk", label: "Research Desk", note: "Build a source-linked brief from a fixed question" },
+  { href: "/intelligence/verify", label: "Check a source", note: "An exact NCT, PMID or CID against the source register" },
+  { href: "/intelligence/compare?subjects=magainin-2%2Cpexiganan", label: "Compare compounds", note: "Two research files side by side" },
+  { href: "/intelligence#trial-lookup", label: "Open a trial ID", note: "Look up a ClinicalTrials.gov registration" },
+  { href: "/intelligence/materials", label: "Sample report checks", note: "Compare the lot IDs on two documents" },
+  { href: "/intelligence/organizations", label: "Study sponsors", note: "Names recorded on selected trial registrations" },
+  { href: "/intelligence/providers", label: "Supplier documentation", note: "Company-published laboratory methods, unverified" },
+  { href: "/grades", label: "Purity vs grade", note: "Why a purity number is not a grade", browse: true },
+  { href: "/intelligence/updates", label: "Monthly update", note: "A note when a source record changes" },
 ] as const;
 
-
-const OTHER_RESEARCH_AREAS = [
-  { href: "/intelligence/market#browse", label: "All compounds", description: "Search and filter the 16-record library" },
-  { href: "/intelligence#trial-lookup", label: "Open a trial ID", description: "Look up a ClinicalTrials.gov registration" },
-  { href: "/intelligence/organizations", label: "Study sponsors", description: "Names recorded on selected trial registrations" },
-  { href: "/intelligence/providers", label: "Supplier documentation", description: "Unverified company-published laboratory methods" },
-  { href: "/intelligence/materials", label: "Sample report checks", description: "Compare the lot IDs you already have" },
-  { href: "/intelligence/compare?subjects=magainin-2%2Cpexiganan", label: "Compare compounds", description: "Compare two source files side by side" },
-] as const;
+const navItems = (browse: boolean) => DIRECTORIES.filter((item) => browse || !item.browse);
+const toolItems = (browse: boolean) => TOOLS.filter((item) => browse || !("browse" in item && item.browse));
 
 export function ResearchReleaseHeader() {
   return (
@@ -49,7 +48,7 @@ export function ResearchReleaseHeader() {
             <span className="text-[16px] font-extrabold tracking-[.06em] text-[#111214]">VialGrade</span>
           </Link>
           <nav aria-label="Research navigation" className="hidden items-center gap-0.5 xl:flex">
-            {NAV.map(item => (
+            {navItems(publicBrowseRelease()).map(item => (
               <Link key={item.href} href={item.href}
                 className="shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-[13px] font-bold text-[#3a3d46] transition hover:bg-black/[.06] hover:text-[#111214]">
                 {item.label}
@@ -57,15 +56,15 @@ export function ResearchReleaseHeader() {
             ))}
             <details className="group relative">
               <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full px-3 py-2 text-[13px] font-bold text-[#3a3d46] hover:bg-black/[.06] hover:text-[#111214] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b31d8] [&::-webkit-details-marker]:hidden">
-                More research <ChevronDown className="size-3.5 transition group-open:rotate-180" />
+                Research tools <ChevronDown className="size-3.5 transition group-open:rotate-180" />
               </summary>
               <div className="ink hard-sm absolute left-0 top-[calc(100%+13px)] z-50 w-[345px] rounded-[16px] bg-white p-2 shadow-lg">
-                <p className="px-3 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Other research tools</p>
-                <nav aria-label="More research areas" className="grid">
-                  {[...(publicBrowseRelease() ? BROWSE_AREAS : []), ...OTHER_RESEARCH_AREAS].map(item => (
+                <p className="px-3 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Research tools</p>
+                <nav aria-label="Research tools" className="grid">
+                  {toolItems(publicBrowseRelease()).map(item => (
                     <Link href={item.href} key={item.href} className="rounded-xl px-3 py-2.5 hover:bg-[#eef0ff]">
                       <span className="block text-[13px] font-extrabold text-[#111214]">{item.label}</span>
-                      <span className="mt-0.5 block text-[11px] leading-5 text-[var(--muted)]">{item.description}</span>
+                      <span className="mt-0.5 block text-[11px] leading-5 text-[var(--muted)]">{item.note}</span>
                     </Link>
                   ))}
                 </nav>
@@ -83,7 +82,7 @@ export function ResearchReleaseHeader() {
               Existing account
             </Link>
             <nav aria-label="Mobile research navigation" className="xl:hidden">
-              <ResearchMobileMenu browseLinks={publicBrowseRelease() ? BROWSE_AREAS.map(item => ({ href: item.href, label: item.label, note: item.description })) : []} />
+              <ResearchMobileMenu primary={navItems(publicBrowseRelease())} tools={toolItems(publicBrowseRelease())} />
             </nav>
           </div>
         </div>
@@ -108,21 +107,11 @@ export function ResearchReleaseFooter() {
         </div>
         <nav aria-label="Explore research" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Explore</p>
-          <Link href="/intelligence/market" className="hover:text-white">Market</Link>
-          <Link href={publicBrowseRelease() ? "/compounds" : "/intelligence/market#browse"} className="hover:text-white">Compounds</Link>
-          {publicBrowseRelease() && BROWSE_AREAS.slice(1).map(item => <Link key={item.href} href={item.href} className="hover:text-white">{item.label}</Link>)}
-          <Link href="/intelligence/organizations" className="hover:text-white">Study sponsors</Link>
-          <Link href="/intelligence/providers" className="hover:text-white">Supplier documents</Link>
-          <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" className="hover:text-white">Compare</Link>
-          <Link href="/intelligence/desk" className="hover:text-white">Research Desk</Link>
+          {navItems(publicBrowseRelease()).map(item => <Link key={item.href} href={item.href} className="hover:text-white">{item.label}</Link>)}
         </nav>
-        <nav aria-label="Verify research" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">How we check</p>
-          <Link href="/intelligence/grading" className="hover:text-white">File coverage method</Link>
-          <Link href="/intelligence/verify" className="hover:text-white">Check a source ID (pilot)</Link>
-          <Link href="/intelligence/materials" className="hover:text-white">Material documents</Link>
-          <Link href="/intelligence/passports/pexiganan" className="hover:text-white">Evidence passport</Link>
-          <Link href="/intelligence/organizations" className="hover:text-white">Study organizations</Link>
+        <nav aria-label="Research tools" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Research tools</p>
+          {toolItems(publicBrowseRelease()).map(item => <Link key={item.href} href={item.href} className="hover:text-white">{item.label}</Link>)}
         </nav>
         <nav aria-label="About and legal" className="grid content-start gap-2.5 text-xs font-medium text-white/65">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/45">Legal</p>
@@ -135,7 +124,7 @@ export function ResearchReleaseFooter() {
       </div>
       <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-3 border-t border-white/15 px-5 py-6 text-[11px] text-white/55 sm:px-8">
         <p>© 2026 VialGrade · Research context only · No commerce.</p>
-        <Link href="/intelligence/grading" className="inline-flex items-center gap-1 hover:text-white">Read the methodology <ArrowUpRight className="size-3" /></Link>
+        <Link href="/how-we-check" className="inline-flex items-center gap-1 hover:text-white">Read the methodology <ArrowUpRight className="size-3" /></Link>
       </div>
     </footer>
   );

@@ -22,14 +22,14 @@ export default async function IntelligenceResearchDeskPage({ searchParams }: { s
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["magnifier", "coa"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Research Desk" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Research Desk" }]}
         eyebrow={<><NotebookPen className="size-4" aria-hidden="true" /> Source-linked briefing · Pexiganan pilot</>}
         title="Research Desk"
         lead="Build a source-linked brief. Pick a question, check each observation against its original record, then export."
         note="Pexiganan is the only compound with connected evidence here · records reviewed October 19, 2026 · limited pilot, not a scientific review."
         actions={<>
           <Pill href="/compounds/pexiganan" arrow="right">Open the Pexiganan dossier</Pill>
-          <Pill href="/intelligence/passports/pexiganan" variant="ghost" arrow="right">Evidence passport</Pill>
+          <Pill href="/compounds/pexiganan#studies" variant="ghost" arrow="right">Evidence passport</Pill>
         </>}
       />
       <Section tight>
