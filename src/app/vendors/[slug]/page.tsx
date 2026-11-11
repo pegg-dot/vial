@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { evidenceOnlyPublicRelease, hidesCommerce, publicBrowseRelease } from "@/lib/public-research-release";
+import { evidenceOnlyPublicRelease, hidesCommerce, hidesMarket, publicBrowseRelease } from "@/lib/public-research-release";
+import { VendorCatalogRecord } from "@/components/vendor-catalog-record";
 import { ResearchScopeNotice } from "@/components/research-scope-notice";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
@@ -146,6 +147,9 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   // Browsing a vendor under the evidence-only release shows its grade, lab evidence, regulatory records
   // and history. No catalog, prices, offers, buyer reviews, community posts or follow button.
   const noCommerce = hidesCommerce();
+  // The market record (the catalog as read, with prices and their dates) is its own release on top
+  // of browsing. Offers, trackers, storefront signals, buyer reports and follow stay with noCommerce.
+  const noMarket = hidesMarket();
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
@@ -274,7 +278,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
     { id: "network", label: "Who owns it" },
     { id: "catalog", label: "Catalog" },
     { id: "history", label: "History" },
-  ].filter((x): x is { id: string; label: string } => Boolean(x) && !(noCommerce && COMMERCE_SECTIONS.has(x!.id)));
+  ].filter((x): x is { id: string; label: string } => Boolean(x) && !(x!.id === "catalog" ? noMarket : noCommerce && COMMERCE_SECTIONS.has(x!.id)));
   const number = (id: string) => sections.findIndex((s) => s.id === id) + 1;
 
   // The masthead figures. "Listings" is a catalog count, so under the evidence-only release every
@@ -283,10 +287,10 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
   const stats = [
     { icon: FlaskConical, value: vendor.coaCount, label: "Independent lab tests" },
     { icon: ShieldCheck, value: vendor.medianPurity != null ? `${vendor.medianPurity.toFixed(1)}%` : "—", label: "Median tested purity" },
-    noCommerce || vendor.kind !== "storefront"
+    noMarket || vendor.kind !== "storefront"
       ? { icon: FileCheck2, value: vendor.passportCount, label: "Batch test records" }
-      : { icon: PackageSearch, value: vendor.productCount, label: "Listings" },
-    ...(noCommerce ? [] : [
+      : { icon: PackageSearch, value: vendor.productCount, label: noCommerce ? "Listings on record" : "Listings" },
+    ...(noMarket ? [] : [
       {
         icon: priceIndex.medianPctVsMarket ? (priceIndex.medianPctVsMarket > 0 ? TrendingUp : TrendingDown) : Tag,
         value: priceIndex.medianPctVsMarket != null
@@ -294,6 +298,8 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           : "—",
         label: "Typical price vs market",
       },
+    ]),
+    ...(noCommerce ? [] : [
       { icon: Star, value: vendor.reviewCount > 0 ? vendor.reviewCount : "—", label: "Buyer reviews on file" },
     ]),
   ];
@@ -504,7 +510,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
         <VendorLinksPanel links={vendorLinks} vendorName={vendor.name} number={number("network")} />
 
         {/* ── Catalog + history ───────────────────────────────────────────────────────── */}
-        {catalogStale && !noCommerce && (
+        {catalogStale && !noMarket && (
           <Notice tone="warn" icon={CircleDashed}>
             <p>
               <strong className="font-extrabold">These prices may be out of date.</strong> We last read this
@@ -513,8 +519,26 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
             </p>
           </Notice>
         )}
-        <section id="catalog" className={noCommerce ? "grid scroll-mt-36 gap-4" : "grid scroll-mt-36 gap-8 lg:grid-cols-[1fr_340px] lg:items-start"}>
-          {noCommerce ? null : (
+        <section id="catalog" className={noMarket ? "grid scroll-mt-36 gap-4" : "grid scroll-mt-36 gap-8 lg:grid-cols-[1fr_340px] lg:items-start"}>
+          {noMarket ? null : noCommerce ? (
+            /* The market record under the evidence-only release: the catalog as a dated table that
+               cites each listing. No product cards, because product pages and compare stay closed. */
+            <NumberedSection id="catalog-listings" number={number("catalog")} eyebrow="Catalog record" title={`What ${vendor.name} lists, and the prices we read`}
+              chips={listings.length > 0 && priceIndex.medianPctVsMarket != null ? <Chip tone="paper">{priceIndex.medianPctVsMarket < 0 ? `${Math.abs(priceIndex.medianPctVsMarket)}% below the median per mg` : priceIndex.medianPctVsMarket > 0 ? `${priceIndex.medianPctVsMarket}% above the median per mg` : "at the median per mg"}</Chip> : undefined}
+              intro={listings.length > 0
+                ? `${listings.length} listing${listings.length === 1 ? "" : "s"} read from their site, most recently read first${priceIndex.medianPctVsMarket != null ? `, compared with the market median across ${priceIndex.comparedCount} comparable listing${priceIndex.comparedCount === 1 ? "" : "s"}` : ", with too few priced peers to compare against the market"}. A price is recorded for reference and is not evidence of quality either way.`
+                : undefined}>
+              {listings.length > 0 ? (
+                <VendorCatalogRecord products={catalogSorted} vendorName={vendor.name} websiteUrl={sourceUrl}
+                  compoundNames={new Map(catalog.compounds.map((c) => [c.slug, c.name]))} />
+              ) : (
+                <NoEvidence
+                  answer="We hold no catalog record for this vendor."
+                  note={`We track ${vendor.name} from lab records and public sources, but have not read a catalog from its site${maker ? " — it is an upstream manufacturer, not a retailer" : ""}. There are no listed prices on record.`}
+                />
+              )}
+            </NumberedSection>
+          ) : (
             <NumberedSection id="catalog-listings" number={number("catalog")} eyebrow="Catalog" title={`What does ${vendor.name} sell, and at what price?`}
               chips={listings.length > 0 && priceIndex.medianPctVsMarket != null ? <Chip tone={priceIndex.medianPctVsMarket < 0 ? "mint" : priceIndex.medianPctVsMarket > 0 ? "warn" : "paper"}>{priceIndex.medianPctVsMarket < 0 ? "typically below market" : priceIndex.medianPctVsMarket > 0 ? "typically above market" : "around market rate"}</Chip> : undefined}
               intro={listings.length > 0
@@ -532,7 +556,7 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           )}
 
           <aside id="history" className="scroll-mt-36">
-            <VendorHistoryRail history={noCommerce ? vendor.history.filter((h) => h.type !== "catalog") : vendor.history} vendorName={vendor.name} number={number("history")} />
+            <VendorHistoryRail history={noMarket ? vendor.history.filter((h) => h.type !== "catalog") : vendor.history} vendorName={vendor.name} number={number("history")} />
           </aside>
         </section>
       </Section>

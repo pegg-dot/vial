@@ -196,10 +196,14 @@ function VendorRow({ entry, rank, activeCol, cols }: { entry: VendorDirectoryEnt
   );
 }
 
-export function VendorsDirectory({ entries, hidePrices = false }: { entries: VendorDirectoryEntry[]; hidePrices?: boolean }) {
+export function VendorsDirectory({ entries, hidePrices = false, hideBuyers = hidePrices }: { entries: VendorDirectoryEntry[]; hidePrices?: boolean; hideBuyers?: boolean }) {
   // Evidence-only release: no price, listing-count or buyer-sentiment columns, and no ranking on them.
-  const cols = hidePrices ? COLS.filter((c) => !["listings", "price", "buyers"].includes(c.key)) : COLS;
-  const priorities = hidePrices ? PRIORITIES.filter((p) => !["price", "reputation"].includes(p.key)) : PRIORITIES;
+  // The market record brings back the listing count and the price index on their own (`hideBuyers`
+  // stays on): buyer sentiment is not part of it.
+  const hiddenCols = [...(hidePrices ? ["listings", "price"] : []), ...(hideBuyers ? ["buyers"] : [])];
+  const hiddenPriorities = [...(hidePrices ? ["price"] : []), ...(hideBuyers ? ["reputation"] : [])];
+  const cols = COLS.filter((c) => !hiddenCols.includes(c.key));
+  const priorities = PRIORITIES.filter((p) => !hiddenPriorities.includes(p.key));
   const [priority, setPriority] = useState("reliable");
   const [kind, setKind] = useState<string>("all");
   const [query, setQuery] = useState("");
@@ -259,7 +263,7 @@ export function VendorsDirectory({ entries, hidePrices = false }: { entries: Ven
               and a reader who sees an A- below three ungraded rows deserves to know why. Buyer
               reputation is neither shown nor ranked on under the evidence-only release, so the
               sentence drops it there rather than name a signal the page does not carry. */}
-          {activeCol === null && <span className="text-[#4a4d56]"> Ordered on tests, purity{hidePrices ? "" : ", buyer reputation"} and flags together &mdash; never one blended number.</span>}
+          {activeCol === null && <span className="text-[#4a4d56]"> Ordered on tests, purity{hideBuyers ? "" : ", buyer reputation"} and flags together &mdash; never one blended number.</span>}
         </p>
       </div>
 

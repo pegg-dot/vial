@@ -6,13 +6,13 @@ import { SHELVES } from "@/lib/market-taxonomy";
 import { CompoundsExperience } from "@/components/market/compounds-experience";
 import { DataUnavailable } from "@/components/home-data-unavailable";
 import { PageHero, Pill, Section, SectionHeading, StatRow } from "@/components/intelligence/research-ui";
-import { evidenceOnlyPublicRelease, hidesCommerce, publicBrowseRelease } from "@/lib/public-research-release";
+import { evidenceOnlyPublicRelease, hidesCommerce, hidesMarket, publicBrowseRelease } from "@/lib/public-research-release";
 import { ResearchExplorer } from "@/components/intelligence/research-explorer";
 import { ResearchThemeRail } from "@/components/intelligence/research-original-home";
 import { ResearchMarketShelves } from "@/components/intelligence/research-market-shelves";
 import { parseExplorerState } from "@/lib/research-explorer-state";
 import { RESEARCH_SUBJECTS } from "@/lib/research-explorer";
-import { projectCatalog } from "@/lib/evidence-projection";
+import { projectCatalog, projectMarketCatalog } from "@/lib/evidence-projection";
 import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = { title: "Compound directory", description: "Browse canonical compound records, laboratory-report coverage and evidence context.", alternates: { canonical: "/compounds" } };
@@ -50,6 +50,10 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
   const vendorCounts = Object.fromEntries([...vendorSets].map(([compoundSlug, set]) => [compoundSlug, set.size]));
   const vendorTotal = new Set(products.map((p) => p.vendorSlug)).size;
   const initialShelf = shelfKeyFor(goal, shelf);
+  // Three payloads: no prices at all (evidence-only), the market record (prices and listing counts,
+  // nothing else of a listing), or the whole legacy catalog.
+  const noMarket = hidesMarket();
+  const directoryCatalog = !catalog ? null : noMarket ? projectCatalog(catalog) : hidesCommerce() ? projectMarketCatalog(catalog) : catalog;
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
@@ -58,7 +62,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
         eyebrow={<><Layers3 className="size-4" aria-hidden="true" /> Compound directory</>}
         title="Every peptide we track."
         lead={showCatalog
-          ? <>One page per compound: the curated research file where one exists, {hidesCommerce() ? "laboratory-report coverage, batch passports and the research on file" : "documented vendor observations, historical price ranges and laboratory-report coverage"}. Research topics are indexing labels, not validated health benefits or purchasing recommendations.</>
+          ? <>One page per compound: the curated research file where one exists, {noMarket ? "laboratory-report coverage, batch passports and the research on file" : "documented vendor observations, historical price ranges and laboratory-report coverage"}. Research topics are indexing labels, not validated health benefits or purchasing recommendations.</>
           : "One page per compound: the curated research file, its registered studies and original sources. Research topics are indexing labels, not validated health benefits or purchasing recommendations."}
         actions={<>
           <Pill href="#browse" variant="primary" arrow="right">Browse the research library</Pill>
@@ -70,7 +74,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
           { icon: BookOpenText, value: RESEARCH_SUBJECTS.length, label: "Research files" },
           ...(showCatalog ? [{ icon: Layers3, value: compounds.length, label: "Catalog records" }] : []),
           ...(showCatalog ? [{ icon: Store, value: vendorTotal, label: "Vendors" }] : []),
-          ...(showCatalog && !hidesCommerce() ? [{ icon: BarChart3, value: products.length, label: "Listings" }] : []),
+          ...(showCatalog && !noMarket ? [{ icon: BarChart3, value: products.length, label: hidesCommerce() ? "Listings on record" : "Listings" }] : []),
           ...(showCatalog && totalCoa !== null ? [{ icon: BookOpenText, value: totalCoa, label: "Lab certificates" }] : []),
         ]} />
       </PageHero>
@@ -91,11 +95,13 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
       </Section>
 
       {/* ── Catalog records: every compound with lab evidence, batch records or published research on file. ── */}
-      {showCatalog && catalog && (
+      {showCatalog && directoryCatalog && (
         <Section id="catalog" band="white">
           <SectionHeading eyebrow="Catalog records" title="Lab evidence and batch records on file."
-            lead="Compounds with independent certificates, batch records or published research on file, by research shelf. The same page shows a compound's research file when it has one." className="mb-6" />
-          <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} vendorCounts={vendorCounts} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
+            lead={noMarket || !hidesCommerce()
+              ? "Compounds with independent certificates, batch records or published research on file, by research shelf. The same page shows a compound's research file when it has one."
+              : "Compounds with independent certificates, batch records, published research or listings on record, by research shelf. A card's price is the lowest listed price as we last read it: a dated observation, not an offer. The same page shows a compound's research file when it has one."} className="mb-6" />
+          <CompoundsExperience catalog={directoryCatalog} vendorCounts={vendorCounts} initialShelf={initialShelf} hidePrices={noMarket} hideStacks={hidesCommerce()} />
         </Section>
       )}
     </div>

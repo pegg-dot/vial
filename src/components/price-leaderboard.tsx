@@ -4,6 +4,7 @@ import type { Product } from "@/lib/types";
 import type { LabTestRow } from "@/server/ingest/lab-tests";
 import { formatCurrency, formatMgTotal, formatPricePerMg } from "@/lib/format";
 import { independentPurityByVendor, isSuspicious, splitByRankability } from "@/lib/market-picks";
+import { LISTING_LINK_LABEL, LISTING_LINK_NOTE, listingSourceUrl } from "@/lib/vendor-source-link";
 import { ExpandableRows } from "./expandable-rows";
 
 // Historical price table for documented third-party listings of this
@@ -38,31 +39,48 @@ const AVAIL: Partial<Record<Product["availability"], { label: string; cls: strin
   Unavailable: { label: "Unavailable", cls: "text-[#d3372c]" },
 };
 
-export function PriceLeaderboard({ compoundName, marketHref, listings, labTests }: { compoundName: string; marketHref?: string; listings: Product[]; labTests: LabTestRow[] }) {
+/**
+ * `record` is the market record under the evidence-only release, where product pages are closed:
+ * a row's vendor goes to that vendor's evidence record, the price carries the day it was read, and
+ * the last cell cites the listing it was read from, as a plain external link, only for a vendor
+ * whose own website link is released (`websiteByVendor` holds each vendor's storefrontUrlFor result).
+ * Without it the table links to product pages, as the legacy site does.
+ */
+export function PriceLeaderboard({ compoundName, marketHref, listings, labTests, record }: {
+  compoundName: string; marketHref?: string; listings: Product[]; labTests: LabTestRow[];
+  record?: { websiteByVendor: ReadonlyMap<string, string | null> };
+}) {
   const { ranked, unranked } = splitByRankability(listings);
   // Ranked first, then the ones no per-mg figure can order — see `splitByRankability`. Nothing is
   // dropped: a vendor missing from the comparison reads as a vendor we do not know about.
   const all = [...ranked, ...unranked];
-  if (all.length < 2) return null;
+  // A comparison needs two rows; a record of what is listed is still a record with one.
+  if (all.length < (record ? 1 : 2)) return null;
 
   // Suspiciously-cheap, purity-by-vendor, and real-cost-per-active-mg all come from the shared
   // pick logic (lib/market-picks.ts) — the exact rules the Top picks row uses — so this table
   // can never disagree with the picks or the product buy box for the same listing.
   const purityByVendor = independentPurityByVendor(labTests);
+  // Each row's citation, worked out once so the footnote can say whether any row carries one.
+  const sourceBySlug = new Map(all.map((p) => [p.slug, record ? listingSourceUrl(p.externalUrl, record.websiteByVendor.get(p.vendorSlug)) : null]));
+  const anySource = [...sourceBySlug.values()].some(Boolean);
 
   const renderRow = (p: Product, i: number) => {
     const purity = purityByVendor.get(p.vendorSlug);
     const suspicious = isSuspicious(p);
     const canRank = rankable(p);
     const avail = AVAIL[p.availability];
+    const sourceUrl = sourceBySlug.get(p.slug) ?? null;
+    const vendorName = p.vendorSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const readOn = record && p.observedAt ? p.observedAt.slice(0, 10) : null;
     return (
       <tr key={p.slug} className={suspicious ? "bg-[#fff4e0]" : undefined}>
         {/* Only a ranked row carries a position. Numbering the unrankable ones 31…40 would claim
             they sit at the expensive end of a ranking they were never in. */}
         <td className="px-4 py-2.5 font-extrabold tabular-nums text-[var(--muted)]">{canRank ? i + 1 : <span className="text-[#111214]/25">&mdash;</span>}</td>
         <td className="px-4 py-2.5">
-          <Link href={`/products/${p.slug}`} className="inline-flex items-center gap-1.5 font-bold hover:underline">
-            {suspicious ? <TriangleAlert className="size-3.5 text-[#b26a00]" /> : null}{p.vendorSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+          <Link href={record ? `/vendors/${p.vendorSlug}` : `/products/${p.slug}`} className="inline-flex items-center gap-1.5 font-bold hover:underline">
+            {suspicious ? <TriangleAlert className="size-3.5 text-[#b26a00]" /> : null}{vendorName}
           </Link>
           {/* A price with no way to buy it is not a comparison. Five of the ten cheapest MOTS-c
               rows were out of stock and said nothing. */}
@@ -80,7 +98,10 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
             </>
           ) : p.quantity}
         </td>
-        <td className="px-4 py-2.5 font-extrabold tabular-nums">{formatCurrency(p.price)}</td>
+        <td className="px-4 py-2.5 font-extrabold tabular-nums">
+          {formatCurrency(p.price)}
+          {readOn && <span className="block whitespace-nowrap text-[11px] font-medium text-[var(--muted)]">read {readOn}</span>}
+        </td>
         <td className="px-4 py-2.5">
           {canRank
             ? <span className={`ink-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold tabular-nums ${suspicious ? "bg-[#fff4e0] text-[#b26a00]" : "bg-[#f2f2ef] text-[#111214]/70"}`}>{formatPricePerMg(p.pricePerMg!)}{suspicious && <span className="font-bold"> · too cheap?</span>}</span>
@@ -96,7 +117,13 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
             ? <span className="font-extrabold tabular-nums">{formatPricePerMg(p.trust.adjustedPricePerMg)}</span>
             : <span className="text-xs font-medium text-[var(--muted)]">—</span>}
         </td>
-        <td className="px-4 py-2.5"><Link href={`/products/${p.slug}`} className="inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">View <ExternalLink className="size-3" /></Link></td>
+        <td className="px-4 py-2.5">
+          {!record
+            ? <Link href={`/products/${p.slug}`} className="inline-flex items-center gap-1 text-xs font-bold text-[#2b31d8] hover:underline">View <ExternalLink className="size-3" /></Link>
+            : sourceUrl
+              ? <a href={sourceUrl} target="_blank" rel="noopener noreferrer nofollow" title={LISTING_LINK_NOTE} aria-label={`${vendorName} ${compoundName} listing, external`} className="inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-xs font-bold text-[#2b31d8] hover:underline">{LISTING_LINK_LABEL} <ExternalLink className="size-3" aria-hidden="true" /></a>
+              : <span className="text-xs font-medium text-[var(--muted)]">—</span>}
+        </td>
       </tr>
     );
   };
@@ -139,7 +166,7 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
               <th className="px-4 py-2.5 font-bold">Per mg</th>
               <th className="px-4 py-2.5 font-bold">Reported test purity</th>
               <th className="px-4 py-2.5 font-bold">COA-adjusted estimate</th>
-              <th className="px-4 py-2.5 font-bold"></th>
+              <th className="px-4 py-2.5 font-bold">{record ? "Read from" : ""}</th>
             </tr>
           </thead>
           <ExpandableRows
@@ -161,7 +188,7 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests 
           </Link>
         </p>
       )}
-      <p className="mt-3 text-xs font-medium leading-5 text-[var(--muted)]">All prices are dated third-party observations, not offers or purchasing recommendations. A COA-adjusted estimate applies a reported purity measurement from one sample to a calculation; it does not prove what any future shipment contains. Price outliers do not establish fraud, adulteration, safety or lawful sale.</p>
+      <p className="mt-3 text-xs font-medium leading-5 text-[var(--muted)]">All prices are dated third-party observations, not offers or purchasing recommendations. A COA-adjusted estimate applies a reported purity measurement from one sample to a calculation; it does not prove what any future shipment contains. Price outliers do not establish fraud, adulteration, safety or lawful sale.{anySource ? " " + LISTING_LINK_NOTE : ""}</p>
     </section>
   );
 }

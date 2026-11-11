@@ -45,6 +45,14 @@ jobs:
         run: npx playwright test tests/e2e/research-release.spec.ts tests/e2e/cagrilintide-audit.spec.ts tests/e2e/research-navigation-and-commerce.spec.ts
         env:
           VIALGRADE_PUBLIC_EVIDENCE_ONLY: "true"
+      # The market record is a narrower release on top of browsing: prices and listings as a dated
+      # record, with product pages, carts, click-throughs and every API still closed.
+      - name: Test the market-record release
+        run: npx playwright test tests/e2e/research-market-records.spec.ts
+        env:
+          VIALGRADE_PUBLIC_EVIDENCE_ONLY: "true"
+          VIALGRADE_PUBLIC_BROWSE: "true"
+          VIALGRADE_MARKET_RECORDS: "true"
 
   postgres-contract:
     runs-on: ubuntu-latest
