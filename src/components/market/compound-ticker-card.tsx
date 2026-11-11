@@ -51,6 +51,13 @@ export function CompoundTickerCard({
   const tier = compoundTrustTier(compound);
   const { cls, Icon } = TIER[tier.tier];
   const purity = purityLabel(tier, compound);
+  // The row's own metric (distinct vendors) sits at the right end of the figure line in both modes.
+  const metricBlock = metric && (
+    <div className="shrink-0 text-right">
+      <p className="text-[20px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#4a4d56]">{metric.value}</p>
+      <p className="mt-1 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
+    </div>
+  );
 
   const body = (
     <>
@@ -64,9 +71,12 @@ export function CompoundTickerCard({
       <h3 className="mt-2.5 truncate text-[17px] font-extrabold leading-tight tracking-[-.03em] text-[#111214]">{compound.name}</h3>
 
       {hidePrice ? (
-        <div className="mt-2.5">
-          <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]">{compound.coaCount}</p>
-          <p className="mt-1 truncate text-[11px] font-bold text-[var(--muted)]">independent lab {compound.coaCount === 1 ? "test" : "tests"} on record</p>
+        <div className="mt-2.5 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[22px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#111214]">{compound.coaCount}</p>
+            <p className="mt-1 truncate text-[11px] font-bold text-[var(--muted)]">independent lab {compound.coaCount === 1 ? "test" : "tests"} on record</p>
+          </div>
+          {metricBlock}
         </div>
       ) : (
         <div className="mt-2.5 flex items-end justify-between gap-3">
@@ -77,12 +87,7 @@ export function CompoundTickerCard({
               {compound.medianPrice > 0 ? ` · median ${formatCurrency(compound.medianPrice)}` : ""}
             </p>
           </div>
-          {metric && (
-            <div className="shrink-0 text-right">
-              <p className="text-[20px] font-extrabold leading-none tabular-nums tracking-[-.04em] text-[#4a4d56]">{metric.value}</p>
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-[.1em] text-[var(--muted)]">{metric.label}</p>
-            </div>
-          )}
+          {metricBlock}
         </div>
       )}
 

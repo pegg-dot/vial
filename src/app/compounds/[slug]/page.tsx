@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_TAG } from "@/server/catalog/repository";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, ChartNoAxesCombined, CheckCircle2, CircleAlert, ClipboardCheck, FileSearch, GitCompareArrows, Layers3 } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, ChartNoAxesCombined, CheckCircle2, CircleAlert, ClipboardCheck, FileSearch, GitCompareArrows, Layers3, Store } from "lucide-react";
 import { getCompoundBySlug, getProductsByCompoundSlug } from "@/server/catalog/repository";
 import { PURITY_PROVENANCE_SHORT } from "@/lib/provenance-copy";
 import { formatCurrency } from "@/lib/format";
@@ -30,7 +30,7 @@ import { PriceLeaderboard } from "@/components/price-leaderboard";
 import { getLabTestsForCompound } from "@/server/ingest/lab-tests";
 import { getVendorDirectory } from "@/server/vendors/directory";
 import { projectDirectoryEntry } from "@/lib/evidence-projection";
-import { TestedByVendors } from "@/components/tested-by-vendors";
+import { CompoundVendors, type CompoundVendorEntry } from "@/components/compound-vendors";
 import { getDatabase } from "@/server/db/client";
 import { getCurrentPrincipal } from "@/server/auth/principal";
 import { listFollows } from "@/server/consumer-intelligence/repository";
@@ -108,10 +108,18 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   // Under the evidence-only release this page is for looking into a compound: lab evidence, passports,
   // research. No prices, listings, market table or follow button.
   const noCommerce = hidesCommerce();
-  // The vendors this compound's evidence names, with the letter from each one's own record. Under the
-  // evidence-only release the entries are projected like the directory's, so no price reaches the page.
-  const testedVendorSlugs = new Set([...labTests.map((t) => t.vendor_slug), ...passports.map((p) => p.vendor_slug)].filter((s): s is string => Boolean(s)));
-  const testedBy = directory.filter((e) => testedVendorSlugs.has(e.vendor.slug)).map((e) => (noCommerce ? projectDirectoryEntry(e) : e));
+  // Every directory vendor that lists this compound or whose independent evidence names it, in the
+  // directory's order, with the letter from each one's own record. Under the evidence-only release
+  // the entries are projected like the directory's, so no price reaches the page; the listings
+  // themselves never leave the server (only which vendors they belong to).
+  const countBy = (slugs: (string | null | undefined)[]) => { const m = new Map<string, number>(); for (const s of slugs) if (s) m.set(s, (m.get(s) ?? 0) + 1); return m; };
+  const testsByVendor = countBy(labTests.map((t) => t.vendor_slug));
+  const batchesByVendor = countBy(passports.map((p) => p.vendor_slug));
+  const listingVendorSlugs = new Set(listings.map((l) => l.vendorSlug));
+  const vendorEntries: CompoundVendorEntry[] = directory
+    .filter((e) => listingVendorSlugs.has(e.vendor.slug) || testsByVendor.has(e.vendor.slug) || batchesByVendor.has(e.vendor.slug))
+    .map((e) => ({ entry: noCommerce ? projectDirectoryEntry(e) : e, lists: listingVendorSlugs.has(e.vendor.slug), tests: testsByVendor.get(e.vendor.slug) ?? 0, batches: batchesByVendor.get(e.vendor.slug) ?? 0 }));
+  const vendorsLabel = vendorEntries.length === 1 ? "See 1 vendor" : "See " + vendorEntries.length + " vendors";
   const edu = showCatalog ? educationFor(slug) : null;
   // "Commonly stacked with" = the bundles surface. Resolve each stacked slug to a real compound
   // (so we only ever link to compounds we actually track) and carry its cheapest listing price.
@@ -139,9 +147,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       { id: "material-evidence", label: "Materials" },
     ] : []),
     ...(edu ? [{ id: "understand", label: "Understand" }] : []),
+    ...(vendorEntries.length ? [{ id: "vendors", label: "Vendors" }] : []),
     ...(showCatalog && listings.length && !noCommerce ? [{ id: "market", label: "The market" }] : []),
     ...(labTests.length || passports.length ? [{ id: "lab-tests", label: "Lab tests" }] : []),
-    ...(testedBy.length ? [{ id: "tested-by", label: "Tested by" }] : []),
     ...(showCatalog && (research.length || regulatory) ? [{ id: "research", label: "Research" }] : []),
     ...(stacked.length || inStacks.length ? [{ id: "stacked", label: "Stacked with" }] : []),
     ...(subject ? [{ id: "related", label: "Limits and related" }] : []),
@@ -229,10 +237,14 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
            catalog's plain-English summary. */
         lead={subject?.identity ?? edu?.summary ?? compound?.description}
         note={subject ? "This letter describes linked source types in our file, not how promising or safe the compound is." : undefined}
-        actions={subject ? <>
-          <Pill href={isPex ? "#research-workspace" : "#overview"} variant="primary" arrow="right">{isPex ? "Investigate the evidence" : "Start with the research question"}</Pill>
-          <Pill href={subject.referenceUrl} external arrow="up">Inspect molecular identity</Pill>
-          {related[0] && <Pill href={compareExplorerHref([subject.slug, related[0].slug], "researcher")} icon={GitCompareArrows}>Compare with {related[0].name}</Pill>}
+        actions={subject || vendorEntries.length ? <>
+          {subject && <>
+            <Pill href={isPex ? "#research-workspace" : "#overview"} variant="primary" arrow="right">{isPex ? "Investigate the evidence" : "Start with the research question"}</Pill>
+            <Pill href={subject.referenceUrl} external arrow="up">Inspect molecular identity</Pill>
+            {related[0] && <Pill href={compareExplorerHref([subject.slug, related[0].slug], "researcher")} icon={GitCompareArrows}>Compare with {related[0].name}</Pill>}
+          </>}
+          {/* The way to the vendors is one click from the top: the section, then each vendor's record or site. */}
+          {vendorEntries.length ? <Pill href="#vendors" variant={subject ? "ghost" : "primary"} icon={Store} arrow="right">{vendorsLabel}</Pill> : null}
         </> : undefined}
         aside={aside}
       >
@@ -364,6 +376,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
             <CompoundKnowledge id="understand" number={sectionNumber("understand")} name={compound.name} education={edu} depth={depthFor(slug)} showStacks={false} />
           ) : null}
 
+          {vendorEntries.length ? <CompoundVendors vendors={vendorEntries} compoundName={name} number={sectionNumber("vendors")} /> : null}
+
           {/* THE market surface (legacy release only). The leaderboard brings its own page container,
               so this block steps out of the section's padding to line up with it. */}
           {compound && showCatalog && listings.length && !noCommerce ? (
@@ -382,8 +396,6 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
               {passports.length ? <PassportCarousel passports={passports} compoundName={name} /> : null}
             </LabTestsPanel>
           ) : null}
-
-          {testedBy.length ? <TestedByVendors entries={testedBy} compoundName={name} number={sectionNumber("tested-by")} /> : null}
 
           {compound && showCatalog && (research.length || regulatory) ? (
             <CompoundResearchPanel id="research" number={sectionNumber("research")} findings={research} regulatoryStatus={regulatory?.regulatory_status ?? null} evidenceSummary={regulatory?.evidence_summary ?? null} compoundName={compound.name} fdaApprovedDrugExists={regulatory?.fda_approved_drug_exists ?? null} />

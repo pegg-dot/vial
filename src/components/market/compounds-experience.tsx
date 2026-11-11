@@ -31,7 +31,7 @@ const SHELF_PAGE = 8;
 // The catalog arrives as a prop from the /compounds server component rather than from
 // useMarketplace(): the market table and quick-view read whole records (price histories, purity,
 // research notes), and the provider carries only the lite projection the site chrome needs.
-export function CompoundsExperience({ catalog, initialShelf = null, hidePrices = false }: { catalog: CatalogSnapshot; initialShelf?: string | null; hidePrices?: boolean }) {
+export function CompoundsExperience({ catalog, vendorCounts, initialShelf = null, hidePrices = false }: { catalog: CatalogSnapshot; vendorCounts: Record<string, number>; initialShelf?: string | null; hidePrices?: boolean }) {
   const { compounds, products } = catalog;
   const [view, setView] = useState<"terminal" | "shelves">("shelves");
   // The rail's filter. A ?shelf= deep-link lands filtered rather than scrolled — the section it used
@@ -57,17 +57,9 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
   // relationship entirely: BPC-157 has 39 listings but only 14 vendors selling it, so the card
   // claimed nearly three times the real number. On a site whose whole premise is that other
   // people's numbers do not survive checking, publishing one that does not survive checking is the
-  // worst kind of bug. Counted from the listings themselves so it cannot drift from them.
-  const vendorsPerCompound = useMemo(() => {
-    const seen = new Map<string, Set<string>>();
-    for (const p of products) {
-      const set = seen.get(p.compoundSlug);
-      if (set) set.add(p.vendorSlug);
-      else seen.set(p.compoundSlug, new Set([p.vendorSlug]));
-    }
-    return seen;
-  }, [products]);
-  const vendorCount = (slug: string) => String(vendorsPerCompound.get(slug)?.size ?? 0);
+  // worst kind of bug. Counted on the server from the listings themselves so it cannot drift from
+  // them, and so it reaches the evidence-only directory, whose payload carries no listings at all.
+  const vendorCount = (slug: string) => String(vendorCounts[slug] ?? 0);
   const groups = useMemo(() => groupByShelf(results), [results]);
   // Compounds per shelf over the WHOLE directory, so the rail's numbers are what selecting a pill
   // shows before any search narrows it — the same denominator the count line uses.
@@ -86,7 +78,7 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
         <CollectionRow eyebrow="Readers' picks" title="Most looked-up records" blurb="The compounds readers look up most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[248px] shrink-0 snap-start">
-              <CompoundTickerCard compound={c} products={products} hidePrice={hidePrices} metric={hidePrices ? undefined : { label: "vendors", value: vendorCount(c.slug) }} onQuickView={hidePrices ? undefined : () => openRow(trend, i)} />
+              <CompoundTickerCard compound={c} products={products} hidePrice={hidePrices} metric={{ label: "vendors", value: vendorCount(c.slug) }} onQuickView={hidePrices ? undefined : () => openRow(trend, i)} />
             </div>
           ))}
         </CollectionRow>
@@ -170,7 +162,7 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {shown.map((c, i) => (
-                    <CompoundTickerCard key={c.slug} compound={c} products={products} hidePrice={hidePrices} onQuickView={hidePrices ? undefined : () => openRow(shown, i)} />
+                    <CompoundTickerCard key={c.slug} compound={c} products={products} hidePrice={hidePrices} metric={{ label: "vendors", value: vendorCount(c.slug) }} onQuickView={hidePrices ? undefined : () => openRow(shown, i)} />
                   ))}
                 </div>
                 {hidden > 0 && (
