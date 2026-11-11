@@ -46,13 +46,13 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
-      {/* The first crumb lands on the market's catalog anchor: the browse release rejects any
-          in-page href that ends in "/market" (the closed per-compound market tables). */}
       <PageHero size="compact" art={["molecule", "vial"]}
         breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Compounds" }]}
         eyebrow={<><Layers3 className="size-4" aria-hidden="true" /> Compound directory</>}
         title="Every peptide we track."
-        lead={<>One page per compound: the curated research file where one exists, {hidesCommerce() ? "laboratory-report coverage, batch passports and the research on file" : "documented vendor observations, historical price ranges and laboratory-report coverage"}. Research topics are indexing labels, not validated health benefits or purchasing recommendations.</>}
+        lead={showCatalog
+          ? <>One page per compound: the curated research file where one exists, {hidesCommerce() ? "laboratory-report coverage, batch passports and the research on file" : "documented vendor observations, historical price ranges and laboratory-report coverage"}. Research topics are indexing labels, not validated health benefits or purchasing recommendations.</>
+          : "One page per compound: the curated research file, its registered studies and original sources. Research topics are indexing labels, not validated health benefits or purchasing recommendations."}
         actions={<>
           <Pill href="#browse" variant="primary" arrow="right">Browse the research library</Pill>
           {showCatalog && <Pill href="#catalog" arrow="right">Catalog records</Pill>}
@@ -62,7 +62,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
           { icon: BookOpenText, value: RESEARCH_SUBJECTS.length, label: "Research files" },
           ...(showCatalog ? [{ icon: Layers3, value: compounds.length, label: "Catalog records" }] : []),
           ...(showCatalog && !hidesCommerce() ? [{ icon: BarChart3, value: products.length, label: "Listings" }] : []),
-          ...(showCatalog ? [{ icon: BookOpenText, value: totalCoa ?? 0, label: "Lab certificates" }] : []),
+          ...(showCatalog && totalCoa !== null ? [{ icon: BookOpenText, value: totalCoa, label: "Lab certificates" }] : []),
         ]} />
       </PageHero>
 
@@ -84,7 +84,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
       {/* ── Catalog records: every compound with lab evidence, batch records or published research on file. ── */}
       {showCatalog && catalog && (
         <Section id="catalog" band="white">
-          <SectionHeading eyebrow="Catalog records" title="Every catalog record."
+          <SectionHeading eyebrow="Catalog records" title="Lab evidence and batch records on file."
             lead="Compounds with independent certificates, batch records or published research on file, by research shelf. The same page shows a compound's research file when it has one." className="mb-6" />
           <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
         </Section>

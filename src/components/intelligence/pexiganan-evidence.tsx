@@ -32,7 +32,7 @@ export function PexEvidenceScopeStrip() {
 const WAYFINDER = [
   {
     icon: BookOpenCheck, title: "Evidence passport", sub: "Six claim-to-source checks, including the gaps",
-    href: "/compounds/pexiganan#studies", label: "Read passport",
+    href: "#passport-claims", label: "Read the six checks",
   },
   {
     icon: ScanSearch, title: "Verify a record", sub: "Check a specific NCT, PMID or PubChem CID",
@@ -59,7 +59,6 @@ export function PexEvidenceWayfinder({ condensed = false }: { condensed?: boolea
           Choose the next question you want answered. You can read the source checks, look up an exact citation,
           inspect selected registered studies or find the organizations named on those records.
         </p>
-        <div className="mt-4"><PexEvidenceScopeStrip /></div>
       </div>
       <div className={"grid gap-px bg-[#111214]/15 sm:grid-cols-2 " + (condensed ? "" : "xl:grid-cols-4")}>
         {WAYFINDER.map(({ icon, title, sub, href, label }) => (
@@ -75,10 +74,9 @@ export function PexEvidenceWayfinder({ condensed = false }: { condensed?: boolea
   );
 }
 
-/** The six claim cards. `compact` shows the first three with a link to all six (unused since the passport folded into the compound page). */
-/** `headless` drops the grid's own heading when a numbered section already supplies one. */
-export function PexEvidenceClaimGrid({ compact = false, headless = false }: { compact?: boolean; headless?: boolean }) {
-  const claims = compact ? PEXIGANAN_CLAIMS.slice(0, 3) : PEXIGANAN_CLAIMS;
+/** The six claim cards. `headless` drops the grid's own heading when a numbered section already supplies one. */
+export function PexEvidenceClaimGrid({ headless = false }: { headless?: boolean }) {
+  const claims = PEXIGANAN_CLAIMS;
   return (
     <section aria-label="Pexiganan claim and evidence checks">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -88,9 +86,8 @@ export function PexEvidenceClaimGrid({ compact = false, headless = false }: { co
             <h3 className={UI.h3 + " mt-1"}>What these original sources actually support</h3>
           </div>
         )}
-        {compact && <Link href="/compounds/pexiganan#passport-claims" className={UI.linkSmall}>All six checks <ArrowRight className="size-4" aria-hidden="true" /></Link>}
       </div>
-      <div className={"grid gap-4 lg:grid-cols-2 " + (headless && !compact ? "" : "mt-4")}>
+      <div className={"grid gap-4 lg:grid-cols-2 " + (headless ? "" : "mt-4")}>
         {claims.map((claim, i) => {
           const badge = STATUS[claim.status];
           return (
@@ -114,7 +111,7 @@ export function PexEvidenceClaimGrid({ compact = false, headless = false }: { co
                   })}
                 </div>
               </div>
-              {!compact && <p className={UI.small + " mt-4 border-t border-[#111214]/15 pt-3"}><span className="font-extrabold text-[#2b31d8]">Follow-up · </span>{claim.reviewTask}</p>}
+              <p className={UI.small + " mt-4 border-t border-[#111214]/15 pt-3"}><span className="font-extrabold text-[#2b31d8]">Follow-up · </span>{claim.reviewTask}</p>
             </Frame>
           );
         })}

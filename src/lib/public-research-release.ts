@@ -63,8 +63,8 @@ export function publicReleaseAction(
   if (browse && isBrowsePage(pathname, method)) return null;
   // The compound directory and the method page are research surfaces (the research library, the
   // research-file letters) and stay public whatever the browse release says; a compound page that
-  // carries a research file IS the research dossier now. Each page hides its catalog parts when
-  // browse is off.
+  // carries a research file IS the research dossier now. /compounds and the compound pages hide
+  // their catalog parts when browse is off; the method page links the directories only when on.
   const reading = ["GET", "HEAD"].includes(method.toUpperCase());
   const path0 = pathname.replace(/\/+$/, "") || "/";
   if (reading && (path0 === "/compounds" || path0 === "/how-we-check")) return null;

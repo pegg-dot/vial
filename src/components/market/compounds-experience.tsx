@@ -83,7 +83,7 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
   return (
     <div>
       {trend.length > 0 && (
-        <CollectionRow eyebrow="Most looked-up" title="Most looked-up records" blurb="The compounds readers look up most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
+        <CollectionRow eyebrow="Readers' picks" title="Most looked-up records" blurb="The compounds readers look up most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[248px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} hidePrice={hidePrices} metric={hidePrices ? undefined : { label: "vendors", value: vendorCount(c.slug) }} onQuickView={hidePrices ? undefined : () => openRow(trend, i)} />

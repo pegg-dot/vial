@@ -14,7 +14,7 @@ const SOURCE_COUNT = PEXIGANAN_SOURCES.length;
 const COMPOUND_COUNT = PEXIGANAN_SOURCES.filter(source => source.kind === "compound").length;
 const REGISTRY_COUNT = PEXIGANAN_SOURCES.filter(source => source.kind === "registry").length;
 const PUBMED_COUNT = SOURCE_COUNT - COMPOUND_COUNT - REGISTRY_COUNT;
-export const PEX_PINNED_TRIALS = PEXIGANAN_TRIAL_SELECTION.length;
+const PEX_PINNED_TRIALS = PEXIGANAN_TRIAL_SELECTION.length;
 
 /** The sentence over the live registry table: how many rows, and why a row can stay unverified. */
 export const PEX_REGISTRY_NOTE = PEX_PINNED_TRIALS + " pinned NCT records are fetched live from ClinicalTrials.gov and matched on their intervention field. A row that cannot be reconfirmed stays unverified rather than inheriting the editorial snapshot.";

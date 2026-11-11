@@ -8,7 +8,7 @@ import { ResearchBrandTicker } from "@/components/intelligence/research-brand-ti
 // One navigation: the directories first, the method page, then the research tools in one menu.
 // Vendors, labs and batch records exist only under the browse release; the rest is always public.
 const DIRECTORIES = [
-  { href: "/compounds", label: "Compounds", note: "Research files, lab evidence and batch records, one page per compound", browse: false },
+  { href: "/compounds", label: "Compounds", note: "One page per compound: the research file, its studies and sources", browse: false },
   { href: "/vendors", label: "Vendors", note: "VialGrade letters with the evidence behind them, and each vendor's own site", browse: true },
   { href: "/labs", label: "Labs", note: "Who tests, and what they have published", browse: true },
   { href: "/passports", label: "Batch records", note: "The full test record for a batch, including results that disagree", browse: true },

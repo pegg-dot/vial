@@ -199,7 +199,7 @@ export function OriginalResearchCompoundsShowcase() {
               The compounds <span className="text-[#2b31d8]">in the research library.</span>
             </h2>
           </div>
-          <Link href={CATALOG} className="ink hard-sm press inline-flex items-center gap-1.5 rounded-full bg-[#2b31d8] px-5 py-3 text-sm font-bold text-white">View full catalog <ArrowRight className="size-4" /></Link>
+          <Link href={CATALOG} className="ink hard-sm press inline-flex items-center gap-1.5 rounded-full bg-[#2b31d8] px-5 py-3 text-sm font-bold text-white">See every compound <ArrowRight className="size-4" /></Link>
         </div>
         <div className="mt-12 grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {subjects.map((subject,index) => (
@@ -235,7 +235,7 @@ export function OriginalResearchFinalCta() {
         <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-7 text-[var(--muted)]">Start with the compound identity, trace original studies, then inspect the missing information. All physical materials remain unverified.</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link href="/intelligence/verify" className="ink hard-sm press rounded-full bg-[#2b31d8] px-6 py-3 text-sm font-bold text-white">Verify a source</Link>
-          <Link href={CATALOG} className="ink hard-sm press rounded-full bg-white px-6 py-3 text-sm font-bold">Explore the compounds <ArrowRight className="inline size-4" /></Link>
+          <Link href={CATALOG} className="ink hard-sm press rounded-full bg-white px-6 py-3 text-sm font-bold">Explore every compound <ArrowRight className="inline size-4" /></Link>
         </div>
       </div>
     </section>

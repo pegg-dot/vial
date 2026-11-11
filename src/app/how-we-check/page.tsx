@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { ArrowDown, Check, CircleAlert, CircleDashed, Database, Fingerprint, Scale, ShieldCheck } from "lucide-react";
+import { ArrowDown, ArrowRight, BookOpenCheck, Check, CircleAlert, CircleDashed, ClipboardCheck, Database, Fingerprint, FlaskConical, Scale, ShieldCheck } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
 import { articleSchema } from "@/lib/structured-data";
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, ClipboardCheck, FlaskConical } from "lucide-react";
+import { evidenceOnlyPublicRelease, publicBrowseRelease } from "@/lib/public-research-release";
 import { ResearchFileGradeCard } from "@/components/intelligence/research-file-grade";
 import { FILE_GRADE_CURATION_DATE, FILE_GRADE_LIMITS, FILE_GRADE_METHOD_VERSION } from "@/lib/research-file-grade";
 import { RESEARCH_SUBJECTS } from "@/lib/research-explorer";
@@ -35,7 +35,7 @@ const reportQuestions = [
   { title: "Is it clean?", detail: "Were sterility, endotoxin, or particulates separately checked? Usually they weren't — we say so." },
 ];
 
-// The research-file letters (A/B/C) were a page of their own at /how-we-check#grade-checks; they are one
+// The research-file letters (A/B/C) were a page of their own at /intelligence/grading; they are one
 // section of the method now. Same checks, same four worked examples, same limits.
 const FILE_CHECKS = [
   { icon: BookOpenCheck, name: "Molecular reference", description: "A specific public compound identity source. A substance SID or unresolved variant requires explicit qualification and prevents a letter." },
@@ -46,6 +46,8 @@ const FILE_SCALE = [["A", "3 linked layers"], ["B", "2 linked layers"], ["C", "1
 const FILE_EXAMPLES = ["pexiganan", "cagrilintide", "magainin-2", "retatrutide"].map((slug) => RESEARCH_SUBJECTS.find((subject) => subject.slug === slug)!);
 
 export default function HowWeCheckPage() {
+  // The batch-record and laboratory directories exist only under the browse release.
+  const directories = !evidenceOnlyPublicRelease() || publicBrowseRelease();
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       {/* Article, not FAQPage. The "one report answers six questions" block looks like a FAQ, but
@@ -186,10 +188,10 @@ export default function HowWeCheckPage() {
       <Section band="white">
         <SectionHeading eyebrow="Go deeper" title="The full records, if you want them" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <CardLink href="/passports" title="Batch test records" body="The complete test record for a specific batch — including results that disagree." />
+          {directories && <CardLink href="/passports" title="Batch test records" body="The complete test record for a specific batch — including results that disagree." />}
           <CardLink href="/intelligence" title="Research records" body="Every research subject on file, with its original sources and what stays unknown." />
           <CardLink href="/intelligence/materials" title="Research material checks" body="What has been independently checked about a research material, what has not, and why sample origin matters." />
-          <CardLink href="/labs" title="Laboratories" body="Who runs the tests, their methods, and their report history." />
+          {directories && <CardLink href="/labs" title="Laboratories" body="Who runs the tests, their methods, and their report history." />}
         </div>
       </Section>
     </div>

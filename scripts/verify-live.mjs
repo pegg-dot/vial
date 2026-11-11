@@ -131,7 +131,7 @@ if (blind.length) {
 }
 
 // ── 1. The site serves ──────────────────────────────────────────────────────────────────────────
-const PUBLIC = ["/", "/vendors", "/compounds", "/verify", "/news", "/testing", "/status", "/search", "/signals"];
+const PUBLIC = ["/", "/vendors", "/compounds", "/intelligence/verify", "/news", "/testing", "/status", "/search", "/signals"];
 for (const path of PUBLIC) {
   const res = await get(path, { redirect: "follow" });
   if (res.ok) pass(`GET ${path}`, `HTTP ${res.status}`);

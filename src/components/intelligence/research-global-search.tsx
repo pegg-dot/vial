@@ -109,7 +109,7 @@ export function ResearchGlobalSearch() {
   );
 }
 
-export type MobileMenuLink = { href: string; label: string; note: string };
+type MobileMenuLink = { href: string; label: string; note: string };
 
 const MOBILE_ROW = "rounded-xl px-4 py-2.5 hover:bg-[#eef0ff]";
 const MOBILE_EYEBROW = "px-4 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]";
