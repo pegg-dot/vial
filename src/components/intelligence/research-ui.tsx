@@ -318,11 +318,13 @@ const PILL = {
 } as const;
 
 /** The pill button. A link when `href` is given (external links open in a new tab), otherwise a button. */
-export function Pill({ href, external = false, variant = "secondary", size = "md", icon: Icon, arrow, type = "button", disabled, onClick, ariaLabel, ariaPressed, ariaCurrent, title, className = "", children }: {
+export function Pill({ href, external = false, variant = "secondary", size = "md", icon: Icon, arrow, type = "button", disabled, onClick, ariaLabel, ariaPressed, ariaCurrent, title, rel = "noopener noreferrer", className = "", children }: {
   href?: string; external?: boolean; variant?: keyof typeof PILL; size?: "md" | "sm"; icon?: ComponentType<{ className?: string }>;
   arrow?: "right" | "up"; type?: "button" | "submit"; disabled?: boolean; onClick?: () => void; ariaLabel?: string; ariaPressed?: boolean;
   /** For a filter link that is the current selection (a pressed button uses `ariaPressed`). */
-  ariaCurrent?: "page" | "true"; title?: string; className?: string; children: ReactNode;
+  ariaCurrent?: "page" | "true"; title?: string;
+  /** rel for an external link; defaults to noopener noreferrer. Vendor sites add nofollow. */
+  rel?: string; className?: string; children: ReactNode;
 }) {
   const cls = ["inline-flex items-center justify-center gap-2 rounded-full font-extrabold", size === "sm" ? "min-h-9 px-4 text-xs" : "min-h-11 px-5 text-sm",
     PILL[variant], disabled ? "opacity-50" : "", className].join(" ");
@@ -335,7 +337,7 @@ export function Pill({ href, external = false, variant = "secondary", size = "md
     </>
   );
   // A link may also need a click handler (closing a dialog it sits in); it never turns the link into a button.
-  if (href && external) return <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} aria-label={ariaLabel} title={title} className={cls}>{inner}</a>;
+  if (href && external) return <a href={href} target="_blank" rel={rel} onClick={onClick} aria-label={ariaLabel} title={title} className={cls}>{inner}</a>;
   if (href) return <Link href={href} onClick={onClick} aria-label={ariaLabel} aria-current={ariaCurrent} title={title} className={cls}>{inner}</Link>;
   return <button type={type} disabled={disabled} onClick={onClick} aria-label={ariaLabel} aria-pressed={ariaPressed} title={title} className={cls}>{inner}</button>;
 }

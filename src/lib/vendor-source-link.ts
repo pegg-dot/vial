@@ -7,6 +7,16 @@ export function vendorLinksReleased(enabled = process.env.VIALGRADE_VENDOR_LINKS
   return enabled === "true";
 }
 
+/**
+ * The one rule for a storefront link wherever a vendor appears (its page, the directory, a
+ * compound's "tested by" list): the release flag is on, the verdict and status allow it, and the
+ * stored domain is a plain public hostname. Anything else is null, never a fallback.
+ */
+export function storefrontUrlFor(input: { verdict: string; status: string | null; domain: string | null | undefined }, released = vendorLinksReleased()): string | null {
+  if (!released || !vendorLinkAllowed(input)) return null;
+  return vendorSourceUrl(input.domain);
+}
+
 export const VENDOR_LINK_LABEL = "Company's own website";
 export const VENDOR_LINK_NOTE = "External site, not verified or endorsed by VialGrade. Nothing here is a recommendation to buy.";
 

@@ -6,6 +6,7 @@ import { VendorMark } from "@/components/vendor-mark";
 import { DataOriginBadge } from "@/components/data-origin-badge";
 import { VialGradeMark } from "@/components/vial-grade-card";
 import { Chip, Frame, Pill, UI } from "@/components/intelligence/research-ui";
+import { VENDOR_LINK_NOTE } from "@/lib/vendor-source-link";
 import { PRIORITIES, rankVendors, type VendorDirectoryEntry } from "@/lib/vendor-ranking";
 import { filterVendorEntries, hasActiveVendorFilters, offeredVendorKinds } from "@/lib/vendor-directory-filter";
 import { vendorClaimLabelShort } from "@/lib/vendor-copy";
@@ -147,10 +148,11 @@ function VendorRow({ entry, rank, activeCol, cols }: { entry: VendorDirectoryEnt
   ].filter(Boolean).join(", ");
 
   return (
+    <div className="flex items-center">
     <Link
       href={`/vendors/${v.slug}`}
       aria-label={spoken}
-      className={`group flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 transition sm:px-4 ${flagged ? "bg-[#ffecea]" : "hover:bg-[#eef0ff]"}`}
+      className={`group flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 transition sm:px-4 ${flagged ? "bg-[#ffecea]" : "hover:bg-[#eef0ff]"}`}
     >
       <span aria-hidden="true" className="w-7 shrink-0 text-right text-[13px] font-extrabold tabular-nums text-[var(--muted)]">{rank}</span>
       <VendorMark initials={v.initials} accent={v.accent} size="sm" />
@@ -184,6 +186,13 @@ function VendorRow({ entry, rank, activeCol, cols }: { entry: VendorDirectoryEnt
         </p>
       )}
     </Link>
+    {/* The storefront link sits beside the row, not inside it: a link cannot nest a link. Server-side
+        rule (flag, verdict, status, valid domain) decides whether it exists at all. */}
+    {entry.websiteUrl && (
+      <Pill href={entry.websiteUrl} external rel="noopener noreferrer nofollow" variant="ghost" size="sm" arrow="up"
+        ariaLabel={`${v.name} website, external`} title={VENDOR_LINK_NOTE} className="mr-3 hidden shrink-0 sm:inline-flex">Website</Pill>
+    )}
+    </div>
   );
 }
 

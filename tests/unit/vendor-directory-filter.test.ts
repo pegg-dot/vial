@@ -29,7 +29,7 @@ function entry(over: {
     defunct: false,
     integrityFlagged: false,
     reviewSentiment: null,
-    verdict: "trusted",
+    websiteUrl: null, verdict: "trusted",
     redFlag: false,
   };
 }

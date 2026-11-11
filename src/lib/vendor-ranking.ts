@@ -15,6 +15,8 @@ export interface VendorDirectoryEntry {
   defunct: boolean;
   integrityFlagged: boolean;
   reviewSentiment: ReviewSentiment | null;
+  /** The vendor's own website when the vendor-link release allows it for this verdict and status; otherwise null. Computed on the server. */
+  websiteUrl: string | null;
   verdict: Verdict;            // the SAME composed verdict the vendor page + /verify show
   redFlag: boolean;            // === (verdict === "avoid") — demoted under every rank, never hidden
 }

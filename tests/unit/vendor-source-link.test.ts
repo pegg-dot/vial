@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { vendorLinkAllowed, vendorLinksReleased, vendorSourceUrl } from "@/lib/vendor-source-link";
+import { storefrontUrlFor, vendorLinkAllowed, vendorLinksReleased, vendorSourceUrl } from "@/lib/vendor-source-link";
 
 describe("vendor source link", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -34,5 +34,18 @@ describe("vendor source link", () => {
     expect(vendorLinkAllowed({ verdict: "unproven", status: null })).toBe(true);
     expect(vendorLinkAllowed({ verdict: "caution", status: "blocked" })).toBe(true);
     for (const status of ["offline", "parked", "closed", "redirected", "some-new-status"]) expect(vendorLinkAllowed({ verdict: "trusted", status })).toBe(false);
+  });
+
+  it("storefrontUrlFor: every condition must hold, and the result is the validated https URL", () => {
+    const ok = { verdict: "trusted", status: "operating", domain: "Acme-Peptides.com" };
+    expect(storefrontUrlFor(ok, true)).toBe("https://acme-peptides.com/");
+    expect(storefrontUrlFor(ok, false)).toBeNull();
+    expect(storefrontUrlFor({ ...ok, verdict: "avoid" }, true)).toBeNull();
+    expect(storefrontUrlFor({ ...ok, verdict: "high-risk" }, true)).toBeNull();
+    expect(storefrontUrlFor({ ...ok, status: "redirected" }, true)).toBeNull();
+    expect(storefrontUrlFor({ ...ok, status: "offline" }, true)).toBeNull();
+    expect(storefrontUrlFor({ ...ok, status: null }, true)).toBe("https://acme-peptides.com/");
+    expect(storefrontUrlFor({ ...ok, domain: "https://acme.com/shop?ref=1" }, true)).toBeNull();
+    expect(storefrontUrlFor({ ...ok, domain: null }, true)).toBeNull();
   });
 });

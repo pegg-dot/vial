@@ -6,6 +6,7 @@ export interface PassportRow {
   slug: string;
   declared_batch_code: string;
   vendor_name?: string | null;
+  vendor_slug?: string | null;
   evidence_confidence: number | string;
   evidence_links: number | string;
   open_conflicts: number | string;
