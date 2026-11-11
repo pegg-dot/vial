@@ -75,12 +75,18 @@ describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
       expect(publicReleaseAction(path, "HEAD", true, false)).toBeNull();
     });
 
+  it.each(["/verify", "/verify/"])("lets %s reach its page, which forwards permanently to the source checker", path => {
+    expect(publicReleaseAction(path, "GET", true, false)).toBeNull();
+    expect(publicReleaseAction(path, "HEAD", true, false)).toBeNull();
+    expect(publicReleaseAction(path, "POST", true, false)).not.toBeNull();
+  });
+
   it.each(["/compounds", "/how-we-check"])("but only for reading: %s", path => {
     expect(publicReleaseAction(path, "POST", true, false)).not.toBeNull();
     expect(publicReleaseAction(path, "POST", true, true)).not.toBeNull();
   });
 
-  it.each(["/compounds/x", "/compoundsx", "/how-we-check/x", "/vendors", "/labs", "/passports", "/grades"])(
+  it.each(["/compounds/x", "/compoundsx", "/how-we-check/x", "/verify/x", "/verifyx", "/vendors", "/labs", "/passports", "/grades"])(
     "everything else under the directories still needs the browse release: %s", path => {
       expect(publicReleaseAction(path, "GET", true, false)).not.toBeNull();
     });
@@ -101,7 +107,7 @@ describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
   });
 
   it.each(["/products/legacy", "/compounds/retatrutide/market", "/go/anything", "/cart", "/checkout",
-    "/market", "/stacks", "/search", "/verify", "/compare", "/news", "/about", "/help", "/coverage", "/testing", "/api/v1/catalog", "/api/search", "/api/v1/verify",
+    "/market", "/stacks", "/search", "/compare", "/news", "/about", "/help", "/coverage", "/testing", "/api/v1/catalog", "/api/search", "/api/v1/verify",
   ])("keeps shop, market tables and every API closed even when on: %s", path => {
     expect(publicReleaseAction(path, "GET", true, true)).not.toBeNull();
   });

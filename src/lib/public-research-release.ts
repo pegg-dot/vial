@@ -65,9 +65,11 @@ export function publicReleaseAction(
   // research-file letters) and stay public whatever the browse release says; a compound page that
   // carries a research file IS the research dossier now. /compounds and the compound pages hide
   // their catalog parts when browse is off; the method page links the directories only when on.
+  // /verify is a page-level permanent redirect to the research source checker, so a saved link
+  // forwards instead of meeting the retired notice.
   const reading = ["GET", "HEAD"].includes(method.toUpperCase());
   const path0 = pathname.replace(/\/+$/, "") || "/";
-  if (reading && (path0 === "/compounds" || path0 === "/how-we-check")) return null;
+  if (reading && (path0 === "/compounds" || path0 === "/how-we-check" || path0 === "/verify")) return null;
   const compound = /^\/compounds\/([a-z0-9-]+)\/?$/.exec(pathname);
   if (compound && reading && hasDossier(compound[1])) return null;
   const path = pathname.replace(/\/+$/, "") || "/";

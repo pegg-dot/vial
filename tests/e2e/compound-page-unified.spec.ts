@@ -36,12 +36,12 @@ test.describe("One page per compound", () => {
     }
     expect(new URL((await request.get("/intelligence/grading", { maxRedirects: 0 })).headers().location!, "http://localhost").hash).toBe("#grade-checks");
     expect(new URL((await request.get("/intelligence/passports/pexiganan", { maxRedirects: 0 })).headers().location!, "http://localhost").hash).toBe("#studies");
-    // /verify forwards 308 to /intelligence/verify from its page, but under the evidence-only release
-    // the proxy treats /verify as a retired shop surface and answers first with the retired notice.
-    // follow-and-news.spec.ts proves the 308 without the gate. Pinned here so the gap stays visible.
+    // /verify reaches its page under the gate too (the gate lets it through for reading), so a saved
+    // link forwards to the source checker instead of the retired notice; only reading passes.
     const verify = await request.get("/verify", { maxRedirects: 0 });
-    expect(verify.status()).toBe(307);
-    expect(verify.headers().location).toBe("/intelligence?notice=retired");
+    expect(verify.status()).toBe(308);
+    expect(verify.headers().location).toBe("/intelligence/verify");
+    expect((await request.post("/verify", { maxRedirects: 0 })).status()).not.toBe(308);
 
     // A browser keeps the fragment when the Location carries none, and takes the Location's own one.
     await page.goto("/intelligence/market?theme=host-defense#browse");
