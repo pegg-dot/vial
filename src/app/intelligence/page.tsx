@@ -49,7 +49,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
             <h2 className="mt-3 max-w-2xl text-balance text-[clamp(2.4rem,5.3vw,4rem)] font-extrabold leading-[.92] tracking-[-.045em]">A record you can <span className="text-[#2b31d8]">inspect for yourself.</span></h2>
             <p className="mt-4 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">Pexiganan is a designed analog related to Magainin 2. Its molecular identity, registered trial and original papers aren&apos;t the same evidence.</p>
           </div>
-          <Link href="/intelligence/passports/pexiganan" className="ink hard-sm press inline-flex items-center gap-1 rounded-full bg-white px-5 py-3 text-sm font-bold">Open the evidence passport <ArrowRight className="size-4" /></Link>
+          <Link href="/compounds/pexiganan#studies" className="ink hard-sm press inline-flex items-center gap-1 rounded-full bg-white px-5 py-3 text-sm font-bold">Open the evidence passport <ArrowRight className="size-4" /></Link>
         </div>
         <div className="mt-9 grid gap-5 md:grid-cols-3">
           <Link href="/compounds/pexiganan" className="ink hard press group flex flex-col rounded-[18px] bg-white p-6">
@@ -76,7 +76,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
           <Link href="/intelligence/verify" className="inline-flex items-center gap-1 hover:underline">Verify source <ArrowUpRight className="size-4" /></Link>
           <Link href="/intelligence/cases/magainin-pexiganan" className="inline-flex items-center gap-1 hover:underline">Open guided example <ArrowUpRight className="size-4" /></Link>
         </nav>
-        <Link href="/intelligence/market#browse" className="mt-8 inline-flex items-center gap-1 text-sm font-extrabold text-[#2b31d8] underline underline-offset-4">Browse all 16 research records <ArrowRight className="size-4" /></Link>
+        <Link href="/compounds#browse" className="mt-8 inline-flex items-center gap-1 text-sm font-extrabold text-[#2b31d8] underline underline-offset-4">Browse all 16 research records <ArrowRight className="size-4" /></Link>
       </section>
 
       <section className="border-y-2 border-[#111214] bg-white">
@@ -87,7 +87,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
               <h2 className="mt-3 text-[clamp(2.4rem,5vw,3.7rem)] font-extrabold leading-[.95] tracking-[-.045em]">Go deeper.</h2>
               <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">Start with the compound, then follow the underlying experiments, reports, and organizations.</p>
             </div>
-            <Link href="/intelligence/grading" className="inline-flex min-h-6 items-center text-sm font-bold text-[#2b31d8] underline underline-offset-4">How source coverage works</Link>
+            <Link href="/how-we-check#grade-checks" className="inline-flex min-h-6 items-center text-sm font-bold text-[#2b31d8] underline underline-offset-4">How source coverage works</Link>
           </div>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {deeper.map(({ name, note, href, action, icon: Icon }, index) => (
@@ -104,7 +104,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
           </div>
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-[#2b31d8]">
             <Link href="/compounds/pexiganan" aria-label="Open Pexiganan dossier" className="inline-flex items-center gap-1 hover:underline">Pexiganan dossier <ArrowUpRight className="size-4" /></Link>
-            <Link href="/intelligence/passports/pexiganan" aria-label="See evidence passport" className="inline-flex items-center gap-1 hover:underline">Evidence passport <ArrowUpRight className="size-4" /></Link>
+            <Link href="/compounds/pexiganan#studies" aria-label="See evidence passport" className="inline-flex items-center gap-1 hover:underline">Evidence passport <ArrowUpRight className="size-4" /></Link>
             <Link href="/intelligence/providers" className="inline-flex items-center gap-1 hover:underline">Public supplier documentation <ArrowUpRight className="size-4" /></Link>
             <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" aria-label="Compare Magainin 2 and Pexiganan" className="inline-flex items-center gap-1 hover:underline">Compare Magainin 2 and Pexiganan <ArrowUpRight className="size-4" /></Link>
           </div>
@@ -125,7 +125,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
       <OriginalResearchFinalCta />
       <section id="method" className="mx-auto max-w-[1320px] scroll-mt-36 border-t border-[#111214]/20 px-5 py-8 text-xs font-medium leading-6 text-[#666970] sm:px-8">
         <p><strong className="text-[#111214]">About this library.</strong> The selected public references are not a systematic literature review. File coverage is not biological effectiveness, material purity or legal authorization to sell. No purchasing, clinical advice or laboratory certification.</p>
-        <Link href="/intelligence/grading" className="mt-3 inline-flex items-center gap-1 font-bold text-[#2b31d8] hover:underline">Read the file-checking method <BookOpen className="size-4" /></Link>
+        <Link href="/how-we-check#grade-checks" className="mt-3 inline-flex items-center gap-1 font-bold text-[#2b31d8] hover:underline">Read the file-checking method <BookOpen className="size-4" /></Link>
       </section>
     </div>
   );

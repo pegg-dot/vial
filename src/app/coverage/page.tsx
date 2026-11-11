@@ -123,7 +123,7 @@ export default async function CoveragePage() {
             <Link href="/how-we-check" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#2b31d8] px-5 py-2.5 text-sm font-bold text-white">
               How a record earns its place <ArrowRight className="size-4" />
             </Link>
-            <Link href="/verify" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold">
+            <Link href="/intelligence/verify" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold">
               Check a vendor or a COA <ArrowRight className="size-4" />
             </Link>
           </div>

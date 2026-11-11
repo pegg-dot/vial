@@ -45,9 +45,9 @@ function arr(v: unknown) {
   try { return JSON.parse(String(v)); } catch { return []; }
 }
 
-// The browse-release spec bans a main link ending in "/market" on these pages, so the first crumb
-// goes to the market's catalog anchor, as the kit's "Back to the research market" link does.
-const breadcrumb = (batch: string) => [{ href: "/intelligence/market", label: "Research Market" }, { href: "/passports", label: "Batch records" }, { label: batch }] as const;
+// The first crumb is the research home; the browse-release spec bans a main link ending in "/market"
+// on these pages (the closed per-compound market tables).
+const breadcrumb = (batch: string) => [{ href: "/intelligence", label: "Home" }, { href: "/passports", label: "Batch records" }, { label: batch }] as const;
 
 /** The hero's aside: the evidence figure, framed in ink so it reads as a measurement and never as a verdict. */
 function EvidenceAside({ confidence }: { confidence: unknown }) {

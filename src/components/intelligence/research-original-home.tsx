@@ -4,7 +4,7 @@ import { ArtCoa, ArtFlask, ArtMagnifierVial, ArtMolecule, ArtShieldCheck, VialBu
 import { RESEARCH_SUBJECTS, RESEARCH_THEMES } from "@/lib/research-explorer";
 import { HeroSourceCheck } from "@/components/intelligence/hero-source-check";
 
-const CATALOG = "/intelligence/market";
+const CATALOG = "/compounds";
 
 export function OriginalResearchHero() {
   return (
@@ -44,7 +44,7 @@ export function OriginalResearchHero() {
           <Link href="/intelligence/desk" className="inline-flex min-h-6 items-center text-[#2b31d8] underline underline-offset-4 hover:text-[#111214]">a research question</Link>
         </div>
         <Link href={CATALOG} className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-[#2b31d8] underline underline-offset-4">
-          Explore the research market <ArrowRight className="size-4" />
+          Explore every compound <ArrowRight className="size-4" />
         </Link>
       </div>
     </section>
@@ -106,10 +106,10 @@ export function OriginalResearchManifesto() {
 }
 
 const FEATURES = [
-  { icon: ArtMolecule, name: "Exact compound identities", body: "Trace the name to a named reference. Analogues and closely related peptides stay separate.", href: "/intelligence/market" , tint: "bg-[#eef0ff]" },
+  { icon: ArtMolecule, name: "Exact compound identities", body: "Trace the name to a named reference. Analogues and closely related peptides stay separate.", href: "/compounds" , tint: "bg-[#eef0ff]" },
   { icon: ArtMagnifierVial, name: "Studies, with the context", body: "Follow the registered intervention and original record without assuming the study proved an outcome.", href: "/intelligence/studies/NCT01594762", tint: "bg-[#e6fbf6]" },
-  { icon: ArtCoa, name: "The receipts, kept", body: "See where a research claim came from and which source relationships still need review.", href: "/intelligence/passports/pexiganan", tint: "bg-[#eef0ff]" },
-  { icon: ArtShieldCheck, name: "A clear verification boundary", body: "A linked file isn't a tested vial. VialGrade keeps source coverage separate from efficacy or lab quality.", href: "/intelligence/grading", tint: "bg-[#e6fbf6]" },
+  { icon: ArtCoa, name: "The receipts, kept", body: "See where a research claim came from and which source relationships still need review.", href: "/compounds/pexiganan#studies", tint: "bg-[#eef0ff]" },
+  { icon: ArtShieldCheck, name: "A clear verification boundary", body: "A linked file isn't a tested vial. VialGrade keeps source coverage separate from efficacy or lab quality.", href: "/how-we-check#grade-checks", tint: "bg-[#e6fbf6]" },
 ] as const;
 
 export function OriginalResearchFeatures() {
@@ -199,7 +199,7 @@ export function OriginalResearchCompoundsShowcase() {
               The compounds <span className="text-[#2b31d8]">in the research library.</span>
             </h2>
           </div>
-          <Link href={CATALOG} className="ink hard-sm press inline-flex items-center gap-1.5 rounded-full bg-[#2b31d8] px-5 py-3 text-sm font-bold text-white">View full catalog <ArrowRight className="size-4" /></Link>
+          <Link href={CATALOG} className="ink hard-sm press inline-flex items-center gap-1.5 rounded-full bg-[#2b31d8] px-5 py-3 text-sm font-bold text-white">See every compound <ArrowRight className="size-4" /></Link>
         </div>
         <div className="mt-12 grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {subjects.map((subject,index) => (
@@ -235,7 +235,7 @@ export function OriginalResearchFinalCta() {
         <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-7 text-[var(--muted)]">Start with the compound identity, trace original studies, then inspect the missing information. All physical materials remain unverified.</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link href="/intelligence/verify" className="ink hard-sm press rounded-full bg-[#2b31d8] px-6 py-3 text-sm font-bold text-white">Verify a source</Link>
-          <Link href={CATALOG} className="ink hard-sm press rounded-full bg-white px-6 py-3 text-sm font-bold">Explore the market <ArrowRight className="inline size-4" /></Link>
+          <Link href={CATALOG} className="ink hard-sm press rounded-full bg-white px-6 py-3 text-sm font-bold">Explore every compound <ArrowRight className="inline size-4" /></Link>
         </div>
       </div>
     </section>

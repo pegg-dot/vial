@@ -116,7 +116,7 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
                 <Pill href={source.url} external variant="ink" size="sm" arrow="up">
                   Open original {source.publisher.split(" / ")[0]} record
                 </Pill>
-                <Pill href="/intelligence/passports/pexiganan" variant="ghost" size="sm" arrow="right">Research evidence passport</Pill>
+                <Pill href="/compounds/pexiganan#studies" variant="ghost" size="sm" arrow="right">Research evidence passport</Pill>
               </div>
               {neighbours.length > 0 && (
                 <div className="mt-5 border-t border-[#111214]/15 pt-4">
@@ -135,7 +135,7 @@ export function PexSourceVerifier({ initialRef = "" }: { initialRef?: string }) 
                 <div className="mt-5 border-t border-[#111214]/15 pt-4">
                   <p className={UI.eyebrowMuted}>Connected evidence question{related.length === 1 ? "" : "s"}</p>
                   <RecordList className="mt-2" items={related.map(claim => ({
-                    href: "/intelligence/passports/pexiganan#evidence-claim-" + claim.id,
+                    href: "/compounds/pexiganan#evidence-claim-" + claim.id,
                     title: claim.heading,
                     action: "Open in the passport",
                   }))} />

@@ -22,7 +22,7 @@ export default async function ResearchMaterialsPage({ searchParams }: {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["coa", "flask"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Research materials" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Research materials" }]}
         eyebrow={<><ClipboardCheck className="size-4" aria-hidden="true" /> Sample and report checks · Local checklist</>}
         title="Research material checks"
         lead="Have a sample label and a report? Start by comparing their lot IDs. A matching number is not proof of authenticity or quality."
@@ -68,11 +68,11 @@ export default async function ResearchMaterialsPage({ searchParams }: {
             <Notice tone="warn" icon={ShieldAlert}>
               <p>The research-file A/B/C grades describe linked primary-source layers. They do not certify an experiment&apos;s conclusions, a supplier, or a lot.</p>
             </Notice>
-            <Pill href="/intelligence/grading" variant="ghost" size="sm" icon={FileSearch} arrow="right">See research grading</Pill>
+            <Pill href="/how-we-check#grade-checks" variant="ghost" size="sm" icon={FileSearch} arrow="right">See research grading</Pill>
           </NumberedSection>
         </div>
       </Section>
-      <PageFootnote href="/intelligence/market" linkLabel="Back to Research Market">
+      <PageFootnote href="/compounds" linkLabel="Back to compounds">
         Editorial research starting points, not grades of material quality. Company-published supplier QC information is separate and unverified;
         no purchasing and no recommendations for human consumption.
       </PageFootnote>

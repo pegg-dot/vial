@@ -54,8 +54,9 @@ describe("retired shop URLs with a research equivalent", () => {
       expect(dest("/compounds/" + slug + "/")).toBeNull();
     });
 
-  it("sends the compounds index to the research market", () => {
-    expect(dest("/compounds")).toBe("/intelligence/market");
+  it("leaves the compounds index on its own page: it is the research library now", () => {
+    expect(dest("/compounds")).toBeNull();
+    expect(dest("/compounds/")).toBeNull();
   });
 
   it.each(["/compounds/bpc-157", "/compounds/not-a-compound", "/compounds/retatrutide/market", "/market", "/vendors/x", "/compounds/..%2Fadmin"])(
@@ -67,6 +68,28 @@ describe("retired shop URLs with a research equivalent", () => {
 
 describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
   afterEach(() => vi.unstubAllEnvs());
+
+  it.each(["/compounds", "/compounds/", "/how-we-check", "/how-we-check/"])(
+    "the research library and the method page stay public with browse OFF: %s", path => {
+      expect(publicReleaseAction(path, "GET", true, false)).toBeNull();
+      expect(publicReleaseAction(path, "HEAD", true, false)).toBeNull();
+    });
+
+  it.each(["/verify", "/verify/"])("lets %s reach its page, which forwards permanently to the source checker", path => {
+    expect(publicReleaseAction(path, "GET", true, false)).toBeNull();
+    expect(publicReleaseAction(path, "HEAD", true, false)).toBeNull();
+    expect(publicReleaseAction(path, "POST", true, false)).not.toBeNull();
+  });
+
+  it.each(["/compounds", "/how-we-check"])("but only for reading: %s", path => {
+    expect(publicReleaseAction(path, "POST", true, false)).not.toBeNull();
+    expect(publicReleaseAction(path, "POST", true, true)).not.toBeNull();
+  });
+
+  it.each(["/compounds/x", "/compoundsx", "/how-we-check/x", "/verify/x", "/verifyx", "/vendors", "/labs", "/passports", "/grades"])(
+    "everything else under the directories still needs the browse release: %s", path => {
+      expect(publicReleaseAction(path, "GET", true, false)).not.toBeNull();
+    });
 
   it("is off unless exactly true", () => {
     expect(publicBrowseRelease("")).toBe(false);
@@ -84,7 +107,7 @@ describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
   });
 
   it.each(["/products/legacy", "/compounds/retatrutide/market", "/go/anything", "/cart", "/checkout",
-    "/market", "/stacks", "/search", "/verify", "/compare", "/news", "/about", "/help", "/coverage", "/testing", "/api/v1/catalog", "/api/search", "/api/v1/verify",
+    "/market", "/stacks", "/search", "/compare", "/news", "/about", "/help", "/coverage", "/testing", "/api/v1/catalog", "/api/search", "/api/v1/verify",
   ])("keeps shop, market tables and every API closed even when on: %s", path => {
     expect(publicReleaseAction(path, "GET", true, true)).not.toBeNull();
   });

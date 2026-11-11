@@ -230,7 +230,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
             Showing {matching.length} of {RESEARCH_SUBJECTS.length} compounds
             {themeId === "all" ? "" : " · " + researchThemeById(themeId).name}
           </p>
-          <Link href="/intelligence/grading" className={UI.linkSmall}>About file coverage</Link>
+          <Link href="/how-we-check#grade-checks" className={UI.linkSmall}>About file coverage</Link>
         </div>
       </section>
 

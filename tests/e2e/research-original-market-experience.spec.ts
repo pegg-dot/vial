@@ -14,7 +14,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     await expect(page.getByRole("heading", { name: /The compounds.*in the research library/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /A record you can inspect for yourself/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Browse all 16 research records/ }))
-      .toHaveAttribute("href", "/intelligence/market#browse");
+      .toHaveAttribute("href", "/compounds#browse");
     await expect(page.getByRole("link", { name: /Buy|Checkout|Shop|Vendor listing/i })).toHaveCount(0);
   });
 
@@ -29,9 +29,9 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     await expect(dialog).not.toBeVisible();
   });
 
-  test("research market keeps curated horizontal shelves and source-linked comparison", async ({ page }) => {
-    await page.goto("/intelligence/market");
-    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
+  test("the research library keeps curated horizontal shelves and source-linked comparison", async ({ page }) => {
+    await page.goto("/compounds");
+    await expect(page.getByRole("heading", { level: 1, name: /Every peptide we track/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Studies on file" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Related research, kept separate" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Across the research areas" })).toBeVisible();
@@ -50,8 +50,8 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     await expect(source.getByRole("link", { name: "Original identity record" })).toHaveAttribute("href", "https://pubchem.ncbi.nlm.nih.gov/compound/16132253");
   });
 
-  test("market category URLs prefilter real records without a sales or referral path", async ({ page, request }) => {
-    await page.goto("/intelligence/market?theme=host-defense#browse");
+  test("library category URLs prefilter real records without a sales or referral path", async ({ page, request }) => {
+    await page.goto("/compounds?theme=host-defense#browse");
     await expect(page.getByRole("status").filter({ hasText: "Showing 4 of 16 compounds" })).toBeVisible();
     await expect(page.locator('[data-testid="research-card"]')).toHaveCount(4);
     await page.locator('[data-testid="research-card"]').getByRole("button", { name: "Quick view Pexiganan" }).click();
@@ -93,8 +93,9 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
   });
 
   test("filters, sort and compare selection survive opening a dossier and pressing Back", async ({ page }) => {
-    await page.goto("/intelligence/market");
-    const browse = page.locator("section").filter({ has: page.locator("h2", { hasText: "Browse everything" }) }).first();
+    await page.goto("/compounds");
+    // The explorer's own section: the library's outer section also holds the shelves' quick views.
+    const browse = page.locator("section#browse").filter({ has: page.locator("h2", { hasText: "Browse everything" }) });
     await page.getByRole("button", { name: "Host defense & antimicrobials" }).first().click();
     await page.getByText("More filters").click();
     await page.getByLabel("Sort research file coverage").selectOption("source-coverage");
@@ -109,7 +110,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     expect(await names()).toEqual(before);
     await expect(page.getByRole("region", { name: "Comparison selection" })).toBeVisible();
     // Hand-edited garbage falls back to the default list instead of breaking the page.
-    await page.goto("/intelligence/market?theme=%3Cx%3E&sort=zzz&compare=nope");
+    await page.goto("/compounds?theme=%3Cx%3E&sort=zzz&compare=nope");
     await expect(browse.locator('button[aria-label^="Quick view"]')).toHaveCount(16);
   });
 
@@ -125,7 +126,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
   test("desktop and mobile preserve original hierarchy without overflow or inaccessible menu", async ({ page }) => {
     for (const width of [1440, 1024, 390, 360]) {
       await page.setViewportSize({ width, height: 844 });
-      for (const route of ["/intelligence", "/intelligence/market"]) {
+      for (const route of ["/intelligence", "/compounds"]) {
         const response = await page.goto(route);
         expect(response?.status(), route).toBe(200);
         expect(await page.evaluate(() => document.documentElement.scrollWidth), width + "px " + route).toBeLessThanOrEqual(width + 1);
@@ -134,9 +135,9 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/intelligence");
     await page.getByRole("button", { name: "Open menu" }).click();
-    await expect(page.getByRole("navigation", { name: "Mobile research links" }).getByRole("link", { name: "Market" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Mobile research links" }).getByRole("link", { name: "Verify" })).toBeVisible();
-    await page.getByRole("navigation", { name: "Mobile research links" }).getByRole("link", { name: "Market" }).click();
-    await expect(page).toHaveURL(/\/intelligence\/market$/);
+    await expect(page.getByRole("navigation", { name: "Mobile research links" }).getByRole("link", { name: "Compounds", exact: true })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Mobile research links" }).getByRole("link", { name: "Check a source", exact: true })).toBeVisible();
+    await page.getByRole("navigation", { name: "Mobile research links" }).getByRole("link", { name: "Compounds", exact: true }).click();
+    await expect(page).toHaveURL(/\/compounds$/);
   });
 });

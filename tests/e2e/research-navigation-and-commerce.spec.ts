@@ -58,14 +58,15 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     await expect(page.getByRole("heading", { name: /Know what.s behind the claim/ })).toBeVisible();
     const mobileNav = page.getByRole("navigation", { name: "Mobile research navigation" });
     await mobileNav.getByRole("button", { name: "Open menu" }).click();
+    // Mobile rows carry aria-label = label, and "Compounds" is a substring of "Compare compounds".
     const menu = page.getByRole("navigation", { name: "Mobile research links" });
-    await expect(menu.getByRole("link", { name: "Market" })).toBeVisible();
-    await expect(menu.getByRole("link", { name: "Compare" })).toBeVisible();
-    await menu.getByRole("link", { name: "Compounds" }).click();
-    await expect(page).toHaveURL(/\/intelligence\/market#browse$/);
+    await expect(menu.getByRole("link", { name: "Compounds", exact: true })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Compare compounds", exact: true })).toBeVisible();
+    await menu.getByRole("link", { name: "Compounds", exact: true }).click();
+    await expect(page).toHaveURL(/\/compounds$/);
     const indexWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(indexWidth).toBeLessThanOrEqual(391);
-    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /Every peptide we track/ })).toBeVisible();
     const auditWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(auditWidth).toBeLessThanOrEqual(391);
   });
@@ -76,7 +77,8 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     await expect(page.getByRole("status").getByText(/The previous shopping marketplace is archived/)).toBeVisible();
     await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toBeVisible();
     if (process.env.VIALGRADE_PUBLIC_BROWSE !== "true") {
-      await page.goto("/how-we-check");
+      // /how-we-check is public now whatever the browse release says; /grades is still browse-only.
+      await page.goto("/grades");
       await expect(page).toHaveURL(/\/intelligence\?notice=retired$/);
     }
   });
@@ -85,7 +87,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   // sentence are exempt, so they are skipped the same way a reader would see them.
   test("standalone links and buttons are at least 24px tall on phone width", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence", "/intelligence/market", "/compounds/oxytocin", "/compounds/pexiganan", "/intelligence/verify", "/intelligence/materials"]) {
+    for (const path of ["/intelligence", "/compounds", "/how-we-check", "/compounds/oxytocin", "/compounds/pexiganan", "/intelligence/verify", "/intelligence/materials"]) {
       await page.goto(path);
       const small = await page.evaluate(() => [...document.querySelectorAll("a[href], button, [role=button]")]
         .filter(el => {
@@ -114,9 +116,11 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   });
 
   test("every visible internal public link on research and legal pages leads somewhere real", async ({ page }) => {
+    // The research library (/compounds), the method page (/how-we-check) and the pexiganan page are
+    // public with the browse release off; the four retired addresses only forward to them.
     const publicPages = [
-      "/intelligence", "/intelligence/market", "/intelligence/retatrutide", "/intelligence/cagrilintide",
-      "/intelligence/tirzepatide", "/intelligence/grading", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/verify", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/compounds/cagrilintide", "/compounds/ll-37", "/compounds/oxytocin", "/compounds/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
+      "/intelligence", "/compounds", "/intelligence/retatrutide", "/intelligence/cagrilintide",
+      "/intelligence/tirzepatide", "/how-we-check", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/verify", "/compounds/pexiganan", "/intelligence/organizations", "/compounds/cagrilintide", "/compounds/ll-37", "/compounds/oxytocin", "/compounds/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
       "/legal/us-regulations", "/legal/privacy", "/legal/contact",
       "/legal/terms", "/legal/disclaimer", "/login", "/register",
     ];
@@ -124,7 +128,8 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     // The browse release deliberately opens the read-only original pages (see research-browse.spec.ts).
     const browse = process.env.VIALGRADE_PUBLIC_BROWSE === "true";
     const disallowedPaths = new Set([
-      "/market", "/checkout", "/cart", "/go", "/products", ...(browse ? [] : ["/vendors", "/how-we-check"]),
+      "/market", "/checkout", "/cart", "/go", "/products", "/intelligence/market", "/intelligence/grading", "/verify", "/intelligence/passports/pexiganan",
+      ...(browse ? [] : ["/vendors"]),
     ]);
     for (const path of publicPages) {
       const response = await page.goto(path);

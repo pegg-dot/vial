@@ -83,7 +83,7 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
   return (
     <div>
       {trend.length > 0 && (
-        <CollectionRow eyebrow="Most looked-up" title="Trending compounds" blurb="The compounds readers look up most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
+        <CollectionRow eyebrow="Readers' picks" title="Most looked-up records" blurb="The compounds readers look up most right now." extent={{ shown: trend.length, total: compounds.length, noun: "compounds we track" }}>
           {trend.map((c, i) => (
             <div key={c.slug} className="w-[248px] shrink-0 snap-start">
               <CompoundTickerCard compound={c} products={products} hidePrice={hidePrices} metric={hidePrices ? undefined : { label: "vendors", value: vendorCount(c.slug) }} onQuickView={hidePrices ? undefined : () => openRow(trend, i)} />
@@ -93,7 +93,7 @@ export function CompoundsExperience({ catalog, initialShelf = null, hidePrices =
       )}
 
       <div className="flex items-center justify-between gap-4 pt-6">
-        <h2 className={UI.h2}>Every compound</h2>
+        <h2 className={UI.h2}>Every record, by shelf</h2>
         {hidePrices ? null : <div className="ink-1 inline-flex gap-1 rounded-full bg-white p-1">
           <button type="button" onClick={() => setView("shelves")} aria-pressed={view === "shelves"} className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-extrabold transition-colors ${view === "shelves" ? "bg-[#111214] text-white" : "text-[var(--muted)] hover:text-[#111214]"}`}>
             <LayoutGrid className="size-3.5" aria-hidden="true" /> Shelves

@@ -60,7 +60,7 @@ export function ResearchFileGradeCard({ subject, compact = false, bare = false }
         <p className={UI.eyebrow + " flex items-center gap-1.5"}>
           <SearchCheck className="size-4" aria-hidden="true" /> VialGrade research file
         </p>
-        <Link href="/intelligence/grading" className={UI.linkSmall}>How grading works</Link>
+        <Link href="/how-we-check#grade-checks" className={UI.linkSmall}>How grading works</Link>
       </div>
       <div className="mt-4 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">

@@ -98,9 +98,9 @@ export function ResearchGlobalSearch() {
               ))}
             </ul>
           ) : <p className="py-7 text-sm font-medium text-[var(--muted)]">No record in the current 16-compound starter library. Try an alternate name.</p>}
-          <Link href="/intelligence/market#browse" onClick={close}
+          <Link href="/compounds#browse" onClick={close}
             className="mt-5 inline-flex min-h-6 items-center gap-1.5 text-sm font-extrabold text-[#2b31d8] hover:underline">
-            Browse the complete research market <ArrowUpRight className="size-4" aria-hidden="true" />
+            Browse the complete research library <ArrowUpRight className="size-4" aria-hidden="true" />
           </Link>
           <p className="mt-3 text-xs font-medium text-[var(--muted)]">Searches cover the 16-compound starter index, not the full scientific literature or trial registry.</p>
         </div>
@@ -109,24 +109,9 @@ export function ResearchGlobalSearch() {
   );
 }
 
-const PRIMARY_MOBILE = [
-  { href: "/intelligence/market", label: "Market", note: "Find compounds and research records" },
-  { href: "/intelligence/market#browse", label: "Compounds", note: "Search the entire library" },
-  { href: "/intelligence/verify", label: "Verify", note: "Check an exact ID in the Pexiganan pilot" },
-  { href: "/intelligence/desk", label: "Research Desk", note: "Examine a source-backed question" },
-] as const;
-const MORE_MOBILE = [
-  { href: "/intelligence/compare?subjects=magainin-2%2Cpexiganan", label: "Compare", note: "See two source files together" },
-  { href: "/intelligence/grading", label: "How we check", note: "Understand A/B/C research-file coverage" },
-  { href: "/intelligence#trial-lookup", label: "Open a trial", note: "Look up an NCT registration" },
-  { href: "/intelligence/organizations", label: "Study sponsors", note: "Names found in selected trial records" },
-  { href: "/intelligence/providers", label: "Supplier documents", note: "Read company-published QC claims" },
-  { href: "/intelligence/materials", label: "Sample report checks", note: "Compare the lot IDs on two documents" },
-] as const;
+type MobileMenuLink = { href: string; label: string; note: string };
 
-export type MobileMenuLink = { href: string; label: string; note: string };
-
-const MOBILE_ROW = "rounded-xl px-4 py-2.5 hover:bg-[#eef0ff]";
+const MOBILE_ROW = "grid rounded-xl px-4 py-2.5 hover:bg-[#eef0ff]";
 const MOBILE_EYEBROW = "px-4 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]";
 
 function MobileMenuRows({ items, onPick }: { items: readonly MobileMenuLink[]; onPick: () => void }) {
@@ -138,8 +123,8 @@ function MobileMenuRows({ items, onPick }: { items: readonly MobileMenuLink[]; o
   ));
 }
 
-/** `browseLinks` are the read-only browse pages (compounds, vendors, grades) the header passes in when that release is on. */
-export function ResearchMobileMenu({ browseLinks = [] }: { browseLinks?: readonly MobileMenuLink[] }) {
+/** The header passes the same directories and research tools the desktop navigation shows, browse gating already applied. */
+export function ResearchMobileMenu({ primary, tools }: { primary: readonly MobileMenuLink[]; tools: readonly MobileMenuLink[] }) {
   const [open, setOpen] = useState(false);
   const pick = () => setOpen(false);
   return (
@@ -154,16 +139,10 @@ export function ResearchMobileMenu({ browseLinks = [] }: { browseLinks?: readonl
           <div className="mx-auto grid max-w-[1320px] gap-1">
             <Link onClick={pick} href="/intelligence"
               className="rounded-xl px-4 py-3 text-sm font-extrabold text-[#111214] hover:bg-[#eef0ff]">Home</Link>
-            <p className={MOBILE_EYEBROW + " pt-2"}>Start with</p>
-            <MobileMenuRows items={PRIMARY_MOBILE} onPick={pick} />
-            <p className={MOBILE_EYEBROW + " pt-3"}>Dig deeper</p>
-            <MobileMenuRows items={MORE_MOBILE} onPick={pick} />
-            {browseLinks.length > 0 && (
-              <>
-                <p className={MOBILE_EYEBROW + " pt-3"}>Browse the directory</p>
-                <MobileMenuRows items={browseLinks} onPick={pick} />
-              </>
-            )}
+            <p className={MOBILE_EYEBROW + " pt-2"}>Directories</p>
+            <MobileMenuRows items={primary} onPick={pick} />
+            <p className={MOBILE_EYEBROW + " pt-3"}>Research tools</p>
+            <MobileMenuRows items={tools} onPick={pick} />
             <Link onClick={pick} href="/login"
               className="mt-2 border-t border-[#111214]/15 px-4 py-3 text-sm font-bold text-[#111214]">Existing account</Link>
           </div>

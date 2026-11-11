@@ -45,7 +45,8 @@ import { ResearchFileGradeCard, ResearchFileGradeMark } from "@/components/intel
 import { gradeResearchFile } from "@/lib/research-file-grade";
 import { DossierTrialEvidence, TrialEvidenceLoading } from "@/components/intelligence/dossier-trial-evidence";
 import { DossierOrganizations, OrganizationsLoading } from "@/components/intelligence/dossier-organizations";
-import { PexEvidenceClaimGrid, PexEvidenceWayfinder, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
+import { PexEvidenceWayfinder, PexNoLabVerification, PexSourceRegister } from "@/components/intelligence/pexiganan-evidence";
+import { PexEvidencePassport, PEX_REGISTER_NOTE, PEX_REGISTRY_NOTE } from "@/components/intelligence/pexiganan-passport";
 import { PexigananResearchWorkspace } from "@/components/intelligence/pexiganan-research-workspace";
 import { PexTrialNetworkLive, PexTrialNetworkLoading } from "@/components/intelligence/pexiganan-trial-network";
 import { Chip, ContentsLayout, Frame, Notice, NumberedSection, PageHero, Pill, Quiet, Section, SectionHeading, Stat, UI, type ContentsItem } from "@/components/intelligence/research-ui";
@@ -205,8 +206,8 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   const aside = showCatalog ? (noCommerce ? evidenceCard : priceCard) : snapshotCard;
 
   const crumbs = [
-    { href: "/intelligence/market", label: "Research Market" },
-    showCatalog ? { href: "/compounds", label: "Compounds" } : { href: "/intelligence/market?theme=" + subject!.theme + "#browse", label: theme!.name },
+    { href: "/intelligence", label: "Home" },
+    { href: "/compounds", label: "Compounds" },
     { label: name },
   ];
 
@@ -291,9 +292,14 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           {subject && (
             <NumberedSection id="studies" number={sectionNumber("studies")} eyebrow="Studies" title="What the registered studies record"
               intro="Original registry facts and exact citation links. A registered study is not a result.">
-              {isPex && <PexEvidenceClaimGrid compact headless />}
+              {isPex && <PexEvidencePassport />}
               {isPex ? (
-                <Suspense fallback={<PexTrialNetworkLoading />}><PexTrialNetworkLive headless /></Suspense>
+                <div id="passport-studies" className="scroll-mt-36">
+                  <p className={UI.eyebrowMuted}>Registered studies</p>
+                  <h3 className={UI.h3 + " mt-1"}>The registry, re-read on request</h3>
+                  <p className={UI.small + " mt-2 max-w-3xl"}>{PEX_REGISTRY_NOTE}</p>
+                  <div className="mt-4"><Suspense fallback={<PexTrialNetworkLoading />}><PexTrialNetworkLive headless /></Suspense></div>
+                </div>
               ) : subject.sampleTrial ? (
                 <Suspense fallback={<TrialEvidenceLoading nctId={subject.sampleTrial} />}><DossierTrialEvidence subject={subject} /></Suspense>
               ) : (
@@ -319,7 +325,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
             <div className="grid items-start gap-4 xl:grid-cols-2">
               <NumberedSection id="sources" number={sectionNumber("sources")} eyebrow="Sources" title="Follow the source trail"
                 intro="Every row links to the original record. Search results have not been individually evaluated as evidence.">
-                {isPex ? <PexSourceRegister /> : (
+                {isPex ? <div className="grid gap-3"><p className={UI.small + " max-w-3xl"}>{PEX_REGISTER_NOTE}</p><PexSourceRegister /></div> : (
                   <ul className="divide-y divide-[#111214]/10 rounded-[14px] border border-[#111214]/15">
                     {[
                       { href: subject.referenceUrl, icon: CheckCircle2, title: "Molecular identity", note: subject.referenceLabel + " · Checked 18 Oct 2026", action: "Open PubChem" },
@@ -340,6 +346,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
               <NumberedSection id="material-evidence" number={sectionNumber("material-evidence")} eyebrow="Materials" title="Sample verification: not yet authenticated"
                 intro="The molecular record and the file letter do not establish the identity, authenticity or analytical quality of a physical lot.">
+                {isPex && <PexNoLabVerification />}
                 <div className="flex flex-wrap items-center gap-3">
                   <Pill href={"/intelligence/materials?subject=" + encodeURIComponent(subject.slug)} icon={ClipboardCheck} arrow="right">Open material checks</Pill>
                   <Link href="/intelligence/providers" className={UI.link}>Company-published QC documentation <ArrowUpRight className="size-4" /></Link>
@@ -430,7 +437,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                     <li key={other.slug}><Link href={"/compounds/" + other.slug} className="flex min-h-11 items-center justify-between gap-3 px-5 py-3 text-sm font-extrabold hover:bg-[#eef0ff]">{other.name} <ArrowRight className="size-4 text-[#2b31d8]" aria-hidden="true" /></Link></li>
                   ))}
                 </ul>
-                <Link href="/intelligence/market#browse" className={UI.linkSmall + " mt-3"}><ArrowLeft className="size-3" aria-hidden="true" /> Back to discovery</Link>
+                <Link href="/compounds#browse" className={UI.linkSmall + " mt-3"}><ArrowLeft className="size-3" aria-hidden="true" /> Back to discovery</Link>
               </div>
             </NumberedSection>
           )}

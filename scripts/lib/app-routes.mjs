@@ -47,7 +47,7 @@ const CUSTOMER_ROUTES = new Set(["/account", "/for-you", "/orders", "/saved-sear
  * stronger claim than asserting they merely respond — it is how we notice if commerce ever
  * quietly comes back to life.
  */
-export const REDIRECTED_ROUTES = new Set(["/cart", "/checkout", "/methodology", "/intelligence/suppliers"]);
+export const REDIRECTED_ROUTES = new Set(["/cart", "/checkout", "/methodology", "/intelligence/suppliers", "/verify", "/intelligence/grading", "/intelligence/market", "/intelligence/passports/pexiganan"]);
 export const isRedirected = (r) => REDIRECTED_ROUTES.has(r);
 export const needsCustomer = (r) => CUSTOMER_ROUTES.has(r) || r.startsWith("/account/");
 /** Staff surfaces. /admin/login is the way IN, so it is public by necessity. */

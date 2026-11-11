@@ -40,7 +40,7 @@ test.describe("Pexiganan source-centered research workspace", () => {
     await expect(workspace.getByRole("link", { name: "Check label and report IDs" }))
       .toHaveAttribute("href", "/intelligence/materials?subject=pexiganan");
     await expect(workspace.getByRole("link", { name: "All six evidence checks" }))
-      .toHaveAttribute("href", "/intelligence/passports/pexiganan");
+      .toHaveAttribute("href", "/compounds/pexiganan#studies");
   });
 
   test("preserves all deeper dossiers and no-sale boundaries in the production-like mode", async ({ page, request }) => {

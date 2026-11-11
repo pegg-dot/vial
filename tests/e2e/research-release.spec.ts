@@ -54,7 +54,7 @@ test.describe("research-only production release gate", () => {
     test.skip(process.env.VIALGRADE_PUBLIC_BROWSE === "true", "Browse release deliberately opens these pages; see research-browse.spec.ts");
     await page.goto("/intelligence");
     await expect(page.getByRole("navigation", { name: "Research navigation" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Market", exact: true })).toHaveAttribute("href", "/intelligence/market");
+    await expect(page.getByRole("navigation", { name: "Research navigation" }).getByRole("link", { name: "Compounds", exact: true })).toHaveAttribute("href", "/compounds");
     await expect(page.getByRole("link", { name: "Saved", exact: true })).toHaveCount(0);
     const robots = await page.request.get("/robots.txt");
     expect(await robots.text()).toContain("Disallow: /vendors");

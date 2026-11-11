@@ -21,9 +21,12 @@ describe("recently updated strip", () => {
 
   it("only links to routes that exist and never to anything outbound", () => {
     for (const e of RECENT_UPDATE_ENTRIES) {
-      expect(e.href.startsWith("/intelligence/")).toBe(true);
-      const dir = e.href.split("?")[0]!.replace(/^\//, "").split("/").slice(0, 2).join("/");
-      expect(existsSync("src/app/" + dir)).toBe(true);
+      // Research surfaces only: the intelligence tools, the compound pages, the method page.
+      expect(/^\/(intelligence\/|compounds\/|how-we-check(?:[#?]|$))/.test(e.href)).toBe(true);
+      const dir = e.href.split(/[?#]/)[0]!.replace(/^\//, "").split("/").slice(0, 2).join("/");
+      // A compound page is a dynamic segment: /compounds/pexiganan lives at src/app/compounds/[slug].
+      const dynamic = dir.split("/")[0] + "/[slug]";
+      expect(existsSync("src/app/" + dir) || existsSync("src/app/" + dynamic)).toBe(true);
     }
   });
 

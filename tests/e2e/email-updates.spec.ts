@@ -67,7 +67,7 @@ test.describe("Monthly update email", () => {
 
     test("bar appears after 10 seconds, is dismissible and stays dismissed", async ({ page }) => {
       await page.clock.install();
-      await page.goto("/intelligence/market");
+      await page.goto("/compounds");
       const bar = page.getByRole("complementary", { name: "Monthly update email" });
       await expect(bar).toHaveCount(0);
       await page.clock.fastForward(9_000);

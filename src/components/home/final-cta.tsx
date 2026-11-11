@@ -20,7 +20,7 @@ export function HomeFinalCta() {
           Inspect a vendor record, compound record or COA code. See the underlying sources and limitations rather than purchasing advice.
         </p>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/verify" className="ink hard press inline-flex items-center gap-2 rounded-full bg-[#2b31d8] px-7 py-4 text-base font-bold text-white">
+          <Link href="/intelligence/verify" className="ink hard press inline-flex items-center gap-2 rounded-full bg-[#2b31d8] px-7 py-4 text-base font-bold text-white">
             <ScanLine className="size-5" /> Verify something now
           </Link>
           <Link href="/market" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-white px-7 py-4 text-base font-bold text-[#111214]">

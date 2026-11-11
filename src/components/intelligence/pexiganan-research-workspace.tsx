@@ -231,7 +231,7 @@ export function PexigananResearchWorkspace() {
                     <p className="text-sm font-extrabold text-[#111214]">{check.heading}</p>
                     <p className={UI.small + " mt-1"}>{check.finding}</p>
                     <p className="mt-2 text-xs font-medium leading-5 text-[#9b6b22]">Still to check: {check.reviewTask}</p>
-                    <Link href={"/intelligence/passports/pexiganan#evidence-claim-" + check.id} className={UI.linkSmall + " mt-2"}>
+                    <Link href={"/compounds/pexiganan#evidence-claim-" + check.id} className={UI.linkSmall + " mt-2"}>
                       Read complete check <ArrowUpRight className="size-3.5" aria-hidden="true" />
                     </Link>
                   </div>
@@ -257,10 +257,10 @@ export function PexigananResearchWorkspace() {
           <div className="border-t border-[#111214]/15 pt-4 text-[11px] font-medium leading-5 text-[var(--muted)]">
             <p><CheckCircle2 className="mr-1 inline size-3.5 text-[#0b6b60]" aria-hidden="true" /> Source relationships are editorially selected, not systematically reviewed.</p>
             <p className="mt-1.5">No efficacy rating, human-use guidance, seller endorsement or independently checked physical sample.</p>
-            <Link href="/intelligence/grading" className={UI.linkSmall + " mt-3"}>
+            <Link href="/how-we-check#grade-checks" className={UI.linkSmall + " mt-3"}>
               Understand the source-file score <ArrowUpRight className="size-3.5" aria-hidden="true" />
             </Link>
-            <Link href="/intelligence/passports/pexiganan" className={UI.linkSmall + " mt-2 flex"}>
+            <Link href="/compounds/pexiganan#studies" className={UI.linkSmall + " mt-2 flex"}>
               All six evidence checks <FileSearch className="size-3.5" aria-hidden="true" />
             </Link>
           </div>

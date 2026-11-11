@@ -42,7 +42,7 @@ export default async function ResearchDossierPage({
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero art={["flask", "molecule"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: dossier.label }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: dossier.label }]}
         eyebrow={<><FileCheck2 className="size-4" aria-hidden="true" /> Traceable source register</>}
         title={dossier.label}
         lead="A dated, reproducible starting point for exploring this R&D topic. It separates registered study metadata from scholarly literature metadata, and makes unavailable sources and unanswered questions explicit."

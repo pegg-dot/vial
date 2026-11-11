@@ -174,7 +174,7 @@ export default function GradesPage() {
       })} />
 
       <PageHero art={["coa", "shield", "vial"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Purity vs grade" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Purity vs grade" }]}
         eyebrow={<><FileText className="size-4" aria-hidden="true" /> Purity vs grade</>}
         title={<>&ldquo;99.4% pure&rdquo; is not <span className="text-[#2b31d8]">a grade.</span></>}
         lead="A purity number and a manufacturing standard are two different claims. Vendors let you hear them as one, because that gap is where this market does its selling. Here is the difference in plain English, and the one question that settles it."
@@ -358,7 +358,7 @@ export default function GradesPage() {
           {/* ── Where this lives on the rest of the site ────────────────────────────── */}
           <NumberedSection id="keep-going" number={6} eyebrow="Keep going" title="The rest of the picture">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <CardLink href="/intelligence/grading" title="How research files are graded" body="The three source checks behind every research file letter, and why a letter is not a quality claim." />
+              <CardLink href="/how-we-check#grade-checks" title="How research files are graded" body="The three source checks behind every research file letter, and why a letter is not a quality claim." />
               <CardLink href="/how-we-check" title="How we check" body="What a lab test proves, the six questions one report answers, and what we refuse to guess." />
               <CardLink href="/intelligence" title="Research records" body="Every research subject on file, with its original sources and what stays unknown." />
               <CardLink href="/legal/us-regulations" title="The law around this" body="How research peptides are regulated in the US, in plain English." />

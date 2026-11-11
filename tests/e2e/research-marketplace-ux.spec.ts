@@ -4,8 +4,8 @@ test.describe("marketplace-like browsing with research-only sources", () => {
   test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Public research release only");
 
   test("lets visitors browse a visual category rail and a selected official-study shelf", async ({ page }) => {
-    await page.goto("/intelligence/market");
-    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
+    await page.goto("/compounds");
+    await expect(page.getByRole("heading", { level: 1, name: /Every peptide we track/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Studies on file" })).toBeVisible();
     await expect(page.getByRole("searchbox", { name: "Search research subjects" })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Showing 16 of 16 compounds" })).toBeVisible();
@@ -31,7 +31,7 @@ test.describe("marketplace-like browsing with research-only sources", () => {
   test("supports real quick-view, source links, Escape-to-close and compare selections", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", e => errors.push(e.message));
-    await page.goto("/intelligence/market");
+    await page.goto("/compounds");
     await page.locator('[data-testid="research-card"]').getByRole("button", { name: "Quick view Cagrilintide" }).click();
     const quick = page.getByRole("dialog", { name: "Quick research view: Cagrilintide" });
     await expect(quick).toBeVisible();
@@ -63,8 +63,8 @@ test.describe("marketplace-like browsing with research-only sources", () => {
 
   test("keeps product-style dossier useful without shopping or a horizontal mobile overflow", async ({ page, request }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/intelligence/market");
-    await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
+    await page.goto("/compounds");
+    await expect(page.getByRole("heading", { level: 1, name: /Every peptide we track/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Host defense & antimicrobials/ })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
 

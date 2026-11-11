@@ -26,7 +26,7 @@ function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-export function PassportsClient({ passports, total, verifyHref = "/verify", initialQuery = "", initialOrigins = [], initialEvidence = [] }: {
+export function PassportsClient({ passports, total, verifyHref = "/intelligence/verify", initialQuery = "", initialOrigins = [], initialEvidence = [] }: {
   passports: PassportRow[];
   /**
    * How many published passports EXIST. `passports` is capped by the server query, so its length is

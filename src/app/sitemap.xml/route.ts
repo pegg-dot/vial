@@ -34,7 +34,7 @@ const STATIC_PAGES = [
   ["/compounds", "weekly", 0.8], ["/vendors", "weekly", 0.8], ["/stacks", "weekly", 0.7], ["/research", "weekly", 0.75],
   ["/passports", "daily", 0.8], ["/labs", "weekly", 0.75], ["/testing", "weekly", 0.7],
   ["/compare", "weekly", 0.6], ["/how-we-check", "monthly", 0.7], ["/grades", "monthly", 0.7],
-  ["/reference-standard", "monthly", 0.6], ["/signals", "daily", 0.65], ["/verify", "monthly", 0.7],
+  ["/reference-standard", "monthly", 0.6], ["/signals", "daily", 0.65],
   ["/enforcement", "daily", 0.7], ["/news", "daily", 0.65], ["/about", "monthly", 0.5],
   ["/help", "monthly", 0.5], ["/status", "daily", 0.4],
   ["/legal/privacy", "yearly", 0.2], ["/legal/terms", "yearly", 0.2],

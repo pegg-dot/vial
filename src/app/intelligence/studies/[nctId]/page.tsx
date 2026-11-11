@@ -37,7 +37,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
   if (!id) notFound();
   const result = await lookupStudy(id);
   const connectedToPexiganan = PEXIGANAN_TRIAL_SELECTION.some(record => record.nctId === id);
-  const breadcrumb = [{ href: "/intelligence/market", label: "Research Market" }, { label: "Study " + id }] as const;
+  const breadcrumb = [{ href: "/intelligence", label: "Home" }, { label: "Study " + id }] as const;
   const eyebrow = <><FileSearch className="size-4" aria-hidden="true" /> Study source check · {id}</>;
 
   if (result.state !== "available") return (
@@ -54,7 +54,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
         </>}
         aside={<Frame><StudyLookupForm initialId={id} compact /></Frame>}
       />
-      <PageFootnote href="/intelligence/grading" linkLabel="How we check">
+      <PageFootnote href="/how-we-check#grade-checks" linkLabel="How we check">
         No research profile is created, though normal hosting logs may record a request. VialGrade provides no purchase or medical-advice features.
       </PageFootnote>
     </div>
@@ -89,7 +89,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
                 <p className={"text-xs font-extrabold " + TONE_ACCENT.mint}>Connected to Pexiganan research</p>
                 <p className={UI.small + " mt-1"}>This is one of four curated registry records. The evidence passport shows its molecular, article and sponsor relationships without assuming clinical benefit.</p>
               </div>
-              <Pill href="/intelligence/passports/pexiganan" variant="mint" size="sm" arrow="right" className="shrink-0">Evidence passport</Pill>
+              <Pill href="/compounds/pexiganan#studies" variant="mint" size="sm" arrow="right" className="shrink-0">Evidence passport</Pill>
             </Frame>
           )}
 
@@ -175,7 +175,7 @@ export default async function StudySourcePage({ params }: { params: Promise<{ nc
         </div>
       </Section>
 
-      <PageFootnote href="/intelligence/grading" linkLabel="How we check">
+      <PageFootnote href="/how-we-check#grade-checks" linkLabel="How we check">
         Checked {checkedLabel(result.checkedAt)}. NIH responses may be cached for up to six hours. No research profile is created, though normal hosting logs may record a request. VialGrade provides no purchase or medical-advice features.
       </PageFootnote>
     </div>

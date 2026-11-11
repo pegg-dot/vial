@@ -61,7 +61,7 @@ export function ResearchMarketShelves() {
     <div>
       <CollectionRow eyebrow="Five individually matched registry examples" title="Studies on file"
         blurb="Each record links a named research molecule to one selected public registration. No study outcome is inferred."
-        seeAllHref="/intelligence/market#browse" seeAllLabel="All compounds">
+        seeAllHref="/compounds#browse" seeAllLabel="All compounds">
         {STUDIES.map((item, i) => <ShelfCard key={item.slug} subject={item} badge="Trial example" onOpen={() => open(STUDIES,i)} />)}
       </CollectionRow>
       <CollectionRow eyebrow="Follow the identity" title="Related research, kept separate"
@@ -71,7 +71,7 @@ export function ResearchMarketShelves() {
       </CollectionRow>
       <CollectionRow eyebrow="Browse another subject" title="Across the research areas"
         blurb="A selection from the sixteen published identity workpapers. These are not trending, ranked or endorsed compounds."
-        seeAllHref="/intelligence/market#browse" seeAllLabel="All sixteen records">
+        seeAllHref="/compounds#browse" seeAllLabel="All sixteen records">
         {DISCOVERY.map((item, i) => <ShelfCard key={item.slug} subject={item} badge="Source-linked profile" onOpen={() => open(DISCOVERY,i)} />)}
       </CollectionRow>
 

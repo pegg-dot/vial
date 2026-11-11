@@ -9,28 +9,30 @@ test.describe("Pexiganan source-first research network", () => {
     page.on("pageerror", err => errors.push(err.message));
     await page.goto("/intelligence");
     await expect(page.getByRole("link", { name: "Evidence passport" }).first())
-      .toHaveAttribute("href", "/intelligence/passports/pexiganan");
+      .toHaveAttribute("href", "/compounds/pexiganan#studies");
     await expect(page.getByRole("link", { name: "Verify source" }).first()).toHaveAttribute("href", "/intelligence/verify");
     await page.getByRole("link", { name: "Open the dossier" }).click();
     await expect(page).toHaveURL(/\/compounds\/pexiganan$/);
     await expect(page.getByRole("heading", { level: 1, name: "Pexiganan" })).toBeVisible();
     const wayfinder = page.getByRole("region", { name: "Pexiganan evidence connections" });
     await expect(wayfinder).toBeVisible();
-    await expect(wayfinder.getByRole("link", { name: "Read passport" }))
-      .toHaveAttribute("href", "/intelligence/passports/pexiganan");
+    await expect(wayfinder.getByRole("link", { name: "Read the six checks" }))
+      .toHaveAttribute("href", "#passport-claims");
     await expect(wayfinder.getByRole("link", { name: "Try verification" }))
       .toHaveAttribute("href", "/intelligence/verify?ref=PMID%2036781451");
     await expect(wayfinder.getByRole("link", { name: "View source organizations" }))
       .toHaveAttribute("href", "/intelligence/organizations");
     await expect(page.getByRole("navigation", { name: "On this page" }).getByRole("link", { name: "Studies", exact: true }))
       .toHaveAttribute("href", "#studies");
-    await wayfinder.getByRole("link", { name: "Read passport" }).click();
-    await expect(page.getByRole("heading", { name: "Pexiganan, with the receipts." })).toBeVisible();
+    // The passport is the Studies section of this same page now; the link jumps to its six checks.
+    await wayfinder.getByRole("link", { name: "Read the six checks" }).click();
+    await expect(page).toHaveURL(/\/compounds\/pexiganan#passport-claims$/);
+    await expect(page.getByRole("heading", { name: "Six observations, each tied to its original record" })).toBeInViewport();
     expect(errors).toEqual([]);
   });
 
   test("passport links six claims to original records and exports methodological caveats", async ({ page }) => {
-    await page.goto("/intelligence/passports/pexiganan");
+    await page.goto("/compounds/pexiganan#studies");
     const claims = page.getByRole("region", { name: "Pexiganan claim and evidence checks" });
     await expect(claims.locator("article")).toHaveCount(6);
     await expect(claims.getByRole("heading", { name: "The later DERIVED citation is a review, not a results paper" })).toBeVisible();
@@ -76,7 +78,7 @@ test.describe("Pexiganan source-first research network", () => {
   });
 
   test("shows FOUR selected studies with source-status distinction, without claiming a clinical winner", async ({ page }) => {
-    await page.goto("/intelligence/passports/pexiganan");
+    await page.goto("/compounds/pexiganan#passport-studies");
     const trials = page.getByRole("region", { name: "Pexiganan selected original trial records" });
     await expect(trials).toBeVisible({ timeout: 30000 });
     await expect(trials.locator("article")).toHaveCount(4);
@@ -106,7 +108,7 @@ test.describe("Pexiganan source-first research network", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     for (const path of [
       "/intelligence", "/compounds/pexiganan",
-      "/intelligence/passports/pexiganan", "/intelligence/verify?ref=PMID%2036781451",
+      "/compounds", "/intelligence/verify?ref=PMID%2036781451",
       "/intelligence/organizations",
     ]) {
       const response = await page.goto(path);

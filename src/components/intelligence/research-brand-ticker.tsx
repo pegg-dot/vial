@@ -18,7 +18,7 @@ const TICKER = [
 
 export function ResearchBrandTicker() {
   const path = usePathname();
-  if (path !== "/intelligence" && path !== "/intelligence/market") return null;
+  if (path !== "/intelligence" && path !== "/compounds") return null;
   return (
     <div aria-label="Research library facts" className="overflow-hidden bg-[#2b31d8] text-white">
       <div className="market-ticker flex w-max items-center gap-10 py-2.5 pr-10 text-[13px] font-semibold">

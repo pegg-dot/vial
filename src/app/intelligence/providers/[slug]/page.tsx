@@ -24,7 +24,7 @@ export default async function ResearchProviderProfile({ params }: { params: Prom
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       {/* The h1 is the provider name; the id rides on its text because PageHero does not take a title id. */}
       <PageHero size="compact" art={["coa", "shield"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/intelligence/providers", label: "Supplier documentation" }, { label: provider.name }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { href: "/intelligence/providers", label: "Supplier documentation" }, { label: provider.name }]}
         eyebrow={<><Building2 className="size-4" aria-hidden="true" /> Public organization dossier · {provider.category}</>}
         title={<span id="source-profile-title">{provider.name}</span>}
         lead={provider.summary}

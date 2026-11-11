@@ -34,14 +34,14 @@ export default async function CompareResearchPage({ searchParams }: {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["molecule", "flask"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Compare" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Compare" }]}
         eyebrow={<><GitCompareArrows className="size-4" aria-hidden="true" /> Scientific comparison</>}
         title="Compare compounds"
         lead="Put molecular references, study questions, and source records side by side. This is a research comparison, not a ranking of effectiveness or safety."
         note="File letters describe which source types sit in our file, not how promising or safe a compound is. One selected registry record per subject; no cross-study inference."
         actions={<>
-          <Pill href="/intelligence/market#browse" variant="primary" arrow="right">{paired ? "Change the selection" : "Browse catalog"}</Pill>
-          <Pill href="/intelligence/grading" variant="ghost">How our file coverage grades work</Pill>
+          <Pill href="/compounds#browse" variant="primary" arrow="right">{paired ? "Change the selection" : "Browse catalog"}</Pill>
+          <Pill href="/how-we-check#grade-checks" variant="ghost">How our file coverage grades work</Pill>
         </>}
         aside={paired ? (
           <Frame shadow="sm" pad="sm">
@@ -128,7 +128,7 @@ export default async function CompareResearchPage({ searchParams }: {
         </div>
       </Section>
 
-      <PageFootnote href="/intelligence/market#browse" linkLabel="Back to the research market">
+      <PageFootnote href="/compounds#browse" linkLabel="Back to all compounds">
         Editorial research starting points, not grades of clinical effectiveness or material quality. No purchasing, clinical advice or laboratory certification.
       </PageFootnote>
     </div>

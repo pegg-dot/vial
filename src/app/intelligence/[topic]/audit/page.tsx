@@ -231,7 +231,7 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero art={["magnifier", "coa"]}
         breadcrumb={[
-          { href: "/intelligence/market", label: "Research Market" },
+          { href: "/intelligence", label: "Home" },
           { href: "/intelligence/cagrilintide", label: "Cagrilintide" },
           { label: "Study audit" },
         ]}
@@ -340,7 +340,7 @@ export default async function CagrilintideAuditPage({ params }: { params: Promis
         </ContentsLayout>
       </Section>
 
-      <PageFootnote href="/intelligence/grading" linkLabel="How we check">
+      <PageFootnote href="/how-we-check#grade-checks" linkLabel="How we check">
         Source responses can be cached for up to six hours; assembling an audit is not the same as fetching a new upstream version.
         Four manually pinned public NCT IDs; no user query, profile, database, paid API, model call or third-party full text.
       </PageFootnote>

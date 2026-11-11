@@ -5,7 +5,7 @@ import { reportError } from "@/server/observability/alerts";
 import { hidesCommerce } from "@/lib/public-research-release";
 import { DataUnavailable } from "@/components/home-data-unavailable";
 import { PassportsClient } from "@/components/passports-client";
-import { Frame, Notice, PageHero, Pill, Section, StatRow, TONE_ACCENT, UI } from "@/components/intelligence/research-ui";
+import { Frame, PageHero, Pill, Section, StatRow, TONE_ACCENT, UI } from "@/components/intelligence/research-ui";
 import {
   PASSPORT_EVIDENCE_FACETS,
   PASSPORT_ORIGIN_FACETS,
@@ -53,12 +53,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   // product's equivalents answer the same two questions.
   const noCommerce = hidesCommerce();
   const testingHref = noCommerce ? "/intelligence/materials" : "/testing";
-  const verifyHref = noCommerce ? "/intelligence/verify" : "/verify";
+  const verifyHref = "/intelligence/verify";
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["coa", "magnifier"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { label: "Batch records" }]}
+        breadcrumb={[{ href: "/intelligence", label: "Home" }, { label: "Batch records" }]}
         eyebrow={<><Fingerprint className="size-4" aria-hidden="true" /> Batch test records</>}
         title="The full test record for a batch."
         lead={<>When a batch gets tested, everything lands here: who picked the sample, who tested it, what came back &mdash; including results that disagree.</>}
