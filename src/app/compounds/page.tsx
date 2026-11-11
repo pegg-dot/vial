@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BarChart3, BookOpenText, Layers3 } from "lucide-react";
+import { BarChart3, BookOpenText, Layers3, Store } from "lucide-react";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { getCertificatesOnRecord } from "@/server/public-repository";
 import { SHELVES } from "@/lib/market-taxonomy";
@@ -42,6 +42,13 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
   if (showCatalog && (!catalog || totalCoa === null)) return <DataUnavailable surface="the compound directory" />;
   const compounds = catalog?.compounds ?? [];
   const products = catalog?.products ?? [];
+  // Distinct vendors per compound, counted here from the listings so the count cannot drift from
+  // them and can reach the directory cards without the listings: the evidence-only projection
+  // strips every product from the client payload.
+  const vendorSets = new Map<string, Set<string>>();
+  for (const p of products) vendorSets.set(p.compoundSlug, (vendorSets.get(p.compoundSlug) ?? new Set<string>()).add(p.vendorSlug));
+  const vendorCounts = Object.fromEntries([...vendorSets].map(([compoundSlug, set]) => [compoundSlug, set.size]));
+  const vendorTotal = new Set(products.map((p) => p.vendorSlug)).size;
   const initialShelf = shelfKeyFor(goal, shelf);
 
   return (
@@ -56,11 +63,13 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
         actions={<>
           <Pill href="#browse" variant="primary" arrow="right">Browse the research library</Pill>
           {showCatalog && <Pill href="#catalog" arrow="right">Catalog records</Pill>}
+          {showCatalog && <Pill href="/vendors" variant="ghost" icon={Store} arrow="right">Vendor directory</Pill>}
         </>}
       >
         <StatRow className="mt-8" items={[
           { icon: BookOpenText, value: RESEARCH_SUBJECTS.length, label: "Research files" },
           ...(showCatalog ? [{ icon: Layers3, value: compounds.length, label: "Catalog records" }] : []),
+          ...(showCatalog ? [{ icon: Store, value: vendorTotal, label: "Vendors" }] : []),
           ...(showCatalog && !hidesCommerce() ? [{ icon: BarChart3, value: products.length, label: "Listings" }] : []),
           ...(showCatalog && totalCoa !== null ? [{ icon: BookOpenText, value: totalCoa, label: "Lab certificates" }] : []),
         ]} />
@@ -86,7 +95,7 @@ export default async function CompoundsPage({ searchParams }: { searchParams: Pr
         <Section id="catalog" band="white">
           <SectionHeading eyebrow="Catalog records" title="Lab evidence and batch records on file."
             lead="Compounds with independent certificates, batch records or published research on file, by research shelf. The same page shows a compound's research file when it has one." className="mb-6" />
-          <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
+          <CompoundsExperience catalog={hidesCommerce() ? projectCatalog(catalog) : catalog} vendorCounts={vendorCounts} initialShelf={initialShelf} hidePrices={hidesCommerce()} />
         </Section>
       )}
     </div>
