@@ -31,7 +31,9 @@ const SHELF_PAGE = 8;
 // The catalog arrives as a prop from the /compounds server component rather than from
 // useMarketplace(): the market table and quick-view read whole records (price histories, purity,
 // research notes), and the provider carries only the lite projection the site chrome needs.
-export function CompoundsExperience({ catalog, vendorCounts, initialShelf = null, hidePrices = false }: { catalog: CatalogSnapshot; vendorCounts: Record<string, number>; initialShelf?: string | null; hidePrices?: boolean }) {
+// `hideStacks` is separate from `hidePrices`: the market record can be released while the stack
+// pages the stack cards link to stay closed, and a card must never lead to a retired route.
+export function CompoundsExperience({ catalog, vendorCounts, initialShelf = null, hidePrices = false, hideStacks = hidePrices }: { catalog: CatalogSnapshot; vendorCounts: Record<string, number>; initialShelf?: string | null; hidePrices?: boolean; hideStacks?: boolean }) {
   const { compounds, products } = catalog;
   const [view, setView] = useState<"terminal" | "shelves">("shelves");
   // The rail's filter. A ?shelf= deep-link lands filtered rather than scrolled — the section it used
@@ -178,7 +180,7 @@ export function CompoundsExperience({ catalog, vendorCounts, initialShelf = null
         </div>
       )}
 
-      {stacks.length > 0 && !hidePrices && (
+      {stacks.length > 0 && !hideStacks && (
         <CollectionRow eyebrow="Commonly discussed" title="Popular stacks" blurb="Combinations the research community talks about — not a protocol.">
           {stacks.map((r) => <StackCard key={r.stack.slug} resolved={r} />)}
         </CollectionRow>

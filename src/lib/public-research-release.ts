@@ -22,9 +22,37 @@ export function publicBrowseRelease(enabled = process.env.VIALGRADE_PUBLIC_BROWS
   return enabled === "true";
 }
 
-/** Pages that still carry price or listing blocks must drop them whenever the quarantine is on. */
+/**
+ * Everything on a browse page that is not evidence and not the market record: follow buttons,
+ * buyer reviews, community posts, third-party tracker ratings, storefront signals, offers and stack
+ * pages. These stay off whenever the quarantine is on, whatever the market-record flag says.
+ */
 export function hidesCommerce(enabled = evidenceOnlyPublicRelease()): boolean {
   return enabled;
+}
+
+/**
+ * The market record: which vendor lists a compound, the size, the price as last read, the date it
+ * was read and the listing it was read from. Needs VIALGRADE_MARKET_RECORDS=true on top of the
+ * browse release, the owner's decision of 2026-11-11. It opens no route. Product pages, the
+ * per-compound market page, compare, carts, checkout and /go click-throughs stay closed by
+ * publicReleaseAction and commerce-pause, and the record's outbound links are plain links to the
+ * vendor's own listing (see listingSourceUrl), never a tracked or tagged click-through.
+ */
+export function marketRecordsRelease(enabled = process.env.VIALGRADE_MARKET_RECORDS): boolean {
+  return enabled === "true";
+}
+
+/**
+ * Price and listing blocks specifically. Hidden under the quarantine unless the browse release and
+ * the market-record release are both on; with the quarantine off the legacy site shows them anyway.
+ */
+export function hidesMarket(
+  evidenceOnly = evidenceOnlyPublicRelease(),
+  browse = publicBrowseRelease(),
+  market = marketRecordsRelease(),
+): boolean {
+  return evidenceOnly && !(browse && market);
 }
 
 // Exact page shapes only, never a whole root. Every page listed here drops prices, listings and

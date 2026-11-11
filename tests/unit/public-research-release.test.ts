@@ -1,6 +1,6 @@
 import { isPausedTransactionEndpoint } from "@/lib/commerce-pause";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { publicReleaseAction, legacyResearchDestination, publicBrowseRelease, isBrowsePage, hidesCommerce } from "@/lib/public-research-release";
+import { publicReleaseAction, legacyResearchDestination, publicBrowseRelease, isBrowsePage, hidesCommerce, hidesMarket, marketRecordsRelease } from "@/lib/public-research-release";
 
 describe("public research-only deployment quarantine", () => {
   // The deployment may have the browse flag on; these cases describe the flag being off.
@@ -152,5 +152,64 @@ describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
   it("pages hide commerce whenever the quarantine is on", () => {
     expect(hidesCommerce(true)).toBe(true);
     expect(hidesCommerce(false)).toBe(false);
+  });
+});
+
+describe("market-record release (VIALGRADE_MARKET_RECORDS)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("is off unless exactly true, and reads the environment by default", () => {
+    for (const value of [undefined, "", "1", "TRUE", "yes", "false", " true"]) expect(marketRecordsRelease(value)).toBe(false);
+    expect(marketRecordsRelease("true")).toBe(true);
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
+    expect(marketRecordsRelease()).toBe(true);
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "false");
+    expect(marketRecordsRelease()).toBe(false);
+  });
+
+  it("prices and listings show under the quarantine only when browse AND the market record are both on", () => {
+    // [evidenceOnly, browse, market] -> hidden
+    expect(hidesMarket(true, true, true)).toBe(false);
+    expect(hidesMarket(true, true, false)).toBe(true);
+    expect(hidesMarket(true, false, true)).toBe(true);
+    expect(hidesMarket(true, false, false)).toBe(true);
+    // With the quarantine off the legacy site shows them whatever the other two say.
+    for (const browse of [true, false]) for (const market of [true, false]) expect(hidesMarket(false, browse, market)).toBe(false);
+  });
+
+  it("reads all three flags from the environment by default", () => {
+    vi.stubEnv("VIALGRADE_PUBLIC_EVIDENCE_ONLY", "true");
+    vi.stubEnv("VIALGRADE_PUBLIC_BROWSE", "true");
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "");
+    expect(hidesMarket()).toBe(true);
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
+    expect(hidesMarket()).toBe(false);
+    vi.stubEnv("VIALGRADE_PUBLIC_BROWSE", "");
+    expect(hidesMarket()).toBe(true);
+  });
+
+  it("leaves the rest of the commerce surface hidden: it is a narrower switch than hidesCommerce", () => {
+    vi.stubEnv("VIALGRADE_PUBLIC_EVIDENCE_ONLY", "true");
+    vi.stubEnv("VIALGRADE_PUBLIC_BROWSE", "true");
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
+    expect(hidesMarket()).toBe(false);
+    expect(hidesCommerce()).toBe(true);
+  });
+
+  it.each(["/products/legacy", "/compounds/retatrutide/market", "/go/anything", "/cart", "/checkout", "/market", "/stacks", "/stacks/x",
+    "/compare", "/search", "/api/v1/catalog", "/api/v1/compare", "/api/partner/conversion",
+  ])("opens no route: %s stays closed with the flag on", path => {
+    vi.stubEnv("VIALGRADE_PUBLIC_EVIDENCE_ONLY", "true");
+    vi.stubEnv("VIALGRADE_PUBLIC_BROWSE", "true");
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
+    expect(publicReleaseAction(path, "GET")).not.toBeNull();
+    expect(publicReleaseAction(path, "POST")).toBe("gone");
+  });
+
+  it("does not lift the purchase and click-through pause", () => {
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
+    for (const path of ["/go/acme", "/api/v1/commerce/checkout", "/api/v1/commerce/cart", "/api/partner/conversion"]) {
+      expect(isPausedTransactionEndpoint(path)).toBe(true);
+    }
   });
 });

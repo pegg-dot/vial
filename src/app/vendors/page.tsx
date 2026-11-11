@@ -5,8 +5,8 @@ import { getCertificatesOnRecord } from "@/server/public-repository";
 import { VendorsDirectory } from "@/components/vendors-directory";
 import { DataUnavailable } from "@/components/home-data-unavailable";
 import { PageHero, Section, StatRow } from "@/components/intelligence/research-ui";
-import { hidesCommerce } from "@/lib/public-research-release";
-import { projectDirectoryEntry } from "@/lib/evidence-projection";
+import { hidesCommerce, hidesMarket } from "@/lib/public-research-release";
+import { projectDirectoryEntry, projectMarketDirectoryEntry } from "@/lib/evidence-projection";
 import { reportError } from "@/server/observability/alerts";
 
 export const metadata: Metadata = { title: "Vendor directory", description: "Browse historical vendor records, laboratory reports, regulatory source links and the limits of available evidence; not a purchasing recommendation.", alternates: { canonical: "/vendors" } };
@@ -39,7 +39,10 @@ export default async function VendorsPage() {
       </PageHero>
 
       <Section tight>
-        <VendorsDirectory entries={hidesCommerce() ? entries.map(projectDirectoryEntry) : entries} hidePrices={hidesCommerce()} />
+        {/* Evidence-only: no price or listing figures. With the market record released: listing counts
+            and the price index, still no buyer sentiment. Legacy: everything. */}
+        <VendorsDirectory entries={hidesMarket() ? entries.map(projectDirectoryEntry) : hidesCommerce() ? entries.map(projectMarketDirectoryEntry) : entries}
+          hidePrices={hidesMarket()} hideBuyers={hidesCommerce()} />
       </Section>
     </div>
   );

@@ -15,7 +15,7 @@ import { GoalTags } from "@/components/goal-tags";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { UsLegalNotice } from "@/components/us-legal-notice";
 import { PriceSeries } from "@/components/price-series";
-import { evidenceOnlyPublicRelease, hidesCommerce, publicBrowseRelease } from "@/lib/public-research-release";
+import { evidenceOnlyPublicRelease, hidesCommerce, hidesMarket, publicBrowseRelease } from "@/lib/public-research-release";
 import {
   compareExplorerHref, registryDiscoveryUrl, researchSubjectBySlug, researchThemeById, RESEARCH_SUBJECTS, verifiedPubmedSearchUrl,
 } from "@/lib/research-explorer";
@@ -109,6 +109,10 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   // Under the evidence-only release this page is for looking into a compound: lab evidence, passports,
   // research. No prices, listings, market table or follow button.
   const noCommerce = hidesCommerce();
+  // The market record (who lists it, the price as last read, the listing it was read from) is its
+  // own release on top of browsing. Follow buttons and stack pages stay with noCommerce.
+  const noMarket = hidesMarket();
+  const showMarket = Boolean(compound) && showCatalog && listings.length > 0 && !noMarket;
   // Every directory vendor that lists this compound or whose independent evidence names it, in the
   // directory's order, with the letter from each one's own record. Under the evidence-only release
   // the entries are projected like the directory's, so no price reaches the page; the listings
@@ -149,7 +153,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
     ] : []),
     ...(edu ? [{ id: "understand", label: "Understand" }] : []),
     ...(vendorEntries.length ? [{ id: "vendors", label: "Vendors" }] : []),
-    ...(showCatalog && listings.length && !noCommerce ? [{ id: "market", label: "The market" }] : []),
+    ...(showMarket ? [{ id: "market", label: evidenceOnly ? "Market record" : "The market" }] : []),
     ...(labTests.length || passports.length ? [{ id: "lab-tests", label: "Lab tests" }] : []),
     ...(showCatalog && (research.length || regulatory) ? [{ id: "research", label: "Research" }] : []),
     ...(stacked.length || inStacks.length ? [{ id: "stacked", label: "Stacked with" }] : []),
@@ -212,7 +216,11 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
       </dl>
     </Frame>
   );
-  const aside = showCatalog ? (noCommerce ? evidenceCard : priceCard) : snapshotCard;
+  // Under the evidence-only release the hero stays with the lab evidence even when the market
+  // record is released: the prices sit in their own section further down, after the evidence.
+  const aside = showCatalog ? (evidenceOnly ? evidenceCard : priceCard) : snapshotCard;
+  // Each listing vendor's released website (or null), which is what a row's source citation needs.
+  const websiteByVendor = new Map(directory.map((e) => [e.vendor.slug, e.websiteUrl]));
 
   const crumbs = [
     { href: "/intelligence", label: "Home" },
@@ -276,9 +284,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           {compound && showCatalog && (
             <div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {noCommerce ? <Stat icon={Layers3} label="Batch passports" value={passports.length} /> : <Stat icon={Layers3} label="Active listings" value={compound.listings} />}
+                {noMarket ? <Stat icon={Layers3} label="Batch passports" value={passports.length} /> : <Stat icon={Layers3} label={evidenceOnly ? "Listings on record" : "Active listings"} value={compound.listings} />}
                 <Stat icon={FileSearch} label="Independent lab tests" value={compound.medianPurity != null ? `${compound.coaCount} · ${compound.medianPurity.toFixed(1)}%` : compound.coaCount} />
-                {noCommerce ? <Stat icon={ChartNoAxesCombined} label="Research findings on file" value={research.length} /> : <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />}
+                {noMarket ? <Stat icon={ChartNoAxesCombined} label="Research findings on file" value={research.length} /> : <Stat icon={ChartNoAxesCombined} label="Observed price range" value={listings.length ? `${formatCurrency(Math.min(...listings.map((item) => item.price)))}–${formatCurrency(Math.max(...listings.map((item) => item.price)))}` : "No active listings"} />}
                 <Stat icon={BookOpen} label="Known aliases" value={compound.aliases.length + 1} />
               </div>
               {compound.medianPurity != null && <p className="mt-3 text-[11px] font-medium leading-4 text-[var(--muted)]">{PURITY_PROVENANCE_SHORT} <Link href="/grades" className="font-extrabold text-[#2b31d8] hover:underline">Purity vs grade</Link></p>}
@@ -386,14 +394,24 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
 
           {/* THE market surface (legacy release only). The leaderboard brings its own page container,
               so this block steps out of the section's padding to line up with it. */}
-          {compound && showCatalog && listings.length && !noCommerce ? (
-            <div id="market" className="-mx-5 scroll-mt-36 sm:-mx-8">
+          {compound && showMarket ? (
+            /* min-w-0: a grid item is as wide as its widest child by default, and the table's
+               minimum width would stretch the whole page on a phone instead of scrolling in its box. */
+            <div id="market" className="-mx-5 min-w-0 scroll-mt-36 sm:-mx-8">
               <div className={UI.container + " pt-2"}>
-                <SectionHeading eyebrow="Current market" title={`The ${compound.name} market`}
-                  lead={<>Every {compound.name} listing we track &mdash; {listings.length} in all. Historical prices are shown with evidence and data quality limitations. Prices do not amount to a recommendation or an assurance of product identity, safety or lawful sale.</>}
-                  action={<Pill href={`/compounds/${slug}/market`} variant="ink" arrow="right">Open full market</Pill>} />
+                {evidenceOnly ? (
+                  /* The market record: what was listed and what it cost on the day we read it, each
+                     row citing the listing. The full-market and product pages stay closed here. */
+                  <SectionHeading eyebrow="Market record" title={`What ${compound.name} listings show, and when we read them`}
+                    lead={<>Every {compound.name} listing on record &mdash; {listings.length} in all &mdash; with the price as it read on the day we read it and, where a vendor&rsquo;s website link is released, the listing it was read from. Recorded for reference alongside the lab evidence above: VialGrade sells nothing and takes no referrals, and a price is not a recommendation or an assurance of product identity, safety or lawful sale.</>} />
+                ) : (
+                  <SectionHeading eyebrow="Current market" title={`The ${compound.name} market`}
+                    lead={<>Every {compound.name} listing we track &mdash; {listings.length} in all. Historical prices are shown with evidence and data quality limitations. Prices do not amount to a recommendation or an assurance of product identity, safety or lawful sale.</>}
+                    action={<Pill href={`/compounds/${slug}/market`} variant="ink" arrow="right">Open full market</Pill>} />
+                )}
               </div>
-              <PriceLeaderboard compoundName={compound.name} marketHref={`/compounds/${slug}/market`} listings={listings} labTests={labTests} />
+              <PriceLeaderboard compoundName={compound.name} marketHref={evidenceOnly ? undefined : `/compounds/${slug}/market`} listings={listings} labTests={labTests}
+                record={evidenceOnly ? { websiteByVendor } : undefined} />
             </div>
           ) : null}
 
@@ -432,7 +450,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                           <p className="truncate text-lg font-extrabold tracking-[-.03em] text-[#111214]">{c.name}</p>
                           <p className="mt-0.5 text-xs font-bold text-[var(--muted)]">{c.category}</p>
                         </div>
-                        {noCommerce ? null : <span className="shrink-0 text-right text-sm font-extrabold tabular-nums text-[#111214]">{c.listings > 0 ? formatCurrency(c.medianPrice) : "—"}<span className="mt-0.5 block text-[10px] font-bold text-[var(--muted)]">{c.listings > 0 ? "median" : "no listings"}</span></span>}
+                        {noMarket ? null : <span className="shrink-0 text-right text-sm font-extrabold tabular-nums text-[#111214]">{c.listings > 0 ? formatCurrency(c.medianPrice) : "—"}<span className="mt-0.5 block text-[10px] font-bold text-[var(--muted)]">{c.listings > 0 ? "median" : "no listings"}</span></span>}
                       </div>
                       {cEdu?.goals?.length ? <GoalTags goals={cEdu.goals} limit={2} /> : null}
                       {cEdu?.summary ? <p className="line-clamp-2 text-xs font-medium leading-5 text-[#4a4d56]">{cEdu.summary}</p> : null}
