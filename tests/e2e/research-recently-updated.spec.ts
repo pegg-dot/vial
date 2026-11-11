@@ -11,11 +11,13 @@ test.describe("Recently updated strip", () => {
     const items = strip.getByRole("listitem");
     await expect(items).toHaveCount(4);
     await expect(strip.locator("time").first()).toHaveAttribute("datetime", /^\d{4}-\d{2}-\d{2}$/);
+    // Research surfaces only: the intelligence tools, the compound pages, the method page.
     for (const link of await strip.getByRole("link").all()) {
-      expect(await link.getAttribute("href")).toMatch(/^\/intelligence\//);
+      expect(await link.getAttribute("href")).toMatch(/^\/(intelligence\/|compounds\/|how-we-check(?:[#?]|$))/);
     }
     await strip.getByRole("link", { name: /Pexiganan evidence passport/ }).click();
-    await expect(page).toHaveURL(/\/intelligence\/passports\/pexiganan/);
+    await expect(page).toHaveURL(/\/compounds\/pexiganan#studies$/);
+    await expect(page.getByRole("heading", { name: "What can we actually say?" })).toBeInViewport();
   });
 
   test("uses no selling language", async ({ page }) => {
