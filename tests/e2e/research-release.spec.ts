@@ -5,7 +5,7 @@ test.describe("public research intelligence", () => {
     await page.goto("/intelligence");
     await expect(page.getByRole("heading", { name: /Know what.s behind the claim/ })).toBeVisible();
     await expect(page.getByRole("search").getByLabel("ClinicalTrials.gov study ID or link")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toHaveAttribute("href", "/intelligence/explore/pexiganan");
+    await expect(page.getByRole("link", { name: "Open Pexiganan dossier" })).toHaveAttribute("href", "/compounds/pexiganan");
     await expect(page.getByRole("heading", { name: /The compounds.*in the research library/ })).toBeVisible();
     await expect(page.getByText("Cross-topic source coverage")).toHaveCount(0);
   });

@@ -72,7 +72,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   function parkControlsForReturn(event: React.MouseEvent) {
-    if (!(event.target as Element).closest('a[href^="/intelligence/explore/"]')) return;
+    if (!(event.target as Element).closest('a[href^="/compounds/"]')) return;
     try {
       window.sessionStorage.setItem(RETURN_KEY, JSON.stringify({
         at: Date.now(),
@@ -273,7 +273,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
                       className="ink-1 hard-sm press inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-[10px] bg-[#111214] px-2 text-xs font-extrabold text-white">
                       Quick view <ArrowUpRight className="size-3.5" />
                     </button>
-                    <Link href={"/intelligence/explore/" + subject.slug}
+                    <Link href={"/compounds/" + subject.slug}
                       aria-label={"Open research dossier: " + subject.name}
                       className="ink-1 grid size-10 shrink-0 place-items-center rounded-[10px] bg-white text-[#111214] hover:bg-[#eef0ff]" title="Full research dossier">
                       <ArrowRight className="size-4" />
@@ -305,7 +305,7 @@ export function ResearchExplorer({ initial = DEFAULT_EXPLORER_STATE }: {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {RESEARCH_SUBJECTS.filter(subject => Boolean(subject.sampleTrial)).map(subject => (
-            <Link key={subject.slug} href={"/intelligence/explore/" + subject.slug}
+            <Link key={subject.slug} href={"/compounds/" + subject.slug}
               className="ink-1 inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-3.5 text-xs font-extrabold text-[#111214] transition-colors hover:bg-[#eef0ff]">
               {subject.name}<span className="font-medium text-[var(--muted)]">{subject.sampleTrial}</span><ArrowUpRight className="size-3.5 text-[#2b31d8]" aria-hidden="true" />
             </Link>

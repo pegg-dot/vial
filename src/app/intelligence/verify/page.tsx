@@ -20,7 +20,7 @@ export default async function ResearchSourceVerifyPage({
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       {/* Compact so the verifier, and the limitation it returns, sit above the fold at 1440×900. */}
       <PageHero size="compact" art={["magnifier", "molecule"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/intelligence/explore/pexiganan", label: "Pexiganan" }, { label: "Verify source" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/compounds/pexiganan", label: "Pexiganan" }, { label: "Verify source" }]}
         eyebrow={<><ScanSearch className="size-4" aria-hidden="true" /> Exact source ID lookup · Pexiganan pilot</>}
         title="Verify what a source says."
         lead="Look up an exact PubMed PMID, ClinicalTrials.gov NCT number or PubChem CID."
@@ -43,7 +43,7 @@ export default async function ResearchSourceVerifyPage({
           </NumberedSection>
         </div>
       </Section>
-      <PageFootnote href="/intelligence/explore/pexiganan" linkLabel="Return to Pexiganan">
+      <PageFootnote href="/compounds/pexiganan" linkLabel="Return to Pexiganan">
         A match means a record is present in this reviewed source index, not that its scientific conclusions, a vendor, a certificate or a sample have been authenticated.
         External source records can change and must be inspected directly. No user-input data is saved in a research profile.
       </PageFootnote>

@@ -109,7 +109,7 @@ describe("Resend client", () => {
 
 describe("first-visit bar rule and perimeter", () => {
   it("offers the bar on research pages but never on signup, legal, login, register, admin or account", () => {
-    for (const ok of ["/intelligence", "/intelligence/", "/intelligence/market", "/intelligence/explore/pexiganan"]) expect(updatesPromptAllowedOn(ok)).toBe(true);
+    for (const ok of ["/intelligence", "/intelligence/", "/intelligence/market", "/intelligence/explore/pexiganan", "/compounds/pexiganan", "/compounds"]) expect(updatesPromptAllowedOn(ok)).toBe(true);
     for (const no of ["/intelligence/updates", "/intelligence/updates/", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", "/legal/privacy", "/login", "/register", "/admin", "/admin/login", "/account", "/", "/intelligence-x"]) expect(updatesPromptAllowedOn(no)).toBe(false);
   });
   it("keeps the signup pages and monthly cron reachable without a session, and nothing wider", () => {

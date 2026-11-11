@@ -85,7 +85,7 @@ test.describe("research-only navigation and permanent purchase suspension", () =
   // sentence are exempt, so they are skipped the same way a reader would see them.
   test("standalone links and buttons are at least 24px tall on phone width", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence", "/intelligence/market", "/intelligence/explore/oxytocin", "/intelligence/explore/pexiganan", "/intelligence/verify", "/intelligence/materials"]) {
+    for (const path of ["/intelligence", "/intelligence/market", "/compounds/oxytocin", "/compounds/pexiganan", "/intelligence/verify", "/intelligence/materials"]) {
       await page.goto(path);
       const small = await page.evaluate(() => [...document.querySelectorAll("a[href], button, [role=button]")]
         .filter(el => {
@@ -98,25 +98,25 @@ test.describe("research-only navigation and permanent purchase suspension", () =
     }
   });
 
-  test("retired compound URLs go to a dossier when one exists and otherwise explain the shutdown", async ({ page }) => {
+  test("retired compound URLs serve the dossier when one exists and otherwise explain the shutdown", async ({ page }) => {
     test.skip(process.env.VIALGRADE_PUBLIC_BROWSE === "true", "Browse release opens /compounds pages; see research-browse.spec.ts");
+    // A compound with a research file is the dossier itself: public on its own URL even with browse off.
     const dossier = await page.request.get("/compounds/retatrutide", { maxRedirects: 0 });
-    expect(dossier.status()).toBe(307);
-    expect(dossier.headers().location).toContain("/intelligence/explore/retatrutide");
+    expect(dossier.status()).toBe(200);
     const unknown = await page.request.get("/compounds/bpc-157", { maxRedirects: 0 });
     expect(unknown.status()).toBe(307);
     expect(unknown.headers().location).toContain("/intelligence?notice=retired");
     const post = await page.request.post("/compounds/retatrutide", { data: {}, maxRedirects: 0 });
     expect(post.status()).toBe(410);
     await page.goto("/compounds/retatrutide");
-    await expect(page).toHaveURL(/\/intelligence\/explore\/retatrutide$/);
+    await expect(page).toHaveURL(/\/compounds\/retatrutide$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Retatrutide");
   });
 
   test("every visible internal public link on research and legal pages leads somewhere real", async ({ page }) => {
     const publicPages = [
       "/intelligence", "/intelligence/market", "/intelligence/retatrutide", "/intelligence/cagrilintide",
-      "/intelligence/tirzepatide", "/intelligence/grading", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/verify", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/intelligence/explore/cagrilintide", "/intelligence/explore/ll-37", "/intelligence/explore/oxytocin", "/intelligence/explore/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
+      "/intelligence/tirzepatide", "/intelligence/grading", "/intelligence/cagrilintide/audit", "/intelligence/studies/NCT05804162", "/intelligence/cases/magainin-pexiganan", "/intelligence/verify", "/intelligence/passports/pexiganan", "/intelligence/organizations", "/compounds/cagrilintide", "/compounds/ll-37", "/compounds/oxytocin", "/compounds/ziconotide", "/intelligence/compare?subjects=semaglutide,tirzepatide",
       "/legal/us-regulations", "/legal/privacy", "/legal/contact",
       "/legal/terms", "/legal/disclaimer", "/login", "/register",
     ];

@@ -69,7 +69,7 @@ export default function ResearchFileGradingMethodPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               {examples.map(subject => (
                 <div key={subject.slug} className="min-w-0">
-                  <Link href={"/intelligence/explore/" + subject.slug} className={UI.link + " mb-3"}>
+                  <Link href={"/compounds/" + subject.slug} className={UI.link + " mb-3"}>
                     {subject.name} dossier <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                   <ResearchFileGradeCard subject={subject} compact />

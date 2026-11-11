@@ -29,7 +29,7 @@ export default async function ResearchMaterialsPage({ searchParams }: {
         note="This is a local note-taking checklist, not a laboratory test. Nothing is uploaded or saved, and no indexed identity has an independently authenticated physical lot on file."
         actions={<>
           <Pill href="/intelligence/providers" arrow="right">Supplier quality documents</Pill>
-          <Pill href={"/intelligence/explore/" + initialSlug} variant="ghost" arrow="right">Compound dossier</Pill>
+          <Pill href={"/compounds/" + initialSlug} variant="ghost" arrow="right">Compound dossier</Pill>
         </>}
       />
       <Section tight>

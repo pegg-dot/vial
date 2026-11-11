@@ -57,9 +57,14 @@ export function publicReleaseAction(
   method = "GET",
   enabled = evidenceOnlyPublicRelease(),
   browse = publicBrowseRelease(),
+  hasDossier: (slug: string) => boolean = () => false,
 ): PublicReleaseAction {
   if (!enabled) return null;
   if (browse && isBrowsePage(pathname, method)) return null;
+  // A compound page that carries a research file IS the research dossier now, so it stays public
+  // whatever the browse release says; the page itself hides the catalog parts when browse is off.
+  const compound = /^\/compounds\/([a-z0-9-]+)\/?$/.exec(pathname);
+  if (compound && ["GET", "HEAD"].includes(method.toUpperCase()) && hasDossier(compound[1])) return null;
   const path = pathname.replace(/\/+$/, "") || "/";
 
   // Only the source-linked public research preview, legal notices, and
@@ -112,16 +117,12 @@ export function publicReleaseAction(
 /**
  * Where a retired shop URL has a real equivalent in the research product.
  *
- * Only `/compounds` and `/compounds/<slug>` where the slug has a research dossier. Everything else
- * keeps the generic "retired" notice, which says so honestly instead of guessing a destination.
- * This is a redirect to read-only research pages; it does not reopen listings, prices or referrals.
+ * Only `/compounds` (to the research market). A per-compound page is itself the research dossier
+ * and is let through by publicReleaseAction. Everything else keeps the generic "retired" notice,
+ * which says so honestly instead of guessing a destination.
  */
-export function legacyResearchDestination(
-  pathname: string,
-  hasDossier: (slug: string) => boolean,
-): string | null {
+export function legacyResearchDestination(pathname: string): string | null {
   const path = pathname.replace(/\/+$/, "");
-  if (path === "/compounds") return "/intelligence/market";
-  const match = /^\/compounds\/([a-z0-9-]+)$/.exec(path);
-  return match && hasDossier(match[1]) ? "/intelligence/explore/" + match[1] : null;
+  // The per-compound page is the dossier now and never redirects; only the old directory maps.
+  return path === "/compounds" ? "/intelligence/market" : null;
 }

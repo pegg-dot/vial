@@ -34,7 +34,7 @@ test.describe("source-backed professional research workflows", () => {
   });
 
   test("keeps molecular identity, selected registered results and paper associations separate", async ({ page }) => {
-    await page.goto("/intelligence/explore/cagrilintide");
+    await page.goto("/compounds/cagrilintide");
     const official = page.getByRole("region", { name: "Selected official trial evidence" });
     await expect(official).toBeVisible();
     const verified = official.getByRole("heading", { name: "What the selected trial actually records" });
@@ -68,7 +68,7 @@ test.describe("source-backed professional research workflows", () => {
 
   test("links the editorial workpaper from both molecular identities and their comparison", async ({ page }) => {
     for (const slug of ["magainin-2", "pexiganan"]) {
-      await page.goto("/intelligence/explore/" + slug);
+      await page.goto("/compounds/" + slug);
       await expect(page.getByRole("link", { name: "Open guided evidence workpaper" }))
         .toHaveAttribute("href", "/intelligence/cases/magainin-pexiganan");
     }
@@ -80,7 +80,7 @@ test.describe("source-backed professional research workflows", () => {
 
   test("mobile evidence workpaper does not overflow and retired commerce stays denied", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence/cases/magainin-pexiganan", "/intelligence/explore/pexiganan"]) {
+    for (const path of ["/intelligence/cases/magainin-pexiganan", "/compounds/pexiganan"]) {
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
       expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(391);

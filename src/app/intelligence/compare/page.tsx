@@ -110,7 +110,7 @@ export default async function CompareResearchPage({ searchParams }: {
                             { href: verifiedPubmedSearchUrl(subject), external: true, icon: BookOpen, title: "PubMed search", action: "Search PubMed" },
                             { href: registryDiscoveryUrl(subject), external: true, icon: FileSearch, title: "Registry search", action: "Search ClinicalTrials.gov" },
                           ]} />
-                          <Pill href={"/intelligence/explore/" + subject.slug} variant="ink" arrow="right" className="mt-4 w-full">Open research dossier</Pill>
+                          <Pill href={"/compounds/" + subject.slug} variant="ink" arrow="right" className="mt-4 w-full">Open research dossier</Pill>
                         </div>
                       </Frame>
                     );

@@ -109,7 +109,7 @@ export function ResearchQuickView({
               <div className="mt-3"><ResearchFileGradeCard subject={subject} compact /></div>
             </details>
             <div className="mt-6 flex flex-wrap gap-3 border-t-2 border-[#111214]/10 pt-5">
-              <Pill href={"/intelligence/explore/" + subject.slug} onClick={onClose} variant="primary" arrow="right">Open research dossier</Pill>
+              <Pill href={"/compounds/" + subject.slug} onClick={onClose} variant="primary" arrow="right">Open research dossier</Pill>
               <Pill variant="secondary" icon={GitCompareArrows} onClick={() => { onCompare(subject.slug); onClose(); }}
                 disabled={compareLimitReached && !selected} className="disabled:cursor-not-allowed">
                 {selected ? "Remove from compare" : "Add to compare"}

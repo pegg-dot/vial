@@ -40,7 +40,7 @@ test.describe("research UX comprehension without deleting tools", () => {
   });
 
   test("dossier leads with answers and still exposes all technical sections", async ({ page }) => {
-    await page.goto("/intelligence/explore/pexiganan");
+    await page.goto("/compounds/pexiganan");
     await expect(page.getByRole("link", { name: "Investigate the evidence" })).toHaveAttribute("href", "#research-workspace");
     await expect(page.getByRole("link", { name: "Inspect molecular identity" })).toHaveAttribute("href", "https://pubchem.ncbi.nlm.nih.gov/compound/16132253");
     await expect(page.getByText("This letter describes linked source types", { exact: false })).toBeVisible();
@@ -49,7 +49,7 @@ test.describe("research UX comprehension without deleting tools", () => {
     await expect(page.getByText("What is not verified?")).toBeVisible();
     // Technical details are part of the Overview now, not hidden behind a disclosure.
     await expect(page.locator("#overview").getByText("Membrane-associated antimicrobial peptide activity").first()).toBeVisible();
-    const nav = page.getByRole("navigation", { name: "Research dossier sections" });
+    const nav = page.getByRole("navigation", { name: "On this page" });
     for (const [label, hash] of [
       ["Overview", "#overview"], ["Source file", "#file-grade"], ["Studies", "#studies"],
       ["Sources", "#sources"], ["Materials", "#material-evidence"], ["Limits and related", "#related"],
@@ -117,7 +117,7 @@ test.describe("research UX comprehension without deleting tools", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
     await menu.getByRole("link", { name: "Market" }).click();
     await expect(page).toHaveURL(/\/intelligence\/market$/);
-    for (const route of ["/intelligence/explore/pexiganan", "/intelligence/passports/pexiganan", "/intelligence/materials"]) {
+    for (const route of ["/compounds/pexiganan", "/intelligence/passports/pexiganan", "/intelligence/materials"]) {
       const response = await page.goto(route);
       expect(response?.status()).toBe(200);
       expect(await page.evaluate(() => document.documentElement.scrollWidth), route).toBeLessThanOrEqual(391);

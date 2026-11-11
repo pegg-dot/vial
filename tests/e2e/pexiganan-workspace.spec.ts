@@ -4,7 +4,7 @@ test.describe("Pexiganan source-centered research workspace", () => {
   test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Public evidence research-only build");
 
   test("opens with a usable answer and retains the original identity and source navigation", async ({ page }) => {
-    await page.goto("/intelligence/explore/pexiganan");
+    await page.goto("/compounds/pexiganan");
     await expect(page.getByRole("heading", { level: 1, name: "Pexiganan" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Investigate the evidence" }))
       .toHaveAttribute("href", "#research-workspace");
@@ -22,7 +22,7 @@ test.describe("Pexiganan source-centered research workspace", () => {
   });
 
   test("separates original experiments, source registrations, DERIVED reviews and material evidence", async ({ page }) => {
-    await page.goto("/intelligence/explore/pexiganan");
+    await page.goto("/compounds/pexiganan");
     const workspace = page.getByRole("region", { name: "One compound. Four different evidence questions." });
     await workspace.getByRole("button", { name: "Investigate Original experiments" }).click();
     await expect(workspace.getByRole("heading", { name: "A laboratory membrane model is not a patient outcome." })).toBeVisible();
@@ -44,7 +44,7 @@ test.describe("Pexiganan source-centered research workspace", () => {
   });
 
   test("preserves all deeper dossiers and no-sale boundaries in the production-like mode", async ({ page, request }) => {
-    await page.goto("/intelligence/explore/pexiganan");
+    await page.goto("/compounds/pexiganan");
     await expect(page.getByRole("region", { name: "Pexiganan evidence connections" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Open guided evidence workpaper" }))
       .toHaveAttribute("href", "/intelligence/cases/magainin-pexiganan");
@@ -59,7 +59,7 @@ test.describe("Pexiganan source-centered research workspace", () => {
   test("is navigable on 360/390px phones and source inspection stays in context", async ({ page }) => {
     for (const width of [360, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 844 });
-      await page.goto("/intelligence/explore/pexiganan");
+      await page.goto("/compounds/pexiganan");
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
       const workspace = page.getByRole("region", { name: "One compound. Four different evidence questions." });
       await workspace.getByRole("button", { name: "Investigate Registered studies" }).click();

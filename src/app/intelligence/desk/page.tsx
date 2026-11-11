@@ -28,7 +28,7 @@ export default async function IntelligenceResearchDeskPage({ searchParams }: { s
         lead="Build a source-linked brief. Pick a question, check each observation against its original record, then export."
         note="Pexiganan is the only compound with connected evidence here · records reviewed October 19, 2026 · limited pilot, not a scientific review."
         actions={<>
-          <Pill href="/intelligence/explore/pexiganan" arrow="right">Open the Pexiganan dossier</Pill>
+          <Pill href="/compounds/pexiganan" arrow="right">Open the Pexiganan dossier</Pill>
           <Pill href="/intelligence/passports/pexiganan" variant="ghost" arrow="right">Evidence passport</Pill>
         </>}
       />

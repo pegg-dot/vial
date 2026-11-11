@@ -52,7 +52,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
           <Link href="/intelligence/passports/pexiganan" className="ink hard-sm press inline-flex items-center gap-1 rounded-full bg-white px-5 py-3 text-sm font-bold">Open the evidence passport <ArrowRight className="size-4" /></Link>
         </div>
         <div className="mt-9 grid gap-5 md:grid-cols-3">
-          <Link href="/intelligence/explore/pexiganan" className="ink hard press group flex flex-col rounded-[18px] bg-white p-6">
+          <Link href="/compounds/pexiganan" className="ink hard press group flex flex-col rounded-[18px] bg-white p-6">
             <span className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#2b31d8]">01 · Exact identity</span>
             <p className="mt-3 text-2xl font-extrabold tracking-[-.03em]">Pexiganan / MSI-78</p>
             <p className="mt-2 flex-1 text-sm font-medium leading-6 text-[var(--muted)]">A separate PubChem molecular record, not interchangeable with natural Magainin 2.</p>
@@ -72,7 +72,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
           </Link>
         </div>
         <nav aria-label="Follow Pexiganan evidence" className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-extrabold text-[#2b31d8]">
-          <Link href="/intelligence/explore/pexiganan" className="inline-flex items-center gap-1 hover:underline">Open the dossier <ArrowUpRight className="size-4" /></Link>
+          <Link href="/compounds/pexiganan" className="inline-flex items-center gap-1 hover:underline">Open the dossier <ArrowUpRight className="size-4" /></Link>
           <Link href="/intelligence/verify" className="inline-flex items-center gap-1 hover:underline">Verify source <ArrowUpRight className="size-4" /></Link>
           <Link href="/intelligence/cases/magainin-pexiganan" className="inline-flex items-center gap-1 hover:underline">Open guided example <ArrowUpRight className="size-4" /></Link>
         </nav>
@@ -103,7 +103,7 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
             ))}
           </div>
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-[#2b31d8]">
-            <Link href="/intelligence/explore/pexiganan" aria-label="Open Pexiganan dossier" className="inline-flex items-center gap-1 hover:underline">Pexiganan dossier <ArrowUpRight className="size-4" /></Link>
+            <Link href="/compounds/pexiganan" aria-label="Open Pexiganan dossier" className="inline-flex items-center gap-1 hover:underline">Pexiganan dossier <ArrowUpRight className="size-4" /></Link>
             <Link href="/intelligence/passports/pexiganan" aria-label="See evidence passport" className="inline-flex items-center gap-1 hover:underline">Evidence passport <ArrowUpRight className="size-4" /></Link>
             <Link href="/intelligence/providers" className="inline-flex items-center gap-1 hover:underline">Public supplier documentation <ArrowUpRight className="size-4" /></Link>
             <Link href="/intelligence/compare?subjects=magainin-2%2Cpexiganan" aria-label="Compare Magainin 2 and Pexiganan" className="inline-flex items-center gap-1 hover:underline">Compare Magainin 2 and Pexiganan <ArrowUpRight className="size-4" /></Link>

@@ -29,7 +29,7 @@ test.describe("Research materials and source provenance", () => {
 
   test("keeps phone layouts within viewport and connects a compound dossier", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence/materials", "/intelligence/providers", "/intelligence/providers/bachem", "/intelligence/explore/pexiganan"]) {
+    for (const path of ["/intelligence/materials", "/intelligence/providers", "/intelligence/providers/bachem", "/compounds/pexiganan"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(391);

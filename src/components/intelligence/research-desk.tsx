@@ -44,7 +44,7 @@ const kindNames: Record<PexEvidenceSource["kind"], string> = {
 };
 
 const ELSEWHERE = [
-  { href: "/intelligence/explore/pexiganan", label: "Compound dossier" },
+  { href: "/compounds/pexiganan", label: "Compound dossier" },
   { href: "/intelligence/passports/pexiganan", label: "Full evidence passport" },
   { href: "/intelligence/organizations", label: "Recorded sponsors" },
   { href: "/intelligence/materials?subject=pexiganan", label: "Material evidence" },

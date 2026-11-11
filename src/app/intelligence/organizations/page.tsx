@@ -64,7 +64,7 @@ export default function ResearchOrganizationsPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20 text-[#111214]">
       <PageHero size="compact" art={["molecule", "shield"]}
-        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/intelligence/explore/pexiganan", label: "Pexiganan" }, { label: "Source organizations" }]}
+        breadcrumb={[{ href: "/intelligence/market", label: "Research Market" }, { href: "/compounds/pexiganan", label: "Pexiganan" }, { label: "Source organizations" }]}
         eyebrow={<><Building2 className="size-4" aria-hidden="true" /> Historical study sponsors · Pexiganan pilot</>}
         title="Who sponsored the selected studies?"
         lead={"These are the organization names recorded in the lead-sponsor fields of " + STUDY_COUNT + " selected trial registrations."}
@@ -72,7 +72,7 @@ export default function ResearchOrganizationsPage() {
           + PEXIGANAN_RECORDED_ORGANIZATIONS.length + " lead-sponsor names · " + STUDY_COUNT + " curated registry records · Editorial check " + PEXIGANAN_REVIEW_DATE + "."}
         actions={<>
           <Pill href="/intelligence/passports/pexiganan" arrow="right">Evidence passport</Pill>
-          <Pill href="/intelligence/explore/pexiganan" variant="ghost" arrow="right">Pexiganan dossier</Pill>
+          <Pill href="/compounds/pexiganan" variant="ghost" arrow="right">Pexiganan dossier</Pill>
         </>}
       />
       <Section tight>
@@ -106,7 +106,7 @@ export default function ResearchOrganizationsPage() {
           </NumberedSection>
         </div>
       </Section>
-      <PageFootnote href="/intelligence/explore/pexiganan" linkLabel="Back to compound dossier">
+      <PageFootnote href="/compounds/pexiganan" linkLabel="Back to compound dossier">
         Sponsor names come from each registry record&apos;s lead-sponsor field on the snapshot date, re-read from NIH on request (responses may be cached for up to six hours).
         They are not a supplier list, a manufacturer list or a statement about who made any material.
       </PageFootnote>

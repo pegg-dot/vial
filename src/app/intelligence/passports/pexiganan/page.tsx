@@ -40,7 +40,7 @@ export default function PexigananEvidencePassportPage() {
       <PageHero art={["coa"]}
         breadcrumb={[
           { href: "/intelligence/market", label: "Research Market" },
-          { href: "/intelligence/explore/pexiganan", label: "Pexiganan" },
+          { href: "/compounds/pexiganan", label: "Pexiganan" },
           { label: "Evidence passport" },
         ]}
         eyebrow={<><ClipboardList className="size-4" aria-hidden="true" /> Evidence passport · Research pilot</>}
@@ -110,7 +110,7 @@ export default function PexigananEvidencePassportPage() {
             intro="Metadata and claim provenance only: not laboratory accreditation, medical advice, clinical-evidence certainty, an allegation of reporting misconduct, or a seller verification.">
             <PexNoLabVerification />
             <div className="flex flex-wrap items-center gap-3">
-              <Pill href="/intelligence/explore/pexiganan" variant="secondary" size="sm" icon={ArrowLeft}>Back to compound dossier</Pill>
+              <Pill href="/compounds/pexiganan" variant="secondary" size="sm" icon={ArrowLeft}>Back to compound dossier</Pill>
               <Pill href="/intelligence/organizations" variant="ghost" size="sm" arrow="right">Organizations behind these records</Pill>
               <Pill href="https://clinicaltrials.gov/study/NCT01594762" external variant="ghost" size="sm" arrow="up">Official example trial</Pill>
             </div>

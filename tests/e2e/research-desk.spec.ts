@@ -31,7 +31,7 @@ test.describe("Source-grounded Research Desk pilot", () => {
 
   test("keeps connected source routes public and the phone layout readable", async ({ page, request }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence/desk", "/intelligence/explore/pexiganan", "/intelligence/materials"]) {
+    for (const path of ["/intelligence/desk", "/compounds/pexiganan", "/intelligence/materials"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(391);
@@ -88,7 +88,7 @@ test.describe("Source-grounded Research Desk pilot", () => {
   });
 
   test("the dossier hands its lens to the Desk with context preserved", async ({ page }) => {
-    await page.goto("/intelligence/explore/pexiganan");
+    await page.goto("/compounds/pexiganan");
     await page.getByRole("button", { name: "Investigate Registered studies" }).click();
     await page.getByRole("link", { name: "Build a source brief from this" }).click();
     await expect(page).toHaveURL(/\/intelligence\/desk\?topic=clinical-trials/);

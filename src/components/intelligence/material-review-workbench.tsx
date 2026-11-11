@@ -84,7 +84,7 @@ export function MaterialReviewWorkbench({ initialSlug }: { initialSlug: string }
         chips={<Chip tone="warn" icon={ShieldQuestion}>Unverified</Chip>}
         actions={<>
           <Pill size="sm" variant="ghost" onClick={openIndex}>Choose another compound</Pill>
-          <Pill size="sm" variant="ghost" href={"/intelligence/explore/" + slug} arrow="right">Scientific dossier</Pill>
+          <Pill size="sm" variant="ghost" href={"/compounds/" + slug} arrow="right">Scientific dossier</Pill>
           <Pill size="sm" variant="ghost" href={subject.referenceUrl} external arrow="up">Original identity source</Pill>
         </>}>
         <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">

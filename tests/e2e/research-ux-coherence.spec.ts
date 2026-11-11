@@ -41,7 +41,7 @@ test.describe("Research UX coherence: context, honesty and reach", () => {
   });
 
   test("every public research page exposes exactly one main landmark", async ({ page }) => {
-    for (const path of ["/", "/intelligence", "/intelligence/market", "/intelligence/desk", "/intelligence/explore/pexiganan",
+    for (const path of ["/", "/intelligence", "/intelligence/market", "/intelligence/desk", "/compounds/pexiganan",
       "/intelligence/compare?subjects=magainin-2%2Cpexiganan", "/intelligence/materials", "/intelligence/grading",
       "/intelligence/studies/NCT01594762", "/intelligence/cases/magainin-pexiganan", "/intelligence/providers", "/legal/privacy"]) {
       await page.goto(path);
