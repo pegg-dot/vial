@@ -138,8 +138,8 @@ export default function MagaininPexigananGuidedCase() {
               <div>
                 <h3 className={UI.eyebrowMuted}>Molecules under review</h3>
                 <RecordList className="mt-2" items={[
-                  { href: "/intelligence/explore/magainin-2", title: "Magainin 2", action: "Open dossier" },
-                  { href: "/intelligence/explore/pexiganan", title: "Pexiganan / MSI-78", action: "Open dossier" },
+                  { href: "/compounds/magainin-2", title: "Magainin 2", action: "Open dossier" },
+                  { href: "/compounds/pexiganan", title: "Pexiganan / MSI-78", action: "Open dossier" },
                 ]} />
                 <p className={UI.small + " mt-2"}>Source links establish their separate molecular records. They are not a product catalog.</p>
               </div>

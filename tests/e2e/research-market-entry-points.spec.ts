@@ -7,7 +7,7 @@ test.describe("Connected research market entry points", () => {
     await page.goto("/intelligence");
     await expect(page.getByRole("heading", { name: /Go deeper/ })).toBeVisible();
     const links = [
-      ["Open Pexiganan dossier", "/intelligence/explore/pexiganan"],
+      ["Open Pexiganan dossier", "/compounds/pexiganan"],
       ["See evidence passport", "/intelligence/passports/pexiganan"],
       ["Try source verifier", "/intelligence/verify?ref=PMID%2036781451"],
       ["Explore source organizations", "/intelligence/organizations"],

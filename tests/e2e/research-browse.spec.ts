@@ -37,9 +37,9 @@ test.describe("Browse release (read-only original pages)", () => {
     await expect(page.getByRole("button", { name: /follow/i })).toHaveCount(0);
   });
 
-  test("a compound with a research dossier but no catalog row goes to the dossier", async ({ page }) => {
+  test("a compound with a research dossier but no catalog row stays on its own page", async ({ page }) => {
     await page.goto("/compounds/oxytocin");
-    await expect(page).toHaveURL(/\/(compounds\/oxytocin|intelligence\/explore\/oxytocin)$/);
+    await expect(page).toHaveURL(/\/compounds\/oxytocin$/);
     await expect(page.locator("main h1").first()).toBeVisible();
   });
 

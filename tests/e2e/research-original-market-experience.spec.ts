@@ -24,7 +24,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     const dialog = page.getByRole("dialog", { name: "Search compounds and sources" });
     await expect(dialog).toBeVisible();
     await dialog.getByRole("searchbox", { name: "Search compound name, alias or study ID" }).fill("LY3437943");
-    await expect(dialog.getByRole("link", { name: /Retatrutide/ })).toHaveAttribute("href", "/intelligence/explore/retatrutide");
+    await expect(dialog.getByRole("link", { name: /Retatrutide/ })).toHaveAttribute("href", "/compounds/retatrutide");
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
   });
@@ -103,7 +103,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
     const before = await names();
     expect(before.length).toBeLessThan(16);
     await browse.locator('a[aria-label^="Open research dossier:"]').first().click();
-    await expect(page).toHaveURL(/\/intelligence\/explore\//);
+    await expect(page).toHaveURL(/\/compounds\//);
     await page.goBack();
     await expect(page.getByRole("button", { name: "Host defense & antimicrobials" }).first()).toHaveAttribute("aria-pressed", "true");
     expect(await names()).toEqual(before);
@@ -115,7 +115,7 @@ test.describe("archived VialGrade discovery mechanics restored for research-only
 
   test("every in-page jump link on a dossier points at an element that exists", async ({ page }) => {
     for (const slug of ["pexiganan", "oxytocin", "retatrutide"]) {
-      await page.goto("/intelligence/explore/" + slug);
+      await page.goto("/compounds/" + slug);
       const missing = await page.evaluate(() => [...document.querySelectorAll('main a[href^="#"]')]
         .map(a => a.getAttribute("href")!).filter(h => h.length > 1 && !document.getElementById(h.slice(1))));
       expect(missing, slug).toEqual([]);

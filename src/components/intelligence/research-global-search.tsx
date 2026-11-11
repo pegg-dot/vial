@@ -63,7 +63,7 @@ export function ResearchGlobalSearch() {
             onKeyDown={event => {
               if (event.key === "Enter" && (results[0] || verifyHref)) {
                 event.preventDefault();
-                window.location.assign(results[0] ? "/intelligence/explore/" + results[0].slug : verifyHref!);
+                window.location.assign(results[0] ? "/compounds/" + results[0].slug : verifyHref!);
               }
             }}
             placeholder="Compound, alternate name, or linked NCT..."
@@ -86,7 +86,7 @@ export function ResearchGlobalSearch() {
             <ul className="mt-3 space-y-2">
               {results.map(item => (
                 <li key={item.slug}>
-                  <Link href={"/intelligence/explore/" + item.slug} onClick={close}
+                  <Link href={"/compounds/" + item.slug} onClick={close}
                     className="ink-1 flex items-center gap-3 rounded-[14px] bg-white px-4 py-3 hover:bg-[#eef0ff]">
                     <div className="min-w-0 flex-1">
                       <p className="text-base font-extrabold">{item.name}</p>

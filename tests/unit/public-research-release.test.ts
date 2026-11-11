@@ -1,6 +1,5 @@
 import { isPausedTransactionEndpoint } from "@/lib/commerce-pause";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { researchSubjectBySlug } from "@/lib/research-explorer";
 import { publicReleaseAction, legacyResearchDestination, publicBrowseRelease, isBrowsePage, hidesCommerce } from "@/lib/public-research-release";
 
 describe("public research-only deployment quarantine", () => {
@@ -47,12 +46,12 @@ describe("public research-only deployment quarantine", () => {
 });
 
 describe("retired shop URLs with a research equivalent", () => {
-  const dest = (path: string) => legacyResearchDestination(path, slug => !!researchSubjectBySlug(slug));
+  const dest = (path: string) => legacyResearchDestination(path);
 
   it.each(["retatrutide", "tirzepatide", "semaglutide", "cagrilintide", "ll-37", "oxytocin"])(
-    "sends /compounds/%s to its dossier", slug => {
-      expect(dest("/compounds/" + slug)).toBe("/intelligence/explore/" + slug);
-      expect(dest("/compounds/" + slug + "/")).toBe("/intelligence/explore/" + slug);
+    "leaves /compounds/%s on its own page: the compound page is the dossier now", slug => {
+      expect(dest("/compounds/" + slug)).toBeNull();
+      expect(dest("/compounds/" + slug + "/")).toBeNull();
     });
 
   it("sends the compounds index to the research market", () => {
@@ -117,6 +116,14 @@ describe("read-only browse release (VIALGRADE_PUBLIC_BROWSE)", () => {
 
   it("does nothing when the browse flag is off", () => {
     expect(publicReleaseAction("/compounds/retatrutide", "GET", true, false)).toBe("redirect");
+  });
+
+  it("opens a compound page that carries a research file even with the browse flag off, reads only", () => {
+    const hasDossier = (slug: string) => slug === "pexiganan";
+    expect(publicReleaseAction("/compounds/pexiganan", "GET", true, false, hasDossier)).toBeNull();
+    expect(publicReleaseAction("/compounds/pexiganan", "HEAD", true, false, hasDossier)).toBeNull();
+    expect(publicReleaseAction("/compounds/pexiganan", "POST", true, false, hasDossier)).toBe("gone");
+    expect(publicReleaseAction("/compounds/bpc-157", "GET", true, false, () => false)).toBe("redirect");
   });
 
   it("pages hide commerce whenever the quarantine is on", () => {

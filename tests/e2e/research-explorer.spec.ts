@@ -10,7 +10,7 @@ test.describe("Research Explorer discovery experience", () => {
     await expect(page.getByRole("heading", { name: /The research,/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Compounds" })).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Showing 16 of 16 compounds" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Open research dossier: Pexiganan" })).toHaveAttribute("href", "/intelligence/explore/pexiganan");
+    await expect(page.getByRole("link", { name: "Open research dossier: Pexiganan" })).toHaveAttribute("href", "/compounds/pexiganan");
 
     await page.getByRole("button", { name: /Host defense & antimicrobials/ }).click();
     await expect(page.getByRole("status").filter({ hasText: "Showing 4 of 16 compounds" })).toBeVisible();
@@ -57,7 +57,7 @@ test.describe("Research Explorer discovery experience", () => {
   });
 
   test("opens a truthful dossier with verified identity and carefully labeled source searches", async ({ page }) => {
-    await page.goto("/intelligence/explore/cagrilintide");
+    await page.goto("/compounds/cagrilintide");
     await expect(page.getByRole("heading", { name: "Cagrilintide", level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Follow the source trail" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "What still needs checking" })).toBeVisible();
@@ -75,21 +75,21 @@ test.describe("Research Explorer discovery experience", () => {
 
   test("renders every curated subject and fails closed on invalid slugs", async ({ request }) => {
     for (const subject of RESEARCH_SUBJECTS) {
-      const result = await request.get("/intelligence/explore/" + subject.slug);
+      const result = await request.get("/compounds/" + subject.slug);
       expect(result.status(), subject.slug).toBe(200);
       expect(await result.text(), subject.slug).toContain(subject.name);
     }
     for (const invalid of ["unknown-molecule", "constructor", "__proto__"]) {
-      const response = await request.get("/intelligence/explore/" + invalid, { maxRedirects: 0 });
+      const response = await request.get("/compounds/" + invalid, { maxRedirects: 0 });
       expect([307, 404], invalid + " must never show another subject").toContain(response.status());
     }
-    const privateChild = await request.get("/intelligence/explore/semaglutide/admin", { maxRedirects: 0 });
+    const privateChild = await request.get("/compounds/semaglutide/admin", { maxRedirects: 0 });
     expect(privateChild.status()).toBe(307);
   });
 
   test("keeps all browsing and comparison pages within phone width", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence", "/intelligence/explore/retatrutide", "/intelligence/compare?subjects=retatrutide%2Ctirzepatide&audience=analyst"]) {
+    for (const path of ["/intelligence", "/compounds/retatrutide", "/intelligence/compare?subjects=retatrutide%2Ctirzepatide&audience=analyst"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       const width = await page.evaluate(() => document.documentElement.scrollWidth);

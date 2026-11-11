@@ -6,7 +6,7 @@ test.describe("Organizations on record (dossier Sources A1)", () => {
   test.skip(process.env.VIALGRADE_PUBLIC_EVIDENCE_ONLY !== "true", "Research-only preview");
 
   test("pexiganan lists each sponsor per registered study with its own registry link", async ({ page }) => {
-    await page.goto("/intelligence/explore/pexiganan");
+    await page.goto("/compounds/pexiganan");
     const section = page.getByRole("region", { name: "Organizations on record" });
     await expect(section).toBeVisible();
     await expect(section.getByRole("listitem")).toHaveCount(4);
@@ -21,7 +21,7 @@ test.describe("Organizations on record (dossier Sources A1)", () => {
   });
 
   test("a compound with a pinned study shows a sourced row or an honest 'not confirmed' note, never an unlinked claim", async ({ page }) => {
-    await page.goto("/intelligence/explore/tirzepatide");
+    await page.goto("/compounds/tirzepatide");
     const section = page.getByRole("region", { name: "Organizations on record" });
     await expect(section).toBeVisible({ timeout: 15_000 });
     await expect(section.getByRole("link").first()).toBeVisible({ timeout: 15_000 });
@@ -33,7 +33,7 @@ test.describe("Organizations on record (dossier Sources A1)", () => {
   });
 
   test("a compound with no registered study on file lists nobody", async ({ page }) => {
-    await page.goto("/intelligence/explore/magainin-2");
+    await page.goto("/compounds/magainin-2");
     const section = page.getByRole("region", { name: "Organizations on record" });
     await expect(section.getByText(/No registered study is on file/)).toBeVisible();
     await expect(section.getByRole("listitem")).toHaveCount(0);

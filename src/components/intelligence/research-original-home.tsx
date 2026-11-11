@@ -203,7 +203,7 @@ export function OriginalResearchCompoundsShowcase() {
         </div>
         <div className="mt-12 grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {subjects.map((subject,index) => (
-            <Link key={subject.slug} href={"/intelligence/explore/" + subject.slug} className="ink-1 hard press group flex min-w-0 items-center gap-5 rounded-[20px] bg-white p-5">
+            <Link key={subject.slug} href={"/compounds/" + subject.slug} className="ink-1 hard press group flex min-w-0 items-center gap-5 rounded-[20px] bg-white p-5">
               <div className="ink-1 grid size-[88px] shrink-0 place-items-center rounded-2xl bg-[var(--background)]">
                 <VialPlain className="h-[62px]" liquid={LIQUIDS[index % LIQUIDS.length]} />
               </div>

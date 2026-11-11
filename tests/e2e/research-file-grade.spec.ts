@@ -58,8 +58,8 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
     await quick.getByText("Why did this research file get that grade?").click();
     await expect(quick.getByRole("region", { name: "Research file grade for Pexiganan" })).toContainText("Specific original experiment");
     await quick.getByRole("link", { name: /Open research dossier/ }).click();
-    await expect(page).toHaveURL(/\/intelligence\/explore\/pexiganan$/);
-    await expect(page.getByRole("navigation", { name: "Research dossier sections" })
+    await expect(page).toHaveURL(/\/compounds\/pexiganan$/);
+    await expect(page.getByRole("navigation", { name: "On this page" })
       .getByRole("link", { name: /Source file/ })).toHaveAttribute("href", "#file-grade");
     const full = page.getByRole("region", { name: "Research file grade for Pexiganan" });
     await expect(full).toContainText("3 of 3 source layers individually linked");
@@ -69,7 +69,7 @@ test.describe("source-reconciled research file grades, not peptide efficacy rank
 
   test("keeps research grading accessible at mobile width and shopping disabled", async ({ page, request }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const path of ["/intelligence/grading", "/intelligence", "/intelligence/explore/retatrutide"]) {
+    for (const path of ["/intelligence/grading", "/intelligence", "/compounds/retatrutide"]) {
       const res = await page.goto(path);
       expect(res?.status(), path).toBe(200);
       const width = await page.evaluate(() => document.documentElement.scrollWidth);

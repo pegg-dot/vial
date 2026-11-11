@@ -7,5 +7,6 @@ export const UPDATES_PROMPT_SCROLL_PX = 400;
 export function updatesPromptAllowedOn(pathname: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/intelligence/updates" || path.startsWith("/intelligence/updates/")) return false;
-  return path === "/intelligence" || path.startsWith("/intelligence/");
+  // Research content lives under /intelligence and, since one page per compound, under /compounds.
+  return path === "/intelligence" || path.startsWith("/intelligence/") || path === "/compounds" || path.startsWith("/compounds/");
 }

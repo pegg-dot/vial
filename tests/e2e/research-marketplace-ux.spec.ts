@@ -40,7 +40,7 @@ test.describe("marketplace-like browsing with research-only sources", () => {
       .toHaveAttribute("href", "https://pubchem.ncbi.nlm.nih.gov/compound/171397054");
     await expect(quick.getByText("Selected trial · NCT05804162")).toBeVisible();
     await expect(quick.getByRole("link", { name: /Open research dossier/ }))
-      .toHaveAttribute("href", "/intelligence/explore/cagrilintide");
+      .toHaveAttribute("href", "/compounds/cagrilintide");
     await expect(quick.getByRole("link", { name: /Buy|Checkout|Seller|Shop/ })).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(quick).not.toBeVisible();
@@ -73,8 +73,8 @@ test.describe("marketplace-like browsing with research-only sources", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
     await page.getByRole("button", { name: "Close quick view" }).click();
 
-    await page.goto("/intelligence/explore/cagrilintide");
-    await expect(page.getByRole("navigation", { name: "Research dossier sections" })).toBeVisible();
+    await page.goto("/compounds/cagrilintide");
+    await expect(page.getByRole("navigation", { name: "On this page" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Studies", exact: true })).toHaveAttribute("href", "#studies");
     await expect(page.getByRole("heading", { name: "Cagrilintide", level: 1 })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(391);
