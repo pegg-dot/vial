@@ -62,7 +62,7 @@ export function ResearchReleaseHeader() {
                 <p className="px-3 pb-1 pt-2 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#2b31d8]">Research tools</p>
                 <nav aria-label="Research tools" className="grid">
                   {toolItems(publicBrowseRelease()).map(item => (
-                    <Link href={item.href} key={item.href} className="rounded-xl px-3 py-2.5 hover:bg-[#eef0ff]">
+                    <Link href={item.href} key={item.href} className="grid rounded-xl px-3 py-2.5 hover:bg-[#eef0ff]">
                       <span className="block text-[13px] font-extrabold text-[#111214]">{item.label}</span>
                       <span className="mt-0.5 block text-[11px] leading-5 text-[var(--muted)]">{item.note}</span>
                     </Link>
