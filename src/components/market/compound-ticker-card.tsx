@@ -99,7 +99,10 @@ export function CompoundTickerCard({
     </>
   );
 
-  const className = "ink-1 hard-sm press group flex w-full flex-col rounded-[16px] bg-white p-3.5 text-left";
+  // min-w-0: the tile is a grid item, and a grid item is never narrower than its widest unbreakable
+  // line. A long shelf label beside the Live badge ("Growth Hormone & Performance") made one tile
+  // 18px wider than a 390px screen, and the whole page scrolled sideways. With it the label truncates.
+  const className = "ink-1 hard-sm press group flex w-full min-w-0 flex-col rounded-[16px] bg-white p-3.5 text-left";
 
   if (onQuickView) {
     return (
