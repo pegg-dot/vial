@@ -159,11 +159,15 @@ describe("market-record release (VIALGRADE_MARKET_RECORDS)", () => {
   afterEach(() => vi.unstubAllEnvs());
 
   it("is off unless exactly true, and reads the environment by default", () => {
-    for (const value of [undefined, "", "1", "TRUE", "yes", "false", " true"]) expect(marketRecordsRelease(value)).toBe(false);
+    // Explicit values only: passing undefined would fall through to the environment, and the
+    // production build runs this suite with the flag set.
+    for (const value of ["", "1", "TRUE", "yes", "false", " true"]) expect(marketRecordsRelease(value)).toBe(false);
     expect(marketRecordsRelease("true")).toBe(true);
     vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
     expect(marketRecordsRelease()).toBe(true);
     vi.stubEnv("VIALGRADE_MARKET_RECORDS", "false");
+    expect(marketRecordsRelease()).toBe(false);
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "");
     expect(marketRecordsRelease()).toBe(false);
   });
 
