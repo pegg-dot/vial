@@ -74,8 +74,9 @@ describe("catalogue insights for the admin overview", () => {
     await report(2, "Retatrutide 10mg", "Some Factory");                                    // names no vendor on record
     await report(3, "Retatrutide 10mg", "Helix Science");                                   // right compound, vendor lists a different one
     await report(4, "BPC-157 5mg", "Helix Science", { lab: "Vendor self-published", isIndependent: false }); // not independent
+    await report(5, "BPC-157 5mg", "Acme Peptides");                                        // independent, but the BPC-157 price is another vendor's
     const insights = await getCatalogInsights({ today: TODAY });
-    expect(insights).toMatchObject({ independentReports: 3, vendorsWithReports: 2, comparableCompounds: 1 });
+    expect(insights).toMatchObject({ independentReports: 4, vendorsWithReports: 2, comparableCompounds: 1 });
     expect(insights.lastReportAdded).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
