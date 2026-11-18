@@ -34,6 +34,9 @@ test.describe("Market record", () => {
       await expect(row).toContainText(/\$\d+\.\d+\/mg/);
     }
     await expect(market).toContainText("dated third-party observations, not offers or purchasing recommendations");
+    // The way on from the record is the vendor comparison, from the heading and from the foot of the table.
+    await expect(market.getByRole("link", { name: "Compare vendors" })).toHaveAttribute("href", "/compounds/bpc-157/vendors");
+    await expect(market.getByRole("link", { name: "Compare BPC-157 vendors side by side" })).toHaveAttribute("href", "/compounds/bpc-157/vendors");
 
     // Nothing in the record leads to a closed route, and with no stored domain nothing leads off the site.
     const hrefs = await market.locator("a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""));
@@ -109,12 +112,95 @@ test.describe("Market record", () => {
     expect(hrefs.filter((h) => CLOSED_HREF.test(h))).toEqual([]);
   });
 
-  test("the flag opens no route: product pages, market tables, compare, stacks, click-throughs and carts stay closed", async ({ request }) => {
-    for (const path of ["/products/helix-science-bpc-157", "/compounds/bpc-157/market", "/market", "/compare", "/stacks", "/cart", "/checkout"]) {
+  test("the vendor comparison sets every source of a compound on one row each, and any two side by side", async ({ page }) => {
+    const response = await page.goto("/compounds/bpc-157/vendors");
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1, name: "BPC-157, vendor by vendor" })).toBeVisible();
+    await expect(page.locator("main")).toContainText("VialGrade sells nothing and takes no referrals");
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "BPC-157" })).toHaveAttribute("href", "/compounds/bpc-157");
+
+    // One row per source: the fixture's three vendors, each with its listing count, a price per mg and the day it was read.
+    const table = page.getByTestId("vendor-comparison");
+    const rows = table.locator("tbody tr[data-source]");
+    await expect(rows).toHaveCount(3);
+    for (const [vendor, slug] of [["Helix Science", "helix-science"], ["Northstar Research", "northstar-research"], ["Meridian Biosciences", "meridian-biosciences"]]) {
+      const row = table.locator(`tr[data-source="${slug}"]`);
+      await expect(row.getByRole("link", { name: vendor, exact: true })).toHaveAttribute("href", "/vendors/" + slug);
+      await expect(row).toContainText(/\d+ listings?/);
+      await expect(row).toContainText(/\$\d+(\.\d+)?\/mg/);
+      await expect(row).toContainText(/read \d{4}-\d{2}-\d{2}/);
+    }
+
+    // Re-ordering is a link, so an order can be shared; the row set does not change.
+    await table.getByRole("link", { name: "Price per mg, low to high" }).click();
+    await expect(page).toHaveURL(/\/compounds\/bpc-157\/vendors\?sort=price$/);
+    await expect(table.getByRole("link", { name: "Price per mg, low to high" })).toHaveAttribute("aria-current", "true");
+    await expect(rows).toHaveCount(3);
+    const perMg = (await rows.evaluateAll((els) => els.map((e) => Number(/\$(\d+(?:\.\d+)?)\/mg/.exec(e.textContent ?? "")?.[1]))));
+    expect(perMg.every((n) => Number.isFinite(n))).toBe(true);
+    expect([...perMg].sort((a, b) => a - b)).toEqual(perMg);
+
+    // Pick two from the table: the first stays put, the second lands on the side by side.
+    const side = page.getByTestId("vendor-side-by-side");
+    await expect(side.locator("[data-source-detail]")).toHaveCount(0);
+    await table.locator('tr[data-source="helix-science"]').getByRole("link", { name: "Add Helix Science to the side by side" }).click();
+    await expect(page).toHaveURL(/a=helix-science/);
+    await expect(side.locator("[data-source-detail]")).toHaveCount(1);
+    await table.locator('tr[data-source="northstar-research"]').getByRole("link", { name: "Add Northstar Research to the side by side" }).click();
+    await expect(page).toHaveURL(/sort=price&a=helix-science&b=northstar-research#side-by-side$/);
+    await expect(page.getByRole("heading", { name: "Helix Science and Northstar Research" })).toBeVisible();
+    await expect(side.locator("[data-source-detail]")).toHaveCount(2);
+    for (const slug of ["helix-science", "northstar-research"]) {
+      const detail = side.locator(`[data-source-detail="${slug}"]`);
+      await expect(detail).toContainText(/\$[1-9]\d*/);
+      await expect(detail).toContainText(/\d{4}-\d{2}-\d{2}/);
+    }
+    await expect(side).toContainText("A side by side of records, not a verdict");
+
+    // The picker is a plain form: choosing a different second source and submitting is a new address.
+    await side.getByLabel("Second source").selectOption("meridian-biosciences");
+    await side.getByRole("button", { name: "Compare" }).click();
+    await expect(page).toHaveURL(/a=helix-science&b=meridian-biosciences#side-by-side$/);
+    await expect(page.getByRole("heading", { name: "Helix Science and Meridian Biosciences" })).toBeVisible();
+
+    // Nothing leads to a closed route or off the site (no fixture vendor has a released website), and nothing sells.
+    const hrefs = await page.locator("main a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""));
+    expect(hrefs.filter((h) => CLOSED_HREF.test(h))).toEqual([]);
+    // The two tables link only to vendor records and back to this page (the page's standing research notice cites the FDA).
+    const tableHrefs = await page.locator("[data-testid='vendor-comparison'] a[href], [data-testid='vendor-side-by-side'] a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""));
+    expect(tableHrefs.length).toBeGreaterThan(3);
+    expect(tableHrefs.filter((h) => !/^\/vendors\/[a-z0-9-]+$|^\/compounds\/bpc-157\/vendors(?:[?#]|$)/.test(h))).toEqual([]);
+    expect(await page.locator("main").innerText()).not.toMatch(/add to cart|buy now|\bbuy\b|shop now|\bdeal\b|coupon|checkout|cheapest|best value/i);
+    await expect(page.getByRole("button", { name: /follow/i })).toHaveCount(0);
+  });
+
+  test("the comparison ignores a sort or a source it does not know, and has no page for an unknown compound", async ({ page, request }) => {
+    await page.goto("/compounds/bpc-157/vendors?sort=__proto__&a=not-a-source&b=helix-science");
+    await expect(page.getByTestId("vendor-comparison").locator("tbody tr[data-source]")).toHaveCount(3);
+    await expect(page.getByTestId("vendor-comparison").getByRole("link", { name: "Most complete record" })).toHaveAttribute("aria-current", "true");
+    await expect(page.getByTestId("vendor-side-by-side").locator("[data-source-detail]")).toHaveCount(1);
+    expect((await request.get("/compounds/not-a-compound/vendors")).status()).toBe(404);
+  });
+
+  test("the comparison's tables scroll inside their own boxes on a phone instead of widening the page", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/compounds/bpc-157/vendors?a=helix-science&b=northstar-research");
+    await page.getByTestId("vendor-side-by-side").scrollIntoViewIfNeeded();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  test("the flag opens one page, the vendor comparison, and nothing else: product pages, market tables, compare, stacks, click-throughs and carts stay closed", async ({ request }) => {
+    for (const path of ["/products/helix-science-bpc-157", "/market", "/compare", "/stacks", "/cart", "/checkout", "/compounds/bpc-157/vendors/x", "/compounds/bpc-157/listings"]) {
       const response = await request.get(path, { maxRedirects: 0 });
       expect(response.status(), path).toBe(307);
       expect(response.headers().location, path).toContain("/intelligence?notice=retired");
     }
+    // A saved link to the old per-compound market page forwards to that compound's comparison.
+    const old = await request.get("/compounds/bpc-157/market", { maxRedirects: 0 });
+    expect(old.status()).toBe(307);
+    expect(new URL(old.headers().location, "http://x").pathname).toBe("/compounds/bpc-157/vendors");
+    expect((await request.post("/compounds/bpc-157/vendors", { data: {}, maxRedirects: 0 })).status()).toBe(410);
     expect((await request.get("/go/helix-science-bpc-157", { maxRedirects: 0 })).status()).toBe(410);
     expect((await request.post("/api/v1/commerce/cart", { data: {}, maxRedirects: 0 })).status()).toBe(410);
     expect((await request.get("/api/v1/catalog", { maxRedirects: 0 })).status()).toBe(410);

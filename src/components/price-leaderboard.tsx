@@ -44,7 +44,8 @@ const AVAIL: Partial<Record<Product["availability"], { label: string; cls: strin
  * a row's vendor goes to that vendor's evidence record, the price carries the day it was read, and
  * the last cell cites the listing it was read from, as a plain external link, only for a vendor
  * whose own website link is released (`websiteByVendor` holds each vendor's storefrontUrlFor result).
- * Without it the table links to product pages, as the legacy site does.
+ * Without it the table links to product pages, as the legacy site does. `marketHref` is the way
+ * on from the table: the vendor comparison in record mode, the full market on the legacy site.
  */
 export function PriceLeaderboard({ compoundName, marketHref, listings, labTests, record }: {
   compoundName: string; marketHref?: string; listings: Product[]; labTests: LabTestRow[];
@@ -184,7 +185,7 @@ export function PriceLeaderboard({ compoundName, marketHref, listings, labTests,
         // differently, so the way out sits at the end of it as well as at the top of the section.
         <p className="mt-4">
           <Link href={marketHref} className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold">
-            Open the full {compoundName} market <ArrowUpRight className="size-4" />
+            {record ? `Compare ${compoundName} vendors side by side` : `Open the full ${compoundName} market`} <ArrowUpRight className="size-4" />
           </Link>
         </p>
       )}
