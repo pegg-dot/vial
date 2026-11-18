@@ -156,7 +156,7 @@ test.describe("legacy account rights in research-only mode", () => {
     expect(login.status()).toBe(200);
     const response = await page.goto("/admin");
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole("heading", { name: /Reader traffic/i })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Overview" })).toBeVisible();
     // Referral figures are kept but labelled historical, and the public menu is not stacked on top
     // of the staff bar.
     await expect(page.getByRole("heading", { name: "Historical referral figures" })).toBeVisible();

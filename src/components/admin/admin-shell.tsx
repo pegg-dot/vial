@@ -19,7 +19,9 @@ export function AdminShell({ role, principal, children }: { role: StaffRole; pri
   return (
     <section className="mx-auto max-w-[1540px] px-4 py-6 sm:px-7 sm:py-8">
       <header className="ink hard mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[18px] bg-[#111214] px-5 py-4 text-white">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
+        {/* min-w-0 here and on the nav wrapper: without it the five pipeline steps set the header's
+            minimum width and the whole admin page scrolled sideways on a phone instead of the row. */}
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-3">
           <div className="flex items-center gap-3">
             <Link href="/admin" className="text-sm font-black uppercase tracking-[.18em]">VialGrade admin</Link>
             <span className="rounded-full bg-white/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.1em]">{role}</span>

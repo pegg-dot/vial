@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, Database, FlaskConical, Globe, KeyRound, Link2, MousePointerClick, ShieldAlert, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, Database, FlaskConical, Globe, GitCompareArrows, KeyRound, Link2, Mail, MailCheck, MousePointerClick, ShieldAlert, Store, TrendingUp, Users } from "lucide-react";
 import { deriveSystemHealth } from "@/lib/system-health";
 import { checkReadiness } from "@/server/health/readiness";
 import { getRefreshMetrics } from "@/server/refresh/repository";
@@ -8,6 +8,7 @@ import { getIntelligenceMetrics } from "@/server/intelligence/repository";
 import { getCollectionMetrics, isKeepingUp, describeWait, LATENESS_DEGRADED, getUnhealthyCollectorTargets } from "@/server/collect/metrics";
 import { getNotificationSweepHealth, isSweepHealthy, isSweepKeepingUp } from "@/server/notifications/sweep";
 import { getCurrentPrincipal } from "@/server/auth/principal";
+import { principalHasPermission } from "@/server/auth/permissions";
 import { getAttributionOverview } from "@/server/outbound/partner-report";
 import { getDataFreshness, getBrokenCollectors } from "@/server/health/data-health";
 import { attentionState } from "@/lib/collector-attention";
@@ -15,17 +16,22 @@ import { getSearchConsoleSummary, isSearchConsoleConfigured } from "@/server/seo
 import { getCatalogCoverage } from "@/server/collect/coverage";
 import { getVisitorSummary } from "@/server/analytics/visitors";
 import { getPeopleOverview } from "@/server/admin/people";
+import { getSignupOverview } from "@/server/digest/signup-overview";
+import { getCatalogInsights, daysBetween } from "@/server/admin/catalog-insights";
 import { listVerifyDemand } from "@/server/verify/query-log";
 import { getDatabase } from "@/server/db/client";
+import { AdminColumns } from "@/components/admin/admin-columns";
+import { SignupTable } from "@/components/admin/signup-table";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin" };
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const shortDay = (day: string) => new Date(day + "T12:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" });
 
 const money = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
-function Stat({ icon: Icon, value, label, sub }: { icon: typeof Users; value: string; label: string; sub?: string }) {
+function Stat({ icon: Icon, value, label, sub }: { icon: typeof Users; value: string | number; label: string; sub?: string }) {
   return (
     <div className="ink hard rounded-[18px] bg-white p-5">
       <Icon className="size-5 text-[#2b31d8]" />
@@ -35,6 +41,29 @@ function Stat({ icon: Icon, value, label, sub }: { icon: typeof Users; value: st
     </div>
   );
 }
+
+// The page in the order the owner reads it: what is growing, who is finding the site, what the
+// site holds, whether it is still being collected, then housekeeping. Each entry is a section id.
+const SECTIONS = [
+  { id: "signups", label: "Signups" },
+  { id: "reach", label: "Reach" },
+  { id: "catalog", label: "On record" },
+  { id: "collection", label: "Collection" },
+  { id: "accounts", label: "Accounts" },
+  { id: "historical", label: "Shop era" },
+] as const;
+
+function SectionHead({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children?: React.ReactNode }) {
+  return (
+    <div id={id} className="scroll-mt-6 pt-12">
+      <p className="text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">{eyebrow}</p>
+      <h2 className="mt-1.5 text-2xl font-extrabold tracking-[-.03em]">{title}</h2>
+      {children && <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">{children}</p>}
+    </div>
+  );
+}
+
+const SUB = "mt-8 text-base font-extrabold tracking-[-.02em]";
 
 export default async function AdminPage() {
   const principal = await getCurrentPrincipal();
@@ -60,6 +89,13 @@ export default async function AdminPage() {
   });
 
   const gscPromise = getSearchConsoleSummary();
+  // Addresses are shown only to staff whose role may read personal data; everyone else sees counts.
+  const mayReadAddresses = principalHasPermission(principal, "privacy:read");
+  const [signups, catalog, lastView] = await Promise.all([
+    getSignupOverview({ limit: 8, connection: db }).catch(() => null),
+    getCatalogInsights({ connection: db }).catch(() => null),
+    db.query<{ at: string | null }>(`SELECT to_char(MAX(created_at) AT TIME ZONE 'America/New_York', 'YYYY-MM-DD') AS at FROM page_views WHERE NOT is_bot`).then(r => r.rows[0]?.at ?? null).catch(() => null),
+  ]);
   const [attribution, visitors, people, freshness, broken, counts, collectors, unhealthy, coverage, verifyDemand] = await Promise.all([
     getAttributionOverview({ days: 30 }),
     getVisitorSummary({ days: 30 }),
@@ -101,6 +137,10 @@ export default async function AdminPage() {
   // denominator are now both distinct-daily-hashes, so the ratio is like-for-like.
   const clickThroughRate = visitors.readerDays > 0 ? totals.clickers / visitors.readerDays : 0;
   const unmatchedClickers = Math.max(0, totals.clickers - visitors.matchedClickers);
+
+  const trend = signups ? signups.last30Days - signups.previous30Days : 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const priceAgeDays = catalog?.lastPriceRead ? daysBetween(catalog.lastPriceRead, today) : null;
 
   return (
     <div className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
@@ -170,102 +210,78 @@ export default async function AdminPage() {
       </section>
 
       <p className="mt-10 text-[11px] font-bold uppercase tracking-[.2em] text-[#2b31d8]">Admin</p>
-      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Reader traffic</h1>
+      <h1 className="mt-2 text-4xl font-extrabold tracking-[-.05em]">Overview</h1>
       <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Last 30 days. Automated traffic — search crawlers, link previews, our own checks — is excluded, and so is our
-        own signed-in browsing. Readers are counted <strong>once a day</strong>: with no cookies and no accounts we
-        cannot tell that today&rsquo;s reader is yesterday&rsquo;s, so someone returning on another day counts again.
-        Treat these as visits by readers, not as a headcount of distinct people.
+        Who is signing up, who is finding the site, what the site holds, and whether it is still being read.
       </p>
+      <nav aria-label="On this page" className="mt-5 flex flex-wrap gap-2">
+        {SECTIONS.map(section => (
+          <a key={section.id} href={`#${section.id}`} className="ink-1 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold hover:bg-[#eef0ff]">{section.label}</a>
+        ))}
+      </nav>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Stat
-          icon={Users}
-          value={visitors.readerDays.toLocaleString()}
-          label="Readers, counted once a day"
-          sub={
-            visitors.busiestDay
-              ? `${visitors.visits.toLocaleString()} pages read · busiest day ${visitors.busiestDay.people}`
-              : `${visitors.visits.toLocaleString()} pages read`
-          }
-        />
-      </div>
-
-      <div className="mt-10 flex flex-wrap items-center gap-3">
-        <Link href="/admin/analytics" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-[#2b31d8] px-5 py-2.5 text-sm font-bold text-white">
-          Traffic, day by day <ArrowUpRight className="size-4" />
-        </Link>
-        <span className="text-xs font-medium text-[var(--muted)]">Per-day readers, views and same-day repeats.</span>
-      </div>
-
-      {/* Kept, not deleted: these are real recorded figures. They are labelled historical because
-          purchase referrals are switched off (the endpoints answer HTTP 410), so nothing here can grow. */}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Historical referral figures</h2>
-      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        VialGrade no longer sends readers to sellers or takes orders, so these numbers cannot change. They are what was
-        recorded before referrals were switched off, kept for the record.
-      </p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="Clicks to a vendor" sub={`from ${totals.clickers.toLocaleString()} ${totals.clickers === 1 ? "reader" : "readers"}`} />
-        <Stat icon={Link2} value={String(totals.vendors)} label="Vendors that received them" />
-        <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="Confirmed orders" sub={totals.conversions === 0 ? "none reported back" : "reported back by a partner"} />
-        <Stat icon={Database} value={money(totals.revenueCents)} label="Revenue recorded" sub={totals.revenueCents === 0 ? "none recorded" : undefined} />
-      </div>
-
-      <div className="ink hard mt-4 rounded-[18px] bg-[#e6fbf4] p-5">
-        <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#0e8f80]">Historical click-through</p>
-        <p className="mt-2 text-3xl font-extrabold tracking-[-.03em]">
-          {Math.round(clickThroughRate * 100)}% of recorded readers clicked through to a vendor
-        </p>
-        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#0e8f80]">
-          {visitors.readerDays === 0
-            ? "No reader traffic in this window, so there is nothing to rate."
-            : `${totals.clickers.toLocaleString()} of ${visitors.readerDays.toLocaleString()} readers went on to a seller. Both sides are counted the same way — a hash that resets daily, no cookies and no accounts — so a reader returning on another day counts again in both.`}
-          {unmatchedClickers > 0 &&
-            ` We could tie ${visitors.matchedClickers} of those clicks back to a recorded page view; the other ${unmatchedClickers} came from readers whose view-tracking was blocked, which is normal and means arrivals are undercounted.`}
-        </p>
-      </div>
-
-
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Where they came from</h2>
-
-      {visitors.topSources.length > 0 && (
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <div className="ink hard rounded-[18px] bg-white p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Where they come from</p>
-            <ul className="mt-3 space-y-1.5 text-sm">
-              {visitors.topSources.map(s2 => (
-                <li key={s2.source} className="flex justify-between gap-4">
-                  <span className="truncate font-bold">{s2.source}</span>
-                  <span className="tabular-nums text-[var(--muted)]">{s2.people}</span>
-                </li>
-              ))}
-            </ul>
+      {/* ── Signups: the email list. This is the site's signup now; reader accounts are closed. ── */}
+      <SectionHead id="signups" eyebrow="Signups" title="Email list">
+        Everyone who asked for the monthly update, from the first-visit prompt or the signup page. Unsubscribing deletes
+        the address, so every figure is who is on the list now. The list is never joined to what anyone read.
+      </SectionHead>
+      {!signups ? (
+        <p className="mt-4 text-sm font-medium text-[var(--muted)]">The email list could not be read.</p>
+      ) : (
+        <div data-testid="admin-signups">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat icon={Mail} value={signups.total.toLocaleString()} label="On the list"
+              sub={signups.total === 0 ? "no signups yet" : `${signups.last7Days.toLocaleString()} in the last 7 days`} />
+            <Stat icon={TrendingUp} value={signups.last30Days.toLocaleString()} label="New in 30 days"
+              sub={signups.previous30Days === 0 && signups.last30Days === 0 ? "none in the 30 days before either" : `${trend >= 0 ? "+" : "−"}${Math.abs(trend).toLocaleString()} against the 30 days before (${signups.previous30Days.toLocaleString()})`} />
+            <Stat icon={MailCheck} value={signups.confirmed.toLocaleString()} label="Confirmed"
+              sub="clicked the confirmation link; these get the update" />
+            <Stat icon={CalendarClock} value={(signups.waiting + signups.confirmationSent).toLocaleString()} label="Not confirmed yet"
+              sub={`${signups.waiting.toLocaleString()} waiting for the first email · ${signups.confirmationSent.toLocaleString()} sent a link`} />
           </div>
-          <div className="ink hard rounded-[18px] bg-white p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Most-read pages</p>
-            <ul className="mt-3 space-y-1.5 text-sm">
-              {visitors.topPages.slice(0, 8).map(p2 => (
-                <li key={p2.path} className="flex justify-between gap-4">
-                  <span className="truncate font-mono text-[12px]">{p2.path}</span>
-                  <span className="tabular-nums text-[var(--muted)]">{p2.visits}</span>
-                </li>
-              ))}
-            </ul>
+
+          {/* Said plainly, because it decides what a signup is worth today: an address that can be mailed, or one that is only being held. */}
+          <div className={`ink hard mt-3 rounded-[18px] p-5 ${signups.mailConnected ? "bg-[#e6fbf4]" : "bg-[#fff8e8]"}`}>
+            <p className="text-sm font-extrabold">{signups.mailConnected ? "Email sending is connected." : "Email sending is not connected, so signups are being saved but nobody is being emailed."}</p>
+            <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-[#3a3d46]">
+              {signups.mailConnected
+                ? `New signups get a confirmation link straight away.${signups.waiting > 0 ? ` ${signups.waiting.toLocaleString()} saved earlier will get theirs on the next monthly run.` : ""}${signups.lastUpdateThrough ? ` The last monthly update ran through ${signups.lastUpdateThrough}.` : " No monthly update has gone out yet."}`
+                : "Each address is kept with the consent the reader ticked. Once RESEND_API_KEY and DIGEST_FROM_EMAIL are set on the deployment, the monthly run sends every waiting address one confirmation link, and only the ones who click it get updates."}
+            </p>
+          </div>
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-[1.1fr_.9fr]">
+            <div className="ink hard min-w-0 rounded-[18px] bg-white p-5">
+              <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Signups per day, last 30 days</p>
+              <div className="mt-4">
+                <AdminColumns title="Signups per day, last 30 days" unit="signup" emptyText="No signups in the last 30 days."
+                  points={signups.daily.map(d => ({ label: shortDay(d.day), value: d.count }))}
+                  startLabel={shortDay(signups.daily[0]!.day)} endLabel={shortDay(signups.daily[signups.daily.length - 1]!.day)} />
+              </div>
+            </div>
+            <div className="ink hard min-w-0 overflow-hidden rounded-[18px] bg-white">
+              <div className="flex items-center justify-between gap-3 px-5 pt-5">
+                <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Latest signups</p>
+                <Link href="/admin/signups" className="text-sm font-bold text-[#2b31d8] hover:underline">All signups →</Link>
+              </div>
+              <div className="mt-3">
+                <SignupTable rows={signups.rows} showAddresses={mayReadAddresses} compact />
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Google's side of the story: how often we were SHOWN and chosen, from Search Console —
-          the step this site cannot observe on its own. Absent credentials, the card explains
-          exactly how to connect it. */}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Google&rsquo;s side of the story</h2>
+      {/* ── Reach: who is finding the site. Google's side is live; our own reader counting is off. ── */}
+      <SectionHead id="reach" eyebrow="Reach" title="Who is finding the site">
+        Search Console is the live figure here: how often Google showed the site and how often it was chosen.
+      </SectionHead>
       {await (async () => {
         const gsc = await gscPromise;
         if (gsc) {
           return (
             <>
-              <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Search Console, last {gsc.windowDays} full days (Google&rsquo;s data lags ~2 days). This is the step before the funnel above: how often Google showed {gsc.site.replace("sc-domain:", "")} and how many people chose it.</p>
+              <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">Search Console, last {gsc.windowDays} full days (Google&rsquo;s data lags about 2 days): how often Google showed {gsc.site.replace("sc-domain:", "")} and how many people chose it.</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Stat icon={Globe} value={gsc.impressions.toLocaleString()} label="Times shown in Google" />
                 <Stat icon={MousePointerClick} value={gsc.clicks.toLocaleString()} label="Clicks from Google" sub={gsc.impressions > 0 ? `${(gsc.ctr * 100).toFixed(1)}% of impressions` : undefined} />
@@ -304,51 +320,241 @@ export default async function AdminPage() {
         );
       })()}
 
-      {/* The pipeline: who we already send buyers to, ranked — i.e. who to approach first. */}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Vendors that received traffic (historical)</h2>
+      <h3 className={SUB}>Readers on the site</h3>
       <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Ranked by the traffic recorded for each vendor before referrals were switched off. Open a vendor for its one-page report.
+        {/* The page-view beacon answers 410 while the privacy review is open (lib/privacy-pause.ts), so this figure cannot grow. */}
+        Reader counting is switched off: the page-view beacon has been paused since the privacy review began, so nothing new is being recorded.
+        {lastView ? ` The last page view on record is from ${lastView}.` : " No page view is on record."}
+        {" "}What was recorded is counted once a day per reader, with no cookies and no accounts, and excludes automated traffic and signed-in staff.
       </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          icon={Users}
+          value={visitors.readerDays.toLocaleString()}
+          label="Readers in the last 30 days"
+          sub={
+            visitors.busiestDay
+              ? `${visitors.visits.toLocaleString()} pages read · busiest day ${visitors.busiestDay.people}`
+              : `${visitors.visits.toLocaleString()} pages read`
+          }
+        />
+      </div>
+      {visitors.topSources.length > 0 && (
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <div className="ink hard rounded-[18px] bg-white p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Where they came from</p>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {visitors.topSources.map(s2 => (
+                <li key={s2.source} className="flex justify-between gap-4">
+                  <span className="truncate font-bold">{s2.source}</span>
+                  <span className="tabular-nums text-[var(--muted)]">{s2.people}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="ink hard rounded-[18px] bg-white p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Most-read pages</p>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {visitors.topPages.slice(0, 8).map(p2 => (
+                <li key={p2.path} className="flex justify-between gap-4">
+                  <span className="truncate font-mono text-[12px]">{p2.path}</span>
+                  <span className="tabular-nums text-[var(--muted)]">{p2.visits}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Link href="/admin/analytics" className="ink hard-sm press inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold">
+          Recorded traffic, day by day <ArrowUpRight className="size-4" />
+        </Link>
+      </div>
+
+      {/* ── On record: what the public pages are built from, and how recently it was read. ── */}
+      <SectionHead id="catalog" eyebrow="On record" title="What the site holds">
+        The listings, prices and lab reports the compound, vendor and comparison pages are built from, and when a price was last read.
+      </SectionHead>
+      {!catalog ? (
+        <p className="mt-4 text-sm font-medium text-[var(--muted)]">The catalogue figures could not be read.</p>
+      ) : (
+        <div data-testid="admin-catalog">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat icon={Database} value={catalog.listings.toLocaleString()} label="Listings on record"
+              sub={`${catalog.vendorsListed.toLocaleString()} vendors · ${catalog.compoundsListed.toLocaleString()} compounds with a price read`} />
+            <Stat icon={FlaskConical} value={catalog.independentReports.toLocaleString()} label="Independent lab reports"
+              sub={`${catalog.vendorsWithReports.toLocaleString()} vendors named · ${catalog.reportsAdded30Days.toLocaleString()} added in 30 days${catalog.lastReportAdded ? `, latest ${catalog.lastReportAdded}` : ""}`} />
+            <Stat icon={GitCompareArrows} value={catalog.comparableCompounds.toLocaleString()} label="Compounds with price and lab result from one vendor"
+              sub="where the vendor comparison can show both on one row" />
+            <Stat icon={Store} value={catalog.listingsRead30Days.toLocaleString()} label="Listings with a price read in 30 days"
+              sub={`${catalog.listingsRead7Days.toLocaleString()} in the last 7 days`} />
+          </div>
+          {/* The one thing no health probe says: a collector can be enabled and not failing while every price is months old. */}
+          <div className={`ink hard mt-3 rounded-[18px] p-5 ${priceAgeDays === null || priceAgeDays > 14 ? "bg-[#fff8e8]" : "bg-[#e6fbf4]"}`} data-testid="admin-price-freshness">
+            <p className="text-sm font-extrabold">
+              {priceAgeDays === null
+                ? "No live price has been read yet."
+                : priceAgeDays > 14
+                  ? `Prices are going stale: the last price was read ${priceAgeDays} days ago, on ${catalog.lastPriceRead}.`
+                  : `Prices are current: the last price was read ${priceAgeDays === 0 ? "today" : priceAgeDays === 1 ? "yesterday" : `${priceAgeDays} days ago`}, on ${catalog.lastPriceRead}.`}
+            </p>
+            <p className="mt-1 max-w-3xl text-sm font-medium leading-6 text-[#3a3d46]">
+              Every public price carries the day it was read, so a stale read shows on the page as an old date, not as a wrong price. The chart counts the listings whose price was read each week.
+            </p>
+          </div>
+          <div className="ink hard mt-3 min-w-0 rounded-[18px] bg-white p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[.12em] text-[var(--muted)]">Listings with a price read, per week, last 12 weeks</p>
+            <div className="mt-4">
+              <AdminColumns title="Listings with a price read, per week, last 12 weeks" unit="listing" emptyText="No price has been read in the last 12 weeks."
+                points={catalog.weekly.map(w => ({ label: `week of ${shortDay(w.week)}`, value: w.listings }))}
+                startLabel={`week of ${shortDay(catalog.weekly[0]!.week)}`} endLabel={`week of ${shortDay(catalog.weekly[catalog.weekly.length - 1]!.week)}`} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Collection: is the data still being gathered. ── */}
+      <SectionHead id="collection" eyebrow="Collection" title="Is the data being collected">
+        The collectors that read vendor pages and lab feeds, and the storefronts they cannot read.
+      </SectionHead>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={Store} value={counts.vendors} label="Vendors collected from" sub={`${counts.graded} graded`} />
+        <Stat icon={MousePointerClick} value={counts.due} label="Collection queue due now" sub="drains every 15 minutes" />
+        <Stat
+          icon={Link2}
+          value={String(broken.length)}
+          label="Broken collectors"
+          sub={broken.length ? broken.map(b => b.target).slice(0, 3).join(", ") : "every source that yielded data still does"}
+        />
+      </div>
+      <h3 className={SUB}>Collectors needing attention</h3>
+      {unhealthy.length === 0 ? (
+        <p className="mt-3 text-sm font-medium text-[var(--muted)]">Every collector is enabled and its last run succeeded.</p>
+      ) : (
+        <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+          <table className="w-full min-w-[820px] text-left text-sm">
+            <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+              <tr>
+                <th className="px-5 py-3">Vendor / target</th><th className="px-5 py-3">Collector</th>
+                <th className="px-5 py-3">State</th><th className="px-5 py-3">Last run</th>
+                <th className="px-5 py-3">Next due</th><th className="px-5 py-3">Last error</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#111214]/10">
+              {unhealthy.map(t => {
+                const st = attentionState(t, collectors.map(c => ({ collector: c.collector, lastOk: c.last_ok === null ? null : Boolean(c.last_ok) })));
+                return (
+                <tr key={t.id} className={st.tone === "red" ? "bg-[#fff1f0]" : st.tone === "amber" ? "bg-[#fff4e0]" : "bg-[#f3f3f3]"}>
+                  <td className="px-5 py-3 font-bold">{t.target}</td>
+                  <td className="px-5 py-3 text-xs">{t.collector}</td>
+                  <td className="px-5 py-3 text-xs font-bold">{st.label}</td>
+                  <td className="px-5 py-3 text-xs">{t.lastRunAt ? new Date(t.lastRunAt).toLocaleString() : "never"}</td>
+                  <td className="px-5 py-3 text-xs">{t.enabled && t.nextDueAt ? new Date(t.nextDueAt).toLocaleString() : "—"}</td>
+                  <td className="px-5 py-3 text-xs text-[var(--muted)]">{t.lastError?.slice(0, 120) ?? "—"}</td>
+                </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <h3 className={SUB}>Storefronts that cannot be graded</h3>
+      {!coverage ? (
+        <p className="mt-3 text-sm font-medium text-[var(--muted)]">The coverage report could not be read.</p>
+      ) : coverage.ungradable.length === 0 ? (
+        <p className="mt-3 text-sm font-medium text-[var(--muted)]">Every storefront on record has a catalogue we have read.</p>
+      ) : (
+        <>
+          {/* The grade scale needs a catalogue to rate, so a storefront with no listings can never
+              earn a letter. None of these is a FAILING collector, which is exactly why they are
+              invisible in the table above — most have no catalog collector enqueued at all. */}
+          <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+            <span className="font-extrabold text-[#111214]">{coverage.ungradable.length} of {coverage.storefronts}</span> storefronts have no catalogue on record, so the grade scale has nothing to rate and the directory shows them as &ldquo;No listings&rdquo;.
+            {/* Each clause appears only when it has something to describe. Once vendor-kind
+                reconciliation moved the lab-feed factories out of this list, the uncurated bucket
+                emptied and this paragraph was reporting "0 were surfaced from lab records". */}
+            {coverage.counts["no-method"] > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts["no-method"]}</span> are curated and polled for status, but no catalogue import method was ever identified &mdash; nothing reads their storefront.</>}
+            {coverage.counts.uncurated > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.uncurated}</span> were surfaced from lab records and never curated.</>}
+            {coverage.counts.flagged > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.flagged}</span> are red-flagged and deliberately excluded from every collector &mdash; nothing polls them at all, and no import flag would change that.</>}
+            {coverage.counts.collecting > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.collecting}</span> have a collector that has not yet succeeded &mdash; those appear above.</>}
+          </p>
+          <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+                <tr>
+                  <th className="px-5 py-3">Storefront</th><th className="px-5 py-3">Why it has no catalogue</th>
+                  <th className="px-5 py-3">Lab tests we hold</th><th className="px-5 py-3">What would change it</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#111214]/10">
+                {coverage.ungradable.slice(0, 40).map((row) => (
+                  <tr key={row.slug} className={row.state === "no-method" ? "bg-[#fff4e0]" : row.state === "flagged" ? "bg-[#f3f3f3]" : undefined}>
+                    <td className="px-5 py-3 font-bold">{row.name}</td>
+                    <td className="px-5 py-3 text-xs font-bold">
+                      {row.state === "no-method" ? "Curated, but no import method" : row.state === "uncurated" ? "Never curated" : row.state === "flagged" ? "Red-flagged — not collected at all" : "Collector has not succeeded yet"}
+                    </td>
+                    <td className="px-5 py-3 text-xs tabular-nums">{row.coaCount || "—"}</td>
+                    <td className="px-5 py-3 text-xs text-[var(--muted)]">
+                      {/* The note is what a probe actually found. Without it this column could only
+                          repeat the generic instruction, and the next person would re-probe a
+                          storefront we already know answers 401. */}
+                      {row.note ?? (row.state === "no-method" ? "Identify how its catalogue can be read, then set the flag in known-vendors.json" : row.state === "uncurated" ? "Add it to known-vendors.json with a domain" : row.state === "flagged" ? "Nothing — it is excluded on purpose. Clearing the red flag would re-enable collection." : "See the attention table above")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {coverage.ungradable.length > 40 && (
+            <p className="mt-2 text-xs font-medium tabular-nums text-[var(--muted)]">Showing the 40 that matter most of {coverage.ungradable.length}.</p>
+          )}
+        </>
+      )}
+
+      <h3 className={SUB}>Collectors</h3>
       <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
             <tr>
-              <th className="px-5 py-3">Vendor</th><th className="px-5 py-3">Clicks sent</th>
-              <th className="px-5 py-3">Readers</th><th className="px-5 py-3">Orders</th>
-              <th className="px-5 py-3">Revenue</th><th className="px-5 py-3">Status</th><th className="px-5 py-3" />
+              <th className="px-5 py-3">Collector</th><th className="px-5 py-3">Targets</th>
+              <th className="px-5 py-3">Due</th><th className="px-5 py-3">Last run</th>
+              <th className="px-5 py-3">State</th><th className="px-5 py-3">Last error</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#111214]/10">
-            {vendors.length === 0 && (
-              <tr><td colSpan={7} className="px-5 py-8 text-center text-sm font-medium text-[var(--muted)]">
-                No outbound clicks were recorded.
-              </td></tr>
-            )}
-            {vendors.map(v => (
-              <tr key={v.vendorSlug}>
-                <td className="px-5 py-3 font-bold">{v.vendorName}</td>
-                <td className="px-5 py-3 font-extrabold tabular-nums">{v.clicks.toLocaleString()}</td>
-                <td className="px-5 py-3 tabular-nums">{v.visitorDays.toLocaleString()}</td>
-                <td className="px-5 py-3 tabular-nums">{v.conversions || "—"}</td>
-                <td className="px-5 py-3 tabular-nums">{v.revenueCents ? money(v.revenueCents) : "—"}</td>
-                <td className="px-5 py-3"><span className="ink-1 rounded-full bg-[#f2f2ef] px-2 py-1 text-[11px] font-bold uppercase tracking-[.08em]">{v.status}</span></td>
-                <td className="px-5 py-3">
-                  <Link href={`/admin/partner/${v.vendorSlug}`} className="text-sm font-bold text-[#2b31d8] hover:underline">Report →</Link>
-                </td>
-              </tr>
-            ))}
+            {collectors.map(c => {
+              const neverRan = !c.last_run_at;
+              const failing = c.last_ok === false || Number(c.failures) > 0;
+              return (
+                <tr key={c.collector} className={failing ? "bg-[#fff1f0]" : neverRan ? "bg-[#fff4e0]" : undefined}>
+                  <td className="px-5 py-3 font-bold">{c.collector}</td>
+                  <td className="px-5 py-3 tabular-nums">{c.targets}</td>
+                  <td className="px-5 py-3 tabular-nums">{c.due}</td>
+                  <td className="px-5 py-3 text-xs">{c.last_run_at ? new Date(c.last_run_at).toLocaleString() : "never"}</td>
+                  <td className="px-5 py-3 text-xs font-bold">
+                    {failing ? `failing (${c.failures})` : neverRan ? "never run" : "ok"}
+                  </td>
+                  <td className="px-5 py-3 text-xs text-[var(--muted)]">{c.last_error?.slice(0, 90) ?? "—"}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* Account administration, deliberately NOT analytics. The privacy notice promises that
-          analytics records carry no account identifier, so nothing here is joined to what anyone
-          read — and the stored IP/user-agent hashes are counted but never shown. */}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">People and sign-ins</h2>
-      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Who holds an account, and who has signed in. This is account administration — it is never joined to what
-        anyone read, and the IP and device hashes kept for session security are deliberately not shown here.
+      <p className="mt-4 text-xs font-medium text-[var(--muted)]">
+        Listings checked in the last 14 days: {freshness.listings.fresh} fresh · {freshness.listings.aging} aging · {freshness.listings.stale} stale.
+        Lab tests: {freshness.coas.fresh} fresh · {freshness.coas.stale} stale.
       </p>
+
+      {/* ── Accounts: administration, deliberately NOT analytics. The privacy notice promises that
+          analytics records carry no account identifier, so nothing here is joined to what anyone
+          read — and the stored IP/user-agent hashes are counted but never shown. ── */}
+      <SectionHead id="accounts" eyebrow="Accounts" title="Staff accounts and sign-ins">
+        Who holds an account, and who has signed in. New reader accounts are closed, so the email list above is the
+        site&rsquo;s signup now; what is listed here is staff and the reader accounts made before that. It is never joined
+        to what anyone read, and the IP and device hashes kept for session security are deliberately not shown.
+      </SectionHead>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           icon={Users}
@@ -436,16 +642,64 @@ export default async function AdminPage() {
         </div>
       )}
 
-      {/* The demand signal /verify generates, which used to be discarded on every call.
-          Untracked domains first: a shop we already cover being checked often is interesting, a
-          shop we do NOT cover being checked often is a decision waiting to be made. No request
-          context is stored anywhere behind this — see server/verify/query-log.ts. */}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">What buyers are checking</h2>
-      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-        Every query typed into /verify that resolved to something, most-checked first. A domain here
-        that we do not track is a vendor buyers are about to spend money at and we hold nothing on
-        &mdash; that is the list worth working down. A count climbing fast is a link circulating.
-      </p>
+
+      {/* ── Shop era: kept, not deleted. These are real recorded figures from when the site sent
+          readers to sellers. Purchase referrals and /verify answer HTTP 410 now, so nothing here can grow. ── */}
+      <SectionHead id="historical" eyebrow="Shop era" title="Historical referral figures">
+        VialGrade no longer sends readers to sellers or takes orders, so these numbers cannot change. They are what was
+        recorded before referrals were switched off, kept for the record.
+      </SectionHead>
+      <details className="mt-4" data-testid="admin-historical">
+        <summary className="ink-1 w-fit cursor-pointer rounded-full bg-white px-4 py-2 text-sm font-bold hover:bg-[#eef0ff]">Show the recorded figures</summary>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat icon={MousePointerClick} value={totals.clicks.toLocaleString()} label="Clicks to a vendor" sub={`from ${totals.clickers.toLocaleString()} ${totals.clickers === 1 ? "reader" : "readers"}`} />
+          <Stat icon={Link2} value={String(totals.vendors)} label="Vendors that received them" />
+          <Stat icon={ArrowUpRight} value={String(totals.conversions)} label="Confirmed orders" sub={totals.conversions === 0 ? "none reported back" : "reported back by a partner"} />
+          <Stat icon={Database} value={money(totals.revenueCents)} label="Revenue recorded" sub={totals.revenueCents === 0 ? "none recorded" : undefined} />
+        </div>
+        <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+          {visitors.readerDays === 0
+            ? "No reader traffic is on record in the last 30 days, so there is no click-through rate to state."
+            : `${Math.round(clickThroughRate * 100)}% of recorded readers clicked through to a vendor: ${totals.clickers.toLocaleString()} of ${visitors.readerDays.toLocaleString()}, both counted with a hash that resets daily.`}
+          {unmatchedClickers > 0 && ` ${unmatchedClickers} of those clicks came from readers whose view-tracking was blocked.`}
+        </p>
+        <h3 className={SUB}>Vendors that received traffic</h3>
+      <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
+        <table className="w-full min-w-[720px] text-left text-sm">
+          <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
+            <tr>
+              <th className="px-5 py-3">Vendor</th><th className="px-5 py-3">Clicks sent</th>
+              <th className="px-5 py-3">Readers</th><th className="px-5 py-3">Orders</th>
+              <th className="px-5 py-3">Revenue</th><th className="px-5 py-3">Status</th><th className="px-5 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#111214]/10">
+            {vendors.length === 0 && (
+              <tr><td colSpan={7} className="px-5 py-8 text-center text-sm font-medium text-[var(--muted)]">
+                No outbound clicks were recorded.
+              </td></tr>
+            )}
+            {vendors.map(v => (
+              <tr key={v.vendorSlug}>
+                <td className="px-5 py-3 font-bold">{v.vendorName}</td>
+                <td className="px-5 py-3 font-extrabold tabular-nums">{v.clicks.toLocaleString()}</td>
+                <td className="px-5 py-3 tabular-nums">{v.visitorDays.toLocaleString()}</td>
+                <td className="px-5 py-3 tabular-nums">{v.conversions || "—"}</td>
+                <td className="px-5 py-3 tabular-nums">{v.revenueCents ? money(v.revenueCents) : "—"}</td>
+                <td className="px-5 py-3"><span className="ink-1 rounded-full bg-[#f2f2ef] px-2 py-1 text-[11px] font-bold uppercase tracking-[.08em]">{v.status}</span></td>
+                <td className="px-5 py-3">
+                  <Link href={`/admin/partner/${v.vendorSlug}`} className="text-sm font-bold text-[#2b31d8] hover:underline">Report →</Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+        <h3 className={SUB}>What readers checked on the old verify page</h3>
+        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
+          Every query typed into /verify that resolved to something, most-checked first. The endpoint is paused, so this list is as it stood.
+        </p>
       <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
@@ -479,137 +733,7 @@ export default async function AdminPage() {
         </table>
       </div>
 
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Is the data healthy?</h2>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={FlaskConical} value={counts.coas} label="Independent lab tests" />
-        <Stat icon={Database} value={counts.listings} label="Live listings" sub={`${counts.vendors} vendors · ${counts.graded} graded`} />
-        <Stat icon={MousePointerClick} value={counts.due} label="Collection queue due now" sub="drains every 15 minutes" />
-        <Stat
-          icon={Link2}
-          value={String(broken.length)}
-          label="Broken collectors"
-          sub={broken.length ? broken.map(b => b.target).slice(0, 3).join(", ") : "every source that yielded data still does"}
-        />
-      </div>
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Collectors needing attention</h2>
-      {unhealthy.length === 0 ? (
-        <p className="mt-3 text-sm font-medium text-[var(--muted)]">Every collector is enabled and its last run succeeded.</p>
-      ) : (
-        <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
-          <table className="w-full min-w-[820px] text-left text-sm">
-            <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
-              <tr>
-                <th className="px-5 py-3">Vendor / target</th><th className="px-5 py-3">Collector</th>
-                <th className="px-5 py-3">State</th><th className="px-5 py-3">Last run</th>
-                <th className="px-5 py-3">Next due</th><th className="px-5 py-3">Last error</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#111214]/10">
-              {unhealthy.map(t => {
-                const st = attentionState(t, collectors.map(c => ({ collector: c.collector, lastOk: c.last_ok === null ? null : Boolean(c.last_ok) })));
-                return (
-                <tr key={t.id} className={st.tone === "red" ? "bg-[#fff1f0]" : st.tone === "amber" ? "bg-[#fff4e0]" : "bg-[#f3f3f3]"}>
-                  <td className="px-5 py-3 font-bold">{t.target}</td>
-                  <td className="px-5 py-3 text-xs">{t.collector}</td>
-                  <td className="px-5 py-3 text-xs font-bold">{st.label}</td>
-                  <td className="px-5 py-3 text-xs">{t.lastRunAt ? new Date(t.lastRunAt).toLocaleString() : "never"}</td>
-                  <td className="px-5 py-3 text-xs">{t.enabled && t.nextDueAt ? new Date(t.nextDueAt).toLocaleString() : "—"}</td>
-                  <td className="px-5 py-3 text-xs text-[var(--muted)]">{t.lastError?.slice(0, 120) ?? "—"}</td>
-                </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Storefronts that cannot be graded</h2>
-      {!coverage ? (
-        <p className="mt-3 text-sm font-medium text-[var(--muted)]">The coverage report could not be read.</p>
-      ) : coverage.ungradable.length === 0 ? (
-        <p className="mt-3 text-sm font-medium text-[var(--muted)]">Every storefront on record has a catalogue we have read.</p>
-      ) : (
-        <>
-          {/* The grade scale needs a catalogue to rate, so a storefront with no listings can never
-              earn a letter. None of these is a FAILING collector, which is exactly why they are
-              invisible in the table above — most have no catalog collector enqueued at all. */}
-          <p className="mt-3 max-w-3xl text-sm font-medium leading-6 text-[var(--muted)]">
-            <span className="font-extrabold text-[#111214]">{coverage.ungradable.length} of {coverage.storefronts}</span> storefronts have no catalogue on record, so the grade scale has nothing to rate and the directory shows them as &ldquo;No listings&rdquo;.
-            {/* Each clause appears only when it has something to describe. Once vendor-kind
-                reconciliation moved the lab-feed factories out of this list, the uncurated bucket
-                emptied and this paragraph was reporting "0 were surfaced from lab records". */}
-            {coverage.counts["no-method"] > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts["no-method"]}</span> are curated and polled for status, but no catalogue import method was ever identified &mdash; nothing reads their storefront.</>}
-            {coverage.counts.uncurated > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.uncurated}</span> were surfaced from lab records and never curated.</>}
-            {coverage.counts.flagged > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.flagged}</span> are red-flagged and deliberately excluded from every collector &mdash; nothing polls them at all, and no import flag would change that.</>}
-            {coverage.counts.collecting > 0 && <>{" "}<span className="font-bold text-[#111214]">{coverage.counts.collecting}</span> have a collector that has not yet succeeded &mdash; those appear above.</>}
-          </p>
-          <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
-                <tr>
-                  <th className="px-5 py-3">Storefront</th><th className="px-5 py-3">Why it has no catalogue</th>
-                  <th className="px-5 py-3">Lab tests we hold</th><th className="px-5 py-3">What would change it</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#111214]/10">
-                {coverage.ungradable.slice(0, 40).map((row) => (
-                  <tr key={row.slug} className={row.state === "no-method" ? "bg-[#fff4e0]" : row.state === "flagged" ? "bg-[#f3f3f3]" : undefined}>
-                    <td className="px-5 py-3 font-bold">{row.name}</td>
-                    <td className="px-5 py-3 text-xs font-bold">
-                      {row.state === "no-method" ? "Curated, but no import method" : row.state === "uncurated" ? "Never curated" : row.state === "flagged" ? "Red-flagged — not collected at all" : "Collector has not succeeded yet"}
-                    </td>
-                    <td className="px-5 py-3 text-xs tabular-nums">{row.coaCount || "—"}</td>
-                    <td className="px-5 py-3 text-xs text-[var(--muted)]">
-                      {/* The note is what a probe actually found. Without it this column could only
-                          repeat the generic instruction, and the next person would re-probe a
-                          storefront we already know answers 401. */}
-                      {row.note ?? (row.state === "no-method" ? "Identify how its catalogue can be read, then set the flag in known-vendors.json" : row.state === "uncurated" ? "Add it to known-vendors.json with a domain" : row.state === "flagged" ? "Nothing — it is excluded on purpose. Clearing the red flag would re-enable collection." : "See the attention table above")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {coverage.ungradable.length > 40 && (
-            <p className="mt-2 text-xs font-medium tabular-nums text-[var(--muted)]">Showing the 40 that matter most of {coverage.ungradable.length}.</p>
-          )}
-        </>
-      )}
-
-      <h2 className="mt-12 text-2xl font-extrabold tracking-[-.03em]">Collectors</h2>
-      <div className="ink hard mt-4 overflow-x-auto rounded-[18px] bg-white">
-        <table className="w-full min-w-[820px] text-left text-sm">
-          <thead className="border-b-2 border-[#111214]/10 text-[11px] uppercase tracking-[.1em] text-[var(--muted)]">
-            <tr>
-              <th className="px-5 py-3">Collector</th><th className="px-5 py-3">Targets</th>
-              <th className="px-5 py-3">Due</th><th className="px-5 py-3">Last run</th>
-              <th className="px-5 py-3">State</th><th className="px-5 py-3">Last error</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#111214]/10">
-            {collectors.map(c => {
-              const neverRan = !c.last_run_at;
-              const failing = c.last_ok === false || Number(c.failures) > 0;
-              return (
-                <tr key={c.collector} className={failing ? "bg-[#fff1f0]" : neverRan ? "bg-[#fff4e0]" : undefined}>
-                  <td className="px-5 py-3 font-bold">{c.collector}</td>
-                  <td className="px-5 py-3 tabular-nums">{c.targets}</td>
-                  <td className="px-5 py-3 tabular-nums">{c.due}</td>
-                  <td className="px-5 py-3 text-xs">{c.last_run_at ? new Date(c.last_run_at).toLocaleString() : "never"}</td>
-                  <td className="px-5 py-3 text-xs font-bold">
-                    {failing ? `failing (${c.failures})` : neverRan ? "never run" : "ok"}
-                  </td>
-                  <td className="px-5 py-3 text-xs text-[var(--muted)]">{c.last_error?.slice(0, 90) ?? "—"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="mt-4 text-xs font-medium text-[var(--muted)]">
-        Listings checked in the last 14 days: {freshness.listings.fresh} fresh · {freshness.listings.aging} aging · {freshness.listings.stale} stale.
-        Lab tests: {freshness.coas.fresh} fresh · {freshness.coas.stale} stale.
-      </p>
+      </details>
     </div>
   );
 }

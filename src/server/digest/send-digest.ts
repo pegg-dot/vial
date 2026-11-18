@@ -1,7 +1,7 @@
 import type { SqlConnection } from "@/server/db/client";
 import { allTopicsAnswered, buildDigest, selectDigestChanges } from "@/lib/digest-content";
 import type { TopicTrials } from "@/server/intelligence/public-trials";
-import { purgeStalePending, unsubscribeUrl, type Mailer } from "./subscribers";
+import { purgeStalePending, sendWaitingConfirmations, unsubscribeUrl, type Mailer } from "./subscribers";
 import type { EmailConfig } from "@/server/email/resend";
 
 /** One run sends to at most this many readers; the rest report as `remaining` and go next run. */
@@ -10,8 +10,9 @@ const WATERMARK = "last_digest_date";
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
 export type DigestRunResult =
-  | { state: "skipped"; reason: "email-not-configured" | "registry-unavailable" }
-  | { state: "ok"; purged: number; changes: number; sent: number; failed: number; remaining: number };
+  | { state: "skipped"; reason: "email-not-configured" }
+  | { state: "skipped"; reason: "registry-unavailable"; confirmations: number }
+  | { state: "ok"; purged: number; confirmations: number; changes: number; sent: number; failed: number; remaining: number };
 
 /**
  * Monthly run. The date marker moves forward only when every registry topic answered AND everyone
@@ -25,11 +26,14 @@ export async function runDigest(
   if (!deps.mail) return { state: "skipped", reason: "email-not-configured" };
   const now = deps.now ?? new Date();
   const purged = await purgeStalePending(db);
+  // Addresses saved before sending started get their confirmation link first. They stay pending,
+  // so nothing below mails them until they click it.
+  const confirmations = (await sendWaitingConfirmations(db, deps.mail)).sent;
   const stored = (await db.query<{ value: string }>(`SELECT value FROM digest_state WHERE key=$1`, [WATERMARK])).rows[0]?.value;
   const since = stored ?? day(new Date(now.getTime() - 31 * 86_400_000));
 
   const topics = await deps.topics();
-  if (!allTopicsAnswered(topics)) return { state: "skipped", reason: "registry-unavailable" };
+  if (!allTopicsAnswered(topics)) return { state: "skipped", reason: "registry-unavailable", confirmations };
   const changes = selectDigestChanges(topics, since);
 
   let sent = 0, failed = 0, remaining = 0;
@@ -54,5 +58,5 @@ export async function runDigest(
       `INSERT INTO digest_state(key,value) VALUES($1,$2) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`,
       [WATERMARK, day(now)]);
   }
-  return { state: "ok", purged, changes: changes.length, sent, failed, remaining };
+  return { state: "ok", purged, confirmations, changes: changes.length, sent, failed, remaining };
 }

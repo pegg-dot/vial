@@ -32,13 +32,14 @@ export default function UpdatesPage() {
             <li>Email only. No account, no saved compounds, no searches, no interests.</li>
             <li>We store your address, the consent you gave, and when we last emailed you.</li>
             <li>Every email has an unsubscribe link that deletes your address immediately.</li>
-            <li>Nothing is sent until you click the confirmation link. The confirmation link stops working after 3 days and unconfirmed requests are then deleted in a weekly cleanup.</li>
+            <li>Nothing is sent until you click the confirmation link. The confirmation link stops working 3 days after it is sent and unconfirmed requests are then deleted in a weekly cleanup.</li>
           </ul>
-          {available ? <UpdatesSignupForm /> : (
-            <Notice tone="warn" role="status" className="mt-6">
-              <p>The update email is not switched on yet, so we are not collecting addresses. Please check back later.</p>
+          {!available && (
+            <Notice tone="blue" role="status" className="mt-6">
+              <p>The update email has not started yet. If you sign up now we keep your address until it does, then send you one confirmation link first. Nothing else is sent unless you click it, and you can ask for deletion in the meantime.</p>
             </Notice>
           )}
+          <UpdatesSignupForm />
         </Frame>
       </Section>
       <PageFootnote>
