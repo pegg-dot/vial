@@ -1,6 +1,6 @@
 import { isPausedTransactionEndpoint } from "@/lib/commerce-pause";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { publicReleaseAction, legacyResearchDestination, publicBrowseRelease, isBrowsePage, hidesCommerce, hidesMarket, marketRecordsRelease } from "@/lib/public-research-release";
+import { publicReleaseAction, legacyResearchDestination, publicBrowseRelease, isBrowsePage, isComparisonPage, comparisonHref, hidesCommerce, hidesMarket, marketRecordsRelease } from "@/lib/public-research-release";
 
 describe("public research-only deployment quarantine", () => {
   // The deployment may have the browse flag on; these cases describe the flag being off.
@@ -46,7 +46,9 @@ describe("public research-only deployment quarantine", () => {
 });
 
 describe("retired shop URLs with a research equivalent", () => {
-  const dest = (path: string) => legacyResearchDestination(path);
+  // The flags are passed, never read: the production build runs this suite with its own flags set.
+  const dest = (path: string) => legacyResearchDestination(path, false);
+  const destOpen = (path: string) => legacyResearchDestination(path, true);
 
   it.each(["retatrutide", "tirzepatide", "semaglutide", "cagrilintide", "ll-37", "oxytocin"])(
     "leaves /compounds/%s on its own page: the compound page is the dossier now", slug => {
@@ -63,6 +65,32 @@ describe("retired shop URLs with a research equivalent", () => {
     "leaves %s on the generic retired notice", path => {
       expect(dest(path)).toBeNull();
     });
+
+  it("forwards a saved per-compound market link to that compound's vendor comparison, once it is released", () => {
+    expect(destOpen("/compounds/retatrutide/market")).toBe("/compounds/retatrutide/vendors");
+    expect(destOpen("/compounds/bpc-157/market/")).toBe("/compounds/bpc-157/vendors");
+    expect(dest("/compounds/retatrutide/market")).toBeNull();
+  });
+
+  it.each(["/market", "/products/x", "/compare", "/stacks", "/cart", "/checkout", "/go/x", "/compounds/x/market/y", "/compounds/X/market",
+    "/compounds/x%2Fy/market", "/compounds/../market", "/compounds//market", "/vendors/x/market", "/compounds/bpc-157",
+  ])("forwards nothing else, released or not: %s", path => {
+    expect(destOpen(path)).toBeNull();
+    expect(dest(path)).toBeNull();
+  });
+
+  it("reads all three flags when none is passed", () => {
+    vi.stubEnv("VIALGRADE_PUBLIC_EVIDENCE_ONLY", "true");
+    vi.stubEnv("VIALGRADE_PUBLIC_BROWSE", "true");
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
+    expect(legacyResearchDestination("/compounds/retatrutide/market")).toBe("/compounds/retatrutide/vendors");
+    for (const off of ["VIALGRADE_PUBLIC_EVIDENCE_ONLY", "VIALGRADE_PUBLIC_BROWSE", "VIALGRADE_MARKET_RECORDS"]) {
+      vi.stubEnv(off, "");
+      expect(legacyResearchDestination("/compounds/retatrutide/market"), off).toBeNull();
+      vi.stubEnv(off, "true");
+    }
+    vi.unstubAllEnvs();
+  });
 });
 
 
@@ -215,5 +243,64 @@ describe("market-record release (VIALGRADE_MARKET_RECORDS)", () => {
     for (const path of ["/go/acme", "/api/v1/commerce/checkout", "/api/v1/commerce/cart", "/api/partner/conversion"]) {
       expect(isPausedTransactionEndpoint(path)).toBe(true);
     }
+  });
+});
+
+describe("vendor comparison page (/compounds/<slug>/vendors)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const noDossier = () => false;
+  // [evidenceOnly, browse, market], always passed: see the note on the market-record flag test.
+  const action = (path: string, method: string, evidenceOnly: boolean, browse: boolean, market: boolean) =>
+    publicReleaseAction(path, method, evidenceOnly, browse, noDossier, market);
+
+  it("spells the path in one place", () => {
+    expect(comparisonHref("retatrutide")).toBe("/compounds/retatrutide/vendors");
+    expect(isComparisonPage(comparisonHref("bpc-157"))).toBe(true);
+  });
+
+  it("opens for reads only when the browse release and the market record are both on", () => {
+    for (const method of ["GET", "HEAD"]) {
+      expect(action("/compounds/retatrutide/vendors", method, true, true, true)).toBeNull();
+      expect(action("/compounds/retatrutide/vendors/", method, true, true, true)).toBeNull();
+      expect(action("/compounds/retatrutide/vendors", method, true, true, false)).toBe("redirect");
+      expect(action("/compounds/retatrutide/vendors", method, true, false, true)).toBe("redirect");
+      expect(action("/compounds/retatrutide/vendors", method, true, false, false)).toBe("redirect");
+    }
+  });
+
+  it("stays closed with the market record off even for a compound that carries a research file", () => {
+    expect(publicReleaseAction("/compounds/pexiganan/vendors", "GET", true, true, () => true, false)).toBe("redirect");
+    expect(publicReleaseAction("/compounds/pexiganan/vendors", "GET", true, false, () => true, true)).toBe("redirect");
+  });
+
+  it("never opens a write", () => {
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+      expect(action("/compounds/retatrutide/vendors", method, true, true, true)).toBe("gone");
+      expect(isComparisonPage("/compounds/retatrutide/vendors", method)).toBe(false);
+    }
+  });
+
+  it.each(["/compounds/x/vendors/y", "/compounds/x/vendors/../market", "/compounds/x%2Fy/vendors", "/compounds/X/vendors", "/compounds//vendors",
+    "/compounds/x/vendor", "/compounds/x/vendors;a", "/compounds/x/%76endors", "/vendors/x/vendors", "/compounds/x_y/vendors", "/compounds/vendors/vendors/x",
+  ])("refuses odd, encoded or deeper paths: %s", path => {
+    expect(isComparisonPage(path)).toBe(false);
+    expect(action(path, "GET", true, true, true)).not.toBeNull();
+  });
+
+  it("opens nothing else: the market page, product pages, compare, stacks and every API stay closed with all three on", () => {
+    for (const path of ["/compounds/retatrutide/market", "/products/x", "/market", "/compare", "/stacks", "/cart", "/checkout", "/go/x", "/search", "/api/v1/catalog", "/api/search"]) {
+      expect(action(path, "GET", true, true, true), path).not.toBeNull();
+    }
+  });
+
+  it("reads the market-record flag from the environment when it is not passed", () => {
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "true");
+    expect(publicReleaseAction("/compounds/retatrutide/vendors", "GET", true, true)).toBeNull();
+    vi.stubEnv("VIALGRADE_MARKET_RECORDS", "");
+    expect(publicReleaseAction("/compounds/retatrutide/vendors", "GET", true, true)).toBe("redirect");
+  });
+
+  it("is not gated at all with the quarantine off", () => {
+    expect(action("/compounds/retatrutide/vendors", "GET", false, false, false)).toBeNull();
   });
 });
