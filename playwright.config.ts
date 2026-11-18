@@ -23,6 +23,10 @@ export default defineConfig({
   },
   use: {
     baseURL: `http://localhost:${port}`,
+    // Every test is a returning reader by default: the first-visit email prompt has already been
+    // seen, so its card is never in the way of what a spec is checking. The spec that tests the
+    // prompt itself (email-updates) starts from empty storage instead.
+    storageState: { cookies: [], origins: [{ origin: `http://localhost:${port}`, localStorage: [{ name: "vialgrade:updates-prompt", value: "seen" }] }] },
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     launchOptions: {

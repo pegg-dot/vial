@@ -32,6 +32,7 @@ const STEPS = [
  * group, no arrows.
  */
 const ELSEWHERE = [
+  { href: "/admin/signups", label: "Signups", hint: "Everyone on the email list" },
   { href: "/admin/learning", label: "Learning", hint: "Accepted and rejected evidence trajectories" },
   { href: "/admin/analytics", label: "Traffic", hint: "Readers, clicks and sources, day by day" },
 ] as const;
@@ -45,12 +46,12 @@ export function AdminNav() {
     }`;
 
   return (
-    <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 sm:w-auto">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 sm:w-auto">
     <nav
       aria-label="Provenance pipeline"
       // Scrolls rather than wrapping or disappearing: five steps do not fit a phone, and hiding
       // them was how they became unreachable in the first place.
-      className="-mx-1 flex w-full items-center gap-1 overflow-x-auto px-1 pb-1 text-[11px] font-bold uppercase tracking-[.1em] text-white/55 sm:mx-0 sm:w-auto sm:overflow-visible sm:pb-0"
+      className="-mx-1 flex w-full min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1 text-[11px] font-bold uppercase tracking-[.1em] text-white/55 sm:mx-0 sm:w-auto sm:overflow-visible sm:pb-0"
     >
       {STEPS.map((step, index) => {
         // Exact match only. A prefix match would light up "Sources" while you are on a nested page

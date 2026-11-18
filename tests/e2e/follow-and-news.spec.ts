@@ -18,7 +18,15 @@ test.describe("privacy-first research mode", () => {
     await page.evaluate(() => window.localStorage.clear());
     await page.reload();
     await page.waitForTimeout(11_200);
-    await expect(page.getByRole("dialog")).toBeHidden();
+    // The one thing a first-time reader may be offered is the email-only update card (owner's
+    // decision, 2026-11-17), which says in its own words that it is not an account. Nothing may ask
+    // for an account, a password or a registration.
+    await expect(page.getByRole("dialog").filter({ hasText: /create an account|register|sign up|password|join/i })).toHaveCount(0);
+    for (const dialog of await page.getByRole("dialog").all()) {
+      await expect(dialog).toHaveAccessibleName("Monthly update email");
+      await expect(dialog).toContainText("no account");
+      await expect(dialog).not.toHaveAttribute("aria-modal", "true");
+    }
   });
 
   test("keeps existing sign-in available but pauses registration", async ({ page }) => {

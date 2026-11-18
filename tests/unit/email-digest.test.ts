@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { normalizeEmail, signDigestToken, verifyDigestToken } from "@/server/digest/tokens";
 import { allTopicsAnswered, buildDigest, confirmationEmail, DIGEST_MAX_ITEMS, selectDigestChanges } from "@/lib/digest-content";
 import { emailConfig, sendEmail } from "@/server/email/resend";
-import { updatesPromptAllowedOn } from "@/lib/updates-prompt";
+import { UPDATES_PROMPT_DELAY_MS, updatesPromptAllowedOn, updatesPromptSeen } from "@/lib/updates-prompt";
+import { SUBSCRIBE_MESSAGE, UPDATES_SUBSCRIBE_PATH, parseSubscribeReply, signupSucceeded } from "@/lib/updates-signup";
+import { publicReleaseAction } from "@/lib/public-research-release";
+import { readCappedBody } from "@/server/http/capped-body";
 import { accessDecision } from "@/server/auth/access-policy";
 import type { TopicTrials } from "@/server/intelligence/public-trials";
 
@@ -107,13 +110,108 @@ describe("Resend client", () => {
   });
 });
 
-describe("first-visit bar rule and perimeter", () => {
-  it("offers the bar on research pages but never on signup, legal, login, register, admin or account", () => {
-    for (const ok of ["/intelligence", "/intelligence/", "/intelligence/market", "/intelligence/explore/pexiganan", "/compounds/pexiganan", "/compounds"]) expect(updatesPromptAllowedOn(ok)).toBe(true);
-    for (const no of ["/intelligence/updates", "/intelligence/updates/", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", "/legal/privacy", "/login", "/register", "/admin", "/admin/login", "/account", "/", "/intelligence-x"]) expect(updatesPromptAllowedOn(no)).toBe(false);
+describe("first-visit prompt rule and perimeter", () => {
+  it("opens on every public reading page, and never on signup, legal, sign-in, staff, account or retired checkout pages", () => {
+    for (const ok of ["/", "/intelligence", "/intelligence/", "/intelligence/market", "/intelligence/explore/pexiganan", "/compounds", "/compounds/pexiganan",
+      "/compounds/retatrutide/vendors", "/vendors", "/vendors/acme", "/labs", "/grades", "/how-we-check", "/passports/x", "/intelligence-x", "/legalese", "/accounting"]) expect(updatesPromptAllowedOn(ok), ok).toBe(true);
+    for (const no of ["/intelligence/updates", "/intelligence/updates/", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", "/legal", "/legal/privacy",
+      "/login", "/register", "/admin", "/admin/login", "/admin/signups", "/account", "/account/security", "/seller", "/lab", "/orders/1", "/watchlist", "/cart", "/checkout", "/go/x", "/api/health"]) expect(updatesPromptAllowedOn(no), no).toBe(false);
   });
-  it("keeps the signup pages and monthly cron reachable without a session, and nothing wider", () => {
-    for (const p of ["/intelligence/updates", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", "/api/internal/cron/digest"]) expect(accessDecision(p, null).allowed).toBe(true);
-    for (const p of ["/intelligence/updates/other", "/api/v1/updates", "/api/internal/cron/other"]) expect(accessDecision(p, null).allowed).toBe(false);
+
+  it("is offered once: anything stored counts as seen, including what the earlier bar wrote", () => {
+    expect(updatesPromptSeen(null)).toBe(false);
+    for (const stored of ["seen", "dismissed", ""]) expect(updatesPromptSeen(stored)).toBe(true);
+  });
+
+  it("opens on arrival, not after a long read", () => {
+    expect(UPDATES_PROMPT_DELAY_MS).toBeGreaterThanOrEqual(500);
+    expect(UPDATES_PROMPT_DELAY_MS).toBeLessThanOrEqual(3_000);
+  });
+
+  it("keeps the signup pages, the signup endpoint and the monthly cron reachable without a session, and nothing wider", () => {
+    for (const p of ["/intelligence/updates", "/intelligence/updates/confirm", "/intelligence/updates/unsubscribe", UPDATES_SUBSCRIBE_PATH, "/api/internal/cron/digest"]) expect(accessDecision(p, null).allowed).toBe(true);
+    for (const p of ["/intelligence/updates/other", "/intelligence/updates/subscribe/x", "/api/v1/updates", "/api/internal/cron/other", "/admin/signups"]) expect(accessDecision(p, null).allowed).toBe(false);
+  });
+
+  it("the signup endpoint takes a POST under every release mode, which a compound or vendor page's own URL does not", () => {
+    for (const [evidenceOnly, browse] of [[true, true], [true, false], [false, false]] as const) {
+      expect(publicReleaseAction(UPDATES_SUBSCRIBE_PATH, "POST", evidenceOnly, browse)).toBeNull();
+    }
+    // Why the prompt posts to its own endpoint rather than to the page it is shown on.
+    expect(publicReleaseAction("/compounds/bpc-157", "POST", true, true)).toBe("gone");
+    expect(publicReleaseAction("/vendors/acme", "POST", true, true)).toBe("gone");
+  });
+});
+
+describe("signup reply, as the browser reads it", () => {
+  it("treats a sent link and a saved address as success, and nothing else", () => {
+    expect(signupSucceeded("sent")).toBe(true);
+    expect(signupSucceeded("saved")).toBe(true);
+    for (const status of ["idle", "invalid", "unavailable", "needs-consent", "slow-down"] as const) expect(signupSucceeded(status)).toBe(false);
+  });
+
+  it("reads a well-formed reply and turns anything else into 'unavailable', never a silent success", () => {
+    for (const status of ["sent", "saved", "invalid", "unavailable", "needs-consent", "slow-down"]) expect(parseSubscribeReply({ status })).toBe(status);
+    for (const junk of [null, undefined, "sent", 5, [], {}, { status: 1 }, { status: "ok" }, { status: "idle" }, { status: "constructor" }, { error: "Gone" }]) expect(parseSubscribeReply(junk)).toBe("unavailable");
+  });
+
+  it("says what happened to the address in each case, and promises nothing a saved address will not get", () => {
+    expect(SUBSCRIBE_MESSAGE.saved).toMatch(/on the list/i);
+    expect(SUBSCRIBE_MESSAGE.saved).toMatch(/has not started yet/i);
+    expect(SUBSCRIBE_MESSAGE.saved).toMatch(/confirmation link first/i);
+    expect(SUBSCRIBE_MESSAGE.saved).not.toMatch(/check your inbox/i);
+    expect(SUBSCRIBE_MESSAGE.sent).toMatch(/check your inbox/i);
+    expect(SUBSCRIBE_MESSAGE.unavailable).toMatch(/nothing was saved/i);
+    expect(SUBSCRIBE_MESSAGE.idle).toBe("");
+    for (const message of Object.values(SUBSCRIBE_MESSAGE)) for (const word of BANNED) expect(message.toLowerCase()).not.toContain(word);
+  });
+});
+
+describe("capped request body", () => {
+  const body = (text: string, headers: Record<string, string> = {}) => new Request("https://v.example/x", { method: "POST", body: text, headers });
+  const streamed = (chunks: string[], onPull?: () => void) => {
+    let i = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        onPull?.();
+        if (i < chunks.length) controller.enqueue(new TextEncoder().encode(chunks[i++]!));
+        else controller.close();
+      },
+    // No read-ahead, so a pull happens only when the reader asks for a chunk.
+    }, { highWaterMark: 0 });
+    return new Request("https://v.example/x", { method: "POST", body: stream, duplex: "half" } as RequestInit);
+  };
+
+  it("returns a body at or under the limit, whole", async () => {
+    expect(await readCappedBody(body('{"email":"a@b.co"}'), 2048)).toBe('{"email":"a@b.co"}');
+    expect(await readCappedBody(body("x".repeat(64)), 64)).toBe("x".repeat(64));
+    expect(await readCappedBody(streamed(["ab", "cd", "é"]), 2048)).toBe("abcdé");
+    expect(await readCappedBody(new Request("https://v.example/x", { method: "POST" }), 2048)).toBe("");
+  });
+
+  it("refuses on the declared length before reading anything", async () => {
+    let pulls = 0;
+    const request = streamed(["x".repeat(10)], () => { pulls++; });
+    request.headers.set("content-length", "999999");
+    expect(await readCappedBody(request, 2048)).toBeNull();
+    expect(pulls).toBe(0);
+    for (const bad of ["-1", "1e3", "abc", "1.5"]) expect(await readCappedBody(body("{}", { "content-length": bad }), 2048), bad).toBeNull();
+  });
+
+  it("stops reading once the running count passes the limit, when no length was declared or it lied", async () => {
+    let pulls = 0;
+    const big = streamed(Array.from({ length: 1000 }, () => "y".repeat(100)), () => { pulls++; });
+    expect(await readCappedBody(big, 250)).toBeNull();
+    // Three chunks take it past 250 bytes; the other 997 are never asked for.
+    expect(pulls).toBe(3);
+    const lied = streamed(["z".repeat(300)]);
+    lied.headers.set("content-length", "10");
+    expect(await readCappedBody(lied, 250)).toBeNull();
+    expect(await readCappedBody(body("x".repeat(65)), 64)).toBeNull();
+  });
+
+  it("counts bytes, not characters", async () => {
+    expect(await readCappedBody(streamed(["é".repeat(40)]), 64)).toBeNull();
+    expect(await readCappedBody(streamed(["é".repeat(32)]), 64)).toBe("é".repeat(32));
   });
 });
