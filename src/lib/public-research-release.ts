@@ -74,6 +74,26 @@ export function isBrowsePage(pathname: string, method = "GET"): boolean {
   return BROWSE_PAGES.some(pattern => pattern.test(path));
 }
 
+/**
+ * The vendor comparison for one compound (/compounds/<slug>/vendors): every source on record for
+ * that compound, what it lists and the price as read, beside what a lab reported for a sample
+ * attributed to it. The one page the market-record release adds, the owner's decision of
+ * 2026-11-17. It is a GET/HEAD page built from the same records the compound page already shows;
+ * it carries no cart, no product page and no click-through.
+ */
+const COMPARISON_PAGE = /^\/compounds\/([a-z0-9-]+)\/vendors$/;
+
+export function isComparisonPage(pathname: string, method = "GET"): boolean {
+  if (!["GET", "HEAD"].includes(method.toUpperCase())) return false;
+  if (/[%;\\]|\/\/|\.\./.test(pathname)) return false;
+  return COMPARISON_PAGE.test(pathname.replace(/\/+$/, "") || "/");
+}
+
+/** Where the comparison for a compound lives. The one place the path is spelled. */
+export function comparisonHref(compoundSlug: string): string {
+  return "/compounds/" + compoundSlug + "/vendors";
+}
+
 export type PublicReleaseAction = "redirect" | "gone" | null;
 
 function matches(path: string, root: string): boolean {
@@ -86,9 +106,13 @@ export function publicReleaseAction(
   enabled = evidenceOnlyPublicRelease(),
   browse = publicBrowseRelease(),
   hasDossier: (slug: string) => boolean = () => false,
+  market = marketRecordsRelease(),
 ): PublicReleaseAction {
   if (!enabled) return null;
   if (browse && isBrowsePage(pathname, method)) return null;
+  // The vendor comparison needs the browse release AND the market-record release, like the
+  // price and listing blocks it is made of (hidesMarket).
+  if (browse && market && isComparisonPage(pathname, method)) return null;
   // The compound directory and the method page are research surfaces (the research library, the
   // research-file letters) and stay public whatever the browse release says; a compound page that
   // carries a research file IS the research dossier now. /compounds and the compound pages hide
@@ -152,14 +176,20 @@ export function publicReleaseAction(
 /**
  * Where a retired shop URL has a real equivalent in the research product.
  *
- * Nothing, since the compound directory became the research library: `/compounds` and every
- * compound page with a research file are let through by publicReleaseAction. Everything else
- * keeps the generic "retired" notice, which says so honestly instead of guessing a destination.
- * Kept as a seam so the proxy's shape does not change when a destination appears again.
+ * One case: the per-compound market page. With the vendor comparison released, a saved link to
+ * /compounds/<slug>/market forwards to that compound's comparison. Everything else keeps the
+ * generic "retired" notice, which says so honestly instead of guessing a destination. The compound
+ * directory and every compound page are research surfaces and never reach here.
+ *
+ * `comparisonOpen` is the three flags together; pass it explicitly in tests, since the production
+ * build runs the unit suite with the deployment's own flags set.
  */
-export function legacyResearchDestination(pathname: string): string | null {
-  // The compound directory and every compound page are research surfaces now and never redirect;
-  // nothing retired has a better destination than the honest notice.
-  void pathname;
-  return null;
+export function legacyResearchDestination(
+  pathname: string,
+  comparisonOpen = evidenceOnlyPublicRelease() && publicBrowseRelease() && marketRecordsRelease(),
+): string | null {
+  if (!comparisonOpen) return null;
+  if (/[%;\\]|\/\/|\.\./.test(pathname)) return null;
+  const market = /^\/compounds\/([a-z0-9-]+)\/market$/.exec(pathname.replace(/\/+$/, "") || "/");
+  return market ? comparisonHref(market[1]) : null;
 }

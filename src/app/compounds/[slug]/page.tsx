@@ -15,7 +15,7 @@ import { GoalTags } from "@/components/goal-tags";
 import { CompoundKnowledge } from "@/components/compound-knowledge";
 import { UsLegalNotice } from "@/components/us-legal-notice";
 import { PriceSeries } from "@/components/price-series";
-import { evidenceOnlyPublicRelease, hidesCommerce, hidesMarket, publicBrowseRelease } from "@/lib/public-research-release";
+import { comparisonHref, evidenceOnlyPublicRelease, hidesCommerce, hidesMarket, publicBrowseRelease } from "@/lib/public-research-release";
 import {
   compareExplorerHref, registryDiscoveryUrl, researchSubjectBySlug, researchThemeById, RESEARCH_SUBJECTS, verifiedPubmedSearchUrl,
 } from "@/lib/research-explorer";
@@ -113,6 +113,9 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
   // own release on top of browsing. Follow buttons and stack pages stay with noCommerce.
   const noMarket = hidesMarket();
   const showMarket = Boolean(compound) && showCatalog && listings.length > 0 && !noMarket;
+  // The vendor comparison (its own page) joins the listings and the lab reports by source, so it
+  // has something to show whenever either is on record. Part of the market-record release.
+  const compareHref = compound && showCatalog && evidenceOnly && !noMarket && (listings.length > 0 || labTests.length > 0) ? comparisonHref(slug) : null;
   // Every directory vendor that lists this compound or whose independent evidence names it, in the
   // directory's order, with the letter from each one's own record. Under the evidence-only release
   // the entries are projected like the directory's, so no price reaches the page; the listings
@@ -249,7 +252,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
            catalog's plain-English summary. */
         lead={subject?.identity ?? edu?.summary ?? compound?.description}
         note={subject ? "This letter describes linked source types in our file, not how promising or safe the compound is." : undefined}
-        actions={subject || vendorEntries.length ? <>
+        actions={subject || vendorEntries.length || compareHref ? <>
           {subject && <>
             <Pill href={isPex ? "#research-workspace" : "#overview"} variant="primary" arrow="right">{isPex ? "Investigate the evidence" : "Start with the research question"}</Pill>
             <Pill href={subject.referenceUrl} external arrow="up">Inspect molecular identity</Pill>
@@ -257,6 +260,7 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
           </>}
           {/* The way to the vendors is one click from the top: the section, then each vendor's record or site. */}
           {vendorEntries.length ? <Pill href="#vendors" variant={subject ? "ghost" : "primary"} icon={Store} arrow="right">{vendorsLabel}</Pill> : null}
+          {compareHref ? <Pill href={compareHref} variant="ghost" icon={GitCompareArrows} arrow="right">Compare vendors</Pill> : null}
         </> : undefined}
         aside={aside}
       >
@@ -403,14 +407,15 @@ export default async function CompoundPage({ params }: { params: Promise<{ slug:
                   /* The market record: what was listed and what it cost on the day we read it, each
                      row citing the listing. The full-market and product pages stay closed here. */
                   <SectionHeading eyebrow="Market record" title={`What ${compound.name} listings show, and when we read them`}
-                    lead={<>Every {compound.name} listing on record &mdash; {listings.length} in all &mdash; with the price as it read on the day we read it and, where a vendor&rsquo;s website link is released, the listing it was read from. Recorded for reference alongside the lab evidence above: VialGrade sells nothing and takes no referrals, and a price is not a recommendation or an assurance of product identity, safety or lawful sale.</>} />
+                    lead={<>Every {compound.name} listing on record &mdash; {listings.length} in all &mdash; with the price as it read on the day we read it and, where a vendor&rsquo;s website link is released, the listing it was read from. Recorded for reference alongside the lab evidence above: VialGrade sells nothing and takes no referrals, and a price is not a recommendation or an assurance of product identity, safety or lawful sale.</>}
+                    action={compareHref ? <Pill href={compareHref} variant="ink" arrow="right">Compare vendors</Pill> : undefined} />
                 ) : (
                   <SectionHeading eyebrow="Current market" title={`The ${compound.name} market`}
                     lead={<>Every {compound.name} listing we track &mdash; {listings.length} in all. Historical prices are shown with evidence and data quality limitations. Prices do not amount to a recommendation or an assurance of product identity, safety or lawful sale.</>}
                     action={<Pill href={`/compounds/${slug}/market`} variant="ink" arrow="right">Open full market</Pill>} />
                 )}
               </div>
-              <PriceLeaderboard compoundName={compound.name} marketHref={evidenceOnly ? undefined : `/compounds/${slug}/market`} listings={listings} labTests={labTests}
+              <PriceLeaderboard compoundName={compound.name} marketHref={evidenceOnly ? compareHref ?? undefined : `/compounds/${slug}/market`} listings={listings} labTests={labTests}
                 record={evidenceOnly ? { websiteByVendor } : undefined} />
             </div>
           ) : null}
