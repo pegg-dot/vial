@@ -12,6 +12,7 @@ import { ResearchWorkerRetirement } from "@/components/research-worker-retiremen
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 import { JsonLd } from "@/components/json-ld";
 import { organizationSchema, webSiteSchema } from "@/lib/structured-data";
+import { Analytics } from "@vercel/analytics/next";
 import { siteConfig } from "@/lib/site";
 import { getCatalogSnapshot } from "@/server/catalog/repository";
 import { emptyCatalogLite, toCatalogLite } from "@/lib/catalog-lite";
@@ -96,6 +97,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <HideOnAdmin><ResearchReleaseFooter /></HideOnAdmin>
           <ResearchWorkerRetirement />
           <UpdatesPromptHost />
+          <Analytics />
         </body>
       </html>
     );
@@ -149,6 +151,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <MobileRetentionNav authenticated={Boolean(principal)} />
         </MarketplaceProvider>
         <ServiceWorkerRegistrar />
+        <Analytics />
       </body>
     </html>
   );
